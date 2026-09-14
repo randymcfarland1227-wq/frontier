@@ -6,6 +6,6 @@
   "compatibility_flags": ["nodejs_compat"],
   "workers_dev": true,
   "preview_urls": false,
-  "vars": { "SITE_PASSWORD_HASH": "7bde1145cc759563b1c7ab222f37351543c51ea4dcccac77dfea50754889e8d4" },
+  "vars": { "SITE_PASSWORD_HASH": "b1078e95ba84644948d598aef9a8627d4f83369a9715f1226b18ab201369469f" },
   "assets": { "run_worker_first": true }
 }
