@@ -1,0 +1,11 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "frontier-work-room",
+  "main": "./worker/index.ts",
+  "compatibility_date": "2026-09-14",
+  "compatibility_flags": ["nodejs_compat"],
+  "workers_dev": true,
+  "preview_urls": false,
+  "vars": { "SITE_PASSWORD_HASH": "7bde1145cc759563b1c7ab222f37351543c51ea4dcccac77dfea50754889e8d4" },
+  "assets": { "run_worker_first": true }
+}
