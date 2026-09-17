@@ -6,6 +6,13 @@ interface Env {
   ASSETS: Fetcher;
 }
 
+const publicAppAssets = new Set([
+  "/apple-touch-icon.png",
+  "/icon-192.png",
+  "/icon-512.png",
+  "/manifest.webmanifest",
+]);
+
 // A path whose last segment has an extension (e.g. /assets/index-abc.css).
 function isFilePath(pathname: string): boolean {
   return pathname.slice(pathname.lastIndexOf("/") + 1).includes(".");
@@ -13,13 +20,20 @@ function isFilePath(pathname: string): boolean {
 
 export default {
   async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
+    const { pathname } = new URL(request.url);
+    if (
+      publicAppAssets.has(pathname) &&
+      (request.method === "GET" || request.method === "HEAD")
+    ) {
+      return env.ASSETS.fetch(request);
+    }
+
     const unauthorized = await requireOwner(request, env);
     if (unauthorized) return unauthorized;
 
     // run_worker_first routes CSS, JS, fonts and images through this worker
     // for the password check; the app handler can't serve them, so hand them
     // to the static assets store and only fall through when it has no match.
-    const { pathname } = new URL(request.url);
     if (isFilePath(pathname) && (request.method === "GET" || request.method === "HEAD")) {
       const asset = await env.ASSETS.fetch(request);
       if (asset.status !== 404) return asset;
