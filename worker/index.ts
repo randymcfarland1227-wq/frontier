@@ -1,8 +1,6 @@
 import handler from "vinext/server/app-router-entry";
-import { requireOwner } from "./auth";
 
 interface Env {
-  SITE_PASSWORD_HASH: string;
   ASSETS: Fetcher;
 }
 
@@ -28,12 +26,8 @@ export default {
       return env.ASSETS.fetch(request);
     }
 
-    const unauthorized = await requireOwner(request, env);
-    if (unauthorized) return unauthorized;
-
-    // run_worker_first routes CSS, JS, fonts and images through this worker
-    // for the password check; the app handler can't serve them, so hand them
-    // to the static assets store and only fall through when it has no match.
+    // run_worker_first routes CSS, JS, fonts and images through this worker;
+    // serve those files directly from the static assets store.
     if (isFilePath(pathname) && (request.method === "GET" || request.method === "HEAD")) {
       const asset = await env.ASSETS.fetch(request);
       if (asset.status !== 404) return asset;
