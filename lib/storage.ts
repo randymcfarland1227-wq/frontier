@@ -9,10 +9,14 @@ export function readSaved<T>(key: string, fallback: T): T {
   }
 }
 
+/** Fired with the storage key after every successful write (cloud backup listens). */
+export const LOCAL_WRITE_EVENT = 'lifehub:local-write';
+
 export function writeSaved(key: string, value: unknown) {
   if (typeof window === 'undefined') return;
   try {
     localStorage.setItem(key, JSON.stringify(value));
+    window.dispatchEvent(new CustomEvent(LOCAL_WRITE_EVENT, { detail: key }));
   } catch {
     /* quota / private mode */
   }
@@ -27,6 +31,8 @@ export const STORAGE_KEYS = {
   priorityPins: 'lifehub-priority-pins',
   captures: 'lifehub-captures',
   goalLinks: 'lifehub-goal-links',
+  /** Cloud backup key for this device — never synced */
+  sync: 'lifehub-sync',
   /** Migrate from prior Work Room keys once */
   legacyFocus: 'workroom-focus',
   legacySnapshots: 'workroom-source-snapshots',
