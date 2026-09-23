@@ -49,7 +49,7 @@ export function FeaturedList({
                   aria-pressed={pinned}
                   aria-label={pinned ? `Remove ${item.title} from priority` : `Add ${item.title} to priority`}
                 >
-                  {pinned ? 'In priority' : 'Priority'}
+                  {compact ? (pinned ? 'Pinned' : 'Pin') : pinned ? 'In priority' : 'Priority'}
                 </button>
                 {onComplete ? (
                   <button
