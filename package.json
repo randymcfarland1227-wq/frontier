@@ -8,9 +8,11 @@
   "scripts": {
     "dev": "vinext dev",
     "build": "vinext build",
+    "build:pages": "vite build --config vite.github.config.ts",
+    "preview:pages": "vite preview --config vite.github.config.ts",
     "deploy": "npm run build && wrangler deploy",
     "start": "vinext start",
-    "lint": "eslint . --ignore-pattern dist --ignore-pattern .next"
+    "lint": "eslint . --ignore-pattern dist --ignore-pattern dist-pages --ignore-pattern .next"
   },
   "dependencies": {
     "next": "16.2.6",

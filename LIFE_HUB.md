@@ -1,6 +1,25 @@
 # Randy's Life Hub (frontier upgrade)
 
-Phase 1 scaffold on branch `life-hub-upgrade`. Worker name stays **`frontier-work-room`** so deploys keep replacing `https://frontier-work-room.randymcfarland1227.workers.dev`.
+Phase 1 scaffold on branch `life-hub-upgrade`.
+
+## Live URL
+
+**Primary:** [https://randymcfarland1227-wq.github.io/frontier/](https://randymcfarland1227-wq.github.io/frontier/)
+
+GitHub Pages deploys automatically on push/merge to `main` via `.github/workflows/deploy-pages.yml` (`npm run build:pages` → `dist-pages`).
+> **Note:** The Actions workflow lives at `.github/workflows/deploy-pages.yml` (canonical copy also in `docs/deploy-pages.yml`). Creating/updating files under `.github/workflows/` requires a GitHub token with the `workflow` scope. If the workflow file is missing on the remote, copy from `docs/deploy-pages.yml` or re-auth `gh` with `-s workflow`, then push.
+
+
+**Cloudflare Worker (optional / legacy):** worker name `frontier-work-room` still maps to `https://frontier-work-room.randymcfarland1227.workers.dev` if you run `npm run deploy` later. The hub UI does **not** require Cloudflare — connectors (Gmail / Outlook / TickTick / Sheets) stay stubs for now.
+
+### Local Pages build
+
+```bash
+npm run build:pages    # Vite SPA → dist-pages with base /frontier/
+npm run preview:pages  # preview the Pages build
+```
+
+Node **>= 22.13** (`engines` in package.json). Use `fnm use 22` if needed.
 
 ## Sources (11)
 
@@ -21,6 +40,11 @@ Phase 1 scaffold on branch `life-hub-upgrade`. Worker name stays **`frontier-wor
 ## postMessage protocol
 
 Window name: `randys-life-hub` (was `randys-work-room`).
+
+Parent origins that should allow (hub may load on either):
+
+- `https://randymcfarland1227-wq.github.io` (GitHub Pages primary)
+- `https://frontier-work-room.randymcfarland1227.workers.dev` (legacy Worker)
 
 ### Inbound — origin → hub
 
@@ -71,12 +95,13 @@ Origins that already speak snapshots (Role Hub / Resale) should add listeners fo
 
 ## Still needed (later passes)
 
-1. **Origin bridges** — update sell-hub, Role Hub script, income-venture-lab, move-os, site-repair-log to:
+1. **Origin bridges** — sell-hub, Role Hub script, income-venture-lab, move-os, site-repair-log should:
    - include `tasks[]` in snapshots
    - listen for `randys-workroom:complete` / `:star`
+   - allow both Pages and Worker parent origins (see above)
 2. **API secrets** — TickTick, Gmail, Outlook (Graph), Google Sheets (Radall Task list tab)
 3. **Candle** — replace placeholder when pre-launch site is ready
-4. **Deploy** — `npm run deploy` (wrangler) when credentials available; Node **>= 22.13** preferred (`engines` in package.json)
+4. **Optional Worker** — `npm run deploy` only if you still want the workers.dev mirror
 
 ## Layout
 
@@ -84,4 +109,6 @@ Origins that already speak snapshots (Role Hub / Resale) should add listeners fo
 - `lib/sources.ts` — 11 source definitions
 - `lib/adapters/*` — stubs + Self implementation
 - `app/components/*` — Header, cards, lists, Self inbox, bridges
-- `app/page.tsx` — orchestration, postMessage, complete/star fan-out
+- `app/life-hub.tsx` — orchestration, postMessage, complete/star fan-out (shared by Next + Vite Pages)
+- `app/page.tsx` — thin Next entry
+- `index.html` + `src/main.tsx` + `vite.github.config.ts` — GitHub Pages SPA entry (`base: /frontier/`)

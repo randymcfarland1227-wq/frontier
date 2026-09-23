@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://frontier-work-room.randymcfarland1227.workers.dev'),
+  metadataBase: new URL('https://randymcfarland1227-wq.github.io/frontier/'),
   title: "Randy's Life Hub",
   description: 'One Life Hub for routines, finances, mail, Role Hub, resale, ventures, Move OS, repair log, Self inbox, and more.',
   openGraph: {

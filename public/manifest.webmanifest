@@ -2,21 +2,21 @@
   "name": "Randy's Life Hub",
   "short_name": "Life Hub",
   "description": "One Life Hub for routines, finances, mail, Role Hub, resale, ventures, Move OS, repair log, and Self inbox.",
-  "id": "/",
-  "start_url": "/",
-  "scope": "/",
+  "id": "/frontier/",
+  "start_url": "/frontier/",
+  "scope": "/frontier/",
   "display": "standalone",
   "background_color": "#f6f7fa",
   "theme_color": "#5968e8",
   "icons": [
     {
-      "src": "/icon-192.png",
+      "src": "icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/icon-512.png",
+      "src": "icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
