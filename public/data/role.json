@@ -1,0 +1,13 @@
+{
+  "source": "role",
+  "metrics": {
+    "applied": 0,
+    "pipeline": 0,
+    "ready": 0,
+    "activeRecords": 0
+  },
+  "featured": [],
+  "tasks": [],
+  "refreshedAt": "2026-09-23T07:15:28.000Z",
+  "note": "Apps Script Role Hub cannot be iframed (X-Frame-Options). Open the Role Hub URL directly. When an export or JSON endpoint exists, agent sync can fill this file."
+}

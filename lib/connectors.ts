@@ -2,7 +2,7 @@ import type { SourceId, SourceSnapshot } from './types';
 import { normalizeSourceId } from './sources';
 
 /** Connector sources served as static JSON under public/data/ (GitHub Pages). */
-export const CONNECTOR_SOURCE_IDS = ['gmail', 'radall', 'outlook', 'ticktick'] as const;
+export const CONNECTOR_SOURCE_IDS = ['gmail', 'radall', 'outlook', 'ticktick', 'role'] as const;
 
 export type ConnectorSourceId = (typeof CONNECTOR_SOURCE_IDS)[number];
 

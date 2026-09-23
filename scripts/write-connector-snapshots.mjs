@@ -258,31 +258,28 @@ function mapRadallRaw(raw, refreshedAt) {
   };
 }
 
-const JOB_RE =
-  /\b(job|interview|application|opportunity|recruiter|hiring|linkedin|indeed|greenhouse|lever|workday|career)\b/i;
+
+/** Outlook category is Blue when the Graph `categories` array has a Blue-ish name. */
+function isBlueCategory(categories) {
+  const list = Array.isArray(categories) ? categories : [];
+  return list.some(c => {
+    const name = String(c || '').trim();
+    if (!name) return false;
+    if (/^blue(\s+category)?$/i.test(name)) return true;
+    if (/\bblue\b/i.test(name) && /categor/i.test(name)) return true;
+    return false;
+  });
+}
 
 function mapOutlookRaw(raw, refreshedAt) {
   const messages = Array.isArray(raw?.value) ? raw.value : Array.isArray(raw) ? raw : [];
-  const jobLike = messages.filter(m => {
-    const blob = [
-      m.subject,
-      m.bodyPreview,
-      m.from?.emailAddress?.name,
-      m.from?.emailAddress?.address,
-    ]
-      .filter(Boolean)
-      .join(' ');
-    return JOB_RE.test(blob);
-  });
-
-  // Prefer job-like; if Graph search/inbox yielded none matching, keep empty (no fabrication).
-  const pool = jobLike;
+  const pool = messages.filter(m => isBlueCategory(m.categories));
   const featured = [];
   const tasks = [];
   let unread = 0;
-  let followUp = 0;
+  let flagged = 0;
 
-  for (const m of pool.slice(0, 30)) {
+  for (const m of pool.slice(0, 40)) {
     const id = String(m.id);
     const subject = m.subject || '(no subject)';
     const from =
@@ -290,31 +287,30 @@ function mapOutlookRaw(raw, refreshedAt) {
     const preview = String(m.bodyPreview || '').replace(/\s+/g, ' ').slice(0, 180);
     const originUrl = m.webLink || undefined;
     const isUnread = m.isRead === false;
-    const flagged = m.flag?.flagStatus === 'flagged';
+    const isFlagged = m.flag?.flagStatus === 'flagged';
+    const cats = (Array.isArray(m.categories) ? m.categories : []).join(', ');
     if (isUnread) unread += 1;
-    if (isUnread || flagged) followUp += 1;
+    if (isFlagged) flagged += 1;
 
-    if (isUnread || flagged || featured.length < 8) {
-      featured.push({
-        id,
-        title: subject,
-        detail: preview,
-        meta: `${from}${isUnread ? ' · unread' : ''}${flagged ? ' · flagged' : ''}`,
-        originUrl,
-        completable: false,
-      });
-    }
+    featured.push({
+      id,
+      title: subject,
+      detail: preview,
+      meta: `${from} · Blue${isUnread ? ' · unread' : ''}${isFlagged ? ' · flagged' : ''}${cats ? ` · ${cats}` : ''}`,
+      originUrl,
+      completable: false,
+    });
     tasks.push({
       id,
       title: subject,
       detail: preview,
       status: 'open',
-      starred: flagged,
+      starred: isFlagged || isUnread,
       originUrl,
+      kind: 'mail',
     });
   }
 
-  // Dedupe featured by id, prefer unread/flagged first
   const seen = new Set();
   const featuredUnique = [];
   for (const f of featured) {
@@ -326,9 +322,9 @@ function mapOutlookRaw(raw, refreshedAt) {
   return {
     source: 'outlook',
     metrics: {
-      inquiries: pool.length,
+      blue: pool.length,
       unread,
-      followUp,
+      flagged,
     },
     featured: featuredUnique.slice(0, 10),
     tasks,
@@ -339,7 +335,7 @@ function mapOutlookRaw(raw, refreshedAt) {
 function emptyTickTick(refreshedAt) {
   return {
     source: 'ticktick',
-    metrics: { open: 0, habits: 0, overdue: 0 },
+    metrics: { dueToday: 0, overdue: 0, habits: 0 },
     featured: [
       {
         id: 'ticktick-token-pending',
@@ -350,6 +346,147 @@ function emptyTickTick(refreshedAt) {
       },
     ],
     tasks: [],
+    refreshedAt,
+  };
+}
+
+/** Local calendar date YYYY-MM-DD in America/New_York for TickTick due filtering. */
+function nyDateString(isoLike) {
+  if (!isoLike) return null;
+  const d = new Date(isoLike);
+  if (Number.isNaN(d.getTime())) {
+    const m = String(isoLike).match(/(\d{4}-\d{2}-\d{2})/);
+    return m ? m[1] : null;
+  }
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'America/New_York',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).format(d);
+}
+
+function todayNy() {
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'America/New_York',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).format(new Date());
+}
+
+function mapTickTickRaw(raw, refreshedAt) {
+  const today = raw.localToday || todayNy();
+  const projects = Array.isArray(raw.projects) ? raw.projects : [];
+  const projectName = Object.fromEntries(
+    projects.map(p => [p.id, p.name || p.id]),
+  );
+  const allTasks = Array.isArray(raw.tasks) ? raw.tasks : [];
+  const habits = Array.isArray(raw.habits) ? raw.habits : [];
+
+  // Open TickTick tasks: status 0 = open. Today view = due today OR overdue.
+  const openTasks = allTasks.filter(t => t.status === 0 || t.status === '0' || t.status == null);
+  const dueToday = [];
+  const overdue = [];
+  for (const t of openTasks) {
+    const due = nyDateString(t.dueDate || t.startDate);
+    if (!due) continue;
+    if (due === today) dueToday.push(t);
+    else if (due < today) overdue.push(t);
+  }
+
+  // Include every habit returned by Open API (status 0). TickTick still lists
+  // archived rows in /habit; Life Hub shows them with a Habit badge so the count
+  // matches the user's TickTick habit list (was dropping archivedTime rows).
+  const activeHabits = habits.filter(h => h.status === 0 || h.status === '0' || h.status == null || h.status === 1);
+
+  const tasks = [];
+  const featured = [];
+
+  const pushTask = (t, bucket) => {
+    const id = String(t.id);
+    const title = t.title || '(untitled)';
+    const detail = String(t.content || t.desc || '').replace(/\s+/g, ' ').trim().slice(0, 180);
+    const project = projectName[t.projectId || t._projectId] || t._projectName || '';
+    const due = nyDateString(t.dueDate || t.startDate) || undefined;
+    const originUrl = t.projectId || t._projectId
+      ? `https://ticktick.com/webapp/#p/${t.projectId || t._projectId}/tasks/${id}`
+      : 'https://ticktick.com';
+    const meta = `${bucket}${project ? ` · ${project}` : ''}`;
+    const item = {
+      id,
+      title,
+      detail: detail || project || undefined,
+      status: 'open',
+      due,
+      starred: Boolean(t.priority && Number(t.priority) >= 3),
+      originUrl,
+      kind: 'task',
+    };
+    tasks.push(item);
+    if (item.starred || featured.length < 8) {
+      featured.push({
+        id,
+        title,
+        detail: detail || project || '',
+        meta,
+        originUrl,
+        completable: false,
+      });
+    }
+  };
+
+  // Overdue first, then due today
+  for (const t of overdue) pushTask(t, 'Overdue');
+  for (const t of dueToday) pushTask(t, 'Due today');
+
+  for (const h of activeHabits) {
+    const id = `habit-${h.id}`;
+    const title = h.name || h.title || 'Habit';
+    const streak = h.totalCheckIns != null ? `Check-ins: ${h.totalCheckIns}` : 'Habit';
+    const originUrl = 'https://ticktick.com/webapp/#q/all/habit';
+    const item = {
+      id,
+      title,
+      detail: streak,
+      status: 'open',
+      starred: false,
+      originUrl,
+      kind: 'habit',
+    };
+    tasks.push(item);
+    featured.push({
+      id,
+      title,
+      detail: streak,
+      meta: 'Habit',
+      originUrl,
+      completable: false,
+    });
+  }
+
+  // Prefer overdue/due featured, then habits (cap 12)
+  const featuredSorted = [
+    ...featured.filter(f => !String(f.id).startsWith('habit-')),
+    ...featured.filter(f => String(f.id).startsWith('habit-')),
+  ];
+  const seen = new Set();
+  const featuredUnique = [];
+  for (const f of featuredSorted) {
+    if (seen.has(f.id)) continue;
+    seen.add(f.id);
+    featuredUnique.push(f);
+  }
+
+  return {
+    source: 'ticktick',
+    metrics: {
+      dueToday: dueToday.length,
+      overdue: overdue.length,
+      habits: activeHabits.length,
+    },
+    featured: featuredUnique.slice(0, 12),
+    tasks,
     refreshedAt,
   };
 }
@@ -477,7 +614,7 @@ async function main() {
     if (id === 'gmail') snap = mapGmailRaw(data, refreshedAt);
     else if (id === 'radall') snap = mapRadallRaw(data, refreshedAt);
     else if (id === 'outlook') snap = mapOutlookRaw(data, refreshedAt);
-    else if (id === 'ticktick') snap = emptyTickTick(refreshedAt);
+    else if (id === 'ticktick') snap = mapTickTickRaw(data, refreshedAt);
     writeSnapshot(validateSnapshot(snap, id));
     written.push(id);
   }

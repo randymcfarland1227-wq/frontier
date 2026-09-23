@@ -35,6 +35,8 @@ export type TaskItem = {
   due?: string;
   starred?: boolean;
   originUrl?: string;
+  /** Optional badge: habit vs task vs mail */
+  kind?: 'habit' | 'task' | 'mail' | string;
 };
 
 export type SourceSnapshot = {

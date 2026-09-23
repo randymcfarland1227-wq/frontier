@@ -31,6 +31,16 @@ import { HomeView } from './components/HomeView';
 import { SourceView } from './components/SourceView';
 import { FocusDrawer } from './components/FocusDrawer';
 import { SourceBridges } from './components/SourceBridges';
+import {
+  loadLedger,
+  recordCompletion,
+  computeStats,
+  sourceShares,
+  diffSnapshotCompletions,
+  emptyStats,
+  type CompletionLedger,
+  type CompletionStats,
+} from '../lib/completions';
 
 const starterFocus: FocusItem[] = [
   { id: 1, text: 'Move one strong application forward', space: 'role', done: false },
@@ -91,6 +101,10 @@ export function LifeHub() {
   const [selfItems, setSelfItems] = useState<SelfItem[]>([]);
   const [ready, setReady] = useState(false);
   const [connectorSyncing, setConnectorSyncing] = useState(false);
+  const [theme, setTheme] = useState<'light' | 'dark'>('dark');
+  const [ledger, setLedger] = useState<CompletionLedger>({ entries: {} });
+  const [completionStats, setCompletionStats] = useState<CompletionStats>(emptyStats());
+  const snapshotsRef = useRef(snapshots);
   const frameRefs = useRef<Partial<Record<SourceId, HTMLIFrameElement | null>>>({});
   const sourceWindows = useRef<Partial<Record<SourceId, Window>>>({});
 
@@ -103,7 +117,16 @@ export function LifeHub() {
     setConnectorSyncing(true);
     try {
       const incoming = await fetchConnectorSnapshots();
-      setSnapshots(current => mergeConnectorSnapshots(current, incoming));
+      setSnapshots(current => {
+        let nextLedger = loadLedger();
+        for (const id of CONNECTOR_SOURCE_IDS) {
+          const snap = incoming[id];
+          if (!snap) continue;
+          nextLedger = diffSnapshotCompletions(id, current[id], snap, nextLedger);
+        }
+        setLedger(nextLedger);
+        return mergeConnectorSnapshots(current, incoming);
+      });
     } finally {
       setConnectorSyncing(false);
     }
@@ -122,6 +145,10 @@ export function LifeHub() {
     snaps.self = selfSnapshotFrom(self);
     setSelfItems(self);
     setSnapshots(snaps);
+    setLedger(loadLedger());
+    const savedTheme = readSaved<'light' | 'dark'>(STORAGE_KEYS.theme, 'dark');
+    setTheme(savedTheme);
+    document.documentElement.dataset.theme = savedTheme;
     setReady(true);
   }, []);
 
@@ -135,8 +162,22 @@ export function LifeHub() {
   }, [focus, ready]);
 
   useEffect(() => {
+    snapshotsRef.current = snapshots;
+  }, [snapshots]);
+
+  useEffect(() => {
     if (ready) writeSaved(STORAGE_KEYS.snapshots, snapshots);
   }, [snapshots, ready]);
+
+  useEffect(() => {
+    if (!ready) return;
+    setCompletionStats(computeStats(ledger, snapshots));
+  }, [ledger, snapshots, ready]);
+
+  useEffect(() => {
+    document.documentElement.dataset.theme = theme;
+    if (ready) writeSaved(STORAGE_KEYS.theme, theme);
+  }, [theme, ready]);
 
   useEffect(() => {
     const saveSnapshot = (payload: SourceSnapshot, preserveFeatured = false) => {
@@ -144,19 +185,30 @@ export function LifeHub() {
       if (!id || id === 'self') return;
       // Do not let postMessage wipe connector JSON sources.
       if (isConnectorSource(id)) return;
-      setSnapshots(current => ({
-        ...current,
-        [id]: {
+      setSnapshots(current => {
+        const nextSnap = {
           source: id,
           metrics: payload.metrics || {},
           featured: preserveFeatured ? current[id].featured : payload.featured || [],
           tasks: payload.tasks || current[id].tasks || [],
           refreshedAt: payload.refreshedAt || new Date().toISOString(),
-        },
-      }));
+        };
+        const nextLedger = diffSnapshotCompletions(id, current[id], nextSnap, loadLedger());
+        setLedger(nextLedger);
+        return { ...current, [id]: nextSnap };
+      });
     };
 
     const receive = (event: MessageEvent) => {
+      if (event.data?.type === 'randys-workroom:complete') {
+        const payload = event.data.payload || {};
+        const id = normalizeSourceId(String(payload.source || ''));
+        const taskId = String(payload.id || '');
+        if (id && taskId) {
+          setLedger(recordCompletion(id, taskId, { via: 'origin-snapshot', title: payload.title }));
+        }
+        return;
+      }
       if (event.data?.type !== 'randys-workroom:snapshot') return;
       const payload = event.data.payload as SourceSnapshot;
       if (!payload) return;
@@ -258,10 +310,15 @@ export function LifeHub() {
   };
 
   const completeOnHub = (source: SourceId, id: string) => {
+    const title =
+      snapshotsRef.current[source]?.tasks?.find(t => t.id === id)?.title ||
+      snapshotsRef.current[source]?.featured?.find(f => f.id === id)?.title;
     if (source === 'self') {
+      setLedger(recordCompletion('self', id, { via: 'self', title }));
       syncSelf(toggleSelfComplete(id));
       return;
     }
+    setLedger(recordCompletion(source, id, { via: 'hub', title }));
     // Connector cards: open origin URL until two-way API complete exists.
     if (isConnectorSource(source)) {
       const snap = snapshots[source];
@@ -329,7 +386,7 @@ export function LifeHub() {
   };
 
   return (
-    <main className={`frontier-shell theme-${active === 'home' ? 'home' : active}`}>
+    <main className={`frontier-shell theme-${active === 'home' ? 'home' : active}`} data-color-mode={theme}>
       <Header
         active={active}
         enter={enter}
@@ -337,9 +394,17 @@ export function LifeHub() {
         openFocus={() => setFocusOpen(true)}
         onRefreshConnectors={() => void loadConnectors()}
         connectorSyncing={connectorSyncing}
+        theme={theme}
+        onToggleTheme={() => setTheme(t => (t === 'dark' ? 'light' : 'dark'))}
       />
       {active === 'home' ? (
-        <HomeView enter={enter} snapshots={snapshots} openSource={openSource} />
+        <HomeView
+          enter={enter}
+          snapshots={snapshots}
+          openSource={openSource}
+          completionStats={completionStats}
+          completionShares={sourceShares(completionStats)}
+        />
       ) : (
         <SourceView
           sourceId={active}

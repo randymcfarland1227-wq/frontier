@@ -10,6 +10,8 @@ export function Header({
   openFocus,
   onRefreshConnectors,
   connectorSyncing,
+  theme,
+  onToggleTheme,
 }: {
   active: SpaceId;
   enter: (id: SpaceId) => void;
@@ -17,9 +19,11 @@ export function Header({
   openFocus: () => void;
   onRefreshConnectors?: () => void;
   connectorSyncing?: boolean;
+  theme: 'light' | 'dark';
+  onToggleTheme: () => void;
 }) {
   return (
-    <header className="topbar">
+    <header className="topbar glass-panel">
       <button className="wordmark" onClick={() => enter('home')} aria-label="Randy's Life Hub home">
         <span className="wordmark-mark">R</span>
         <span>RANDY&apos;S LIFE HUB</span>
@@ -37,6 +41,15 @@ export function Header({
         ))}
       </nav>
       <div className="topbar-actions">
+        <button
+          className="mode-button ghost"
+          type="button"
+          onClick={onToggleTheme}
+          title="Toggle dark mode"
+          aria-label="Toggle dark mode"
+        >
+          {theme === 'dark' ? 'Light' : 'Dark'}
+        </button>
         {onRefreshConnectors ? (
           <button
             className="mode-button ghost"

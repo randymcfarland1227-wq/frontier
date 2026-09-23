@@ -1,29 +1,11 @@
 {
   "source": "outlook",
   "metrics": {
-    "inquiries": 1,
+    "blue": 0,
     "unread": 0,
-    "followUp": 0
+    "flagged": 0
   },
-  "featured": [
-    {
-      "id": "AQMkADAwATMwMAExLWI3MzQtNjkzZS0wMAItMDAKAEYAAANjd0LXP1iBQISCE8k2oxMEBwC_VKaPUfYqTax790JjjIcVAAACAQwAAAC_VKaPUfYqTax790JjjIcVAAACBVcAAAA=",
-      "title": "Verify your email address",
-      "detail": "Verify your email address",
-      "meta": "LinkedIn",
-      "originUrl": "https://outlook.live.com/owa/?ItemID=AQMkADAwATMwMAExLWI3MzQtNjkzZS0wMAItMDAKAEYAAANjd0LXP1iBQISCE8k2oxMEBwC%2BVKaPUfYqTax790JjjIcVAAACAQwAAAC%2BVKaPUfYqTax790JjjIcVAAACBVcAAAA%3D&exvsurl=1&viewmodel=ReadMessageItem",
-      "completable": false
-    }
-  ],
-  "tasks": [
-    {
-      "id": "AQMkADAwATMwMAExLWI3MzQtNjkzZS0wMAItMDAKAEYAAANjd0LXP1iBQISCE8k2oxMEBwC_VKaPUfYqTax790JjjIcVAAACAQwAAAC_VKaPUfYqTax790JjjIcVAAACBVcAAAA=",
-      "title": "Verify your email address",
-      "detail": "Verify your email address",
-      "status": "open",
-      "starred": false,
-      "originUrl": "https://outlook.live.com/owa/?ItemID=AQMkADAwATMwMAExLWI3MzQtNjkzZS0wMAItMDAKAEYAAANjd0LXP1iBQISCE8k2oxMEBwC%2BVKaPUfYqTax790JjjIcVAAACAQwAAAC%2BVKaPUfYqTax790JjjIcVAAACBVcAAAA%3D&exvsurl=1&viewmodel=ReadMessageItem"
-    }
-  ],
-  "refreshedAt": "2026-09-23T06:32:49.326Z"
+  "featured": [],
+  "tasks": [],
+  "refreshedAt": "2026-09-23T07:11:34.931Z"
 }

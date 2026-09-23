@@ -138,3 +138,26 @@ For now, Done / star on connector items **opens the origin URL** (`originUrl` or
 - `app/life-hub.tsx` — orchestration, postMessage, complete/star fan-out (shared by Next + Vite Pages)
 - `app/page.tsx` — thin Next entry
 - `index.html` + `src/main.tsx` + `vite.github.config.ts` — GitHub Pages SPA entry (`base: /frontier/`)
+
+
+## 2026-09-23 hub upgrade notes
+
+### Connectors
+- **TickTick**: today view only — due today + overdue tasks, plus all habits (habit badge in UI). Metrics: `dueToday`, `overdue`, `habits`.
+- **Outlook**: Blue category only (Graph `categories` matching Blue / Blue category). No job-inquiry keyword heuristic. Metrics: `blue`, `unread`, `flagged`.
+- **Role Hub**: Apps Script sets `X-Frame-Options` / CSP `frame-ancestors`, so iframe + postMessage bridge cannot work from Life Hub. Card is open-link + optional `public/data/role.json` connector snapshot (honest empty until an export exists). Legacy postMessage id `search` still maps to `role`.
+
+### Origin metric labels
+- **Peculiar Candle**: `openStudioTasks`, `acceptedVessels`, `skusDefined` (pre-launch).
+- **Move OS**: `openTasks`, `completedTasks`, `pinnedFocus` (replacing unclear sessions/streak/planned).
+
+### UI
+- Self full-width band; rows: TickTick/Gmail/Outlook/Repair · Radall/Role/Move · Income/Resale/Candle.
+- Priority board (starred/featured + local pin order) and Review panel (completion stats + share bars).
+- Dark mode toggle (persisted). Glass / iridescent accents.
+- Task boards with habit chips, show-more, 2-column layout.
+
+### Completion ledger
+- `localStorage` key `lifehub-completions`: map of `source::taskId` → `{ completedAt, via, title }`.
+- Counts hub Done, Self complete, inbound `randys-workroom:complete`, and snapshot diffs (task gone or status→done) for iframe + connector refreshes.
+- Deduped by source+taskId (keeps earliest). TickTick Open API does not expose “completed today” without extra calls — connector diffs only see tasks dropping out of the today/overdue/habits snapshot.
