@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type {
   FeaturedItem,
   FocusItem,
@@ -45,8 +45,10 @@ import {
   diffSnapshotCompletions,
   emptyStats,
   type CompletionLedger,
+  saveLedger,
   type CompletionStats,
 } from '../lib/completions';
+import { backfillFocusAreas, loadFocusAreas, type FocusAreaConfig } from '../lib/focusAreas';
 
 const starterFocus: FocusItem[] = [
   { id: 1, text: 'Move one strong application forward', space: 'role', done: false },
@@ -110,6 +112,7 @@ export function LifeHub() {
   const [theme, setTheme] = useState<'light' | 'dark'>('dark');
   const [ledger, setLedger] = useState<CompletionLedger>({ entries: {} });
   const [completionStats, setCompletionStats] = useState<CompletionStats>(emptyStats());
+  const [focusConfig, setFocusConfig] = useState<FocusAreaConfig | null>(null);
   const snapshotsRef = useRef(snapshots);
   const frameRefs = useRef<Partial<Record<SourceId, HTMLIFrameElement | null>>>({});
   const sourceWindows = useRef<Partial<Record<SourceId, Window>>>({});
@@ -161,7 +164,21 @@ export function LifeHub() {
   useEffect(() => {
     if (!ready) return;
     void loadConnectors();
+    void loadFocusAreas().then(config => {
+      if (config) setFocusConfig(config);
+    });
   }, [ready, loadConnectors]);
+
+  // Tag untagged history once areas are known; re-runs as snapshots arrive with project/kind info.
+  const taggedLedger = useMemo(() => {
+    if (!focusConfig) return ledger;
+    const copy: CompletionLedger = structuredClone(ledger);
+    return backfillFocusAreas(copy, focusConfig, snapshots) ? copy : ledger;
+  }, [ledger, focusConfig, snapshots]);
+
+  useEffect(() => {
+    if (taggedLedger !== ledger) saveLedger(taggedLedger);
+  }, [taggedLedger, ledger]);
 
   useEffect(() => {
     if (ready) writeSaved(STORAGE_KEYS.focus, focus);
@@ -211,7 +228,10 @@ export function LifeHub() {
         const id = normalizeSourceId(String(payload.source || ''));
         const taskId = String(payload.id || '');
         if (id && taskId) {
-          setLedger(recordCompletion(id, taskId, { via: 'origin-snapshot', title: payload.title }));
+          const task = snapshotsRef.current[id]?.tasks?.find(t => t.id === taskId);
+          setLedger(
+            recordCompletion(id, taskId, { via: 'origin-snapshot', title: payload.title || task?.title, task }),
+          );
         }
         return;
       }
@@ -321,12 +341,12 @@ export function LifeHub() {
     const featuredNow = snapNow?.featured?.find(f => f.id === id);
     const title = taskNow?.title || featuredNow?.title;
     if (source === 'self') {
-      setLedger(recordCompletion('self', id, { via: 'self', title }));
+      setLedger(recordCompletion('self', id, { via: 'self', title, task: taskNow }));
       syncSelf(toggleSelfComplete(id));
       return;
     }
 
-    setLedger(recordCompletion(source, id, { via: 'hub', title }));
+    setLedger(recordCompletion(source, id, { via: 'hub', title, task: taskNow }));
 
     const def = sourceById[source];
     const isIframe = def.bridge === 'iframe';
@@ -438,6 +458,8 @@ export function LifeHub() {
           onStarTask={(source, task) => starOnHub(source, task)}
           completionStats={completionStats}
           completionShares={sourceShares(completionStats)}
+          ledger={taggedLedger}
+          focusConfig={focusConfig}
         />
       ) : (
         <SourceView

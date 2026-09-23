@@ -604,3 +604,24 @@ a.origin-link:hover strong {
   -webkit-line-clamp: 3;
   overflow: hidden;
 }
+
+/* === Balance strip (focus areas) === */
+.balance-strip { margin: 4px 0 16px; padding-bottom: 14px; border-bottom: 1px solid var(--line); }
+.balance-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; }
+.balance-note { color: var(--muted); font-style: italic; }
+.balance-windows { display: inline-flex; gap: 2px; padding: 2px; border: 1px solid var(--line); border-radius: 999px; background: var(--surface-2); }
+.balance-windows button { border: 0; background: transparent; color: var(--muted); font: inherit; font-size: 10px; font-weight: 650; padding: 4px 10px; border-radius: 999px; cursor: pointer; }
+.balance-windows button.active { background: var(--surface); color: var(--ink); box-shadow: 0 1px 3px rgba(0,0,0,.12); }
+.balance-track { position: relative; overflow: visible; }
+.balance-track .review-bar-fill { position: absolute; inset: 0 auto 0 0; }
+.balance-marker { position: absolute; top: -3px; bottom: -3px; width: 2px; margin-left: -1px; border-radius: 1px; background: var(--ink); opacity: .7; }
+.balance-target { font-weight: 500; }
+.balance-status { margin-left: 4px; font-weight: 650; }
+.balance-row.is-healthy .balance-status { color: #0f9f6e; }
+.balance-row.is-starved .balance-status { color: #c2410c; }
+.balance-row.is-overloaded .balance-status { color: #7c5cdb; }
+[data-theme="dark"] .balance-row.is-healthy .balance-status { color: #34d399; }
+[data-theme="dark"] .balance-row.is-starved .balance-status { color: #fb923c; }
+[data-theme="dark"] .balance-row.is-overloaded .balance-status { color: #a78bfa; }
+.balance-legend { margin-top: 10px; font-size: 10px; }
+.review-sources-label { margin-top: 2px; }

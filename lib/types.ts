@@ -39,6 +39,8 @@ export type TaskItem = {
   kind?: 'habit' | 'task' | 'mail' | string;
   /** TickTick project id (needed for Open API complete) */
   projectId?: string;
+  /** Origin tags (e.g. TickTick) — used by focus-area rules */
+  tags?: string[];
 };
 
 export type SourceSnapshot = {

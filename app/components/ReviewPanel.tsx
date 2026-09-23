@@ -1,13 +1,19 @@
 'use client';
 
-import type { CompletionStats, SourceShare } from '../../lib/completions';
+import type { CompletionLedger, CompletionStats, SourceShare } from '../../lib/completions';
+import type { FocusAreaConfig } from '../../lib/focusAreas';
+import { BalanceStrip } from './BalanceStrip';
 
 export function ReviewPanel({
   stats,
   shares,
+  ledger,
+  focusConfig,
 }: {
   stats: CompletionStats;
   shares: SourceShare[];
+  ledger: CompletionLedger;
+  focusConfig: FocusAreaConfig | null;
 }) {
   const max = Math.max(1, ...shares.map(s => s.count));
   return (
@@ -41,6 +47,8 @@ export function ReviewPanel({
           <span>All time</span>
         </article>
       </div>
+      {focusConfig ? <BalanceStrip ledger={ledger} config={focusConfig} /> : null}
+      <p className="section-label review-sources-label">By source</p>
       <div className="review-bars">
         {shares.length === 0 ? (
           <p className="review-empty">

@@ -1,0 +1,225 @@
+{
+  "version": 1,
+  "note": "Weights confirmed-ish 2026-09-23: Marvel own area; site repairs excluded from Balance (excludeSources). Weights sum to 1; benchmark defaults to weight. Most specific rule wins (projectIds/tags > titleIncludes > kinds > whole source); ties go to the area listed first. TickTick projects: Medical 69dd6ff6…, Life Planning 69dd701e…, Marvel 69dd705c…, Next Step Actions 69dd70fc…, Creativity 69def09b…, Maintenance Organization 69eef620…, Grounding 69f65a37….",
+  "areas": [
+    {
+      "id": "self",
+      "name": "Self",
+      "weight": 0.15,
+      "sourceMap": [
+        {
+          "source": "self"
+        },
+        {
+          "source": "ticktick",
+          "match": {
+            "projectIds": [
+              "69dd701e1ca911a95e9a97c7",
+              "69def09b442591a95e9af9db",
+              "69f65a3753619118d36dd220"
+            ]
+          }
+        },
+        {
+          "source": "ticktick",
+          "match": {
+            "kinds": [
+              "habit"
+            ],
+            "titleIncludes": [
+              "healthy mind",
+              "journal",
+              "read",
+              "smile",
+              "vocal",
+              "creative",
+              "rest"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "money",
+      "name": "Money",
+      "weight": 0.2,
+      "sourceMap": [
+        {
+          "source": "radall"
+        },
+        {
+          "source": "resale"
+        },
+        {
+          "source": "ticktick",
+          "match": {
+            "titleIncludes": [
+              "bill",
+              "budget",
+              "pay"
+            ]
+          }
+        },
+        {
+          "source": "ticktick",
+          "match": {
+            "projectIds": [
+              "69dd701e1ca911a95e9a97c7"
+            ],
+            "titleIncludes": [
+              "financ",
+              "budget",
+              "bill"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "body",
+      "name": "Body",
+      "weight": 0.15,
+      "sourceMap": [
+        {
+          "source": "move"
+        },
+        {
+          "source": "ticktick",
+          "match": {
+            "projectIds": [
+              "69dd6ff6d3e8d1a95e9a96ca"
+            ]
+          }
+        },
+        {
+          "source": "ticktick",
+          "match": {
+            "kinds": [
+              "habit"
+            ]
+          }
+        },
+        {
+          "source": "ticktick",
+          "match": {
+            "projectIds": [
+              "69eef620b4b19119328b4dff"
+            ],
+            "titleIncludes": [
+              "foot care",
+              "nail",
+              "moisturiz"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "work",
+      "name": "Work",
+      "weight": 0.2,
+      "sourceMap": [
+        {
+          "source": "role"
+        },
+        {
+          "source": "gmail"
+        },
+        {
+          "source": "outlook"
+        },
+        {
+          "source": "ticktick",
+          "match": {
+            "projectIds": [
+              "69dd70fc2cf911a95e9a9def"
+            ]
+          }
+        },
+        {
+          "source": "ticktick",
+          "match": {
+            "projectIds": [
+              "69dd701e1ca911a95e9a97c7"
+            ],
+            "titleIncludes": [
+              "work & income",
+              "job"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "venture",
+      "name": "Venture",
+      "weight": 0.15,
+      "sourceMap": [
+        {
+          "source": "candle"
+        },
+        {
+          "source": "income"
+        }
+      ]
+    },
+    {
+      "id": "marvel",
+      "name": "Marvel",
+      "weight": 0.1,
+      "sourceMap": [
+        {
+          "source": "ticktick",
+          "match": {
+            "projectIds": [
+              "69dd705c1bd491a95e9a99ca"
+            ]
+          }
+        },
+        {
+          "source": "ticktick",
+          "match": {
+            "kinds": [
+              "habit"
+            ],
+            "titleIncludes": [
+              "marvel"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "home",
+      "name": "Home",
+      "weight": 0.05,
+      "sourceMap": [
+        {
+          "source": "ticktick",
+          "match": {
+            "projectIds": [
+              "69eef620b4b19119328b4dff"
+            ]
+          }
+        },
+        {
+          "source": "ticktick",
+          "match": {
+            "kinds": [
+              "habit"
+            ],
+            "titleIncludes": [
+              "vacuum",
+              "clean",
+              "kitchen",
+              "wipe"
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "excludeSources": [
+    "repair"
+  ]
+}

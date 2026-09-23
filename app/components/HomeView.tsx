@@ -3,7 +3,8 @@
 import type { FeaturedItem, SourceId, SourceSnapshot, SpaceId, TaskItem } from '../../lib/types';
 import { sourceById } from '../../lib/sources';
 import { updatedLabel } from '../../lib/protocol';
-import type { CompletionStats, SourceShare } from '../../lib/completions';
+import type { CompletionLedger, CompletionStats, SourceShare } from '../../lib/completions';
+import type { FocusAreaConfig } from '../../lib/focusAreas';
 import { SourceCard } from './SourceCard';
 import { PriorityBoard } from './PriorityBoard';
 import { ReviewPanel } from './ReviewPanel';
@@ -66,6 +67,8 @@ export function HomeView({
   onStarTask,
   completionStats,
   completionShares,
+  ledger,
+  focusConfig,
 }: {
   snapshots: Record<SourceId, SourceSnapshot>;
   enter: (id: SpaceId) => void;
@@ -75,6 +78,8 @@ export function HomeView({
   onStarTask: (source: SourceId, task: TaskItem) => void;
   completionStats: CompletionStats;
   completionShares: SourceShare[];
+  ledger: CompletionLedger;
+  focusConfig: FocusAreaConfig | null;
 }) {
   const latest =
     Object.values(snapshots)
@@ -113,7 +118,7 @@ export function HomeView({
           enter={id => enter(id)}
           onComplete={(source, item) => onCompleteFeatured(source, item)}
         />
-        <ReviewPanel stats={completionStats} shares={completionShares} />
+        <ReviewPanel stats={completionStats} shares={completionShares} ledger={ledger} focusConfig={focusConfig} />
       </div>
 
       <SourceRow
