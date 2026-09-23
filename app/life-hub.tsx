@@ -114,6 +114,49 @@ function mergeConnectorSnapshots(
   return next;
 }
 
+function localDay(iso: string) {
+  const d = new Date(iso);
+  return `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`;
+}
+
+/**
+ * Connector snapshots are written once each morning, so an item marked Done on the hub is still
+ * in the file until the next sync. Hide anything the ledger already has as done so it stays gone
+ * after a refresh. TickTick ids repeat (recurring tasks, habits), so only today's Done hides them.
+ */
+function hideLedgerDone(
+  snapshots: Record<SourceId, SourceSnapshot>,
+  ledger: CompletionLedger,
+): Record<SourceId, SourceSnapshot> {
+  const today = localDay(new Date().toISOString());
+  const done = new Set<string>();
+  for (const e of Object.values(ledger.entries)) {
+    if (e.source === 'ticktick' && localDay(e.completedAt) !== today) continue;
+    done.add(`${e.source}::${e.taskId}`);
+  }
+  let next = snapshots;
+  for (const id of CONNECTOR_SOURCE_IDS) {
+    let snap = next[id];
+    if (!snap) continue;
+    const isDone = (itemId: string) => done.has(`${id}::${itemId}`);
+    const hide = new Set([
+      ...snap.tasks.filter(t => t.status !== 'done' && isDone(t.id)).map(t => t.id),
+      ...snap.featured.filter(f => isDone(f.id) && !snap!.tasks.some(t => t.id === f.id && t.status === 'done')).map(f => f.id),
+    ]);
+    if (!hide.size) continue;
+    let metrics = snap.metrics;
+    for (const itemId of hide) metrics = metricsAfterLocalComplete(id, { ...snap, metrics }, itemId);
+    snap = {
+      ...snap,
+      metrics,
+      tasks: snap.tasks.filter(t => !hide.has(t.id)),
+      featured: snap.featured.filter(f => !hide.has(f.id)),
+    };
+    next = { ...next, [id]: snap };
+  }
+  return next;
+}
+
 export function LifeHub() {
   const [active, setActive] = useState<SpaceId>('home');
   const [focusOpen, setFocusOpen] = useState(false);
@@ -152,7 +195,7 @@ export function LifeHub() {
           nextLedger = diffSnapshotCompletions(id, current[id], snap, nextLedger);
         }
         setLedger(nextLedger);
-        return mergeConnectorSnapshots(current, incoming);
+        return hideLedgerDone(mergeConnectorSnapshots(current, incoming), nextLedger);
       });
     } finally {
       setConnectorSyncing(false);
@@ -216,7 +259,9 @@ export function LifeHub() {
   }, [seedLinks]);
   useEffect(() => {
     const reload = () => {
-      setLedger(loadLedger());
+      const synced = loadLedger();
+      setLedger(synced);
+      setSnapshots(current => hideLedgerDone(current, synced));
       setCaptures(loadCaptures());
       syncSelf(loadSelfItems());
       setGoalLinks(mergeLinks(seedLinksRef.current));
