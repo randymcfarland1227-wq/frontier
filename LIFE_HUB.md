@@ -225,3 +225,7 @@ Star on connector items still opens the origin URL until two-way API star exists
 - Worker `GET /api/ticktick/done?from&to&start&end` → TickTick Open API `POST /task/completed` + `GET /habit` + `GET /habit/checkins`; `POST /api/ticktick/habit-checkin` → `POST /habit/{id}/checkin` (value = habit goal). Both require the backup key (`X-Sync-Key`) once the backup is claimed.
 - `lib/ticktickDone.ts` pulls it on load / tab focus / every 10 min. TickTick ledger keys are per day (`ticktick::<id>::YYYY-MM-DD`) with a same-day guard against older undated keys.
 - Targets: 15% each except Marvel 10%.
+
+### Done stays done after refresh (2026-09-23)
+
+- Connector snapshots (`gmail`/`outlook`/`radall`/`role`/`ticktick` JSON) are written once each morning, so reloading used to bring back items already marked Done on the hub. `hideLedgerDone` (`app/life-hub.tsx`) now hides any open connector item the ledger has as done — after every connector load and after a cloud-backup sync (so Done on one device hides it on the others). TickTick only hides items done *today*, since recurring tasks and habits reuse ids.
