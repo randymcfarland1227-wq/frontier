@@ -478,10 +478,10 @@ a.origin-link:hover strong {
 
 .source-row {
   max-width: 1440px;
-  margin: 0 auto 18px;
+  margin: 0 auto 10px;
   padding: 0 max(24px,4vw);
 }
-.space-grid { display: grid; gap: 14px; }
+.space-grid { display: grid; gap: 10px; }
 .space-grid-3 { grid-template-columns: repeat(3,1fr); }
 .space-grid-4 { grid-template-columns: repeat(4,1fr); }
 .space-grid-self { grid-template-columns: 1fr; }
@@ -783,3 +783,20 @@ a.origin-link:hover strong {
 .capture-kind.kind-task { background: color-mix(in srgb, #0f9f6e 18%, transparent); color: #0f9f6e; }
 [data-theme="dark"] .capture-kind.kind-task { color: #34d399; }
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+/* Collapsible home sections */
+.collapsible { position: relative; }
+.section-collapse { position: absolute; top: 14px; right: 14px; z-index: 2; }
+.collapsed-bar { width: 100%; display: flex; align-items: center; gap: 10px; padding: 12px 16px; color: var(--ink); font: inherit; text-align: left; cursor: pointer; }
+.collapsed-bar:hover { border-color: var(--accent); }
+.collapsed-bar .section-label { margin: 0; }
+.collapsed-bar-caret { color: var(--muted); font-size: 13px; }
+.collapsed-bar-title { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 15px; font-weight: 650; letter-spacing: -.02em; }
+.collapsed-bar .collapsed-count { margin-left: auto; }
+.section-toggle { display: inline-flex; align-items: center; gap: 6px; margin: 0 0 6px; padding: 2px 0; border: 0; background: none; color: var(--muted); font: inherit; font-size: 11px; cursor: pointer; }
+.section-toggle .section-label { margin: 0; }
+.section-toggle:hover, .section-toggle:hover .section-label { color: var(--ink); }
+/* Rows already pad themselves; the older standalone .space-grid padding doubled it (and left 54px under each row). */
+.source-row .space-grid { padding: 0; margin: 0; }
+/* Keep the Balance window switch clear of the Review collapse button */
+.collapsible .review-side .balance-head { padding-right: 40px; }
