@@ -204,12 +204,6 @@ Star on connector items still opens the origin URL until two-way API star exists
 - **Retired copy:** any page load on `frontier-work-room.randymcfarland1227.workers.dev` now serves a handoff page that reads that origin's `lifehub-completions` + `lifehub-self-inbox` and redirects to Pages with `#import=<base64>`; Pages merges it in and shows "Brought over N completions". `/api/*` and Home Screen icon files keep working.
 - Deploy order matters: ship Pages (import support) before `npm run deploy` of the Worker.
 
-### Cloud backup + retiring the Worker copy (2026-09-23)
-
-- **Backup:** Worker `GET/PUT /api/state` on KV namespace `LIFEHUB_STATE` (id `e26625e45a6a4f408ca3f45c91ff7aca`). Stores completions, ideas, Self items, goal links (`lib/syncState.ts` — same merge on Worker and browser; merges only combine, never drop). Review → "Turn on backup" generates a device key in the browser; the Worker keeps only its SHA-256 (first device claims). "Link another device" copies `…/frontier/#sync-key=<key>` (fragment, never sent to a server). Syncs 2 s after edits, on tab focus, and every 5 min.
-- **Retired copy:** any page load on `frontier-work-room.randymcfarland1227.workers.dev` now serves a handoff page that reads that origin's `lifehub-completions` + `lifehub-self-inbox` and redirects to Pages with `#import=<base64>`; Pages merges it in and shows "Brought over N completions". `/api/*` and Home Screen icon files keep working.
-- Deploy order matters: ship Pages (import support) before `npm run deploy` of the Worker.
-
 ### Done-only counting, Routine Hub categories, Role Hub live, UI (2026-09-23)
 
 - **Only real "done" counts:** `diffSnapshotCompletions` records a task only when a source reports it `status: 'done'` (optionally with `completedAt`). A task that just disappears (rescheduled, filtered, regenerated — e.g. Resale's auto-actions) no longer counts. Hub Done still counts.
