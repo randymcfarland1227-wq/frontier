@@ -735,6 +735,9 @@ a.origin-link:hover strong {
 .card-collapse:hover { color: var(--ink); border-color: var(--accent); }
 .space-card.is-collapsed { min-height: 0 !important; height: auto !important; align-self: start; }
 .space-card.is-collapsed .card-copy h2 { margin-bottom: 0; }
+.card-title-row .title-tail { white-space: nowrap; }
+.card-title-row .collapsed-count { margin-left: 10px; }
+.collapsed-count { display: inline-block; vertical-align: .3em; min-width: 26px; padding: 3px 9px; border-radius: 999px; background: #2563eb; color: #fff; font-size: 13px; font-weight: 700; line-height: 1.2; letter-spacing: 0; text-align: center; }
 
 /* === Self quick-add (Task / Thought / Idea / …) === */
 .quick-capture { display: grid; gap: 8px; margin: 4px 0 8px; padding: 12px; border-radius: 12px; background: var(--surface-2); border: 1px solid var(--line); }
@@ -779,3 +782,4 @@ a.origin-link:hover strong {
 .capture-row.is-done h3 { text-decoration: line-through; opacity: .6; }
 .capture-kind.kind-task { background: color-mix(in srgb, #0f9f6e 18%, transparent); color: #0f9f6e; }
 [data-theme="dark"] .capture-kind.kind-task { color: #34d399; }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
