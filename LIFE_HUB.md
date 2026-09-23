@@ -6,8 +6,7 @@ Phase 1 scaffold on branch `life-hub-upgrade`.
 
 **Primary:** [https://randymcfarland1227-wq.github.io/frontier/](https://randymcfarland1227-wq.github.io/frontier/)
 
-GitHub Pages deploys automatically on push/merge to `main` via `.github/workflows/deploy-pages.yml` (`npm run build:pages` → `dist-pages`).
-> **Note:** The Actions workflow lives at `.github/workflows/deploy-pages.yml` (canonical copy also in `docs/deploy-pages.yml`). Creating/updating files under `.github/workflows/` requires a GitHub token with the `workflow` scope. If the workflow file is missing on the remote, copy from `docs/deploy-pages.yml` or re-auth `gh` with `-s workflow`, then push.
+GitHub Pages deploys automatically on push/merge to `main` via `.github/workflows/deploy-pages.yml` (`npm run build:pages` → `dist-pages`). A copy also lives at `docs/deploy-pages.yml`. The workflow uses `actions/configure-pages` with `enablement: true`, so the first successful run on `main` should turn on Pages for the repo (GitHub Actions source). Until then the live URL 404s.
 
 
 **Cloudflare Worker (optional / legacy):** worker name `frontier-work-room` still maps to `https://frontier-work-room.randymcfarland1227.workers.dev` if you run `npm run deploy` later. The hub UI does **not** require Cloudflare — connectors (Gmail / Outlook / TickTick / Sheets) stay stubs for now.
