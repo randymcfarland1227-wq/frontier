@@ -36,7 +36,7 @@ export function HomeView({
         <div className="hero-bottom">
           <p>
             Metrics, starred items, and full task lists from TickTick, finances, mail, Role Hub, resale,
-            ventures, Move OS, repair log, and your Self inbox — with Candle held as a placeholder.
+            Peculiar Candle, ventures, Move OS, repair log, and your Self inbox.
           </p>
           <div className="current-intent">
             <span>Life Hub status</span>

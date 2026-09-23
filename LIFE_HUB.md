@@ -30,7 +30,7 @@ Node **>= 22.13** (`engines` in package.json). Use `fnm use 22` if needed.
 | 04 | `outlook` | Outlook job inquiries | Static JSON from Outlook MCP → `public/data/outlook.json` |
 | 05 | `resale` | Resale Hub | Hidden iframe + postMessage (existing sell-hub) |
 | 06 | `role` | Role Hub | Hidden iframe + postMessage (Apps Script; legacy id `search` still accepted) |
-| 07 | `candle` | Peculiar Candle Pre Launch | **Placeholder only** |
+| 07 | `candle` | Peculiar Candle Pre Launch | iframe + postMessage (`peculiar-command-center`) |
 | 08 | `income` | Income & Venture Lab | iframe ready; origin must post snapshots |
 | 09 | `move` | Move OS | iframe ready; origin must post snapshots |
 | 10 | `repair` | Site Repair Log | iframe ready; origin must post snapshots |
@@ -121,14 +121,13 @@ For now, Done / star on connector items **opens the origin URL** (`originUrl` or
 
 ## Still needed (later passes)
 
-1. **Origin bridges** — sell-hub, Role Hub script, income-venture-lab, move-os, site-repair-log should:
+1. **Origin bridges** — sell-hub, Role Hub script, peculiar-command-center (candle), income-venture-lab, move-os, site-repair-log should:
    - include `tasks[]` in snapshots
    - listen for `randys-workroom:complete` / `:star`
    - allow both Pages and Worker parent origins (see above)
 2. **TickTick token** — set on the sync box, then re-run connector sync (do not commit the token)
 3. **Two-way connector actions** — complete/star via APIs instead of open-only
-4. **Candle** — replace placeholder when pre-launch site is ready
-5. **Optional Worker** — `npm run deploy` only if you still want the workers.dev mirror
+4. **Optional Worker** — `npm run deploy` only if you still want the workers.dev mirror
 
 ## Layout
 

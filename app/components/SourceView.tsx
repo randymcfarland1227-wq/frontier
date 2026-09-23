@@ -52,7 +52,7 @@ export function SourceView({
           <h2>{copy.placeholder ? 'Placeholder for now.' : copy.bridge === 'local' ? 'Capture here.' : 'Use the full site.'}</h2>
           <p>
             {copy.placeholder
-              ? 'Peculiar Candle Pre Launch is reserved. Metrics and bridge wiring come in a later pass.'
+              ? 'This source is reserved. Metrics and bridge wiring come in a later pass.'
               : copy.bridge === 'local'
                 ? 'Add, star, and complete Self items on this hub. They stay in this browser until you categorize them to another origin.'
                 : 'Open the origin from here. Star items there so they feature on this card. Completing on the hub will notify the origin when its bridge listens for randys-workroom:complete.'}

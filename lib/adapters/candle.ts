@@ -1,13 +1,12 @@
 import type { SourceAdapter } from './types';
 
 /**
- * Phase 1 stub — no live Peculiar Candle calls yet.
- * Wire secrets / OAuth / postMessage origin updates in a later pass.
+ * Peculiar Candle Pre Launch — iframe + postMessage (see LIFE_HUB.md).
  */
 export const candleAdapter: SourceAdapter = {
   id: 'candle',
   label: 'Peculiar Candle',
-  mode: 'placeholder',
+  mode: 'postMessage',
   async refresh() {
     return null;
   },
