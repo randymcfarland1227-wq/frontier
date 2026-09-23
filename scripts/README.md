@@ -36,7 +36,7 @@ If TickTick has no token / no dump, the script writes an empty stub with a “to
 
 ## Snapshot shape
 
-See `lib/types.ts` (`SourceSnapshot`). Do **not** fabricate rows. Do **not** commit tokens.
+See `lib/types.ts` (`SourceSnapshot`). TickTick **tasks** must include `projectId` (from Open API raw) so Life Hub can complete via the Worker. Do **not** fabricate rows. Do **not** commit tokens.
 
 ## After write
 

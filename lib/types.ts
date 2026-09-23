@@ -37,6 +37,8 @@ export type TaskItem = {
   originUrl?: string;
   /** Optional badge: habit vs task vs mail */
   kind?: 'habit' | 'task' | 'mail' | string;
+  /** TickTick project id (needed for Open API complete) */
+  projectId?: string;
 };
 
 export type SourceSnapshot = {

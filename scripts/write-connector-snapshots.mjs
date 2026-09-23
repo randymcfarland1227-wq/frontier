@@ -413,6 +413,7 @@ function mapTickTickRaw(raw, refreshedAt) {
       ? `https://ticktick.com/webapp/#p/${t.projectId || t._projectId}/tasks/${id}`
       : 'https://ticktick.com';
     const meta = `${bucket}${project ? ` · ${project}` : ''}`;
+    const projectId = t.projectId || t._projectId || undefined;
     const item = {
       id,
       title,
@@ -422,6 +423,7 @@ function mapTickTickRaw(raw, refreshedAt) {
       starred: Boolean(t.priority && Number(t.priority) >= 3),
       originUrl,
       kind: 'task',
+      projectId: projectId ? String(projectId) : undefined,
     };
     tasks.push(item);
     if (item.starred || featured.length < 8) {

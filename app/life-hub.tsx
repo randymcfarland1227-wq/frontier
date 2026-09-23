@@ -27,6 +27,11 @@ import {
   openConnectorOrigin,
 } from '../lib/connectors';
 import { metricsAfterLocalComplete } from '../lib/actionable';
+import {
+  completeTickTickTaskInBackground,
+  isTickTickHabit,
+  projectIdFromTask,
+} from '../lib/ticktickComplete';
 import { Header } from './components/Header';
 import { HomeView } from './components/HomeView';
 import { SourceView } from './components/SourceView';
@@ -312,9 +317,9 @@ export function LifeHub() {
 
   const completeOnHub = (source: SourceId, id: string) => {
     const snapNow = snapshotsRef.current[source];
-    const title =
-      snapNow?.tasks?.find(t => t.id === id)?.title ||
-      snapNow?.featured?.find(f => f.id === id)?.title;
+    const taskNow = snapNow?.tasks?.find(t => t.id === id);
+    const featuredNow = snapNow?.featured?.find(f => f.id === id);
+    const title = taskNow?.title || featuredNow?.title;
     if (source === 'self') {
       setLedger(recordCompletion('self', id, { via: 'self', title }));
       syncSelf(toggleSelfComplete(id));
@@ -327,6 +332,7 @@ export function LifeHub() {
     const isIframe = def.bridge === 'iframe';
     // Connectors (gmail/outlook/ticktick/radall/role): local dismiss — do not open origin.
     // Iframe origins: optimistic local done + broadcastComplete.
+    // TickTick tasks: also POST complete via Worker (habits: local dismiss only).
     const removeFromLists = isConnectorSource(source);
 
     setSnapshots(current => {
@@ -347,6 +353,25 @@ export function LifeHub() {
         },
       };
     });
+
+    if (source === 'ticktick') {
+      const habit = isTickTickHabit({ id, kind: taskNow?.kind });
+      if (!habit) {
+        const projectId = projectIdFromTask({
+          projectId: taskNow?.projectId,
+          originUrl: taskNow?.originUrl || featuredNow?.originUrl,
+          id,
+        });
+        if (projectId) {
+          completeTickTickTaskInBackground({ taskId: id, projectId });
+        } else {
+          console.warn(
+            '[Life Hub] TickTick complete skipped — missing projectId',
+            { taskId: id },
+          );
+        }
+      }
+    }
 
     if (isIframe) {
       broadcastComplete(source, id);

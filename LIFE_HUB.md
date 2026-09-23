@@ -112,11 +112,20 @@ Hub SPA (`lib/connectors.ts`) fetches `BASE_URL + 'data/<id>.json'` after localS
 ### Complete / star on connector cards
 
 **Done on the hub** always `recordCompletion`s in the ledger, then:
-- **gmail / outlook / ticktick / radall / role**: remove the item from local `tasks` + `featured` (dismiss). Do not require opening mail/TickTick. TickTick Open API complete can come later.
+- **gmail / outlook / radall / role**: remove the item from local `tasks` + `featured` (dismiss). Do not require opening mail.
+- **ticktick tasks**: optimistic local dismiss + background `POST` to Worker `https://frontier-work-room.randymcfarland1227.workers.dev/api/ticktick/complete` (Bearer `TICKTICK_ACCESS_TOKEN` stays on the Worker — never in the Pages bundle). Retries once; on failure keeps dismissed and logs a soft console warning. Requires `projectId` on the task (from snapshot or `#p/{projectId}/tasks/...` in `originUrl`).
+- **ticktick habits** (`kind: habit` / id `habit-*`): local dismiss only — TickTick Open API does not support habit complete.
 - **iframe origins** (resale, candle, income, move, repair): optimistic mark done / remove from open list + `broadcastComplete` (`randys-workroom:complete`).
 - **self**: local complete as before.
 
 Star on connector items still opens the origin URL until two-way API star exists.
+
+### Worker: TickTick complete
+
+- Route: `OPTIONS` + `POST /api/ticktick/complete` on `frontier-work-room`
+- Body: `{ "taskId": "...", "projectId": "..." }` → TickTick `POST /open/v1/project/{projectId}/task/{taskId}/complete`
+- Secret: `npx wrangler secret put TICKTICK_ACCESS_TOKEN` then `npx wrangler deploy` (from repo root after `wrangler login`)
+- Client helper: `lib/ticktickComplete.ts`
 
 ### Layout extras
 
@@ -130,9 +139,9 @@ Star on connector items still opens the origin URL until two-way API star exists
    - include `tasks[]` in snapshots
    - listen for `randys-workroom:complete` / `:star`
    - allow both Pages and Worker parent origins (see above)
-2. **TickTick token** — set on the sync box, then re-run connector sync (do not commit the token)
-3. **Two-way connector actions** — complete/star via APIs instead of open-only
-4. **Optional Worker** — `npm run deploy` only if you still want the workers.dev mirror
+2. **TickTick token** — already on sync box for snapshots; also set Worker secret `TICKTICK_ACCESS_TOKEN` via wrangler (do not commit the token)
+3. **Two-way connector actions** — TickTick task complete via Worker is live; star + other connectors still open-origin until APIs exist
+4. **Worker deploy** — `npx wrangler deploy` after secret put (Pages is primary; workers.dev hosts the complete API)
 
 ## Layout
 
