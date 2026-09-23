@@ -27,7 +27,12 @@ export type FocusArea = {
   color?: string;
 };
 
-export type FocusAreaConfig = { version: number; areas: FocusArea[] };
+export type FocusAreaConfig = {
+  version: number;
+  areas: FocusArea[];
+  /** Sources whose completions never count toward Balance (e.g. site repair) */
+  excludeSources?: SourceId[];
+};
 
 /** Bucket for completions no rule matched — counted, never dropped. */
 export const OTHER_AREA_ID = 'other';
@@ -212,6 +217,7 @@ export function computeBalance(
   for (const entry of Object.values(ledger.entries)) {
     const t = Date.parse(entry.completedAt);
     if (Number.isNaN(t) || t < start) continue;
+    if (config.excludeSources?.includes(entry.source)) continue;
     total += 1;
     const id = areaOf(entry, config);
     counts.set(id, (counts.get(id) || 0) + 1);
