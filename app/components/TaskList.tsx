@@ -38,6 +38,9 @@ export function TaskList({
 
   const total = snapshot.tasks.length;
   const openCount = openTasks.length;
+  const hiddenCount = Math.max(0, openCount - PREVIEW);
+  const habitPreview = showAll ? habits.length : Math.min(habits.length, 8);
+  const habitHidden = Math.max(0, habits.length - habitPreview);
 
   return (
     <section className={`task-list ${compact ? 'compact' : ''}`} data-source={sourceId}>
@@ -70,12 +73,11 @@ export function TaskList({
         <>
           {habits.length > 0 ? (
             <div className="habit-chip-row" aria-label="Habits">
-              {habits.slice(0, showAll ? habits.length : 8).map(h => (
+              {habits.slice(0, habitPreview).map(h => (
                 <span className="habit-chip" key={h.id} title={h.detail || h.title}>
                   Habit · {h.title}
                 </span>
               ))}
-              {!showAll && habits.length > 8 ? <span className="habit-chip more">+{habits.length - 8}</span> : null}
             </div>
           ) : null}
 
@@ -126,9 +128,11 @@ export function TaskList({
             )}
           </div>
 
-          {openCount > PREVIEW ? (
+          {hiddenCount > 0 || habitHidden > 0 ? (
             <button type="button" className="task-toggle show-more" onClick={() => setShowAll(v => !v)}>
-              {showAll ? 'Show less' : `Show more (${openCount - PREVIEW} more)`}
+              {showAll
+                ? 'Show less'
+                : `Show ${Math.max(hiddenCount, habitHidden)} more`}
             </button>
           ) : null}
         </>

@@ -153,9 +153,9 @@ For now, Done / star on connector items **opens the origin URL** (`originUrl` or
 
 ### UI
 - Self full-width band; rows: TickTick/Gmail/Outlook/Repair · Radall/Role/Move · Income/Resale/Candle.
-- Priority board (starred/featured + local pin order) and Review panel (completion stats + share bars).
+- Priority board starts empty; promote featured items via **Priority** to pin (`localStorage` `lifehub-priority-pins`). Remove unpins without un-featuring. Review panel unchanged (completion stats + share bars).
 - Dark mode toggle (persisted). Glass / iridescent accents.
-- Task boards with habit chips, show-more, 2-column layout.
+- Task boards with habit chips, full-width show-more under a clamped 2-column (or single-col narrow) grid.
 
 ### Completion ledger
 - `localStorage` key `lifehub-completions`: map of `source::taskId` → `{ completedAt, via, title }`.

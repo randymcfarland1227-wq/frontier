@@ -1,33 +1,44 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import type { FeaturedItem, SourceId, SourceSnapshot } from '../../lib/types';
 import { SOURCE_IDS, sourceById } from '../../lib/sources';
-import { readSaved, writeSaved, STORAGE_KEYS } from '../../lib/storage';
+import { pinKey, usePriorityPins } from '../../lib/priorityPins';
 
 type PriorityItem = FeaturedItem & { source: SourceId };
 
-function collectFeatured(snapshots: Record<SourceId, SourceSnapshot>): PriorityItem[] {
-  const items: PriorityItem[] = [];
+/** Resolve only explicitly pinned keys — never auto-dump featured/starred. */
+function resolvePinned(
+  snapshots: Record<SourceId, SourceSnapshot>,
+  pinOrder: string[],
+): PriorityItem[] {
+  if (!pinOrder.length) return [];
+
+  const catalog = new Map<string, PriorityItem>();
   for (const id of SOURCE_IDS) {
     const snap = snapshots[id];
     if (!snap) continue;
-    for (const f of snap.featured || []) items.push({ ...f, source: id });
-    for (const t of snap.tasks || []) {
-      if (!t.starred) continue;
-      if (items.some(i => i.source === id && i.id === t.id)) continue;
-      items.push({
-        id: t.id,
-        title: t.title,
-        detail: t.detail || '',
-        meta: 'Starred',
-        originUrl: t.originUrl,
+    for (const featured of snap.featured || []) {
+      catalog.set(pinKey(id, featured.id), { ...featured, source: id });
+    }
+    for (const task of snap.tasks || []) {
+      const key = pinKey(id, task.id);
+      if (catalog.has(key)) continue;
+      catalog.set(key, {
+        id: task.id,
+        title: task.title,
+        detail: task.detail || '',
+        meta: task.starred ? 'Starred' : task.status || 'Task',
+        originUrl: task.originUrl,
         completable: true,
         source: id,
       });
     }
   }
-  return items;
+
+  return pinOrder
+    .map(key => catalog.get(key))
+    .filter((item): item is PriorityItem => Boolean(item));
 }
 
 export function PriorityBoard({
@@ -37,41 +48,24 @@ export function PriorityBoard({
   snapshots: Record<SourceId, SourceSnapshot>;
   enter: (id: SourceId) => void;
 }) {
-  const featured = useMemo(() => collectFeatured(snapshots), [snapshots]);
-  const [pinOrder, setPinOrder] = useState<string[]>(() =>
-    readSaved<string[]>(STORAGE_KEYS.priorityPins, []),
-  );
-
-  const ordered = useMemo(() => {
-    const keyOf = (item: PriorityItem) => `${item.source}:${item.id}`;
-    const map = new Map(featured.map(item => [keyOf(item), item]));
-    const pinned = pinOrder.map(k => map.get(k)).filter(Boolean) as PriorityItem[];
-    const rest = featured.filter(item => !pinOrder.includes(keyOf(item)));
-    return [...pinned, ...rest].slice(0, 12);
-  }, [featured, pinOrder]);
-
-  const pin = (item: PriorityItem) => {
-    const k = `${item.source}:${item.id}`;
-    setPinOrder(current => {
-      const next = current.includes(k) ? current : [k, ...current];
-      writeSaved(STORAGE_KEYS.priorityPins, next);
-      return next;
-    });
-  };
+  const { pins, removePin } = usePriorityPins();
+  const ordered = useMemo(() => resolvePinned(snapshots, pins), [snapshots, pins]);
 
   return (
     <section className="priority-board glass-panel iridescent-border" aria-label="Priority">
       <div className="priority-head">
         <p className="section-label">Priority</p>
-        <h2>Starred across every origin</h2>
-        <p>Featured and starred items from all sources. Pin to keep order in this browser.</p>
+        <h2>Pinned priorities</h2>
+        <p>Promote a featured item from any source to pin it here.</p>
       </div>
       {ordered.length === 0 ? (
-        <p className="priority-empty">Star or feature items in any source to gather them here.</p>
+        <p className="priority-empty">
+          Promote a featured item from any source to pin it here.
+        </p>
       ) : (
         <div className="priority-grid">
           {ordered.map(item => (
-            <article key={`${item.source}:${item.id}`} className="priority-card">
+            <article key={pinKey(item.source, item.id)} className="priority-card">
               <button type="button" className="priority-source" onClick={() => enter(item.source)}>
                 {sourceById[item.source].shortName}
               </button>
@@ -85,8 +79,12 @@ export function PriorityBoard({
               {item.detail ? <p>{item.detail}</p> : null}
               <div className="priority-actions">
                 <span>{item.meta}</span>
-                <button type="button" className="row-action ghost" onClick={() => pin(item)}>
-                  Pin
+                <button
+                  type="button"
+                  className="row-action ghost"
+                  onClick={() => removePin(item.source, item.id)}
+                >
+                  Remove
                 </button>
               </div>
             </article>
