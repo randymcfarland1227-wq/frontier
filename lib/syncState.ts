@@ -17,6 +17,16 @@ export type SyncedState = {
   goalLinks: LocalGoalLinks;
 };
 
+/**
+ * Before 2026-09-23 a task that merely disappeared from a source (rescheduled, filtered out,
+ * regenerated) was logged as `via: 'origin-snapshot'`. Those were never real completions, so they
+ * are dropped everywhere — browser, backup, and every device. Real source-reported completions
+ * now use `via: 'origin-done'`. Role Hub's snapshot entries were always explicit applications.
+ */
+export function isRealCompletion(entry: CompletionEntry): boolean {
+  return !(entry.via === 'origin-snapshot' && entry.source !== 'role');
+}
+
 export function emptyState(): SyncedState {
   return { completions: { entries: {} }, captures: [], self: [], goalLinks: { added: [], removed: [] } };
 }
@@ -24,9 +34,12 @@ export function emptyState(): SyncedState {
 /** Coerce anything (old payloads, partial JSON) into a full state. */
 export function normalizeState(raw: unknown): SyncedState {
   const s = (raw && typeof raw === 'object' ? raw : {}) as Partial<SyncedState>;
-  const entries = s.completions && typeof s.completions === 'object' ? s.completions.entries : undefined;
+  const rawEntries = s.completions && typeof s.completions === 'object' ? s.completions.entries : undefined;
+  const entries = Object.fromEntries(
+    Object.entries(rawEntries && typeof rawEntries === 'object' ? rawEntries : {}).filter(([, e]) => e && isRealCompletion(e)),
+  );
   return {
-    completions: { entries: entries && typeof entries === 'object' ? entries : {} },
+    completions: { entries },
     captures: Array.isArray(s.captures) ? s.captures : [],
     self: Array.isArray(s.self) ? s.self : [],
     goalLinks: {

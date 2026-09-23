@@ -31,6 +31,8 @@ export function ReviewPanel({
   const max = Math.max(1, ...shares.map(s => s.count));
   return (
     <section className="review-panel glass-panel" aria-label="Completion review">
+      <div className="review-columns">
+      <div className="review-main">
       <div className="review-head">
         <p className="section-label">Review</p>
         <h2>Completions across sites</h2>
@@ -60,7 +62,6 @@ export function ReviewPanel({
           <span>All time</span>
         </article>
       </div>
-      {focusConfig ? <BalanceStrip ledger={ledger} config={focusConfig} /> : null}
       <p className="section-label review-sources-label">By source</p>
       <div className="review-bars">
         {shares.length === 0 ? (
@@ -101,6 +102,13 @@ export function ReviewPanel({
             );
           })
         )}
+      </div>
+      </div>
+      {focusConfig ? (
+        <div className="review-side">
+          <BalanceStrip ledger={ledger} config={focusConfig} />
+        </div>
+      ) : null}
       </div>
       <CloudBackup />
     </section>

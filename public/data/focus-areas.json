@@ -1,10 +1,10 @@
 {
   "version": 1,
-  "note": "Weights confirmed-ish 2026-09-23: Marvel own area; site repairs excluded from Balance (excludeSources). Weights sum to 1; benchmark defaults to weight. Most specific rule wins (projectIds/tags > titleIncludes > kinds > whole source); ties go to the area listed first. TickTick projects: Medical 69dd6ff6…, Life Planning 69dd701e…, Marvel 69dd705c…, Next Step Actions 69dd70fc…, Creativity 69def09b…, Maintenance Organization 69eef620…, Grounding 69f65a37…. TickTick items whose title matches a Routine Hub routine take that routine's category (routines.categoryAreas), scored 4 — above a single project/tag rule (3), below project+title combos (5). Bump rulesVersion to re-sort history.",
+  "note": "Weights confirmed-ish 2026-09-23: Marvel own area; site repairs excluded from Balance (excludeSources). Weights sum to 1; benchmark defaults to weight. Most specific rule wins (projectIds/tags > titleIncludes > kinds > whole source); ties go to the area listed first. TickTick projects: Medical 69dd6ff6…, Life Planning 69dd701e…, Marvel 69dd705c…, Next Step Actions 69dd70fc…, Creativity 69def09b…, Maintenance Organization 69eef620…, Grounding 69f65a37…. TickTick items whose title matches a Routine Hub routine take that routine's category (routines.categoryAreas), scored 4 — above a single project/tag rule (3), below project+title combos (5). Bump rulesVersion to re-sort history. v3 (2026-09-23): renamed areas; planning → Home; Life Planning list → Home.",
   "areas": [
     {
       "id": "self",
-      "name": "Self",
+      "name": "Mind & Grounding",
       "weight": 0.15,
       "sourceMap": [
         {
@@ -14,7 +14,6 @@
           "source": "ticktick",
           "match": {
             "projectIds": [
-              "69dd701e1ca911a95e9a97c7",
               "69def09b442591a95e9af9db",
               "69f65a3753619118d36dd220"
             ]
@@ -41,7 +40,7 @@
     },
     {
       "id": "money",
-      "name": "Money",
+      "name": "Money / Finance",
       "weight": 0.2,
       "sourceMap": [
         {
@@ -77,7 +76,7 @@
     },
     {
       "id": "body",
-      "name": "Body",
+      "name": "Body & Physical Care",
       "weight": 0.15,
       "sourceMap": [
         {
@@ -116,7 +115,7 @@
     },
     {
       "id": "work",
-      "name": "Work",
+      "name": "Role & Professional Development",
       "weight": 0.2,
       "sourceMap": [
         {
@@ -152,7 +151,7 @@
     },
     {
       "id": "venture",
-      "name": "Venture",
+      "name": "Ventures & Opportunities",
       "weight": 0.15,
       "sourceMap": [
         {
@@ -191,7 +190,7 @@
     },
     {
       "id": "home",
-      "name": "Home",
+      "name": "Organizing, Cleaning, Upkeep & Planning",
       "weight": 0.05,
       "sourceMap": [
         {
@@ -215,6 +214,14 @@
               "wipe"
             ]
           }
+        },
+        {
+          "source": "ticktick",
+          "match": {
+            "projectIds": [
+              "69dd701e1ca911a95e9a97c7"
+            ]
+          }
         }
       ]
     }
@@ -222,7 +229,7 @@
   "excludeSources": [
     "repair"
   ],
-  "rulesVersion": 2,
+  "rulesVersion": 3,
   "routines": {
     "api": "https://script.google.com/macros/s/AKfycbzNe80Y8hAb_zRq7k2eiivtdIjLOeuBlojrOzdXGtSQux4bb6zebj85GrVsSk0Rbsxrhw/exec?action=routines",
     "snapshot": "data/routines.json",
@@ -238,14 +245,14 @@
       "organizing-personal-finance-allocation": "money",
       "organizing-savings-allocations": "money",
       "organizing-needed-purchases": "money",
-      "organizing-goal-effort-review": "self",
-      "organizing-week-planner-prep": "self",
-      "organizing-next-step-awareness-review": "self",
-      "organizing-family-altruism-review": "self",
+      "organizing-goal-effort-review": "home",
+      "organizing-week-planner-prep": "home",
+      "organizing-next-step-awareness-review": "home",
+      "organizing-family-altruism-review": "home",
       "organizing-family-finance-review": "money",
       "mind-open-job-search": "work",
       "organizing-side-hustle-progress": "venture",
-      "organizing-life-path-note": "self",
+      "organizing-life-path-note": "home",
       "organizing-job-search-map-note": "work"
     }
   }

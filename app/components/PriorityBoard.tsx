@@ -58,11 +58,11 @@ export function PriorityBoard({
       <div className="priority-head">
         <p className="section-label">Priority</p>
         <h2>Pinned priorities</h2>
-        <p>Promote a featured item from any source to pin it here.</p>
+        <p>Pin a featured item from any source card, or star a Self task, to keep it here.</p>
       </div>
       {ordered.length === 0 ? (
         <p className="priority-empty">
-          Promote a featured item from any source to pin it here.
+          Nothing pinned yet.
         </p>
       ) : (
         <div className="priority-grid">

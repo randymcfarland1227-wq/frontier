@@ -10,7 +10,6 @@ import { SourceCard } from './SourceCard';
 import { PriorityBoard } from './PriorityBoard';
 import { ReviewPanel } from './ReviewPanel';
 
-const SELF_ROW: SourceId[] = ['self'];
 const ROW_1: SourceId[] = ['ticktick', 'gmail', 'outlook', 'repair'];
 const ROW_2: SourceId[] = ['radall', 'role', 'move'];
 const ROW_3: SourceId[] = ['income', 'resale', 'candle'];
@@ -75,7 +74,6 @@ export function HomeView({
   focusConfig,
   capturesPanel,
   whyPanel,
-  selfQuickCapture,
 }: {
   snapshots: Record<SourceId, SourceSnapshot>;
   enter: (id: SpaceId) => void;
@@ -89,7 +87,6 @@ export function HomeView({
   focusConfig: FocusAreaConfig | null;
   capturesPanel: ReactNode;
   whyPanel: ReactNode;
-  selfQuickCapture: ReactNode;
 }) {
   const latest =
     Object.values(snapshots)
@@ -100,36 +97,14 @@ export function HomeView({
 
   return (
     <>
-      <section className="hero" id="top">
-        <div className="hero-kicker">
-          <span />
-          Eleven origins · one Life Hub
-        </div>
+      <section className="hero hero-flush" id="top">
         <h1>
-          Randy&apos;s
-          <br />
-          <em>Life Hub.</em>
+          Randy&apos;s <em>Life Hub.</em>
         </h1>
-        <div className="hero-bottom">
-          <p>
-            Metrics, starred items, and task lists from TickTick, mail, Role Hub, resale, Peculiar Candle,
-            ventures, Move OS, repair log, and Self — plus completion review across every site.
-          </p>
-          <div className="current-intent glass-panel">
-            <span>Life Hub status</span>
-            <strong>{updatedLabel(latest)}</strong>
-          </div>
-        </div>
+        <p className="hero-status" title="Most recent source refresh">
+          {updatedLabel(latest)}
+        </p>
       </section>
-
-      <div className="hub-overview">
-        <PriorityBoard
-          snapshots={snapshots}
-          enter={id => enter(id)}
-          onComplete={(source, item) => onCompleteFeatured(source, item)}
-        />
-        <ReviewPanel stats={completionStats} shares={completionShares} ledger={ledger} focusConfig={focusConfig} />
-      </div>
 
       {whyPanel ? (
         <section className="source-row" aria-label="Why">
@@ -137,21 +112,22 @@ export function HomeView({
         </section>
       ) : null}
 
-      <SourceRow
-        ids={SELF_ROW}
-        label="Self"
-        snapshots={snapshots}
-        enter={enter}
-        openSource={openSource}
-        onCompleteFeatured={onCompleteFeatured}
-        onCompleteTask={onCompleteTask}
-        onStarTask={onStarTask}
-        fullWidth
-        extra={{ self: selfQuickCapture }}
-      />
-      <section className="source-row" aria-label="Ideas and research">
+      <section className="source-row" aria-label="Review">
+        <ReviewPanel stats={completionStats} shares={completionShares} ledger={ledger} focusConfig={focusConfig} />
+      </section>
+
+      <section className="source-row" aria-label="Self — thoughts, ideas, research and tasks">
         {capturesPanel}
       </section>
+
+      <section className="source-row" aria-label="Priority">
+        <PriorityBoard
+          snapshots={snapshots}
+          enter={id => enter(id)}
+          onComplete={(source, item) => onCompleteFeatured(source, item)}
+        />
+      </section>
+
       <SourceRow
         ids={ROW_1}
         label="Daily ops"
@@ -185,7 +161,7 @@ export function HomeView({
 
       <footer className="home-footer">
         <span>Randy&apos;s Life Hub</span>
-        <p>Work Room upgrade · 11 sources · completion ledger</p>
+        <p>11 sources · completion ledger · cloud backup</p>
         <span>Est. 2026</span>
       </footer>
     </>

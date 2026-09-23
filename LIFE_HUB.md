@@ -216,3 +216,12 @@ Star on connector items still opens the origin URL until two-way API star exists
 - **Routine Hub categories:** `focus-areas.json` → `routines` loads Routine Hub `?action=routines` live (fallback `data/routines.json`); TickTick titles matching a routine take its category → area (`categoryAreas`, per-routine `routineAreas` for mixed Organizing items). Score 4. `rulesVersion: 2` re-sorts older history; hand-set areas (`focusManual`) never change.
 - **Role Hub:** Role Hub posts a snapshot to Life Hub (window opener) on load: `appliedToday`, `appliedWeek`, `pipeline`, `ready`; last-7-days applications as `done` tasks (each counts once as a Work completion on its applied date) + ready-to-submit roles as open tasks. Life Hub accepts `role` postMessages (newer `refreshedAt` wins over `role.json`). Open Role Hub from the Life Hub card to refresh it.
 - **UI:** Review → By source rows expand to list what was completed; every source card collapses to its header (saved per browser); Self card quick-add with Task / Thought / Idea / Research / Look into / Learn (non-tasks go to Thoughts, ideas & research).
+
+### Buckets v3, cleanup, Resale done, Self merge, new home order (2026-09-23)
+
+- **Area names** (ids unchanged): self = Mind & Grounding, money = Money / Finance, body = Body & Physical Care, work = Role & Professional Development, venture = Ventures & Opportunities, marvel = Marvel, home = Organizing, Cleaning, Upkeep & Planning. `rulesVersion: 3`: Routine Hub planning routines and the Life Planning list → home.
+- **Gmail / Outlook:** Done opens an area picker (`AreaPicker`); the choice is stored as a hand-set area (`focusManual`).
+- **Cleanup:** `isRealCompletion` (lib/syncState.ts) drops legacy `via: 'origin-snapshot'` entries (tasks that only disappeared) except Role Hub — applied in `loadLedger`, the backup merge, and the Worker. Source-reported completions now use `via: 'origin-done'`.
+- **Resale:** sell-hub sends its last 7 days of Listing Posted / Price Drop / Offer Sent / Completed / Shipped / Listing Ended actions as done tasks (from the Item Actions sheet) and pings Life Hub the moment one happens.
+- **Self merged** into "Thoughts, ideas, research & tasks" (Task is a kind; Tasks tab; star = pin to Priority). No standalone Self card on home.
+- **Home order:** one-line title + small status → Why → Review (stats | Balance side by side) → Self panel → Priority → source rows.

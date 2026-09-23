@@ -4,13 +4,15 @@ import type { SourceId, SourceSnapshot, TaskItem } from './types';
 import { SOURCE_IDS, sourceById } from './sources';
 import { readSaved, writeSaved, STORAGE_KEYS } from './storage';
 import { getFocusConfig, resolveFocusArea, type FocusAreaId } from './focusAreas';
+import { isRealCompletion } from './syncState';
 
 export type CompletionEntry = {
   source: SourceId;
   taskId: string;
   completedAt: string; // ISO
   title?: string;
-  via: 'hub' | 'origin-snapshot' | 'connector-diff' | 'self';
+  /** origin-done = the source reported it done; origin-snapshot = legacy "disappeared" (dropped) */
+  via: 'hub' | 'origin-done' | 'origin-snapshot' | 'connector-diff' | 'self';
   /** Resolved via focus-areas.json at record time; persisted so history stays stable if maps change. */
   focusAreaId?: FocusAreaId;
   /** rulesVersion of focus-areas.json that produced focusAreaId (older → re-sorted) */
@@ -47,7 +49,12 @@ function ledgerKey(source: SourceId, taskId: string, at: string) {
 }
 
 export function loadLedger(): CompletionLedger {
-  return readSaved<CompletionLedger>(STORAGE_KEYS.completions, { entries: {} });
+  const saved = readSaved<CompletionLedger>(STORAGE_KEYS.completions, { entries: {} });
+  const entries = Object.fromEntries(Object.entries(saved.entries || {}).filter(([, e]) => isRealCompletion(e)));
+  if (Object.keys(entries).length !== Object.keys(saved.entries || {}).length) {
+    saveLedger({ entries });
+  }
+  return { entries };
 }
 
 export function saveLedger(ledger: CompletionLedger) {
@@ -180,7 +187,7 @@ export function diffSnapshotCompletions(
     if (prev?.status === 'done') continue;
     current = recordCompletion(source, task.id, {
       title: task.title || prev?.title,
-      via: source === 'self' ? 'self' : 'origin-snapshot',
+      via: source === 'self' ? 'self' : 'origin-done',
       at: task.completedAt,
       ledger: current,
       task: { ...prev, ...task },

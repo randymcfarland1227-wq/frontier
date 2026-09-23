@@ -749,3 +749,33 @@ a.origin-link:hover strong {
   .quick-kinds button { padding: 6px 2px; border-radius: 10px; font-size: 10px; white-space: nowrap; }
   .capture-form .seg { grid-template-columns: repeat(3, 1fr); }
 }
+
+/* === Area picker (Gmail / Outlook Done) === */
+.area-picker-backdrop { position: fixed; inset: 0; z-index: 60; display: grid; place-items: center; padding: 16px; background: rgba(8,10,14,.55); }
+.area-picker { width: min(440px, 100%); padding: 18px; display: grid; gap: 8px; background: var(--surface) !important; }
+.area-picker h3 { margin: 0; font-size: 16px; font-weight: 650; overflow-wrap: anywhere; }
+.area-picker-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; margin-top: 6px; }
+.area-choice { padding: 10px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface-2); color: var(--ink); font: inherit; font-size: 12px; font-weight: 620; text-align: left; cursor: pointer; }
+.area-choice:hover, .area-choice:focus-visible { border-color: var(--accent); outline: none; }
+.area-choice.suggested { border-color: var(--accent); }
+.area-cancel { justify-self: start; margin-top: 4px; }
+@media (max-width: 420px) { .area-picker-grid { grid-template-columns: 1fr; } }
+
+/* === Home flow (2026-09-23): flush title, horizontal Review === */
+.hero.hero-flush { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; flex-wrap: wrap; padding-bottom: 8px; min-height: 0; }
+.hero.hero-flush h1 { margin: 0; max-width: none; font-size: clamp(34px, 6vw, 64px); line-height: 1; white-space: nowrap; }
+.hero.hero-flush h1 em { font-style: normal; color: var(--muted); }
+.hero-status { margin: 0 0 6px; padding: 4px 10px; border: 1px solid var(--line); border-radius: 999px; background: var(--glass); color: var(--muted); font-size: 11px; font-weight: 600; white-space: nowrap; }
+.review-columns { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 24px; align-items: start; }
+.review-side .balance-strip { margin: 0; padding: 0 0 0 24px; border-bottom: 0; border-left: 1px solid var(--line); }
+.review-side .balance-strip .section-label { margin-top: 2px; }
+@media (max-width: 900px) {
+  .review-columns { grid-template-columns: 1fr; }
+  .review-side .balance-strip { padding: 14px 0 0; border-left: 0; border-top: 1px solid var(--line); }
+}
+@media (max-width: 480px) {
+  .hero.hero-flush h1 { white-space: normal; }
+}
+.capture-row.is-done h3 { text-decoration: line-through; opacity: .6; }
+.capture-kind.kind-task { background: color-mix(in srgb, #0f9f6e 18%, transparent); color: #0f9f6e; }
+[data-theme="dark"] .capture-kind.kind-task { color: #34d399; }
