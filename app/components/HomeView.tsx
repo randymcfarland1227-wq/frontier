@@ -71,6 +71,7 @@ export function HomeView({
   ledger,
   focusConfig,
   capturesPanel,
+  whyPanel,
 }: {
   snapshots: Record<SourceId, SourceSnapshot>;
   enter: (id: SpaceId) => void;
@@ -83,6 +84,7 @@ export function HomeView({
   ledger: CompletionLedger;
   focusConfig: FocusAreaConfig | null;
   capturesPanel: ReactNode;
+  whyPanel: ReactNode;
 }) {
   const latest =
     Object.values(snapshots)
@@ -123,6 +125,12 @@ export function HomeView({
         />
         <ReviewPanel stats={completionStats} shares={completionShares} ledger={ledger} focusConfig={focusConfig} />
       </div>
+
+      {whyPanel ? (
+        <section className="source-row" aria-label="Why">
+          {whyPanel}
+        </section>
+      ) : null}
 
       <SourceRow
         ids={SELF_ROW}

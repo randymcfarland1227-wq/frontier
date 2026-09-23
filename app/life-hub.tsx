@@ -50,6 +50,8 @@ import {
 } from '../lib/completions';
 import { addCapture, loadCaptures, markPromoted, setCaptureStatus, type Capture } from '../lib/captures';
 import { CapturesPanel } from './components/CapturesPanel';
+import { WhyPanel } from './components/WhyPanel';
+import { addLink, loadGoals, loadSeedLinks, mergeLinks, removeLink, type GoalLink, type GoalsData } from '../lib/goals';
 import { backfillFocusAreas, loadFocusAreas, type FocusAreaConfig } from '../lib/focusAreas';
 
 const starterFocus: FocusItem[] = [
@@ -116,6 +118,9 @@ export function LifeHub() {
   const [completionStats, setCompletionStats] = useState<CompletionStats>(emptyStats());
   const [focusConfig, setFocusConfig] = useState<FocusAreaConfig | null>(null);
   const [captures, setCaptures] = useState<Capture[]>([]);
+  const [goalsData, setGoalsData] = useState<GoalsData | null>(null);
+  const [seedLinks, setSeedLinks] = useState<GoalLink[]>([]);
+  const [goalLinks, setGoalLinks] = useState<GoalLink[]>([]);
   const snapshotsRef = useRef(snapshots);
   const frameRefs = useRef<Partial<Record<SourceId, HTMLIFrameElement | null>>>({});
   const sourceWindows = useRef<Partial<Record<SourceId, Window>>>({});
@@ -170,6 +175,11 @@ export function LifeHub() {
     void loadConnectors();
     void loadFocusAreas().then(config => {
       if (config) setFocusConfig(config);
+    });
+    void loadGoals().then(setGoalsData);
+    void loadSeedLinks().then(seed => {
+      setSeedLinks(seed);
+      setGoalLinks(mergeLinks(seed));
     });
   }, [ready, loadConnectors]);
 
@@ -477,6 +487,21 @@ export function LifeHub() {
           completionShares={sourceShares(completionStats)}
           ledger={taggedLedger}
           focusConfig={focusConfig}
+          whyPanel={
+            goalsData ? (
+              <WhyPanel
+                data={goalsData}
+                links={goalLinks}
+                ledger={taggedLedger}
+                captures={captures}
+                snapshots={snapshots}
+                selfItems={selfItems}
+                areas={focusConfig?.areas || []}
+                onLink={(goalId, target, label) => setGoalLinks(addLink(seedLinks, goalId, target, label))}
+                onUnlink={linkId => setGoalLinks(removeLink(seedLinks, linkId))}
+              />
+            ) : null
+          }
           capturesPanel={
             <CapturesPanel
               captures={captures}

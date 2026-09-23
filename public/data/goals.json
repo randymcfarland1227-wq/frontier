@@ -1,0 +1,185 @@
+{
+  "version": 1,
+  "note": "Fallback copy of Goals hub efforts (live source: Goals hub Apps Script ?action=efforts). categories map Goals categories to Life Hub focus areas; areaOverrides per goal.",
+  "source": "https://randymcfarland1227-wq.github.io/Goals-hub/",
+  "api": "https://script.google.com/macros/s/AKfycbyaka5mBHSn6vsQZ31gKmr_0xT1ndoBEZsWur8fJ6MF4b2mXv2gbTaQRvrD3Y_jEpSk/exec",
+  "snapshotAt": "2026-09-23",
+  "categories": [
+    {
+      "id": "physical",
+      "label": "Physical Body",
+      "icon": "💪",
+      "focusAreaId": "body"
+    },
+    {
+      "id": "mental",
+      "label": "Mental",
+      "icon": "🧠",
+      "focusAreaId": "self"
+    },
+    {
+      "id": "connection",
+      "label": "Connection",
+      "icon": "🤝",
+      "focusAreaId": "self"
+    },
+    {
+      "id": "financial",
+      "label": "Financial",
+      "icon": "💰",
+      "focusAreaId": "money"
+    },
+    {
+      "id": "spiritual",
+      "label": "Spiritual / Embodiment",
+      "icon": "✨",
+      "focusAreaId": "self"
+    }
+  ],
+  "areaOverrides": {
+    "connection-training": "marvel",
+    "mental-cleanspaces": "home"
+  },
+  "efforts": [
+    {
+      "id": "physical-protein",
+      "category": "physical",
+      "effort": "Protein Intake",
+      "reason": "To help grow muscles for both strength, aesthetic, and endurance",
+      "how": "170 grams of protein daily via natural sources and protein shakes"
+    },
+    {
+      "id": "physical-hydration",
+      "category": "physical",
+      "effort": "Hydrating Our Body",
+      "reason": "To give our body the required hydration for optimal physical and mental experience",
+      "how": "3–4 bottles a day (add lime for flavor if not wanting it plain)"
+    },
+    {
+      "id": "physical-selfcare",
+      "category": "physical",
+      "effort": "Self Care Practices",
+      "reason": "To take care of our beautiful body and also grow our confidence and ensure emboldness",
+      "how": "Follow the self care guide on a routine basis and keep up with needs"
+    },
+    {
+      "id": "physical-nourish",
+      "category": "physical",
+      "effort": "Nourishing Our Body",
+      "reason": "To give our body the proper tools to repair and manage functions for all parts of us",
+      "how": "Eating whole foods — fruits, vegetables, etc."
+    },
+    {
+      "id": "physical-sleep",
+      "category": "physical",
+      "effort": "Getting Good Sleep",
+      "reason": "To allow peak body repair and feeling rested to take on the world",
+      "how": "8 hours (7 hour minimum)"
+    },
+    {
+      "id": "physical-vitamins",
+      "category": "physical",
+      "effort": "Taking Vitamins / Supps",
+      "reason": "To supplement or enhance the vitamins we are deriving from foods",
+      "how": "Using the pill organizer and the purchase sheet to keep up on needs"
+    },
+    {
+      "id": "mental-reading",
+      "category": "mental",
+      "effort": "Reading More",
+      "reason": "To promote a healthy and aware brain while also learning / intaking low stimuli",
+      "how": "Using the books we have and setting an intention to be curious"
+    },
+    {
+      "id": "mental-journaling",
+      "category": "mental",
+      "effort": "Journaling",
+      "reason": "Present moment awareness — slowing down enough to realize we are all we need to be",
+      "how": "Using Google Docs as a reflection space, not as a task planner or psychoanalyzer"
+    },
+    {
+      "id": "mental-healthyminds",
+      "category": "mental",
+      "effort": "Healthy Minds Sessions",
+      "reason": "To cover a range of healthy mind practices that in turn grow a richer reality and experience",
+      "how": "Daily sessions on the Healthy Minds app"
+    },
+    {
+      "id": "mental-cleanspaces",
+      "category": "mental",
+      "effort": "Clean Spaces / Things",
+      "reason": "Less clutter will always equal calm — routine prevents needing to catch up",
+      "how": "Follow the TickTick schedule and do extra when we can"
+    },
+    {
+      "id": "connection-social",
+      "category": "connection",
+      "effort": "Social Connection",
+      "reason": "To feel connected and cultured — being present with the people in the world around us",
+      "how": "Look for / plan lunches, fun experiences, momentum"
+    },
+    {
+      "id": "connection-relationships",
+      "category": "connection",
+      "effort": "Cultivating Relationships",
+      "reason": "To give friendship and compassion to someone I can build memories and experiences with",
+      "how": "To be a villager — put in the effort"
+    },
+    {
+      "id": "connection-experiences",
+      "category": "connection",
+      "effort": "Experiences and Pics",
+      "reason": "Creating novel experiences I can look back on reflectively with proudness",
+      "how": "Make opportunities for pics"
+    },
+    {
+      "id": "connection-training",
+      "category": "connection",
+      "effort": "Training (Marvel)",
+      "reason": "To help Marvel and I's bond and promote an environment where he knows how to be",
+      "how": "Following the plan and auditing monthly"
+    },
+    {
+      "id": "financial-credit",
+      "category": "financial",
+      "effort": "Credit",
+      "reason": "To ascertain a credit score that opens the door for us to be independent and long lasting",
+      "how": "Making active accounts attractive, paying old debts, and a plan for the two big ones"
+    },
+    {
+      "id": "financial-savings",
+      "category": "financial",
+      "effort": "Moving Forward Savings",
+      "reason": "To give us the tools needed to spread our wings into the world, to experience life",
+      "how": "Using the savings tracker to best build how we are preparing ourselves"
+    },
+    {
+      "id": "financial-material",
+      "category": "financial",
+      "effort": "Material",
+      "reason": "To catch up on odds and ends that cause us disdain",
+      "how": "Use the sheet to snowball them into a complete state"
+    },
+    {
+      "id": "spiritual-guitar",
+      "category": "spiritual",
+      "effort": "Guitar",
+      "reason": "To embody the art of acoustic songwriting and storytelling",
+      "how": "Use TickTick reminder with the guitar reference sheet"
+    },
+    {
+      "id": "spiritual-vocal",
+      "category": "spiritual",
+      "effort": "Vocal",
+      "reason": "To give our gift a place to grow and tell the story of emotion through expression",
+      "how": "Use TickTick reminder with the guitar reference sheet"
+    },
+    {
+      "id": "spiritual-production",
+      "category": "spiritual",
+      "effort": "Production",
+      "reason": "To master how to deliver our creativity to a broad range in a quality and well-done way",
+      "how": "Use TickTick reminder with the guitar reference sheet"
+    }
+  ]
+}
