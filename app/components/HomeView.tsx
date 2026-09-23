@@ -1,6 +1,6 @@
 'use client';
 
-import type { SourceId, SourceSnapshot, SpaceId } from '../../lib/types';
+import type { FeaturedItem, SourceId, SourceSnapshot, SpaceId, TaskItem } from '../../lib/types';
 import { sourceById } from '../../lib/sources';
 import { updatedLabel } from '../../lib/protocol';
 import type { CompletionStats, SourceShare } from '../../lib/completions';
@@ -19,6 +19,9 @@ function SourceRow({
   snapshots,
   enter,
   openSource,
+  onCompleteFeatured,
+  onCompleteTask,
+  onStarTask,
   fullWidth,
 }: {
   ids: SourceId[];
@@ -26,6 +29,9 @@ function SourceRow({
   snapshots: Record<SourceId, SourceSnapshot>;
   enter: (id: SpaceId) => void;
   openSource: (id: SourceId) => void;
+  onCompleteFeatured: (source: SourceId, item: FeaturedItem) => void;
+  onCompleteTask: (source: SourceId, task: TaskItem) => void;
+  onStarTask: (source: SourceId, task: TaskItem) => void;
   fullWidth?: boolean;
 }) {
   return (
@@ -41,6 +47,9 @@ function SourceRow({
             snapshot={snapshots[id]}
             onEnter={() => enter(id)}
             onOpen={() => openSource(id)}
+            onCompleteFeatured={item => onCompleteFeatured(id, item)}
+            onCompleteTask={task => onCompleteTask(id, task)}
+            onStarTask={task => onStarTask(id, task)}
           />
         ))}
       </div>
@@ -52,12 +61,18 @@ export function HomeView({
   snapshots,
   enter,
   openSource,
+  onCompleteFeatured,
+  onCompleteTask,
+  onStarTask,
   completionStats,
   completionShares,
 }: {
   snapshots: Record<SourceId, SourceSnapshot>;
   enter: (id: SpaceId) => void;
   openSource: (id: SourceId) => void;
+  onCompleteFeatured: (source: SourceId, item: FeaturedItem) => void;
+  onCompleteTask: (source: SourceId, task: TaskItem) => void;
+  onStarTask: (source: SourceId, task: TaskItem) => void;
   completionStats: CompletionStats;
   completionShares: SourceShare[];
 }) {
@@ -93,14 +108,55 @@ export function HomeView({
       </section>
 
       <div className="hub-overview">
-        <PriorityBoard snapshots={snapshots} enter={id => enter(id)} />
+        <PriorityBoard
+          snapshots={snapshots}
+          enter={id => enter(id)}
+          onComplete={(source, item) => onCompleteFeatured(source, item)}
+        />
         <ReviewPanel stats={completionStats} shares={completionShares} />
       </div>
 
-      <SourceRow ids={SELF_ROW} label="Self" snapshots={snapshots} enter={enter} openSource={openSource} fullWidth />
-      <SourceRow ids={ROW_1} label="Daily ops" snapshots={snapshots} enter={enter} openSource={openSource} />
-      <SourceRow ids={ROW_2} label="Money · role · move" snapshots={snapshots} enter={enter} openSource={openSource} />
-      <SourceRow ids={ROW_3} label="Ventures" snapshots={snapshots} enter={enter} openSource={openSource} />
+      <SourceRow
+        ids={SELF_ROW}
+        label="Self"
+        snapshots={snapshots}
+        enter={enter}
+        openSource={openSource}
+        onCompleteFeatured={onCompleteFeatured}
+        onCompleteTask={onCompleteTask}
+        onStarTask={onStarTask}
+        fullWidth
+      />
+      <SourceRow
+        ids={ROW_1}
+        label="Daily ops"
+        snapshots={snapshots}
+        enter={enter}
+        openSource={openSource}
+        onCompleteFeatured={onCompleteFeatured}
+        onCompleteTask={onCompleteTask}
+        onStarTask={onStarTask}
+      />
+      <SourceRow
+        ids={ROW_2}
+        label="Money · role · move"
+        snapshots={snapshots}
+        enter={enter}
+        openSource={openSource}
+        onCompleteFeatured={onCompleteFeatured}
+        onCompleteTask={onCompleteTask}
+        onStarTask={onStarTask}
+      />
+      <SourceRow
+        ids={ROW_3}
+        label="Ventures"
+        snapshots={snapshots}
+        enter={enter}
+        openSource={openSource}
+        onCompleteFeatured={onCompleteFeatured}
+        onCompleteTask={onCompleteTask}
+        onStarTask={onStarTask}
+      />
 
       <footer className="home-footer">
         <span>Randy&apos;s Life Hub</span>

@@ -44,9 +44,11 @@ function resolvePinned(
 export function PriorityBoard({
   snapshots,
   enter,
+  onComplete,
 }: {
   snapshots: Record<SourceId, SourceSnapshot>;
   enter: (id: SourceId) => void;
+  onComplete?: (source: SourceId, item: FeaturedItem) => void;
 }) {
   const { pins, removePin } = usePriorityPins();
   const ordered = useMemo(() => resolvePinned(snapshots, pins), [snapshots, pins]);
@@ -79,13 +81,27 @@ export function PriorityBoard({
               {item.detail ? <p>{item.detail}</p> : null}
               <div className="priority-actions">
                 <span>{item.meta}</span>
-                <button
-                  type="button"
-                  className="row-action ghost"
-                  onClick={() => removePin(item.source, item.id)}
-                >
-                  Remove
-                </button>
+                <div className="priority-action-buttons">
+                  {onComplete ? (
+                    <button
+                      type="button"
+                      className="row-action"
+                      onClick={() => {
+                        onComplete(item.source, item);
+                        removePin(item.source, item.id);
+                      }}
+                    >
+                      Done
+                    </button>
+                  ) : null}
+                  <button
+                    type="button"
+                    className="row-action ghost"
+                    onClick={() => removePin(item.source, item.id)}
+                  >
+                    Remove
+                  </button>
+                </div>
               </div>
             </article>
           ))}

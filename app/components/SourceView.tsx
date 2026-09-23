@@ -32,6 +32,7 @@ export function SourceView({
   onSelfStar: (id: string) => void;
 }) {
   const copy = sourceById[sourceId];
+  const links = copy.relatedLinks || [];
   return (
     <div className="room">
       <section className="room-hero">
@@ -39,6 +40,16 @@ export function SourceView({
         <div>
           <p className="room-eyebrow">{copy.eyebrow}</p>
           <h1>{copy.name}</h1>
+          {links.length ? (
+            <div className="related-links room-related">
+              {links.map(link => (
+                <a key={link.url} href={link.url} target="_blank" rel="noopener noreferrer">
+                  {link.label}
+                </a>
+              ))}
+              <span className="related-hint">Goals build routines; routines build TickTick.</span>
+            </div>
+          ) : null}
           <p className="room-intro">{copy.intro}</p>
         </div>
         <div className="room-symbol" aria-hidden="true">
@@ -55,7 +66,7 @@ export function SourceView({
               ? 'This source is reserved. Metrics and bridge wiring come in a later pass.'
               : copy.bridge === 'local'
                 ? 'Add, star, and complete Self items on this hub. They stay in this browser until you categorize them to another origin.'
-                : 'Open the origin from here. Star items there so they feature on this card. Completing on the hub will notify the origin when its bridge listens for randys-workroom:complete.'}
+                : 'Open the origin from here. Star items there so they feature on this card. Completing on the hub dismisses the action item here and notifies iframe origins when their bridge listens for randys-workroom:complete.'}
           </p>
           {copy.url ? (
             <button className="primary-link" type="button" onClick={openSource}>

@@ -96,6 +96,23 @@ button:disabled { cursor: not-allowed; opacity: .55; }
 .card-metrics strong { display: block; font-size: 20px; font-weight: 680; line-height: 1; letter-spacing: -.04em; }
 .card-metrics span { display: block; margin-top: 5px; color: var(--muted); font-size: 9px; line-height: 1.25; }
 .card-metrics p { grid-column: 1/-1; margin: 4px 0 0; color: var(--muted); font-size: 10px; }
+.metric-actionable strong { color: #2563eb; }
+.metric-actionable span { color: #2563eb; font-weight: 700; }
+.related-links {
+  display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 12px;
+  margin: 8px 0 0;
+}
+.related-links a {
+  color: var(--card-accent, var(--accent)); font-size: 12px; font-weight: 680;
+  text-decoration: underline; text-underline-offset: 2px;
+}
+.related-links a:hover { opacity: .85; }
+.related-hint {
+  flex-basis: 100%; color: var(--muted); font-size: 10px; line-height: 1.35;
+}
+.room-related { margin: 8px 0 12px; }
+.room-related a { color: var(--accent); }
+.priority-action-buttons { display: flex; gap: 6px; flex-wrap: wrap; }
 
 .card-actions { margin-top: auto; display: grid; grid-template-columns: auto 1fr; gap: 8px; }
 .open-button, .enter-button {
@@ -125,6 +142,8 @@ button:disabled { cursor: not-allowed; opacity: .55; }
 .room-metrics article { padding: 22px; border-right: 1px solid var(--line); }
 .room-metrics strong { display: block; font-size: 30px; font-weight: 680; line-height: 1; letter-spacing: -.045em; }
 .room-metrics span { display: block; margin-top: 8px; color: var(--muted); font-size: 10px; }
+.room-metrics .metric-actionable strong { color: #2563eb; }
+.room-metrics .metric-actionable span { color: #2563eb; font-weight: 700; }
 .room-metrics > p { grid-column: 1/-1; margin: 0; padding: 11px 24px; border-top: 1px solid var(--line); background: var(--surface-2); color: var(--muted); font-size: 10px; }
 .room-body { max-width: calc(1440px - 8vw); min-height: 520px; margin: 0 auto 60px; display: grid; grid-template-columns: minmax(250px,31%) 1fr; border: 1px solid var(--line); border-radius: 18px; background: white; overflow: hidden; }
 .room-aside { padding: 34px; border-right: 1px solid var(--line); background: var(--accent-soft); }

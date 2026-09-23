@@ -26,6 +26,7 @@ import {
   isConnectorSource,
   openConnectorOrigin,
 } from '../lib/connectors';
+import { metricsAfterLocalComplete } from '../lib/actionable';
 import { Header } from './components/Header';
 import { HomeView } from './components/HomeView';
 import { SourceView } from './components/SourceView';
@@ -310,41 +311,46 @@ export function LifeHub() {
   };
 
   const completeOnHub = (source: SourceId, id: string) => {
+    const snapNow = snapshotsRef.current[source];
     const title =
-      snapshotsRef.current[source]?.tasks?.find(t => t.id === id)?.title ||
-      snapshotsRef.current[source]?.featured?.find(f => f.id === id)?.title;
+      snapNow?.tasks?.find(t => t.id === id)?.title ||
+      snapNow?.featured?.find(f => f.id === id)?.title;
     if (source === 'self') {
       setLedger(recordCompletion('self', id, { via: 'self', title }));
       syncSelf(toggleSelfComplete(id));
       return;
     }
+
     setLedger(recordCompletion(source, id, { via: 'hub', title }));
-    // Connector cards: open origin URL until two-way API complete exists.
-    if (isConnectorSource(source)) {
-      const snap = snapshots[source];
-      const item =
-        snap.featured.find(f => f.id === id) ||
-        snap.tasks.find(t => t.id === id) ||
-        {};
-      openConnectorOrigin(item, sourceById[source].url);
-      return;
-    }
+
+    const def = sourceById[source];
+    const isIframe = def.bridge === 'iframe';
+    // Connectors (gmail/outlook/ticktick/radall/role): local dismiss — do not open origin.
+    // Iframe origins: optimistic local done + broadcastComplete.
+    const removeFromLists = isConnectorSource(source);
+
     setSnapshots(current => {
       const snap = current[source];
+      if (!snap) return current;
+      const nextMetrics = metricsAfterLocalComplete(source, snap, id);
+      const tasks = removeFromLists
+        ? snap.tasks.filter(task => task.id !== id)
+        : snap.tasks.map(task => (task.id === id ? { ...task, status: 'done' } : task));
+      const featured = snap.featured.filter(item => item.id !== id);
       return {
         ...current,
         [source]: {
           ...snap,
-          featured: snap.featured.filter(item => item.id !== id),
-          tasks: snap.tasks.map(task => (task.id === id ? { ...task, status: 'done' } : task)),
-          metrics: {
-            ...snap.metrics,
-            open: Math.max(0, (snap.metrics.open ?? snap.tasks.filter(t => t.status !== 'done').length) - 1),
-          },
+          featured,
+          tasks,
+          metrics: nextMetrics,
         },
       };
     });
-    broadcastComplete(source, id);
+
+    if (isIframe) {
+      broadcastComplete(source, id);
+    }
   };
 
   const starOnHub = (source: SourceId, task: TaskItem) => {
@@ -402,6 +408,9 @@ export function LifeHub() {
           enter={enter}
           snapshots={snapshots}
           openSource={openSource}
+          onCompleteFeatured={(source, item) => completeOnHub(source, item.id)}
+          onCompleteTask={(source, task) => completeOnHub(source, task.id)}
+          onStarTask={(source, task) => starOnHub(source, task)}
           completionStats={completionStats}
           completionShares={sourceShares(completionStats)}
         />

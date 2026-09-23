@@ -51,7 +51,7 @@ export function FeaturedList({
                 >
                   {pinned ? 'In priority' : 'Priority'}
                 </button>
-                {!compact && item.completable && onComplete ? (
+                {onComplete ? (
                   <button
                     type="button"
                     className="row-action"

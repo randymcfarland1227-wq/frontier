@@ -30,6 +30,10 @@ export const sources: SourceDefinition[] = [
     empty: 'Connect TickTick to feature habits and tasks here.',
     url: 'https://ticktick.com',
     bridge: 'none',
+    relatedLinks: [
+      { label: 'Goals', url: 'https://randymcfarland1227-wq.github.io/Goals-hub/' },
+      { label: 'Routines', url: 'https://randymcfarland1227-wq.github.io/routine-hub/' },
+    ],
     metrics: [
       { key: 'dueToday', label: 'Due today' },
       { key: 'overdue', label: 'Overdue' },

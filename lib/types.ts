@@ -79,6 +79,8 @@ export type WorkroomMessage =
 
 export type MetricDefinition = { key: string; label: string };
 
+export type RelatedLink = { label: string; url: string };
+
 export type SourceDefinition = {
   id: SourceId;
   number: string;
@@ -97,4 +99,6 @@ export type SourceDefinition = {
   placeholder?: boolean;
   metrics: MetricDefinition[];
   allowedOrigins?: string[];
+  /** Optional secondary links under the source name (e.g. TickTick Goals / Routines). */
+  relatedLinks?: RelatedLink[];
 };

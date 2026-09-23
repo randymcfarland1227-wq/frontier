@@ -111,7 +111,12 @@ Hub SPA (`lib/connectors.ts`) fetches `BASE_URL + 'data/<id>.json'` after localS
 
 ### Complete / star on connector cards
 
-For now, Done / star on connector items **opens the origin URL** (`originUrl` or the source Open link). Two-way API complete/star comes later.
+**Done on the hub** always `recordCompletion`s in the ledger, then:
+- **gmail / outlook / ticktick / radall / role**: remove the item from local `tasks` + `featured` (dismiss). Do not require opening mail/TickTick. TickTick Open API complete can come later.
+- **iframe origins** (resale, candle, income, move, repair): optimistic mark done / remove from open list + `broadcastComplete` (`randys-workroom:complete`).
+- **self**: local complete as before.
+
+Star on connector items still opens the origin URL until two-way API star exists.
 
 ### Layout extras
 
