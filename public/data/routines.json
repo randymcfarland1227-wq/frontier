@@ -1,0 +1,529 @@
+{
+ "version": 1,
+ "note": "Fallback copy of Routine Hub routines (live: Routine Hub Apps Script ?action=routines). Only id/category/focus are used — to sort TickTick items into focus areas.",
+ "snapshotAt": "2026-09-23",
+ "routines": [
+  {
+   "id": "mind-healthy-minds-session",
+   "category": "mind",
+   "focus": "Healthy Minds Sessions",
+   "active": true
+  },
+  {
+   "id": "mind-journaling",
+   "category": "mind",
+   "focus": "Journal or Self Discovery",
+   "active": true
+  },
+  {
+   "id": "mind-reading",
+   "category": "mind",
+   "focus": "Read (Even 3 Pages)",
+   "active": true
+  },
+  {
+   "id": "mind-clothes-audit",
+   "category": "organizing",
+   "focus": "Monthly Closet Audit",
+   "active": true
+  },
+  {
+   "id": "mind-smile-to-yourself",
+   "category": "mind",
+   "focus": "Smile to Yourself",
+   "active": true
+  },
+  {
+   "id": "mind-weekday-reminders",
+   "category": "mind",
+   "focus": "Open Grounding (Reminders)",
+   "active": true
+  },
+  {
+   "id": "mind-personal-check-in",
+   "category": "mind",
+   "focus": "Personal Check In (Bi Weekly)",
+   "active": true
+  },
+  {
+   "id": "body-cardio-training",
+   "category": "body",
+   "focus": "Cardio — Gym",
+   "active": true
+  },
+  {
+   "id": "body-protein-intake",
+   "category": "body",
+   "focus": "Protein Intake",
+   "active": false
+  },
+  {
+   "id": "body-vitamins-supplements",
+   "category": "body",
+   "focus": "Medicine and Vitamins",
+   "active": true
+  },
+  {
+   "id": "body-abdominal-training",
+   "category": "body",
+   "focus": "Abdominal Training — Gym",
+   "active": true
+  },
+  {
+   "id": "body-water-intake",
+   "category": "body",
+   "focus": "Drink 5 Bottles of Water",
+   "active": true
+  },
+  {
+   "id": "body-moisturize-body",
+   "category": "body",
+   "focus": "Moisturize Body",
+   "active": true
+  },
+  {
+   "id": "body-feet-care",
+   "category": "body",
+   "focus": "Foot Care and Moisturize",
+   "active": true
+  },
+  {
+   "id": "body-weekly-bath",
+   "category": "body",
+   "focus": "Shower or Epsom Salt Bath",
+   "active": true
+  },
+  {
+   "id": "body-washing-face-complexion",
+   "category": "body",
+   "focus": "Face Washing & Care",
+   "active": true
+  },
+  {
+   "id": "body-getting-haircut",
+   "category": "body",
+   "focus": "Schedule Haircut",
+   "active": true
+  },
+  {
+   "id": "body-put-out-gym-clothes",
+   "category": "body",
+   "focus": "Put Out Gym Clothes",
+   "active": true
+  },
+  {
+   "id": "body-nail-cuticle-care",
+   "category": "body",
+   "focus": "Nail and Cuticle Care",
+   "active": true
+  },
+  {
+   "id": "soul-main-session",
+   "category": "soul",
+   "focus": "Music Session — Main",
+   "active": true
+  },
+  {
+   "id": "soul-support-session",
+   "category": "soul",
+   "focus": "Music Session — Support",
+   "active": true
+  },
+  {
+   "id": "soul-maintenance-session",
+   "category": "soul",
+   "focus": "Music Session — Maintenance",
+   "active": true
+  },
+  {
+   "id": "soul-monthly-review",
+   "category": "soul",
+   "focus": "Music Month Review",
+   "active": true
+  },
+  {
+   "id": "soul-vocal-training",
+   "category": "soul",
+   "focus": "Vocal Training / Warm-Ups",
+   "active": true
+  },
+  {
+   "id": "soul-pinterest-reset",
+   "category": "soul",
+   "focus": "Pinterest Board Reset",
+   "active": true
+  },
+  {
+   "id": "cleaning-wash-bedding",
+   "category": "cleaning",
+   "focus": "Wash Bedding",
+   "active": true
+  },
+  {
+   "id": "cleaning-vacuum-room",
+   "category": "cleaning",
+   "focus": "Vacuum Room",
+   "active": true
+  },
+  {
+   "id": "cleaning-wipe-room-surfaces",
+   "category": "cleaning",
+   "focus": "Wipe Room Surfaces",
+   "active": true
+  },
+  {
+   "id": "cleaning-vacuum-car",
+   "category": "cleaning",
+   "focus": "Vacuum Car",
+   "active": true
+  },
+  {
+   "id": "cleaning-clean-laundry",
+   "category": "cleaning",
+   "focus": "Wash Clothes",
+   "active": true
+  },
+  {
+   "id": "cleaning-clean-phone-laptop-glasses",
+   "category": "cleaning",
+   "focus": "Wipe Down Phone, Laptop, and Glasses",
+   "active": true
+  },
+  {
+   "id": "cleaning-clean-tote-bag",
+   "category": "cleaning",
+   "focus": "Clean Out Tote",
+   "active": true
+  },
+  {
+   "id": "cleaning-clean-headphones",
+   "category": "cleaning",
+   "focus": "Clean Headphones",
+   "active": true
+  },
+  {
+   "id": "cleaning-wash-tote-bag",
+   "category": "cleaning",
+   "focus": "Wash Tote Bag",
+   "active": true
+  },
+  {
+   "id": "organizing-digital-declutter",
+   "category": "organizing",
+   "focus": "Digital Declutter",
+   "active": true
+  },
+  {
+   "id": "organizing-water-plants",
+   "category": "organizing",
+   "focus": "Water Plants",
+   "active": true
+  },
+  {
+   "id": "organizing-organize-drawers",
+   "category": "organizing",
+   "focus": "Reset Drawers, Closet, and Fireplace",
+   "active": true
+  },
+  {
+   "id": "organizing-weekly-grocery-shop",
+   "category": "organizing",
+   "focus": "Put Grocery Order In",
+   "active": true
+  },
+  {
+   "id": "organizing-meal-prepping",
+   "category": "organizing",
+   "focus": "Meal Prep",
+   "active": true
+  },
+  {
+   "id": "organizing-personal-finance-allocation",
+   "category": "organizing",
+   "focus": "Weekly Finances Review",
+   "active": true
+  },
+  {
+   "id": "organizing-savings-allocations",
+   "category": "organizing",
+   "focus": "Savings Allocations",
+   "active": true
+  },
+  {
+   "id": "organizing-needed-purchases",
+   "category": "organizing",
+   "focus": "Needed / Recurring Purchase Review",
+   "active": true
+  },
+  {
+   "id": "organizing-goal-effort-review",
+   "category": "organizing",
+   "focus": "Goal Review",
+   "active": true
+  },
+  {
+   "id": "organizing-week-planner-prep",
+   "category": "organizing",
+   "focus": "Fill in Planner for Week",
+   "active": true
+  },
+  {
+   "id": "organizing-next-step-awareness-review",
+   "category": "organizing",
+   "focus": "Next Step Awareness Review",
+   "active": true
+  },
+  {
+   "id": "organizing-family-altruism-review",
+   "category": "organizing",
+   "focus": "Family Altruism Review",
+   "active": true
+  },
+  {
+   "id": "organizing-family-finance-review",
+   "category": "organizing",
+   "focus": "Family Finance Review",
+   "active": true
+  },
+  {
+   "id": "organizing-reset-medicine-holder",
+   "category": "organizing",
+   "focus": "Reset Medicine and Vitamin Holder",
+   "active": true
+  },
+  {
+   "id": "dog-daily-brushing",
+   "category": "dog",
+   "focus": "Daily Brushing",
+   "active": false
+  },
+  {
+   "id": "dog-play-sessions",
+   "category": "dog",
+   "focus": "Train / Play with Marvel",
+   "active": true
+  },
+  {
+   "id": "dog-cuddling",
+   "category": "dog",
+   "focus": "Cuddling",
+   "active": false
+  },
+  {
+   "id": "dog-behavior-training",
+   "category": "dog",
+   "focus": "Daily Marvel Care — Attention + Enrichment",
+   "active": true
+  },
+  {
+   "id": "dog-walks",
+   "category": "dog",
+   "focus": "Walk Marvel — Priority",
+   "active": true
+  },
+  {
+   "id": "dog-command-training",
+   "category": "dog",
+   "focus": "Command Training",
+   "active": false
+  },
+  {
+   "id": "dog-weekly-vacuum-marvel",
+   "category": "dog",
+   "focus": "Vacuum Brush Marvel",
+   "active": true
+  },
+  {
+   "id": "dog-brush-teeth",
+   "category": "dog",
+   "focus": "Brush Teeth",
+   "active": false
+  },
+  {
+   "id": "dog-supply-inventory-count",
+   "category": "dog",
+   "focus": "Marvel Supply Count / Resupply",
+   "active": true
+  },
+  {
+   "id": "dog-behavior-train-audit",
+   "category": "dog",
+   "focus": "Marvel Review",
+   "active": true
+  },
+  {
+   "id": "dog-supply-organization",
+   "category": "dog",
+   "focus": "Supply Organization",
+   "active": false
+  },
+  {
+   "id": "dog-clip-nails",
+   "category": "dog",
+   "focus": "Schedule Marvel Groomer Visit",
+   "active": true
+  },
+  {
+   "id": "dog-behavioral-audit",
+   "category": "dog",
+   "focus": "Behavioral Audit",
+   "active": false
+  },
+  {
+   "id": "body-teeth-night",
+   "category": "body",
+   "focus": "Teeth Brushing — Night Routine",
+   "active": true
+  },
+  {
+   "id": "body-full-gym-session",
+   "category": "body",
+   "focus": "Full Gym Session — Complete Flow",
+   "active": true
+  },
+  {
+   "id": "body-active-pt",
+   "category": "body",
+   "focus": "Active PT — Follow PDF",
+   "active": true
+  },
+  {
+   "id": "body-creatine-fiber",
+   "category": "body",
+   "focus": "Creatine and Fiber Supplements",
+   "active": true
+  },
+  {
+   "id": "mind-open-job-search",
+   "category": "organizing",
+   "focus": "Daily Work & Income Flow",
+   "active": true
+  },
+  {
+   "id": "cleaning-room-reset",
+   "category": "cleaning",
+   "focus": "Clean Room Reset",
+   "active": true
+  },
+  {
+   "id": "cleaning-kitchen-usable",
+   "category": "cleaning",
+   "focus": "Make Kitchen Usable",
+   "active": true
+  },
+  {
+   "id": "mind-daytime-rest",
+   "category": "mind",
+   "focus": "Daytime Rest / Quiet Reset",
+   "active": true
+  },
+  {
+   "id": "body-fruit-vegetable",
+   "category": "body",
+   "focus": "Eat a Fruit or Vegetable",
+   "active": true
+  },
+  {
+   "id": "body-movement-break",
+   "category": "body",
+   "focus": "Movement Break — Walk, Stretch, or Stand",
+   "active": true
+  },
+  {
+   "id": "soul-creative-tinkering",
+   "category": "soul",
+   "focus": "Creative / Tinkering Session",
+   "active": true
+  },
+  {
+   "id": "organizing-side-hustle-progress",
+   "category": "organizing",
+   "focus": "Side Hustle Progress",
+   "active": false
+  },
+  {
+   "id": "body-face-shaving",
+   "category": "body",
+   "focus": "Face Shaving — Every 3 Days",
+   "active": true
+  },
+  {
+   "id": "body-body-shaving",
+   "category": "body",
+   "focus": "Body Shaving — Weekly",
+   "active": true
+  },
+  {
+   "id": "body-recovery-options",
+   "category": "body",
+   "focus": "Recovery: TENS/Massage Gun/Dry Brush/Chair/Stretch-Yoga/Relax",
+   "active": true
+  },
+  {
+   "id": "cleaning-bathroom-weekly",
+   "category": "cleaning",
+   "focus": "Clean Bathroom — Weekly",
+   "active": true
+  },
+  {
+   "id": "cleaning-wash-towels",
+   "category": "cleaning",
+   "focus": "Wash Towels",
+   "active": true
+  },
+  {
+   "id": "organizing-instagram-review",
+   "category": "organizing",
+   "focus": "Instagram Following Review",
+   "active": true
+  },
+  {
+   "id": "body-nutrition-flow-note",
+   "category": "body",
+   "focus": "Nutrition Flow — Use Macro Tracker",
+   "active": true
+  },
+  {
+   "id": "body-gym-standards-note",
+   "category": "body",
+   "focus": "Gym Session Standards",
+   "active": true
+  },
+  {
+   "id": "organizing-life-path-note",
+   "category": "organizing",
+   "focus": "Life Path & Active Project Direction",
+   "active": true
+  },
+  {
+   "id": "organizing-job-search-map-note",
+   "category": "organizing",
+   "focus": "Job Search Flow — Coverage Map",
+   "active": true
+  },
+  {
+   "id": "dog-marvel-care-note",
+   "category": "dog",
+   "focus": "Marvel Care & Attention Menu",
+   "active": true
+  },
+  {
+   "id": "soul-music-log-note",
+   "category": "soul",
+   "focus": "Music Sessions Log",
+   "active": true
+  },
+  {
+   "id": "soul-creative-project-menu-note",
+   "category": "soul",
+   "focus": "Creative / Tinkering & Project Menu",
+   "active": true
+  },
+  {
+   "id": "mind-rest-sleep-note",
+   "category": "mind",
+   "focus": "Rest & Sleep Priorities",
+   "active": true
+  }
+ ]
+}

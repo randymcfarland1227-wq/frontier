@@ -51,6 +51,7 @@ import {
 import { addCapture, loadCaptures, markPromoted, setCaptureStatus, type Capture } from '../lib/captures';
 import { CapturesPanel } from './components/CapturesPanel';
 import { WhyPanel } from './components/WhyPanel';
+import { QuickCapture } from './components/QuickCapture';
 import { consumeLocationHash, startCloudSync, SYNCED_EVENT } from '../lib/cloudSync';
 import { addLink, loadGoals, loadSeedLinks, mergeLinks, removeLink, type GoalLink, type GoalsData } from '../lib/goals';
 import { backfillFocusAreas, loadFocusAreas, type FocusAreaConfig } from '../lib/focusAreas';
@@ -94,6 +95,8 @@ function mergeConnectorSnapshots(
   for (const id of CONNECTOR_SOURCE_IDS) {
     const snap = incoming[id];
     if (!snap) continue;
+    // Role Hub also posts live snapshots; keep whichever is newer.
+    if (id === 'role' && Date.parse(current[id]?.refreshedAt || '') > Date.parse(snap.refreshedAt || '')) continue;
     // Always overwrite the four connector sources from network (do not wipe iframe sources).
     next[id] = {
       source: id,
@@ -239,8 +242,15 @@ export function LifeHub() {
     const saveSnapshot = (payload: SourceSnapshot, preserveFeatured = false) => {
       const id = normalizeSourceId(String(payload.source));
       if (!id || id === 'self') return;
-      // Do not let postMessage wipe connector JSON sources.
-      if (isConnectorSource(id)) return;
+      // Do not let postMessage wipe connector JSON sources — except Role Hub, which posts
+      // its own live snapshot when opened; accept it only if newer than what we have.
+      if (isConnectorSource(id) && id !== 'role') return;
+      if (
+        id === 'role' &&
+        Date.parse(snapshotsRef.current.role?.refreshedAt || '') > Date.parse(payload.refreshedAt || '')
+      ) {
+        return;
+      }
       setSnapshots(current => {
         const nextSnap = {
           source: id,
@@ -506,6 +516,12 @@ export function LifeHub() {
           completionShares={sourceShares(completionStats)}
           ledger={taggedLedger}
           focusConfig={focusConfig}
+          selfQuickCapture={
+            <QuickCapture
+              onAddTask={(title, detail) => syncSelf(addSelfItem(title, detail))}
+              onAddCapture={(kind, title, notes) => setCaptures(addCapture({ kind, title, notes }))}
+            />
+          }
           whyPanel={
             goalsData ? (
               <WhyPanel

@@ -27,8 +27,23 @@ export type FocusArea = {
   color?: string;
 };
 
+export type RoutineConfig = {
+  /** Routine Hub Apps Script `?action=routines` (live) */
+  api?: string;
+  /** Bundled fallback, relative to the site base */
+  snapshot?: string;
+  categoryAreas: Record<string, FocusAreaId>;
+  /** Per-routine override (routine id → area) for mixed categories like Organizing */
+  routineAreas?: Record<string, FocusAreaId>;
+};
+
+type Routine = { id: string; category: string; focus: string };
+
 export type FocusAreaConfig = {
   version: number;
+  /** Bump to re-sort history recorded under older rules */
+  rulesVersion?: number;
+  routines?: RoutineConfig;
   areas: FocusArea[];
   /** Sources whose completions never count toward Balance (e.g. site repair) */
   excludeSources?: SourceId[];
@@ -48,6 +63,37 @@ export type FocusSubject = {
 };
 
 let loadedConfig: FocusAreaConfig | null = null;
+/** Normalized routine name → area, built from Routine Hub */
+let routineIndex: Array<{ key: string; area: FocusAreaId }> = [];
+
+/** Lowercase words, trailing plural "s" dropped, so "Healthy Mind Sessions- Foundations" ≈ "Healthy Minds Session". */
+function routineKey(title: string): string {
+  return title
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, ' ')
+    .trim()
+    .split(' ')
+    .map(w => (w.length > 3 && w.endsWith('s') ? w.slice(0, -1) : w))
+    .join(' ');
+}
+
+function buildRoutineIndex(routines: Routine[], cfg: RoutineConfig) {
+  routineIndex = routines
+    .map(r => ({ key: routineKey(r.focus || ''), area: cfg.routineAreas?.[r.id] ?? cfg.categoryAreas[r.category] }))
+    .filter((r): r is { key: string; area: FocusAreaId } => Boolean(r.key && r.area))
+    // Longest name first so the most specific routine wins a prefix match
+    .sort((a, b) => b.key.length - a.key.length);
+}
+
+/** Area from Routine Hub: exact name match, else the title starts with a routine's name. */
+function routineArea(title?: string): FocusAreaId | undefined {
+  if (!title || !routineIndex.length) return undefined;
+  const key = routineKey(title);
+  return (
+    routineIndex.find(r => r.key === key)?.area ??
+    routineIndex.find(r => r.key.split(' ').length >= 2 && key.startsWith(`${r.key} `))?.area
+  );
+}
 
 export function getFocusConfig(): FocusAreaConfig | null {
   return loadedConfig;
@@ -78,11 +124,29 @@ export async function loadFocusAreas(): Promise<FocusAreaConfig | null> {
     if (!res.ok) return null;
     const json: unknown = await res.json();
     if (!isConfig(json)) return null;
+    if (json.routines) await loadRoutines(json.routines);
     loadedConfig = json;
     return json;
   } catch {
     return null;
   }
+}
+
+async function loadRoutines(cfg: RoutineConfig) {
+  const get = async (url: string) => {
+    try {
+      const res = await fetch(url, { cache: 'no-store' });
+      return res.ok ? ((await res.json()) as unknown) : null;
+    } catch {
+      return null;
+    }
+  };
+  const isRoutines = (v: unknown): v is Routine[] =>
+    Array.isArray(v) && v.length > 0 && v.every(r => r && typeof r.focus === 'string' && typeof r.category === 'string');
+  const live = cfg.api ? await get(cfg.api) : null;
+  if (isRoutines(live)) return buildRoutineIndex(live, cfg);
+  const snap = cfg.snapshot ? ((await get(`${baseUrl()}${cfg.snapshot}`)) as { routines?: unknown } | null) : null;
+  if (isRoutines(snap?.routines)) buildRoutineIndex(snap.routines, cfg);
 }
 
 function inferKind(subject: FocusSubject): string | undefined {
@@ -129,6 +193,11 @@ export function resolveFocusArea(
 ): FocusAreaId | undefined {
   if (!config) return undefined;
   let best: { id: FocusAreaId; score: number } | undefined;
+  // Routine Hub category: beats a single project/tag rule (3), loses to project+title combos (5)
+  if (subject.source === 'ticktick') {
+    const area = routineArea(subject.title);
+    if (area) best = { id: area, score: 4 };
+  }
   for (const area of config.areas) {
     for (const rule of area.sourceMap) {
       const score = ruleScore(rule, subject);
@@ -149,7 +218,8 @@ export function backfillFocusAreas(
 ): boolean {
   let changed = false;
   for (const entry of Object.values(ledger.entries)) {
-    if (entry.focusAreaId) continue;
+    if (entry.focusManual) continue;
+    if (entry.focusAreaId && (entry.focusRules ?? 1) >= (config.rulesVersion ?? 1)) continue;
     const task = snapshots?.[entry.source]?.tasks?.find(t => t.id === entry.taskId);
     const id = resolveFocusArea(
       {
@@ -162,8 +232,9 @@ export function backfillFocusAreas(
       },
       config,
     );
-    if (id) {
+    if (id && (id !== entry.focusAreaId || entry.focusRules !== (config.rulesVersion ?? 1))) {
       entry.focusAreaId = id;
+      entry.focusRules = config.rulesVersion ?? 1;
       changed = true;
     }
   }

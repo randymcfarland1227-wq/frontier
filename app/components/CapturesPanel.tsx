@@ -69,9 +69,9 @@ export function CapturesPanel({
       <div className="captures-head">
         <div>
           <p className="section-label">Not tasks yet</p>
-          <h2>Ideas &amp; research</h2>
+          <h2>Thoughts, ideas &amp; research</h2>
           <p className="review-lede">
-            Things to research, learn, or look into. They stay off task boards and Balance until you promote one
+            Thoughts, ideas, and things to research, learn, or look into. They stay off task boards and Balance until you promote one
             into a Self task.
           </p>
         </div>

@@ -33,6 +33,8 @@ export const STORAGE_KEYS = {
   goalLinks: 'lifehub-goal-links',
   /** Cloud backup key for this device — never synced */
   sync: 'lifehub-sync',
+  /** Source cards collapsed to their header */
+  collapsedCards: 'lifehub-collapsed-cards',
   /** Migrate from prior Work Room keys once */
   legacyFocus: 'workroom-focus',
   legacySnapshots: 'workroom-source-snapshots',
