@@ -229,3 +229,8 @@ Star on connector items still opens the origin URL until two-way API star exists
 ### Done stays done after refresh (2026-09-23)
 
 - Connector snapshots (`gmail`/`outlook`/`radall`/`role`/`ticktick` JSON) are written once each morning, so reloading used to bring back items already marked Done on the hub. `hideLedgerDone` (`app/life-hub.tsx`) now hides any open connector item the ledger has as done — after every connector load and after a cloud-backup sync (so Done on one device hides it on the others). TickTick only hides items done *today*, since recurring tasks and habits reuse ids.
+
+### Collapsible home sections + tighter spacing (2026-09-23)
+
+- Why, Review, Self, Priority and each source row fold to a one-line bar (`app/components/Collapsible.tsx`), remembered per browser in `lifehub-collapsed-cards` as `section:<id>` next to the per-card entries. Collapsed bars show a blue count where one fits: Review = completed today, source rows = sum of their cards' blue to-do numbers. A collapsed source card shows its own blue number beside its name.
+- Spacing: 10px between home sections and between cards. Source rows no longer get the older standalone `.space-grid` side padding and 54px bottom gap.

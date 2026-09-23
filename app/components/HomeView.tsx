@@ -9,6 +9,8 @@ import type { FocusAreaConfig } from '../../lib/focusAreas';
 import { SourceCard } from './SourceCard';
 import { PriorityBoard } from './PriorityBoard';
 import { ReviewPanel } from './ReviewPanel';
+import { Collapsible } from './Collapsible';
+import { getActionableMetric } from '../../lib/actionable';
 
 const ROW_1: SourceId[] = ['ticktick', 'gmail', 'outlook', 'repair'];
 const ROW_2: SourceId[] = ['radall', 'role', 'move'];
@@ -39,7 +41,13 @@ function SourceRow({
 }) {
   return (
     <section className={`source-row ${fullWidth ? 'source-row-self' : ''}`} aria-label={label}>
-      <p className="section-label">{label}</p>
+      <Collapsible
+        id={`row-${ids.join('-')}`}
+        label={label}
+        labelHeader
+        count={ids.reduce((sum, id) => sum + (getActionableMetric(id, snapshots[id]).value || 0), 0)}
+        countLabel="to do"
+      >
       <div
         className={`space-grid ${fullWidth ? 'space-grid-self' : ids.length === 4 ? 'space-grid-4' : 'space-grid-3'}`}
       >
@@ -57,6 +65,7 @@ function SourceRow({
           />
         ))}
       </div>
+      </Collapsible>
     </section>
   );
 }
@@ -108,24 +117,38 @@ export function HomeView({
 
       {whyPanel ? (
         <section className="source-row" aria-label="Why">
-          {whyPanel}
+          <Collapsible id="why" label="Why" title="What the work is for">
+            {whyPanel}
+          </Collapsible>
         </section>
       ) : null}
 
       <section className="source-row" aria-label="Review">
-        <ReviewPanel stats={completionStats} shares={completionShares} ledger={ledger} focusConfig={focusConfig} />
+        <Collapsible
+          id="review"
+          label="Review"
+          title="Completions across sites"
+          count={completionStats.today}
+          countLabel="completed today"
+        >
+          <ReviewPanel stats={completionStats} shares={completionShares} ledger={ledger} focusConfig={focusConfig} />
+        </Collapsible>
       </section>
 
       <section className="source-row" aria-label="Self — thoughts, ideas, research and tasks">
-        {capturesPanel}
+        <Collapsible id="self" label="Self" title="Thoughts, ideas, research & tasks">
+          {capturesPanel}
+        </Collapsible>
       </section>
 
       <section className="source-row" aria-label="Priority">
-        <PriorityBoard
-          snapshots={snapshots}
-          enter={id => enter(id)}
-          onComplete={(source, item) => onCompleteFeatured(source, item)}
-        />
+        <Collapsible id="priority" label="Priority" title="Pinned priorities">
+          <PriorityBoard
+            snapshots={snapshots}
+            enter={id => enter(id)}
+            onComplete={(source, item) => onCompleteFeatured(source, item)}
+          />
+        </Collapsible>
       </section>
 
       <SourceRow
