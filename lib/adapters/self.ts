@@ -12,6 +12,8 @@ export type SelfItem = {
   /** Carried from a promoted capture; overrides focus-area rules on complete */
   focusAreaId?: string;
   fromCaptureId?: string;
+  /** Last change — lets cloud backup pick the newest copy */
+  updatedAt?: string;
 };
 
 export function loadSelfItems(): SelfItem[] {
@@ -74,13 +76,15 @@ export function addSelfItem(
 }
 
 export function toggleSelfComplete(id: string): SelfItem[] {
-  const updated = loadSelfItems().map(i => (i.id === id ? { ...i, done: !i.done } : i));
+  const at = new Date().toISOString();
+  const updated = loadSelfItems().map(i => (i.id === id ? { ...i, done: !i.done, updatedAt: at } : i));
   saveSelfItems(updated);
   return updated;
 }
 
 export function toggleSelfStar(id: string): SelfItem[] {
-  const updated = loadSelfItems().map(i => (i.id === id ? { ...i, starred: !i.starred } : i));
+  const at = new Date().toISOString();
+  const updated = loadSelfItems().map(i => (i.id === id ? { ...i, starred: !i.starred, updatedAt: at } : i));
   saveSelfItems(updated);
   return updated;
 }

@@ -51,6 +51,7 @@ import {
 import { addCapture, loadCaptures, markPromoted, setCaptureStatus, type Capture } from '../lib/captures';
 import { CapturesPanel } from './components/CapturesPanel';
 import { WhyPanel } from './components/WhyPanel';
+import { consumeLocationHash, startCloudSync, SYNCED_EVENT } from '../lib/cloudSync';
 import { addLink, loadGoals, loadSeedLinks, mergeLinks, removeLink, type GoalLink, type GoalsData } from '../lib/goals';
 import { backfillFocusAreas, loadFocusAreas, type FocusAreaConfig } from '../lib/focusAreas';
 
@@ -151,6 +152,7 @@ export function LifeHub() {
 
   useEffect(() => {
     window.name = 'randys-life-hub';
+    consumeLocationHash();
     const savedFocus = readSaved<FocusItem[]>(STORAGE_KEYS.focus, readSaved(STORAGE_KEYS.legacyFocus, starterFocus));
     const savedSnaps = readSaved<unknown>(
       STORAGE_KEYS.snapshots,
@@ -168,6 +170,7 @@ export function LifeHub() {
     setTheme(savedTheme);
     document.documentElement.dataset.theme = savedTheme;
     setReady(true);
+    startCloudSync();
   }, []);
 
   useEffect(() => {
@@ -182,6 +185,22 @@ export function LifeHub() {
       setGoalLinks(mergeLinks(seed));
     });
   }, [ready, loadConnectors]);
+
+  // Cloud backup merged new data into storage (another device, or the old Worker copy).
+  const seedLinksRef = useRef<GoalLink[]>([]);
+  useEffect(() => {
+    seedLinksRef.current = seedLinks;
+  }, [seedLinks]);
+  useEffect(() => {
+    const reload = () => {
+      setLedger(loadLedger());
+      setCaptures(loadCaptures());
+      syncSelf(loadSelfItems());
+      setGoalLinks(mergeLinks(seedLinksRef.current));
+    };
+    window.addEventListener(SYNCED_EVENT, reload);
+    return () => window.removeEventListener(SYNCED_EVENT, reload);
+  }, [syncSelf]);
 
   // Tag untagged history once areas are known; re-runs as snapshots arrive with project/kind info.
   const taggedLedger = useMemo(() => {

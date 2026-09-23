@@ -703,3 +703,17 @@ a.origin-link:hover strong {
   .why-cats button { white-space: nowrap; }
 }
 .why-more { justify-self: center; padding: 7px 16px; }
+
+/* === Cloud backup (Review footer) === */
+.cloud-backup { margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--line); display: grid; gap: 8px; }
+.cloud-row { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
+.cloud-text { margin: 0; font-size: 11px; color: var(--muted); line-height: 1.45; }
+.cloud-text strong { color: var(--ink); font-weight: 680; }
+.cloud-backup.is-ok .cloud-text strong { color: #0f9f6e; }
+.cloud-backup.is-error .cloud-text strong { color: #c2410c; }
+[data-theme="dark"] .cloud-backup.is-ok .cloud-text strong { color: #34d399; }
+[data-theme="dark"] .cloud-backup.is-error .cloud-text strong { color: #fb923c; }
+.cloud-actions { display: flex; flex-wrap: wrap; gap: 6px; }
+.cloud-notice { margin: 0; padding: 8px 10px; border-radius: 8px; background: var(--accent-soft); color: var(--ink); font-size: 11px; font-weight: 600; }
+.cloud-join { display: flex; gap: 6px; }
+.cloud-join input { flex: 1; min-width: 0; padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); color: var(--ink); font: inherit; font-size: 12px; outline: none; }

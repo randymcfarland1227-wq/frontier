@@ -3,6 +3,7 @@
 import type { CompletionLedger, CompletionStats, SourceShare } from '../../lib/completions';
 import type { FocusAreaConfig } from '../../lib/focusAreas';
 import { BalanceStrip } from './BalanceStrip';
+import { CloudBackup } from './CloudBackup';
 
 export function ReviewPanel({
   stats,
@@ -70,6 +71,7 @@ export function ReviewPanel({
           ))
         )}
       </div>
+      <CloudBackup />
     </section>
   );
 }

@@ -7,6 +7,8 @@
   "workers_dev": true,
   "preview_urls": false,
   "assets": { "binding": "ASSETS", "run_worker_first": true },
+  // Cloud backup for Life Hub (GET/PUT /api/state) — see worker/index.ts
+  "kv_namespaces": [{ "binding": "LIFEHUB_STATE", "id": "e26625e45a6a4f408ca3f45c91ff7aca" }],
   // Secrets (never commit values — set with wrangler secret put):
   //   TICKTICK_ACCESS_TOKEN — bearer for POST /api/ticktick/complete → TickTick Open API
   // Commands (from /workspace/frontier after wrangler login):
