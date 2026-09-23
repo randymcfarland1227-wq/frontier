@@ -53,6 +53,8 @@ export function recordCompletion(
     ledger?: CompletionLedger;
     /** Extra task fields focus rules can match on */
     task?: Pick<TaskItem, 'kind' | 'projectId' | 'tags'>;
+    /** Explicit area (e.g. from a promoted capture) — skips rule resolution */
+    focusAreaId?: FocusAreaId;
   },
 ): CompletionLedger {
   const ledger = opts?.ledger ?? loadLedger();
@@ -64,7 +66,7 @@ export function recordCompletion(
     completedAt: opts?.at || new Date().toISOString(),
     title: opts?.title,
     via: opts?.via || 'hub',
-    focusAreaId: resolveFocusArea({
+    focusAreaId: opts?.focusAreaId ?? resolveFocusArea({
       source,
       taskId,
       title: opts?.title,

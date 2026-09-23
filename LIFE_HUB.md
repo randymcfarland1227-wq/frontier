@@ -182,3 +182,10 @@ Star on connector items still opens the origin URL until two-way API star exists
 - Rule resolution (`lib/focusAreas.ts`): most specific match wins — `projectIds`/`tags` (3) + `titleIncludes` (2) + `kinds` (1), summed; bare source = 0; ties → area listed first. No match → **Other** (counted, shown). `excludeSources` (currently `repair`) never count toward Balance.
 - `CompletionEntry.focusAreaId` is set at record time and persisted. Entries recorded before this (or before the config loaded) are backfilled using the current snapshot's task (projectId/kind), then title.
 - Review → **Balance**: per-area share vs target tick, Today / 7 days / Month; on target = within ±5 pts. Overall = 100 − total-variation distance.
+
+### Captures — Ideas & research (slice 3)
+
+- Home, under Self: add Idea / Research / Look into / Learn with optional link, notes, focus area. Stored in `localStorage` `lifehub-captures` (`lib/captures.ts`).
+- Inbox / Parked / Promoted / Dropped. Captures never appear on task boards or in Balance.
+- **Promote** creates a Self task (notes + link as detail), carrying `focusAreaId` + `fromCaptureId`; the capture keeps `promotedTo` as a paper trail and shows whether the task is done. Completing that task records the capture's area (override), so it counts in Balance only then.
+- Later: promote straight to TickTick (needs a Worker create endpoint), `goalId` once the Why panel lands.

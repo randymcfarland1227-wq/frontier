@@ -48,6 +48,8 @@ import {
   saveLedger,
   type CompletionStats,
 } from '../lib/completions';
+import { addCapture, loadCaptures, markPromoted, setCaptureStatus, type Capture } from '../lib/captures';
+import { CapturesPanel } from './components/CapturesPanel';
 import { backfillFocusAreas, loadFocusAreas, type FocusAreaConfig } from '../lib/focusAreas';
 
 const starterFocus: FocusItem[] = [
@@ -113,6 +115,7 @@ export function LifeHub() {
   const [ledger, setLedger] = useState<CompletionLedger>({ entries: {} });
   const [completionStats, setCompletionStats] = useState<CompletionStats>(emptyStats());
   const [focusConfig, setFocusConfig] = useState<FocusAreaConfig | null>(null);
+  const [captures, setCaptures] = useState<Capture[]>([]);
   const snapshotsRef = useRef(snapshots);
   const frameRefs = useRef<Partial<Record<SourceId, HTMLIFrameElement | null>>>({});
   const sourceWindows = useRef<Partial<Record<SourceId, Window>>>({});
@@ -153,6 +156,7 @@ export function LifeHub() {
     const self = loadSelfItems();
     snaps.self = selfSnapshotFrom(self);
     setSelfItems(self);
+    setCaptures(loadCaptures());
     setSnapshots(snaps);
     setLedger(loadLedger());
     const savedTheme = readSaved<'light' | 'dark'>(STORAGE_KEYS.theme, 'dark');
@@ -341,7 +345,10 @@ export function LifeHub() {
     const featuredNow = snapNow?.featured?.find(f => f.id === id);
     const title = taskNow?.title || featuredNow?.title;
     if (source === 'self') {
-      setLedger(recordCompletion('self', id, { via: 'self', title, task: taskNow }));
+      const selfItem = loadSelfItems().find(i => i.id === id);
+      setLedger(
+        recordCompletion('self', id, { via: 'self', title, task: taskNow, focusAreaId: selfItem?.focusAreaId }),
+      );
       syncSelf(toggleSelfComplete(id));
       return;
     }
@@ -432,6 +439,16 @@ export function LifeHub() {
     broadcastStar(source, task.id, nextStarred);
   };
 
+  const promoteCapture = (capture: Capture) => {
+    const detail = [capture.notes, capture.url].filter(Boolean).join('\n');
+    const items = addSelfItem(capture.title, detail, {
+      focusAreaId: capture.focusAreaId,
+      fromCaptureId: capture.id,
+    });
+    syncSelf(items);
+    setCaptures(markPromoted(capture.id, { source: 'self', taskId: items[0].id }));
+  };
+
   const registerFrame = (id: SourceId, el: HTMLIFrameElement | null) => {
     frameRefs.current[id] = el;
   };
@@ -460,6 +477,16 @@ export function LifeHub() {
           completionShares={sourceShares(completionStats)}
           ledger={taggedLedger}
           focusConfig={focusConfig}
+          capturesPanel={
+            <CapturesPanel
+              captures={captures}
+              areas={focusConfig?.areas || []}
+              selfItems={selfItems}
+              onAdd={input => setCaptures(addCapture(input))}
+              onStatus={(id, status) => setCaptures(setCaptureStatus(id, status))}
+              onPromote={promoteCapture}
+            />
+          }
         />
       ) : (
         <SourceView
