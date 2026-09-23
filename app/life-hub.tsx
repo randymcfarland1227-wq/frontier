@@ -51,7 +51,11 @@ import {
 import { addCapture, loadCaptures, markPromoted, setCaptureStatus, type Capture } from '../lib/captures';
 import { CapturesPanel } from './components/CapturesPanel';
 import { WhyPanel } from './components/WhyPanel';
-import { QuickCapture } from './components/QuickCapture';
+import { AreaPicker } from './components/AreaPicker';
+import { loadPriorityPins, pinKey, savePriorityPins } from '../lib/priorityPins';
+
+/** Sources where one bucket doesn't fit every item — ask on Done. */
+const ASK_AREA_SOURCES: SourceId[] = ['gmail', 'outlook'];
 import { consumeLocationHash, startCloudSync, SYNCED_EVENT } from '../lib/cloudSync';
 import { addLink, loadGoals, loadSeedLinks, mergeLinks, removeLink, type GoalLink, type GoalsData } from '../lib/goals';
 import { backfillFocusAreas, loadFocusAreas, type FocusAreaConfig } from '../lib/focusAreas';
@@ -125,6 +129,7 @@ export function LifeHub() {
   const [goalsData, setGoalsData] = useState<GoalsData | null>(null);
   const [seedLinks, setSeedLinks] = useState<GoalLink[]>([]);
   const [goalLinks, setGoalLinks] = useState<GoalLink[]>([]);
+  const [pendingArea, setPendingArea] = useState<{ source: SourceId; id: string; title: string } | null>(null);
   const snapshotsRef = useRef(snapshots);
   const frameRefs = useRef<Partial<Record<SourceId, HTMLIFrameElement | null>>>({});
   const sourceWindows = useRef<Partial<Record<SourceId, Window>>>({});
@@ -273,7 +278,7 @@ export function LifeHub() {
         if (id && taskId) {
           const task = snapshotsRef.current[id]?.tasks?.find(t => t.id === taskId);
           setLedger(
-            recordCompletion(id, taskId, { via: 'origin-snapshot', title: payload.title || task?.title, task }),
+            recordCompletion(id, taskId, { via: 'origin-done', title: payload.title || task?.title, task }),
           );
         }
         return;
@@ -378,11 +383,15 @@ export function LifeHub() {
     sendStar(sourceWindows.current[source], source, id, starred, origin);
   };
 
-  const completeOnHub = (source: SourceId, id: string) => {
+  const completeOnHub = (source: SourceId, id: string, chosenArea?: string) => {
     const snapNow = snapshotsRef.current[source];
     const taskNow = snapNow?.tasks?.find(t => t.id === id);
     const featuredNow = snapNow?.featured?.find(f => f.id === id);
     const title = taskNow?.title || featuredNow?.title;
+    if (!chosenArea && ASK_AREA_SOURCES.includes(source) && focusConfig) {
+      setPendingArea({ source, id, title: title || '' });
+      return;
+    }
     if (source === 'self') {
       const selfItem = loadSelfItems().find(i => i.id === id);
       setLedger(
@@ -392,7 +401,7 @@ export function LifeHub() {
       return;
     }
 
-    setLedger(recordCompletion(source, id, { via: 'hub', title, task: taskNow }));
+    setLedger(recordCompletion(source, id, { via: 'hub', title, task: taskNow, focusAreaId: chosenArea }));
 
     const def = sourceById[source];
     const isIframe = def.bridge === 'iframe';
@@ -516,12 +525,6 @@ export function LifeHub() {
           completionShares={sourceShares(completionStats)}
           ledger={taggedLedger}
           focusConfig={focusConfig}
-          selfQuickCapture={
-            <QuickCapture
-              onAddTask={(title, detail) => syncSelf(addSelfItem(title, detail))}
-              onAddCapture={(kind, title, notes) => setCaptures(addCapture({ kind, title, notes }))}
-            />
-          }
           whyPanel={
             goalsData ? (
               <WhyPanel
@@ -543,6 +546,19 @@ export function LifeHub() {
               areas={focusConfig?.areas || []}
               selfItems={selfItems}
               onAdd={input => setCaptures(addCapture(input))}
+              onAddTask={(title, detail, focusAreaId) =>
+                syncSelf(addSelfItem(title, detail, focusAreaId ? { focusAreaId } : undefined))
+              }
+              onTaskDone={id => completeOnHub('self', id)}
+              onTaskUndo={id => syncSelf(toggleSelfComplete(id))}
+              onTaskStar={id => {
+                // Starring a Self task pins it to Priority (and unstarring unpins it).
+                const items = toggleSelfStar(id);
+                const key = pinKey('self', id);
+                const pins = loadPriorityPins().filter(k => k !== key);
+                savePriorityPins(items.find(i => i.id === id)?.starred ? [key, ...pins] : pins);
+                syncSelf(items);
+              }}
               onStatus={(id, status) => setCaptures(setCaptureStatus(id, status))}
               onPromote={promoteCapture}
             />
@@ -564,6 +580,20 @@ export function LifeHub() {
       )}
       <FocusDrawer open={focusOpen} close={() => setFocusOpen(false)} focus={focus} setFocus={setFocus} enter={enter} />
       <SourceBridges register={registerFrame} />
+      {pendingArea && focusConfig ? (
+        <AreaPicker
+          title={pendingArea.title}
+          sourceName={sourceById[pendingArea.source].shortName}
+          areas={focusConfig.areas}
+          suggested={focusConfig.areas.find(a => a.sourceMap.some(r => r.source === pendingArea.source && !r.match))?.id}
+          onPick={areaId => {
+            const p = pendingArea;
+            setPendingArea(null);
+            completeOnHub(p.source, p.id, areaId);
+          }}
+          onCancel={() => setPendingArea(null)}
+        />
+      ) : null}
     </main>
   );
 }
