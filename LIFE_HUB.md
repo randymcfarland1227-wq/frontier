@@ -234,3 +234,8 @@ Star on connector items still opens the origin URL until two-way API star exists
 
 - Why, Review, Self, Priority and each source row fold to a one-line bar (`app/components/Collapsible.tsx`), remembered per browser in `lifehub-collapsed-cards` as `section:<id>` next to the per-card entries. Collapsed bars show a blue count where one fits: Review = completed today, source rows = sum of their cards' blue to-do numbers. A collapsed source card shows its own blue number beside its name.
 - Spacing: 10px between home sections and between cards. Source rows no longer get the older standalone `.space-grid` side padding and 54px bottom gap.
+
+### Euphoria look + tighter card headers (2026-09-23)
+
+- End of `app/globals.css` ("Euphoria pass"): neon violet / magenta / electric-blue / cyan palette. A fixed glow layer (`.frontier-shell::before`, `--aurora`) sits behind frosted see-through cards and panels (`--glass-card`, blur + saturate), with shimmering iridescent edges on every panel, a soft glow around each card's source-color bar, a holographic "Life Hub." title, and blue → violet → magenta to-do numbers and count badges. Works in light and dark mode.
+- Card number row → title gap cut from 22px to 6px (2px when collapsed).
