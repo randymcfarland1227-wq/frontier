@@ -41,7 +41,7 @@
     {
       "id": "money",
       "name": "Money / Finance",
-      "weight": 0.2,
+      "weight": 0.15,
       "sourceMap": [
         {
           "source": "radall"
@@ -116,7 +116,7 @@
     {
       "id": "work",
       "name": "Role & Professional Development",
-      "weight": 0.2,
+      "weight": 0.15,
       "sourceMap": [
         {
           "source": "role"
@@ -191,7 +191,7 @@
     {
       "id": "home",
       "name": "Organizing, Cleaning, Upkeep & Planning",
-      "weight": 0.05,
+      "weight": 0.15,
       "sourceMap": [
         {
           "source": "ticktick",

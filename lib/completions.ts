@@ -42,10 +42,20 @@ function localDate(iso: string) {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 }
 
-/** TickTick habits keep one id forever, so they count once per day instead of once all-time. */
+/**
+ * TickTick habits and recurring tasks keep one id forever, so TickTick completions count once
+ * per day (not once all-time). Other sources: once per task.
+ */
 function ledgerKey(source: SourceId, taskId: string, at: string) {
-  const habit = source === 'ticktick' && taskId.startsWith('habit-');
-  return habit ? `${source}::${taskId}::${localDate(at)}` : `${source}::${taskId}`;
+  return source === 'ticktick' ? `${source}::${taskId}::${localDate(at)}` : `${source}::${taskId}`;
+}
+
+/** Same task already recorded that day (covers older keys without a date). */
+function hasSameDay(ledger: CompletionLedger, source: SourceId, taskId: string, at: string) {
+  const day = localDate(at);
+  return Object.values(ledger.entries).some(
+    e => e.source === source && e.taskId === taskId && localDate(e.completedAt) === day,
+  );
 }
 
 export function loadLedger(): CompletionLedger {
@@ -79,7 +89,7 @@ export function recordCompletion(
   const ledger = opts?.ledger ?? loadLedger();
   const completedAt = opts?.at || new Date().toISOString();
   const key = ledgerKey(source, taskId, completedAt);
-  if (ledger.entries[key]) return ledger;
+  if (ledger.entries[key] || hasSameDay(ledger, source, taskId, completedAt)) return ledger;
   ledger.entries[key] = {
     source,
     taskId,

@@ -53,6 +53,7 @@ import { CapturesPanel } from './components/CapturesPanel';
 import { WhyPanel } from './components/WhyPanel';
 import { AreaPicker } from './components/AreaPicker';
 import { loadPriorityPins, pinKey, savePriorityPins } from '../lib/priorityPins';
+import { checkInTickTickHabit, pullTickTickDone } from '../lib/ticktickDone';
 
 /** Sources where one bucket doesn't fit every item — ask on Done. */
 const ASK_AREA_SOURCES: SourceId[] = ['gmail', 'outlook'];
@@ -193,6 +194,20 @@ export function LifeHub() {
       setGoalLinks(mergeLinks(seed));
     });
   }, [ready, loadConnectors]);
+
+  // Work finished inside the TickTick app (tasks + habit check-ins) — on load, on return, every 10 min.
+  useEffect(() => {
+    if (!ready) return;
+    const pull = () => void pullTickTickDone().then(next => next && setLedger(next));
+    pull();
+    const onVisible = () => document.visibilityState === 'visible' && pull();
+    document.addEventListener('visibilitychange', onVisible);
+    const timer = window.setInterval(pull, 10 * 60 * 1000);
+    return () => {
+      document.removeEventListener('visibilitychange', onVisible);
+      window.clearInterval(timer);
+    };
+  }, [ready]);
 
   // Cloud backup merged new data into storage (another device, or the old Worker copy).
   const seedLinksRef = useRef<GoalLink[]>([]);
@@ -431,7 +446,9 @@ export function LifeHub() {
 
     if (source === 'ticktick') {
       const habit = isTickTickHabit({ id, kind: taskNow?.kind });
-      if (!habit) {
+      if (habit) {
+        checkInTickTickHabit(id);
+      } else {
         const projectId = projectIdFromTask({
           projectId: taskNow?.projectId,
           originUrl: taskNow?.originUrl || featuredNow?.originUrl,
