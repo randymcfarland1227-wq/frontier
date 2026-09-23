@@ -9,6 +9,9 @@ export type SelfItem = {
   done: boolean;
   starred: boolean;
   createdAt: string;
+  /** Carried from a promoted capture; overrides focus-area rules on complete */
+  focusAreaId?: string;
+  fromCaptureId?: string;
 };
 
 export function loadSelfItems(): SelfItem[] {
@@ -50,7 +53,11 @@ export function selfSnapshotFrom(items: SelfItem[]): SourceSnapshot {
   };
 }
 
-export function addSelfItem(title: string, detail = ''): SelfItem[] {
+export function addSelfItem(
+  title: string,
+  detail = '',
+  extra?: Pick<SelfItem, 'focusAreaId' | 'fromCaptureId'>,
+): SelfItem[] {
   const items = loadSelfItems();
   const next: SelfItem = {
     id: `self-${Date.now()}`,
@@ -59,6 +66,7 @@ export function addSelfItem(title: string, detail = ''): SelfItem[] {
     done: false,
     starred: false,
     createdAt: new Date().toISOString(),
+    ...extra,
   };
   const updated = [next, ...items];
   saveSelfItems(updated);

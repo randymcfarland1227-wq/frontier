@@ -1,5 +1,6 @@
 'use client';
 
+import type { ReactNode } from 'react';
 import type { FeaturedItem, SourceId, SourceSnapshot, SpaceId, TaskItem } from '../../lib/types';
 import { sourceById } from '../../lib/sources';
 import { updatedLabel } from '../../lib/protocol';
@@ -69,6 +70,7 @@ export function HomeView({
   completionShares,
   ledger,
   focusConfig,
+  capturesPanel,
 }: {
   snapshots: Record<SourceId, SourceSnapshot>;
   enter: (id: SpaceId) => void;
@@ -80,6 +82,7 @@ export function HomeView({
   completionShares: SourceShare[];
   ledger: CompletionLedger;
   focusConfig: FocusAreaConfig | null;
+  capturesPanel: ReactNode;
 }) {
   const latest =
     Object.values(snapshots)
@@ -132,6 +135,9 @@ export function HomeView({
         onStarTask={onStarTask}
         fullWidth
       />
+      <section className="source-row" aria-label="Ideas and research">
+        {capturesPanel}
+      </section>
       <SourceRow
         ids={ROW_1}
         label="Daily ops"

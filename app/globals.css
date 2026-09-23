@@ -625,3 +625,42 @@ a.origin-link:hover strong {
 [data-theme="dark"] .balance-row.is-overloaded .balance-status { color: #a78bfa; }
 .balance-legend { margin-top: 10px; font-size: 10px; }
 .review-sources-label { margin-top: 2px; }
+
+/* === Captures (ideas & research) === */
+.captures-panel { padding: 18px 20px; display: grid; gap: 14px; }
+.captures-head h2 { margin: 0 0 6px; font-size: 20px; font-weight: 660; letter-spacing: -.03em; }
+.seg { display: inline-flex; flex-wrap: wrap; gap: 2px; padding: 2px; border: 1px solid var(--line); border-radius: 999px; background: var(--surface-2); justify-self: start; }
+.seg button { border: 0; background: transparent; color: var(--muted); font: inherit; font-size: 11px; font-weight: 650; padding: 5px 12px; border-radius: 999px; cursor: pointer; }
+.seg button.active { background: var(--surface); color: var(--ink); box-shadow: 0 1px 3px rgba(0,0,0,.12); }
+.seg-count { opacity: .6; font-weight: 600; margin-left: 2px; }
+.capture-form { display: grid; gap: 8px; padding: 14px; border-radius: 12px; background: var(--surface-2); border: 1px solid var(--line); }
+.capture-form-row { display: grid; grid-template-columns: 1fr minmax(120px, 180px); gap: 8px; }
+.capture-form input, .capture-form select, .capture-form textarea {
+  width: 100%; box-sizing: border-box; padding: 10px 11px; border: 1px solid var(--line); border-radius: 9px;
+  background: var(--surface); color: var(--ink); font: inherit; font-size: 13px; outline: none; resize: vertical;
+}
+.capture-form input:focus, .capture-form select:focus, .capture-form textarea:focus { border-color: var(--accent); }
+.capture-form button[type="submit"] { justify-self: start; padding: 9px 16px; border: 0; border-radius: 8px; background: var(--accent); color: white; font-size: 11px; font-weight: 650; cursor: pointer; }
+.capture-form button[type="submit"]:disabled { opacity: .45; cursor: default; }
+.capture-list { display: grid; }
+.capture-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 14px; padding: 12px 0; border-top: 1px solid var(--line); }
+.capture-row:first-child { border-top: 0; }
+.capture-row.is-dropped, .capture-row.is-promoted { opacity: .7; }
+.capture-main { min-width: 0; flex: 1 1 auto; }
+.capture-main h3 { margin: 4px 0; font-size: 14px; font-weight: 640; overflow-wrap: anywhere; }
+.capture-main h3 a { color: inherit; text-decoration: none; border-bottom: 1px solid var(--line); }
+.capture-main h3 a:hover { border-color: var(--accent); }
+.capture-main p { margin: 0; color: var(--muted); font-size: 12px; line-height: 1.45; white-space: pre-line; }
+.capture-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; color: var(--muted); font-size: 10px; }
+.capture-kind, .capture-area { padding: 2px 8px; border-radius: 999px; font-size: 9px; font-weight: 700; letter-spacing: .02em; }
+.capture-kind { background: var(--accent-soft); color: var(--accent); }
+.capture-area { border: 1px solid var(--line); color: var(--ink); }
+.capture-promoted { margin-top: 4px !important; font-weight: 650; }
+.capture-actions { display: flex; flex-wrap: wrap; gap: 6px; justify-content: flex-end; flex-shrink: 0; }
+@media (max-width: 720px) {
+  .capture-form-row { grid-template-columns: 1fr; }
+  .capture-row { flex-direction: column; }
+  .capture-actions { justify-content: flex-start; }
+  .captures-panel .seg { display: grid; grid-template-columns: repeat(4, 1fr); justify-self: stretch; border-radius: 12px; }
+  .captures-panel .seg button { padding: 6px 2px; border-radius: 10px; font-size: 10px; white-space: nowrap; }
+}
