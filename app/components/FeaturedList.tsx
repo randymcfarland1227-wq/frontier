@@ -26,7 +26,13 @@ export function FeaturedList({
         items.map(item => (
           <article className="featured-row" key={item.id}>
             <div>
-              <strong>{item.title}</strong>
+              {item.originUrl ? (
+                <a className="origin-link" href={item.originUrl} target="_blank" rel="noopener noreferrer">
+                  <strong>{item.title}</strong>
+                </a>
+              ) : (
+                <strong>{item.title}</strong>
+              )}
               <p>{item.detail}</p>
               <span>{item.meta}</span>
             </div>

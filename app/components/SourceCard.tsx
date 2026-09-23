@@ -1,6 +1,8 @@
 'use client';
 
 import type { SourceDefinition, SourceSnapshot } from '../../lib/types';
+import { updatedLabel } from '../../lib/protocol';
+import { isConnectorSource } from '../../lib/connectors';
 import { MetricGrid } from './MetricGrid';
 import { FeaturedList } from './FeaturedList';
 import { TaskList } from './TaskList';
@@ -16,6 +18,8 @@ export function SourceCard({
   onEnter: () => void;
   onOpen: () => void;
 }) {
+  const showSync = isConnectorSource(source.id) && Boolean(snapshot.refreshedAt);
+
   return (
     <article className={`space-card ${source.id}${source.placeholder ? ' placeholder' : ''}`}>
       <div className="card-top">
@@ -26,6 +30,7 @@ export function SourceCard({
         <p>{source.label}</p>
         <h2>{source.name}</h2>
         <p className="description">{source.description}</p>
+        {showSync ? <p className="sync-stamp">Synced {updatedLabel(snapshot.refreshedAt).replace(/^Updated\s+/i, '')}</p> : null}
       </div>
       <MetricGrid sourceId={source.id} snapshot={snapshot} compact />
       <FeaturedList sourceId={source.id} snapshot={snapshot} compact />

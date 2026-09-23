@@ -20,6 +20,12 @@ import {
   toggleSelfStar,
   type SelfItem,
 } from '../lib/adapters/self';
+import {
+  CONNECTOR_SOURCE_IDS,
+  fetchConnectorSnapshots,
+  isConnectorSource,
+  openConnectorOrigin,
+} from '../lib/connectors';
 import { Header } from './components/Header';
 import { HomeView } from './components/HomeView';
 import { SourceView } from './components/SourceView';
@@ -57,6 +63,26 @@ function migrateFocus(raw: FocusItem[]): FocusItem[] {
   });
 }
 
+function mergeConnectorSnapshots(
+  current: Record<SourceId, SourceSnapshot>,
+  incoming: Partial<Record<SourceId, SourceSnapshot>>,
+): Record<SourceId, SourceSnapshot> {
+  const next = { ...current };
+  for (const id of CONNECTOR_SOURCE_IDS) {
+    const snap = incoming[id];
+    if (!snap) continue;
+    // Always overwrite the four connector sources from network (do not wipe iframe sources).
+    next[id] = {
+      source: id,
+      metrics: snap.metrics || {},
+      featured: snap.featured || [],
+      tasks: snap.tasks || [],
+      refreshedAt: snap.refreshedAt || new Date().toISOString(),
+    };
+  }
+  return next;
+}
+
 export function LifeHub() {
   const [active, setActive] = useState<SpaceId>('home');
   const [focusOpen, setFocusOpen] = useState(false);
@@ -64,12 +90,23 @@ export function LifeHub() {
   const [snapshots, setSnapshots] = useState<Record<SourceId, SourceSnapshot>>(emptySnapshots);
   const [selfItems, setSelfItems] = useState<SelfItem[]>([]);
   const [ready, setReady] = useState(false);
+  const [connectorSyncing, setConnectorSyncing] = useState(false);
   const frameRefs = useRef<Partial<Record<SourceId, HTMLIFrameElement | null>>>({});
   const sourceWindows = useRef<Partial<Record<SourceId, Window>>>({});
 
   const syncSelf = useCallback((items: SelfItem[]) => {
     setSelfItems(items);
     setSnapshots(current => ({ ...current, self: selfSnapshotFrom(items) }));
+  }, []);
+
+  const loadConnectors = useCallback(async () => {
+    setConnectorSyncing(true);
+    try {
+      const incoming = await fetchConnectorSnapshots();
+      setSnapshots(current => mergeConnectorSnapshots(current, incoming));
+    } finally {
+      setConnectorSyncing(false);
+    }
   }, []);
 
   useEffect(() => {
@@ -89,6 +126,11 @@ export function LifeHub() {
   }, []);
 
   useEffect(() => {
+    if (!ready) return;
+    void loadConnectors();
+  }, [ready, loadConnectors]);
+
+  useEffect(() => {
     if (ready) writeSaved(STORAGE_KEYS.focus, focus);
   }, [focus, ready]);
 
@@ -100,6 +142,8 @@ export function LifeHub() {
     const saveSnapshot = (payload: SourceSnapshot, preserveFeatured = false) => {
       const id = normalizeSourceId(String(payload.source));
       if (!id || id === 'self') return;
+      // Do not let postMessage wipe connector JSON sources.
+      if (isConnectorSource(id)) return;
       setSnapshots(current => ({
         ...current,
         [id]: {
@@ -218,6 +262,16 @@ export function LifeHub() {
       syncSelf(toggleSelfComplete(id));
       return;
     }
+    // Connector cards: open origin URL until two-way API complete exists.
+    if (isConnectorSource(source)) {
+      const snap = snapshots[source];
+      const item =
+        snap.featured.find(f => f.id === id) ||
+        snap.tasks.find(t => t.id === id) ||
+        {};
+      openConnectorOrigin(item, sourceById[source].url);
+      return;
+    }
     setSnapshots(current => {
       const snap = current[source];
       return {
@@ -239,6 +293,10 @@ export function LifeHub() {
   const starOnHub = (source: SourceId, task: TaskItem) => {
     if (source === 'self') {
       syncSelf(toggleSelfStar(task.id));
+      return;
+    }
+    if (isConnectorSource(source)) {
+      openConnectorOrigin(task, sourceById[source].url);
       return;
     }
     const nextStarred = !task.starred;
@@ -272,7 +330,14 @@ export function LifeHub() {
 
   return (
     <main className={`frontier-shell theme-${active === 'home' ? 'home' : active}`}>
-      <Header active={active} enter={enter} unfinished={unfinished} openFocus={() => setFocusOpen(true)} />
+      <Header
+        active={active}
+        enter={enter}
+        unfinished={unfinished}
+        openFocus={() => setFocusOpen(true)}
+        onRefreshConnectors={() => void loadConnectors()}
+        connectorSyncing={connectorSyncing}
+      />
       {active === 'home' ? (
         <HomeView enter={enter} snapshots={snapshots} openSource={openSource} />
       ) : (

@@ -242,3 +242,29 @@ button:disabled { cursor: not-allowed; opacity: .55; }
 }
 
 @media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto!important; transition: none!important; } }
+
+/* Connector sync + origin links */
+.topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.mode-button.ghost {
+  opacity: 0.85;
+}
+.mode-button:disabled {
+  opacity: 0.55;
+  cursor: wait;
+}
+.sync-stamp {
+  margin: 0.35rem 0 0;
+  font-size: 0.75rem;
+  opacity: 0.72;
+}
+a.origin-link {
+  color: inherit;
+  text-decoration: none;
+}
+a.origin-link:hover strong {
+  text-decoration: underline;
+}

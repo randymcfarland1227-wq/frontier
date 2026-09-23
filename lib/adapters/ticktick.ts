@@ -1,8 +1,8 @@
 import type { SourceAdapter } from './types';
 
 /**
- * Phase 1 stub — no live TickTick calls yet.
- * Wire secrets / OAuth / postMessage origin updates in a later pass.
+ * Live data arrives via public/data/ticktick.json once TICKTICK_ACCESS_TOKEN
+ * exists on the sync box. Until then the committed file is an empty stub.
  */
 export const ticktickAdapter: SourceAdapter = {
   id: 'ticktick',

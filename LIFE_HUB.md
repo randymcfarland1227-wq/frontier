@@ -9,7 +9,7 @@ Phase 1 scaffold on branch `life-hub-upgrade`.
 GitHub Pages deploys automatically on push/merge to `main` via `.github/workflows/deploy-pages.yml` (`npm run build:pages` → `dist-pages`). A copy also lives at `docs/deploy-pages.yml`. The workflow uses `actions/configure-pages` with `enablement: true`, so the first successful run on `main` should turn on Pages for the repo (GitHub Actions source). Until then the live URL 404s.
 
 
-**Cloudflare Worker (optional / legacy):** worker name `frontier-work-room` still maps to `https://frontier-work-room.randymcfarland1227.workers.dev` if you run `npm run deploy` later. The hub UI does **not** require Cloudflare — connectors (Gmail / Outlook / TickTick / Sheets) stay stubs for now.
+**Cloudflare Worker (optional / legacy):** worker name `frontier-work-room` still maps to `https://frontier-work-room.randymcfarland1227.workers.dev` if you run `npm run deploy` later. The hub UI does **not** require Cloudflare — connector cards read static `public/data/*.json` committed by an agent sync (no secrets on Pages).
 
 ### Local Pages build
 
@@ -24,10 +24,10 @@ Node **>= 22.13** (`engines` in package.json). Use `fnm use 22` if needed.
 
 | # | id | Name | Bridge / adapter |
 |---|----|------|------------------|
-| 01 | `ticktick` | TickTick | API stub (`lib/adapters/ticktick.ts`) |
-| 02 | `radall` | Radall Finances (Sheet) | API stub — sheet id `19rw8MAYTZ70Qy2GFAi0DaCGdsp7hQc67l8nkvw17jQk` |
-| 03 | `gmail` | Gmail Starred | API stub |
-| 04 | `outlook` | Outlook job inquiries | API stub |
+| 01 | `ticktick` | TickTick | Static JSON stub (`public/data/ticktick.json`) until token |
+| 02 | `radall` | Radall Finances (Sheet) | Static JSON from Sheets MCP → `public/data/radall.json` |
+| 03 | `gmail` | Gmail Starred | Static JSON from Gmail MCP → `public/data/gmail.json` |
+| 04 | `outlook` | Outlook job inquiries | Static JSON from Outlook MCP → `public/data/outlook.json` |
 | 05 | `resale` | Resale Hub | Hidden iframe + postMessage (existing sell-hub) |
 | 06 | `role` | Role Hub | Hidden iframe + postMessage (Apps Script; legacy id `search` still accepted) |
 | 07 | `candle` | Peculiar Candle Pre Launch | **Placeholder only** |
@@ -92,15 +92,43 @@ Origins that already speak snapshots (Role Hub / Resale) should add listeners fo
 - Starred open items become `featured` on the Self card
 - Later: categorize-to-origin
 
+## Connector snapshots (Gmail / Radall / Outlook / TickTick)
+
+Pages is static — there are **no Cloudflare secrets** on the site.
+
+### How refresh works
+
+1. An agent (or future routine) calls MCP connectors on a machine that has access:
+   - **Gmail** `search_threads` — `is:starred -in:draft`, pageSize 30
+   - **Radall** Google Sheets `read_range` on spreadsheet `19rw8MAYTZ70Qy2GFAi0DaCGdsp7hQc67l8nkvw17jQk`, tab **Task List**
+   - **Outlook** `list_mail_messages` — job-inquiry search or inbox fallback
+   - **TickTick** Open API only if `TICKTICK_ACCESS_TOKEN` (or similar) exists; otherwise empty stub
+2. Map to `SourceSnapshot` (see `lib/types.ts`)
+3. Run `node scripts/write-connector-snapshots.mjs --dir /tmp/lifehub-sync --map-raw` (or write `public/data/*.json` directly)
+4. Commit + push to `main` → GitHub Actions rebuilds Pages
+
+Hub SPA (`lib/connectors.ts`) fetches `BASE_URL + 'data/<id>.json'` after localStorage hydrate (and on **Refresh**). It merges **only** `gmail` / `radall` / `outlook` / `ticktick` and never wipes iframe-bridged sources.
+
+### Complete / star on connector cards
+
+For now, Done / star on connector items **opens the origin URL** (`originUrl` or the source Open link). Two-way API complete/star comes later.
+
+### Layout extras
+
+- `public/data/*.json` + `manifest.json` — committed snapshots
+- `lib/connectors.ts` — fetch + merge helpers
+- `scripts/write-connector-snapshots.mjs` — validate/write helper (see `scripts/README.md`)
+
 ## Still needed (later passes)
 
 1. **Origin bridges** — sell-hub, Role Hub script, income-venture-lab, move-os, site-repair-log should:
    - include `tasks[]` in snapshots
    - listen for `randys-workroom:complete` / `:star`
    - allow both Pages and Worker parent origins (see above)
-2. **API secrets** — TickTick, Gmail, Outlook (Graph), Google Sheets (Radall Task list tab)
-3. **Candle** — replace placeholder when pre-launch site is ready
-4. **Optional Worker** — `npm run deploy` only if you still want the workers.dev mirror
+2. **TickTick token** — set on the sync box, then re-run connector sync (do not commit the token)
+3. **Two-way connector actions** — complete/star via APIs instead of open-only
+4. **Candle** — replace placeholder when pre-launch site is ready
+5. **Optional Worker** — `npm run deploy` only if you still want the workers.dev mirror
 
 ## Layout
 

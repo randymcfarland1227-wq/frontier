@@ -51,7 +51,13 @@ export function TaskList({
             show.map(task => (
               <article className={`task-row ${task.status === 'done' ? 'done' : ''}`} key={task.id}>
                 <div className="task-main">
-                  <strong>{task.title}</strong>
+                  {task.originUrl ? (
+                    <a className="origin-link" href={task.originUrl} target="_blank" rel="noopener noreferrer">
+                      <strong>{task.title}</strong>
+                    </a>
+                  ) : (
+                    <strong>{task.title}</strong>
+                  )}
                   {task.detail ? <p>{task.detail}</p> : null}
                   <span>
                     {task.status || 'open'}

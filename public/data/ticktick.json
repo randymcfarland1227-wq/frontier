@@ -1,0 +1,19 @@
+{
+  "source": "ticktick",
+  "metrics": {
+    "open": 0,
+    "habits": 0,
+    "overdue": 0
+  },
+  "featured": [
+    {
+      "id": "ticktick-token-pending",
+      "title": "TickTick token pending",
+      "detail": "Set TICKTICK_ACCESS_TOKEN on the sync box, then re-run the connector sync.",
+      "meta": "Stub",
+      "completable": false
+    }
+  ],
+  "tasks": [],
+  "refreshedAt": "2026-09-23T06:32:49.326Z"
+}

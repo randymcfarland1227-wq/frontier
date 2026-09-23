@@ -8,11 +8,15 @@ export function Header({
   enter,
   unfinished,
   openFocus,
+  onRefreshConnectors,
+  connectorSyncing,
 }: {
   active: SpaceId;
   enter: (id: SpaceId) => void;
   unfinished: number;
   openFocus: () => void;
+  onRefreshConnectors?: () => void;
+  connectorSyncing?: boolean;
 }) {
   return (
     <header className="topbar">
@@ -32,9 +36,22 @@ export function Header({
           </button>
         ))}
       </nav>
-      <button className="mode-button" type="button" onClick={openFocus}>
-        Today <span>{String(unfinished).padStart(2, '0')}</span>
-      </button>
+      <div className="topbar-actions">
+        {onRefreshConnectors ? (
+          <button
+            className="mode-button ghost"
+            type="button"
+            onClick={onRefreshConnectors}
+            disabled={connectorSyncing}
+            title="Reload connector JSON from this site"
+          >
+            {connectorSyncing ? 'Syncing…' : 'Refresh'}
+          </button>
+        ) : null}
+        <button className="mode-button" type="button" onClick={openFocus}>
+          Today <span>{String(unfinished).padStart(2, '0')}</span>
+        </button>
+      </div>
     </header>
   );
 }

@@ -1,8 +1,8 @@
 import type { SourceAdapter } from './types';
 
 /**
- * Phase 1 stub — no live Outlook calls yet.
- * Wire secrets / OAuth / postMessage origin updates in a later pass.
+ * Live data arrives via public/data/outlook.json (agent MCP sync + commit).
+ * This adapter remains a no-op for future direct API use.
  */
 export const outlookAdapter: SourceAdapter = {
   id: 'outlook',

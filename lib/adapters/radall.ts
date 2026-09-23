@@ -1,12 +1,12 @@
 import type { SourceAdapter } from './types';
 
 /**
- * Phase 1 stub — no live Radall Google Sheet calls yet.
- * Wire secrets / OAuth / postMessage origin updates in a later pass.
+ * Live data arrives via public/data/radall.json (Sheets MCP sync + commit).
+ * This adapter remains a no-op for future direct API use.
  */
 export const radallAdapter: SourceAdapter = {
   id: 'radall',
-  label: 'Radall Google Sheet',
+  label: 'Radall Finances',
   mode: 'api',
   async refresh() {
     return null;

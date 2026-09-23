@@ -1,0 +1,61 @@
+{
+  "source": "gmail",
+  "metrics": {
+    "starred": 3,
+    "unread": 0,
+    "action": 3
+  },
+  "featured": [
+    {
+      "id": "1a0ca8746bd9e24c",
+      "title": "AutoPay failed—make your payment now",
+      "detail": "We weren't able to process your scheduled payment. Please make this payment today. Affirm AutoPay failed for your Shotgun plan We couldn't process your $7.12 payment due Sep 22, 20",
+      "meta": "From affirm-confirmation@affirm.com",
+      "originUrl": "https://mail.google.com/mail/?authuser=randymcfarland1227@gmail.com#all/thread-f:1877060362685768268",
+      "completable": false
+    },
+    {
+      "id": "1a0ca54128331858",
+      "title": "Randy, don’t lose your Verizon service",
+      "detail": "Randy Fios Account: ******4380001 Act before it's too late Hi Randy, We understand that unexpected situations happen, and we don't want you to lose access to the services you rely ",
+      "meta": "From donotreply@verizonfinancialservices.com",
+      "originUrl": "https://mail.google.com/mail/?authuser=randymcfarland1227@gmail.com#all/thread-f:1877056843972548696",
+      "completable": false
+    },
+    {
+      "id": "1a0b567ce591d78a",
+      "title": "Senior Cvent Platform Administrator - REMOTE",
+      "detail": "Hi Randy, I'm reaching out because your background stood out for a Project Management Assistant* opportunity we're hiring for at ApTask Global Workforce (AGW). I thought it might b",
+      "meta": "From asyiemlieh@agwtalent.com",
+      "originUrl": "https://mail.google.com/mail/?authuser=randymcfarland1227@gmail.com#all/thread-f:1876688764157417354",
+      "completable": false
+    }
+  ],
+  "tasks": [
+    {
+      "id": "1a0ca8746bd9e24c",
+      "title": "AutoPay failed—make your payment now",
+      "detail": "We weren't able to process your scheduled payment. Please make this payment today. Affirm AutoPay failed for your Shotgun plan We couldn't process your $7.12 payment due Sep 22, 20",
+      "status": "open",
+      "starred": true,
+      "originUrl": "https://mail.google.com/mail/?authuser=randymcfarland1227@gmail.com#all/thread-f:1877060362685768268"
+    },
+    {
+      "id": "1a0ca54128331858",
+      "title": "Randy, don’t lose your Verizon service",
+      "detail": "Randy Fios Account: ******4380001 Act before it's too late Hi Randy, We understand that unexpected situations happen, and we don't want you to lose access to the services you rely ",
+      "status": "open",
+      "starred": true,
+      "originUrl": "https://mail.google.com/mail/?authuser=randymcfarland1227@gmail.com#all/thread-f:1877056843972548696"
+    },
+    {
+      "id": "1a0b567ce591d78a",
+      "title": "Senior Cvent Platform Administrator - REMOTE",
+      "detail": "Hi Randy, I'm reaching out because your background stood out for a Project Management Assistant* opportunity we're hiring for at ApTask Global Workforce (AGW). I thought it might b",
+      "status": "open",
+      "starred": true,
+      "originUrl": "https://mail.google.com/mail/?authuser=randymcfarland1227@gmail.com#all/thread-f:1876688764157417354"
+    }
+  ],
+  "refreshedAt": "2026-09-23T06:32:49.326Z"
+}
