@@ -4,7 +4,7 @@ import type { SourceId } from './types';
 import type { FocusAreaId } from './focusAreas';
 import { readSaved, writeSaved, STORAGE_KEYS } from './storage';
 
-export type CaptureKind = 'research' | 'learn' | 'lookinto' | 'idea';
+export type CaptureKind = 'research' | 'learn' | 'lookinto' | 'idea' | 'thought';
 
 export type CaptureStatus = 'inbox' | 'parked' | 'promoted' | 'dropped';
 
@@ -24,6 +24,7 @@ export type Capture = {
 };
 
 export const CAPTURE_KINDS: Array<{ id: CaptureKind; label: string }> = [
+  { id: 'thought', label: 'Thought' },
   { id: 'idea', label: 'Idea' },
   { id: 'research', label: 'Research' },
   { id: 'lookinto', label: 'Look into' },

@@ -41,6 +41,8 @@ export type TaskItem = {
   projectId?: string;
   /** Origin tags (e.g. TickTick) — used by focus-area rules */
   tags?: string[];
+  /** When the origin marked it done (ISO) — used as the completion time */
+  completedAt?: string;
 };
 
 export type SourceSnapshot = {

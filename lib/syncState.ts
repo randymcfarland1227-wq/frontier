@@ -39,10 +39,15 @@ export function normalizeState(raw: unknown): SyncedState {
 function mergeEntry(a: CompletionEntry, b: CompletionEntry): CompletionEntry {
   const first = Date.parse(a.completedAt) <= Date.parse(b.completedAt) ? a : b;
   const other = first === a ? b : a;
+  // Area: a hand-set area wins, then whichever copy was sorted under newer rules.
+  const rank = (e: CompletionEntry) => (e.focusAreaId ? (e.focusManual ? 1e6 : (e.focusRules ?? 1)) : -1);
+  const area = rank(other) > rank(first) ? other : first;
   return {
     ...first,
     title: first.title ?? other.title,
-    focusAreaId: first.focusAreaId ?? other.focusAreaId,
+    focusAreaId: area.focusAreaId,
+    focusRules: area.focusRules,
+    focusManual: area.focusManual,
   };
 }
 

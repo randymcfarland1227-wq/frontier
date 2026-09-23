@@ -25,6 +25,7 @@ function SourceRow({
   onCompleteTask,
   onStarTask,
   fullWidth,
+  extra,
 }: {
   ids: SourceId[];
   label: string;
@@ -35,6 +36,7 @@ function SourceRow({
   onCompleteTask: (source: SourceId, task: TaskItem) => void;
   onStarTask: (source: SourceId, task: TaskItem) => void;
   fullWidth?: boolean;
+  extra?: Partial<Record<SourceId, ReactNode>>;
 }) {
   return (
     <section className={`source-row ${fullWidth ? 'source-row-self' : ''}`} aria-label={label}>
@@ -52,6 +54,7 @@ function SourceRow({
             onCompleteFeatured={item => onCompleteFeatured(id, item)}
             onCompleteTask={task => onCompleteTask(id, task)}
             onStarTask={task => onStarTask(id, task)}
+            extra={extra?.[id]}
           />
         ))}
       </div>
@@ -72,6 +75,7 @@ export function HomeView({
   focusConfig,
   capturesPanel,
   whyPanel,
+  selfQuickCapture,
 }: {
   snapshots: Record<SourceId, SourceSnapshot>;
   enter: (id: SpaceId) => void;
@@ -85,6 +89,7 @@ export function HomeView({
   focusConfig: FocusAreaConfig | null;
   capturesPanel: ReactNode;
   whyPanel: ReactNode;
+  selfQuickCapture: ReactNode;
 }) {
   const latest =
     Object.values(snapshots)
@@ -142,6 +147,7 @@ export function HomeView({
         onCompleteTask={onCompleteTask}
         onStarTask={onStarTask}
         fullWidth
+        extra={{ self: selfQuickCapture }}
       />
       <section className="source-row" aria-label="Ideas and research">
         {capturesPanel}

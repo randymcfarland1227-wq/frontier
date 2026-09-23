@@ -1,5 +1,7 @@
 'use client';
 
+import { useState } from 'react';
+import { readSaved, writeSaved, STORAGE_KEYS } from '../../lib/storage';
 import type { FeaturedItem, SourceDefinition, SourceSnapshot, TaskItem } from '../../lib/types';
 import { updatedLabel } from '../../lib/protocol';
 import { isConnectorSource } from '../../lib/connectors';
@@ -15,6 +17,7 @@ export function SourceCard({
   onCompleteFeatured,
   onCompleteTask,
   onStarTask,
+  extra,
 }: {
   source: SourceDefinition;
   snapshot: SourceSnapshot;
@@ -23,19 +26,44 @@ export function SourceCard({
   onCompleteFeatured?: (item: FeaturedItem) => void;
   onCompleteTask?: (task: TaskItem) => void;
   onStarTask?: (task: TaskItem) => void;
+  /** Rendered under the header (e.g. Self quick-add) */
+  extra?: React.ReactNode;
 }) {
   const showSync = isConnectorSource(source.id) && Boolean(snapshot.refreshedAt);
+  const [collapsed, setCollapsed] = useState(() =>
+    readSaved<string[]>(STORAGE_KEYS.collapsedCards, []).includes(source.id),
+  );
+  const toggleCollapsed = () => {
+    const next = !collapsed;
+    const saved = readSaved<string[]>(STORAGE_KEYS.collapsedCards, []).filter(id => id !== source.id);
+    writeSaved(STORAGE_KEYS.collapsedCards, next ? [...saved, source.id] : saved);
+    setCollapsed(next);
+  };
   const links = source.relatedLinks || [];
 
   return (
-    <article className={`space-card ${source.id}${source.placeholder ? ' placeholder' : ''}`}>
+    <article className={`space-card ${source.id}${source.placeholder ? ' placeholder' : ''}${collapsed ? ' is-collapsed' : ''}`}>
       <div className="card-top">
         <span>{source.number}</span>
-        <span className="marker">{source.marker}</span>
+        <div className="card-top-right">
+          <button
+            type="button"
+            className="card-collapse"
+            aria-expanded={!collapsed}
+            aria-label={`${collapsed ? 'Expand' : 'Collapse'} ${source.name}`}
+            title={collapsed ? 'Expand' : 'Collapse to header'}
+            onClick={toggleCollapsed}
+          >
+            {collapsed ? '▸' : '▾'}
+          </button>
+          <span className="marker">{source.marker}</span>
+        </div>
       </div>
       <div className="card-copy">
         <p>{source.label}</p>
         <h2>{source.name}</h2>
+        {collapsed ? null : (
+          <>
         {links.length ? (
           <div className="related-links">
             {links.map(link => (
@@ -48,7 +76,12 @@ export function SourceCard({
         ) : null}
         <p className="description">{source.description}</p>
         {showSync ? <p className="sync-stamp">Synced {updatedLabel(snapshot.refreshedAt).replace(/^Updated\s+/i, '')}</p> : null}
+          </>
+        )}
       </div>
+      {collapsed ? null : (
+        <>
+      {extra}
       <MetricGrid sourceId={source.id} snapshot={snapshot} compact />
       <FeaturedList sourceId={source.id} snapshot={snapshot} compact onComplete={onCompleteFeatured} />
       <TaskList
@@ -73,6 +106,8 @@ export function SourceCard({
           <span>→</span>
         </button>
       </div>
+        </>
+      )}
     </article>
   );
 }
