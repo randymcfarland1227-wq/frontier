@@ -1,8 +1,9 @@
 /** Completion ledger + review stats for Life Hub. */
 
-import type { SourceId, SourceSnapshot } from './types';
+import type { SourceId, SourceSnapshot, TaskItem } from './types';
 import { SOURCE_IDS, sourceById } from './sources';
 import { readSaved, writeSaved, STORAGE_KEYS } from './storage';
+import { resolveFocusArea, type FocusAreaId } from './focusAreas';
 
 export type CompletionEntry = {
   source: SourceId;
@@ -10,6 +11,8 @@ export type CompletionEntry = {
   completedAt: string; // ISO
   title?: string;
   via: 'hub' | 'origin-snapshot' | 'connector-diff' | 'self';
+  /** Resolved via focus-areas.json at record time; persisted so history stays stable if maps change. */
+  focusAreaId?: FocusAreaId;
 };
 
 export type CompletionLedger = {
@@ -43,7 +46,14 @@ export function saveLedger(ledger: CompletionLedger) {
 export function recordCompletion(
   source: SourceId,
   taskId: string,
-  opts?: { title?: string; via?: CompletionEntry['via']; at?: string; ledger?: CompletionLedger },
+  opts?: {
+    title?: string;
+    via?: CompletionEntry['via'];
+    at?: string;
+    ledger?: CompletionLedger;
+    /** Extra task fields focus rules can match on */
+    task?: Pick<TaskItem, 'kind' | 'projectId' | 'tags'>;
+  },
 ): CompletionLedger {
   const ledger = opts?.ledger ?? loadLedger();
   const key = ledgerKey(source, taskId);
@@ -54,6 +64,14 @@ export function recordCompletion(
     completedAt: opts?.at || new Date().toISOString(),
     title: opts?.title,
     via: opts?.via || 'hub',
+    focusAreaId: resolveFocusArea({
+      source,
+      taskId,
+      title: opts?.title,
+      kind: opts?.task?.kind,
+      projectId: opts?.task?.projectId,
+      tags: opts?.task?.tags,
+    }),
   };
   saveLedger(ledger);
   return ledger;
@@ -150,12 +168,14 @@ export function diffSnapshotCompletions(
         title: prevTask.title,
         via: source === 'self' ? 'self' : 'origin-snapshot',
         ledger: current,
+        task: prevTask,
       });
     } else if (nxt.status === 'done' && prevTask.status !== 'done') {
       current = recordCompletion(source, id, {
         title: nxt.title || prevTask.title,
         via: source === 'self' ? 'self' : 'origin-snapshot',
         ledger: current,
+        task: { ...prevTask, ...nxt },
       });
     }
   }

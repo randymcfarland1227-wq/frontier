@@ -175,3 +175,10 @@ Star on connector items still opens the origin URL until two-way API star exists
 - `localStorage` key `lifehub-completions`: map of `source::taskId` → `{ completedAt, via, title }`.
 - Counts hub Done, Self complete, inbound `randys-workroom:complete`, and snapshot diffs (task gone or status→done) for iframe + connector refreshes.
 - Deduped by source+taskId (keeps earliest). TickTick Open API does not expose “completed today” without extra calls — connector diffs only see tasks dropping out of the today/overdue/habits snapshot.
+
+### Focus areas + Balance (slice 1–2 of BUILDER_HANDOFF Part 2)
+
+- Config: `public/data/focus-areas.json` — areas, weights (sum to 1), `sourceMap` rules. Edit + push to change; no code change needed.
+- Rule resolution (`lib/focusAreas.ts`): most specific match wins — `projectIds`/`tags` (3) + `titleIncludes` (2) + `kinds` (1), summed; bare source = 0; ties → area listed first. No match → **Other** (counted, shown).
+- `CompletionEntry.focusAreaId` is set at record time and persisted. Entries recorded before this (or before the config loaded) are backfilled using the current snapshot's task (projectId/kind), then title.
+- Review → **Balance**: per-area share vs target tick, Today / 7 days / Month; on target = within ±5 pts. Overall = 100 − total-variation distance.
