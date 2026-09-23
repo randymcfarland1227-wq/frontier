@@ -5,6 +5,7 @@ import { readSaved, writeSaved, STORAGE_KEYS } from '../../lib/storage';
 import type { FeaturedItem, SourceDefinition, SourceSnapshot, TaskItem } from '../../lib/types';
 import { updatedLabel } from '../../lib/protocol';
 import { isConnectorSource } from '../../lib/connectors';
+import { getActionableMetric } from '../../lib/actionable';
 import { MetricGrid } from './MetricGrid';
 import { FeaturedList } from './FeaturedList';
 import { TaskList } from './TaskList';
@@ -61,7 +62,18 @@ export function SourceCard({
       </div>
       <div className="card-copy">
         <p>{source.label}</p>
-        <h2>{source.name}</h2>
+        {collapsed ? (
+          <h2 className="card-title-row">
+            {/* Keep the count on the same line as the last word of the name */}
+            {source.name.slice(0, source.name.lastIndexOf(' ') + 1)}
+            <span className="title-tail">
+              {source.name.slice(source.name.lastIndexOf(' ') + 1)}
+              <CollapsedCount source={source} snapshot={snapshot} />
+            </span>
+          </h2>
+        ) : (
+          <h2>{source.name}</h2>
+        )}
         {collapsed ? null : (
           <>
         {links.length ? (
@@ -109,5 +121,17 @@ export function SourceCard({
         </>
       )}
     </article>
+  );
+}
+
+/** The card's blue "to do" number, shown beside the name while the card is collapsed. */
+function CollapsedCount({ source, snapshot }: { source: SourceDefinition; snapshot: SourceSnapshot }) {
+  const actionable = getActionableMetric(source.id, snapshot);
+  if (!Number.isFinite(actionable.value)) return null;
+  return (
+    <span className="collapsed-count" title={`${actionable.value} ${actionable.label}`}>
+      {actionable.value.toLocaleString()}
+      <span className="sr-only"> {actionable.label}</span>
+    </span>
   );
 }
