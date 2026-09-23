@@ -224,12 +224,163 @@ main{max-width:420px;padding:24px;text-align:center}a{color:#9aa8ff}</style></he
   });
 }
 
+// ---------------------------------------------------------------------------
+// TickTick completions feed: GET /api/ticktick/done?from=YYYYMMDD&to=YYYYMMDD&start=ISO&end=ISO
+// Tasks completed in TickTick (Open API /task/completed) + habit check-ins, so Life Hub can
+// count work finished in the TickTick app. Postponed tasks never appear — TickTick only lists
+// tasks it marked complete. POST /api/ticktick/habit-checkin checks a habit in from the hub.
+// ---------------------------------------------------------------------------
+
+const TT = "https://api.ticktick.com/open/v1";
+
+function ttTime(value: unknown): string | undefined {
+  if (typeof value !== "string" || !value) return undefined;
+  // TickTick uses "+0000"; make it ISO-8601 with a colon so every parser agrees.
+  const t = Date.parse(value.replace(/([+-]\d{2})(\d{2})$/, "$1:$2"));
+  return Number.isNaN(t) ? undefined : new Date(t).toISOString();
+}
+
+async function ttFetch(env: Env, path: string, init?: RequestInit): Promise<unknown> {
+  const res = await fetch(`${TT}${path}`, {
+    ...init,
+    headers: {
+      Authorization: `Bearer ${env.TICKTICK_ACCESS_TOKEN}`,
+      "Content-Type": "application/json",
+      ...(init?.headers || {}),
+    },
+  });
+  if (!res.ok) throw new Error(`ticktick_${res.status}`);
+  const text = await res.text();
+  return text ? JSON.parse(text) : null;
+}
+
+/** Gate private TickTick data behind the backup key once the backup has been claimed. */
+async function syncKeyAllowed(request: Request, env: Env): Promise<boolean> {
+  const claimed = await env.LIFEHUB_STATE.get(AUTH_KEY);
+  if (!claimed) return true;
+  const key = (request.headers.get("X-Sync-Key") || "").trim();
+  return key.length >= 24 && (await sha256(key)) === claimed;
+}
+
+const stampRe = /^\d{8}$/;
+
+async function handleTickTickDone(request: Request, env: Env): Promise<Response> {
+  const origin = request.headers.get("Origin");
+  if (request.method === "OPTIONS") return new Response(null, { status: 204, headers: corsHeaders(origin) });
+  if (origin && !CORS_ALLOW_ORIGINS.has(origin)) return jsonResponse({ ok: false, error: "cors_denied" }, 403, origin);
+  if (request.method !== "GET") return jsonResponse({ ok: false, error: "method_not_allowed" }, 405, origin);
+  if (!env.TICKTICK_ACCESS_TOKEN) return jsonResponse({ ok: false, error: "token_not_configured" }, 503, origin);
+  if (!(await syncKeyAllowed(request, env))) return jsonResponse({ ok: false, error: "wrong_key" }, 401, origin);
+
+  const q = new URL(request.url).searchParams;
+  const from = q.get("from") || "";
+  const to = q.get("to") || "";
+  const start = ttTime(q.get("start") || "");
+  const end = ttTime(q.get("end") || "");
+  if (!stampRe.test(from) || !stampRe.test(to) || !start || !end) {
+    return jsonResponse({ ok: false, error: "bad_range" }, 400, origin);
+  }
+  const fmt = (iso: string) => iso.replace(/\.\d{3}Z$/, ".000+0000");
+
+  const errors: string[] = [];
+  let tasks: Array<Record<string, unknown>> = [];
+  try {
+    const raw = (await ttFetch(env, "/task/completed", {
+      method: "POST",
+      body: JSON.stringify({ startDate: fmt(start), endDate: fmt(end) }),
+    })) as Array<Record<string, unknown>> | null;
+    tasks = (raw || [])
+      .filter(t => t && t.status === 2 && typeof t.id === "string")
+      .map(t => ({
+        id: t.id,
+        projectId: t.projectId,
+        title: t.title,
+        completedAt: ttTime(t.completedTime),
+        repeat: Boolean(t.repeatFlag),
+      }));
+  } catch (e) {
+    errors.push(`tasks:${(e as Error).message}`);
+  }
+
+  const habits: Array<Record<string, unknown>> = [];
+  try {
+    const list = ((await ttFetch(env, "/habit")) as Array<Record<string, unknown>> | null) || [];
+    const byId = new Map(list.filter(h => typeof h.id === "string").map(h => [h.id as string, h]));
+    if (byId.size) {
+      const checkins = ((await ttFetch(
+        env,
+        `/habit/checkins?habitIds=${encodeURIComponent([...byId.keys()].join(","))}&from=${from}&to=${to}`,
+      )) as Array<{ habitId: string; checkins?: Array<Record<string, unknown>> }> | null) || [];
+      for (const doc of checkins) {
+        const habit = byId.get(doc.habitId);
+        for (const c of doc.checkins || []) {
+          const value = Number(c.value) || 0;
+          const goal = Number(c.goal) || Number(habit?.goal) || 1;
+          const done = c.status === 2 || (c.status == null && value >= goal && value > 0);
+          if (!done || !stampRe.test(String(c.stamp))) continue;
+          habits.push({
+            id: `habit-${doc.habitId}`,
+            title: habit?.name,
+            stamp: String(c.stamp),
+            completedAt: ttTime(c.time) || ttTime(c.opTime),
+          });
+        }
+      }
+    }
+  } catch (e) {
+    errors.push(`habits:${(e as Error).message}`);
+  }
+
+  return jsonResponse({ ok: errors.length < 2, tasks, habits, errors }, 200, origin);
+}
+
+async function handleHabitCheckin(request: Request, env: Env): Promise<Response> {
+  const origin = request.headers.get("Origin");
+  if (request.method === "OPTIONS") return new Response(null, { status: 204, headers: corsHeaders(origin) });
+  if (origin && !CORS_ALLOW_ORIGINS.has(origin)) return jsonResponse({ ok: false, error: "cors_denied" }, 403, origin);
+  if (request.method !== "POST") return jsonResponse({ ok: false, error: "method_not_allowed" }, 405, origin);
+  if (!env.TICKTICK_ACCESS_TOKEN) return jsonResponse({ ok: false, error: "token_not_configured" }, 503, origin);
+  if (!(await syncKeyAllowed(request, env))) return jsonResponse({ ok: false, error: "wrong_key" }, 401, origin);
+
+  let body: { habitId?: unknown; stamp?: unknown };
+  try {
+    body = (await request.json()) as { habitId?: unknown; stamp?: unknown };
+  } catch {
+    return jsonResponse({ ok: false, error: "invalid_json" }, 400, origin);
+  }
+  const habitId = typeof body.habitId === "string" ? body.habitId.replace(/^habit-/, "").trim() : "";
+  const stamp = String(body.stamp || "");
+  if (!/^[0-9a-f]{12,40}$/i.test(habitId) || !stampRe.test(stamp)) {
+    return jsonResponse({ ok: false, error: "bad_input" }, 400, origin);
+  }
+  try {
+    // Count habits ("Drink 5 bottles") need value = goal to register as complete.
+    const habit = (await ttFetch(env, `/habit/${habitId}`)) as { goal?: number } | null;
+    const goal = Number(habit?.goal) || 1;
+    await ttFetch(env, `/habit/${habitId}/checkin`, {
+      method: "POST",
+      body: JSON.stringify({ stamp: Number(stamp), value: goal, goal, status: 2 }),
+    });
+    return jsonResponse({ ok: true }, 200, origin);
+  } catch (e) {
+    return jsonResponse({ ok: false, error: (e as Error).message }, 502, origin);
+  }
+}
+
 export default {
   async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
     const { pathname } = new URL(request.url);
 
     if (pathname === "/api/ticktick/complete") {
       return handleTickTickComplete(request, env);
+    }
+
+    if (pathname === "/api/ticktick/done") {
+      return handleTickTickDone(request, env);
+    }
+
+    if (pathname === "/api/ticktick/habit-checkin") {
+      return handleHabitCheckin(request, env);
     }
 
     if (pathname === "/api/state") {

@@ -46,6 +46,12 @@ export function getSyncStatus(): SyncStatus {
   return status;
 }
 
+/** Header for private Worker endpoints once backup is on (TickTick feed). */
+export function syncKeyHeader(): Record<string, string> {
+  const key = getKey();
+  return key ? { 'X-Sync-Key': key } : {};
+}
+
 function getKey(): string | undefined {
   return readSaved<SyncConfig>(STORAGE_KEYS.sync, {}).key;
 }

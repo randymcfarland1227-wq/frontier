@@ -225,3 +225,9 @@ Star on connector items still opens the origin URL until two-way API star exists
 - **Resale:** sell-hub sends its last 7 days of Listing Posted / Price Drop / Offer Sent / Completed / Shipped / Listing Ended actions as done tasks (from the Item Actions sheet) and pings Life Hub the moment one happens.
 - **Self merged** into "Thoughts, ideas, research & tasks" (Task is a kind; Tasks tab; star = pin to Priority). No standalone Self card on home.
 - **Home order:** one-line title + small status → Why → Review (stats | Balance side by side) → Self panel → Priority → source rows.
+
+### TickTick completions feed (2026-09-23)
+
+- Worker `GET /api/ticktick/done?from&to&start&end` → TickTick Open API `POST /task/completed` + `GET /habit` + `GET /habit/checkins`; `POST /api/ticktick/habit-checkin` → `POST /habit/{id}/checkin` (value = habit goal). Both require the backup key (`X-Sync-Key`) once the backup is claimed.
+- `lib/ticktickDone.ts` pulls it on load / tab focus / every 10 min. TickTick ledger keys are per day (`ticktick::<id>::YYYY-MM-DD`) with a same-day guard against older undated keys.
+- Targets: 15% each except Marvel 10%.
