@@ -26,6 +26,7 @@ export const STORAGE_KEYS = {
   theme: 'lifehub-theme',
   priorityPins: 'lifehub-priority-pins',
   captures: 'lifehub-captures',
+  goalLinks: 'lifehub-goal-links',
   /** Migrate from prior Work Room keys once */
   legacyFocus: 'workroom-focus',
   legacySnapshots: 'workroom-source-snapshots',

@@ -189,3 +189,11 @@ Star on connector items still opens the origin URL until two-way API star exists
 - Inbox / Parked / Promoted / Dropped. Captures never appear on task boards or in Balance.
 - **Promote** creates a Self task (notes + link as detail), carrying `focusAreaId` + `fromCaptureId`; the capture keeps `promotedTo` as a paper trail and shows whether the task is done. Completing that task records the capture's area (override), so it counts in Balance only then.
 - Later: promote straight to TickTick (needs a Worker create endpoint), `goalId` once the Why panel lands.
+
+### Why panel — goals + attached work (slice 4)
+
+- Home, between Review and Self. Goals = Goals hub **efforts** (title, reason = "why", how), read live from the Goals hub Apps Script (`?action=efforts`, `?action=reviews` — CORS `*`). If that fails, falls back to `public/data/goals.json` (snapshot of the same efforts; refresh it when goals change). Life Hub never writes goals.
+- `goals.json` also maps Goals categories → focus areas (`categories[].focusAreaId`) with per-goal `areaOverrides` (Marvel training → Marvel, Clean Spaces → Home).
+- Each card: category, area, latest bi-weekly review (On Track / Slipping / Stalled), why, "N done this week · M linked". Goals with no work are dashed.
+- Links: `public/data/goal-links.json` (44 starter links matched by TickTick title) + per-browser adds/unlinks in `localStorage` `lifehub-goal-links`. Link any open TickTick task/habit, source task, Self item, or idea; a promoted idea counts through its Self task.
+- Ledger fix: TickTick habits are keyed per local day (`ticktick::habit-…::YYYY-MM-DD`) so a daily habit counts every day, not once all-time.

@@ -16,7 +16,7 @@ export type CompletionEntry = {
 };
 
 export type CompletionLedger = {
-  /** key = `${source}::${taskId}` */
+  /** key = `${source}::${taskId}`, or `${source}::${taskId}::${YYYY-MM-DD}` for daily habits */
   entries: Record<string, CompletionEntry>;
 };
 
@@ -30,8 +30,16 @@ export type CompletionStats = {
   inventoryTasks: number;
 };
 
-function ledgerKey(source: SourceId, taskId: string) {
-  return `${source}::${taskId}`;
+function localDate(iso: string) {
+  const d = new Date(iso);
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+}
+
+/** TickTick habits keep one id forever, so they count once per day instead of once all-time. */
+function ledgerKey(source: SourceId, taskId: string, at: string) {
+  const habit = source === 'ticktick' && taskId.startsWith('habit-');
+  return habit ? `${source}::${taskId}::${localDate(at)}` : `${source}::${taskId}`;
 }
 
 export function loadLedger(): CompletionLedger {
@@ -58,12 +66,13 @@ export function recordCompletion(
   },
 ): CompletionLedger {
   const ledger = opts?.ledger ?? loadLedger();
-  const key = ledgerKey(source, taskId);
+  const completedAt = opts?.at || new Date().toISOString();
+  const key = ledgerKey(source, taskId, completedAt);
   if (ledger.entries[key]) return ledger;
   ledger.entries[key] = {
     source,
     taskId,
-    completedAt: opts?.at || new Date().toISOString(),
+    completedAt,
     title: opts?.title,
     via: opts?.via || 'hub',
     focusAreaId: opts?.focusAreaId ?? resolveFocusArea({

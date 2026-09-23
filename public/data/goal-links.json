@@ -1,0 +1,462 @@
+{
+  "version": 1,
+  "note": "Starter links from Life Hub — matched by TickTick title on 2026-09-23. label is for humans only. Add/unlink more on the hub (saved per browser).",
+  "links": [
+    {
+      "id": "seed-physical-protein-f42e265c",
+      "goalId": "physical-protein",
+      "target": {
+        "type": "ticktick",
+        "taskId": "6a93a4ba8f087e0df42e265c",
+        "projectId": "69dd6ff6d3e8d1a95e9a96ca"
+      },
+      "role": "drives",
+      "label": "Nutrition Flow — Use Macro Tracker"
+    },
+    {
+      "id": "seed-physical-protein-95911710",
+      "goalId": "physical-protein",
+      "target": {
+        "type": "ticktick",
+        "taskId": "habit-6a939b9e8f08defd95911710"
+      },
+      "role": "supports",
+      "label": "Creatine and Fiber Supplements"
+    },
+    {
+      "id": "seed-physical-hydration-959116e4",
+      "goalId": "physical-hydration",
+      "target": {
+        "type": "ticktick",
+        "taskId": "habit-6a939b9a8f08defd959116e4"
+      },
+      "role": "drives",
+      "label": "Drink 5 Bottles of Water"
+    },
+    {
+      "id": "seed-physical-selfcare-5148f149",
+      "goalId": "physical-selfcare",
+      "target": {
+        "type": "ticktick",
+        "taskId": "6a92084c8f0869c15148f149",
+        "projectId": "69eef620b4b19119328b4dff"
+      },
+      "role": "drives",
+      "label": "Foot Care and Moisturize"
+    },
+    {
+      "id": "seed-physical-selfcare-72a47fad",
+      "goalId": "physical-selfcare",
+      "target": {
+        "type": "ticktick",
+        "taskId": "6a7e9d3c4a4491ef72a47fad",
+        "projectId": "69eef620b4b19119328b4dff"
+      },
+      "role": "drives",
+      "label": "Nail and Cuticle Care"
+    },
+    {
+      "id": "seed-physical-selfcare-bc895baa",
+      "goalId": "physical-selfcare",
+      "target": {
+        "type": "ticktick",
+        "taskId": "habit-69ceeef031ee1102bc895baa"
+      },
+      "role": "drives",
+      "label": "Face Washing & Care"
+    },
+    {
+      "id": "seed-physical-selfcare-bc895c5f",
+      "goalId": "physical-selfcare",
+      "target": {
+        "type": "ticktick",
+        "taskId": "habit-69ceef1f31849102bc895c5f"
+      },
+      "role": "drives",
+      "label": "Moisturize Body"
+    },
+    {
+      "id": "seed-physical-selfcare-6a8d9251",
+      "goalId": "physical-selfcare",
+      "target": {
+        "type": "ticktick",
+        "taskId": "habit-69d002d0055a11026a8d9251"
+      },
+      "role": "drives",
+      "label": "Shower or Epsom Salt Bath"
+    },
+    {
+      "id": "seed-physical-selfcare-f42d25f2",
+      "goalId": "physical-selfcare",
+      "target": {
+        "type": "ticktick",
+        "taskId": "habit-6a939b628f087e0df42d25f2"
+      },
+      "role": "drives",
+      "label": "Teeth Brushing — Night Routine"
+    },
+    {
+      "id": "seed-physical-selfcare-bbb3fdea",
+      "goalId": "physical-selfcare",
+      "target": {
+        "type": "ticktick",
+        "taskId": "habit-6a93a4858f080f71bbb3fdea"
+      },
+      "role": "drives",
+      "label": "Face Shaving — Every 3 Days"
+    },
+    {
+      "id": "seed-physical-selfcare-f42e2033",
+      "goalId": "physical-selfcare",
+      "target": {
+        "type": "ticktick",
+        "taskId": "habit-6a93a4888f087e0df42e2033"
+      },
+      "role": "drives",
+      "label": "Body Shaving — Weekly"
+    },
+    {
+      "id": "seed-physical-nourish-9591a2d1",
+      "goalId": "physical-nourish",
+      "target": {
+        "type": "ticktick",
+        "taskId": "habit-6a93a4728f08defd9591a2d1"
+      },
+      "role": "drives",
+      "label": "Eat a Fruit or Vegetable"
+    },
+    {
+      "id": "seed-physical-nourish-f42e265c",
+      "goalId": "physical-nourish",
+      "target": {
+        "type": "ticktick",
+        "taskId": "6a93a4ba8f087e0df42e265c",
+        "projectId": "69dd6ff6d3e8d1a95e9a96ca"
+      },
+      "role": "supports",
+      "label": "Nutrition Flow — Use Macro Tracker"
+    },
+    {
+      "id": "seed-physical-sleep-bbb40176",
+      "goalId": "physical-sleep",
+      "target": {
+        "type": "ticktick",
+        "taskId": "6a93a4ba8f080f71bbb40176",
+        "projectId": "69f65a3753619118d36dd220"
+      },
+      "role": "drives",
+      "label": "Rest & Sleep Priorities"
+    },
+    {
+      "id": "seed-physical-sleep-5168d502",
+      "goalId": "physical-sleep",
+      "target": {
+        "type": "ticktick",
+        "taskId": "habit-6a93a46e8f0869c15168d502"
+      },
+      "role": "supports",
+      "label": "Daytime Rest / Quiet Reset"
+    },
+    {
+      "id": "seed-physical-vitamins-bc895aab",
+      "goalId": "physical-vitamins",
+      "target": {
+        "type": "ticktick",
+        "taskId": "habit-69ceedf0f95d5102bc895aab"
+      },
+      "role": "drives",
+      "label": "Medicine and Vitamins"
+    },
+    {
+      "id": "seed-physical-vitamins-95911710",
+      "goalId": "physical-vitamins",
+      "target": {
+        "type": "ticktick",
+        "taskId": "habit-6a939b9e8f08defd95911710"
+      },
+      "role": "drives",
+      "label": "Creatine and Fiber Supplements"
+    },
+    {
+      "id": "seed-mental-reading-249a9837",
+      "goalId": "mental-reading",
+      "target": {
+        "type": "ticktick",
+        "taskId": "habit-69dd725de73dd117249a9837"
+      },
+      "role": "drives",
+      "label": "Read (Even 3 Pages)"
+    },
+    {
+      "id": "seed-mental-journaling-1b75d411",
+      "goalId": "mental-journaling",
+      "target": {
+        "type": "ticktick",
+        "taskId": "habit-69ffc3345a86910c1b75d411"
+      },
+      "role": "drives",
+      "label": "Journal or Self Discovery"
+    },
+    {
+      "id": "seed-mental-journaling-d59110c7",
+      "goalId": "mental-journaling",
+      "target": {
+        "type": "ticktick",
+        "taskId": "6a4d3200f017d143d59110c7",
+        "projectId": "69f65a3753619118d36dd220"
+      },
+      "role": "supports",
+      "label": "Personal Check In (Bi Weekly)"
+    },
+    {
+      "id": "seed-mental-healthyminds-bc895b75",
+      "goalId": "mental-healthyminds",
+      "target": {
+        "type": "ticktick",
+        "taskId": "habit-69ceeea92fe4d102bc895b75"
+      },
+      "role": "drives",
+      "label": "Healthy Minds Session-Awareness"
+    },
+    {
+      "id": "seed-mental-healthyminds-6a8d8ebe",
+      "goalId": "mental-healthyminds",
+      "target": {
+        "type": "ticktick",
+        "taskId": "habit-69cfffa0cac5d1026a8d8ebe"
+      },
+      "role": "drives",
+      "label": "Healthy Minds Session- Connection"
+    },
+    {
+      "id": "seed-mental-healthyminds-6a8d8efa",
+      "goalId": "mental-healthyminds",
+      "target": {
+        "type": "ticktick",
+        "taskId": "habit-69d0000b178891026a8d8efa"
+      },
+      "role": "drives",
+      "label": "Healthy Minds Session- Insight"
+    },
+    {
+      "id": "seed-mental-healthyminds-6a8d8f64",
+      "goalId": "mental-healthyminds",
+      "target": {
+        "type": "ticktick",
+        "taskId": "habit-69d00098154891026a8d8f64"
+      },
+      "role": "drives",
+      "label": "Healthy Minds Session — Purpose"
+    },
+    {
+      "id": "seed-mental-healthyminds-6a8d9016",
+      "goalId": "mental-healthyminds",
+      "target": {
+        "type": "ticktick",
+        "taskId": "habit-69d0010c05f211026a8d9016"
+      },
+      "role": "drives",
+      "label": "Healthy Mind Sessions- Foundations"
+    },
+    {
+      "id": "seed-mental-cleanspaces-54046851",
+      "goalId": "mental-cleanspaces",
+      "target": {
+        "type": "ticktick",
+        "taskId": "69ffbe88cd20d11954046851",
+        "projectId": "69eef620b4b19119328b4dff"
+      },
+      "role": "drives",
+      "label": "Digital Declutter"
+    },
+    {
+      "id": "seed-mental-cleanspaces-bbb4017b",
+      "goalId": "mental-cleanspaces",
+      "target": {
+        "type": "ticktick",
+        "taskId": "6a93a4ba8f080f71bbb4017b",
+        "projectId": "69eef620b4b19119328b4dff"
+      },
+      "role": "drives",
+      "label": "Clean Bathroom — Weekly"
+    },
+    {
+      "id": "seed-mental-cleanspaces-bc896025",
+      "goalId": "mental-cleanspaces",
+      "target": {
+        "type": "ticktick",
+        "taskId": "habit-69cef07abe6e5102bc896025"
+      },
+      "role": "drives",
+      "label": "Wipe Room Surfaces"
+    },
+    {
+      "id": "seed-mental-cleanspaces-bc89607c",
+      "goalId": "mental-cleanspaces",
+      "target": {
+        "type": "ticktick",
+        "taskId": "habit-69cef0cab8fe5102bc89607c"
+      },
+      "role": "drives",
+      "label": "Vacuum Room"
+    },
+    {
+      "id": "seed-mental-cleanspaces-f0e21dcf",
+      "goalId": "mental-cleanspaces",
+      "target": {
+        "type": "ticktick",
+        "taskId": "habit-6a939bbb8f0861e0f0e21dcf"
+      },
+      "role": "drives",
+      "label": "Clean Room Reset"
+    },
+    {
+      "id": "seed-mental-cleanspaces-95911933",
+      "goalId": "mental-cleanspaces",
+      "target": {
+        "type": "ticktick",
+        "taskId": "habit-6a939bbe8f08defd95911933"
+      },
+      "role": "drives",
+      "label": "Make Kitchen Usable"
+    },
+    {
+      "id": "seed-mental-cleanspaces-5148f147",
+      "goalId": "mental-cleanspaces",
+      "target": {
+        "type": "ticktick",
+        "taskId": "6a92084c8f0869c15148f147",
+        "projectId": "69eef620b4b19119328b4dff"
+      },
+      "role": "supports",
+      "label": "Clean Out Tote"
+    },
+    {
+      "id": "seed-mental-cleanspaces-5148f148",
+      "goalId": "mental-cleanspaces",
+      "target": {
+        "type": "ticktick",
+        "taskId": "6a92084c8f0869c15148f148",
+        "projectId": "69eef620b4b19119328b4dff"
+      },
+      "role": "supports",
+      "label": "Vacuum Car"
+    },
+    {
+      "id": "seed-connection-training-6a8d97ce",
+      "goalId": "connection-training",
+      "target": {
+        "type": "ticktick",
+        "taskId": "habit-69d0150bb3b091026a8d97ce"
+      },
+      "role": "drives",
+      "label": "Train/Play with Marvel"
+    },
+    {
+      "id": "seed-connection-training-bbb405a7",
+      "goalId": "connection-training",
+      "target": {
+        "type": "ticktick",
+        "taskId": "6a93a5018f080f71bbb405a7",
+        "projectId": "69dd705c1bd491a95e9a99ca"
+      },
+      "role": "supports",
+      "label": "Marvel Care & Attention Menu"
+    },
+    {
+      "id": "seed-connection-training-bc896e72",
+      "goalId": "connection-training",
+      "target": {
+        "type": "ticktick",
+        "taskId": "habit-69cef7a256f71102bc896e72"
+      },
+      "role": "supports",
+      "label": "Walk Marvel — Priority"
+    },
+    {
+      "id": "seed-connection-training-95911956",
+      "goalId": "connection-training",
+      "target": {
+        "type": "ticktick",
+        "taskId": "habit-6a939bc28f08defd95911956"
+      },
+      "role": "supports",
+      "label": "Daily Marvel Care — Attention + Enrichment"
+    },
+    {
+      "id": "seed-financial-savings-bc8976dc",
+      "goalId": "financial-savings",
+      "target": {
+        "type": "ticktick",
+        "taskId": "69cefe89a8a19102bc8976dc",
+        "projectId": "69dd701e1ca911a95e9a97c7"
+      },
+      "role": "supports",
+      "label": "Weekly Finances Review"
+    },
+    {
+      "id": "seed-financial-credit-bc8976dc",
+      "goalId": "financial-credit",
+      "target": {
+        "type": "ticktick",
+        "taskId": "69cefe89a8a19102bc8976dc",
+        "projectId": "69dd701e1ca911a95e9a97c7"
+      },
+      "role": "supports",
+      "label": "Weekly Finances Review"
+    },
+    {
+      "id": "seed-spiritual-vocal-7dae9e59",
+      "goalId": "spiritual-vocal",
+      "target": {
+        "type": "ticktick",
+        "taskId": "habit-6a7e8b2d9a80983d7dae9e59"
+      },
+      "role": "drives",
+      "label": "Vocal Training / Warm-Ups"
+    },
+    {
+      "id": "seed-spiritual-production-c7faa9b4",
+      "goalId": "spiritual-production",
+      "target": {
+        "type": "ticktick",
+        "taskId": "6a124c4c639b9152c7faa9b4",
+        "projectId": "69def09b442591a95e9af9db"
+      },
+      "role": "drives",
+      "label": "Music Session- Main"
+    },
+    {
+      "id": "seed-spiritual-production-d36dca31",
+      "goalId": "spiritual-production",
+      "target": {
+        "type": "ticktick",
+        "taskId": "69f65956b6485118d36dca31",
+        "projectId": "69def09b442591a95e9af9db"
+      },
+      "role": "drives",
+      "label": "Music  Session-Maintenance"
+    },
+    {
+      "id": "seed-spiritual-production-d36dc4b0",
+      "goalId": "spiritual-production",
+      "target": {
+        "type": "ticktick",
+        "taskId": "69f658e5e81f9118d36dc4b0",
+        "projectId": "69def09b442591a95e9af9db"
+      },
+      "role": "supports",
+      "label": "Music Sessions Log"
+    },
+    {
+      "id": "seed-spiritual-guitar-bbb3fd1d",
+      "goalId": "spiritual-guitar",
+      "target": {
+        "type": "ticktick",
+        "taskId": "habit-6a93a47b8f080f71bbb3fd1d"
+      },
+      "role": "supports",
+      "label": "Creative / Tinkering Session"
+    }
+  ]
+}
