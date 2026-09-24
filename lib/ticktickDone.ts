@@ -28,9 +28,12 @@ function stampDate(s: string) {
 export async function pullTickTickDone(): Promise<CompletionLedger | null> {
   const end = new Date();
   const start = new Date(end.getFullYear(), end.getMonth(), end.getDate() - (DAYS - 1));
+  // TickTick's habit check-in range excludes the `to` day, so ask through tomorrow
+  // (otherwise today's check-ins never show up).
+  const tomorrow = new Date(end.getFullYear(), end.getMonth(), end.getDate() + 1);
   const q = new URLSearchParams({
     from: stamp(start),
-    to: stamp(end),
+    to: stamp(tomorrow),
     start: start.toISOString(),
     end: end.toISOString(),
   });
