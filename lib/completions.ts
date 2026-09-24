@@ -4,7 +4,7 @@ import type { SourceId, SourceSnapshot, TaskItem } from './types';
 import { SOURCE_IDS, sourceById } from './sources';
 import { readSaved, writeSaved, STORAGE_KEYS } from './storage';
 import { getFocusConfig, resolveFocusArea, type FocusAreaId } from './focusAreas';
-import { isRealCompletion } from './syncState';
+import { collapseTickTickCopies, isRealCompletion, tickTickTitleKey } from './syncState';
 
 export type CompletionEntry = {
   source: SourceId;
@@ -50,17 +50,26 @@ function ledgerKey(source: SourceId, taskId: string, at: string) {
   return source === 'ticktick' ? `${source}::${taskId}::${localDate(at)}` : `${source}::${taskId}`;
 }
 
-/** Same task already recorded that day (covers older keys without a date). */
-function hasSameDay(ledger: CompletionLedger, source: SourceId, taskId: string, at: string) {
+/**
+ * Same task already recorded that day (covers older keys without a date). For TickTick, a
+ * same-named task also counts as the same — overdue recurring copies share a name, not an id.
+ */
+function hasSameDay(ledger: CompletionLedger, source: SourceId, taskId: string, at: string, title?: string) {
   const day = localDate(at);
+  const name = source === 'ticktick' ? tickTickTitleKey(title) : '';
   return Object.values(ledger.entries).some(
-    e => e.source === source && e.taskId === taskId && localDate(e.completedAt) === day,
+    e =>
+      e.source === source &&
+      localDate(e.completedAt) === day &&
+      (e.taskId === taskId || (name !== '' && tickTickTitleKey(e.title) === name)),
   );
 }
 
 export function loadLedger(): CompletionLedger {
   const saved = readSaved<CompletionLedger>(STORAGE_KEYS.completions, { entries: {} });
-  const entries = Object.fromEntries(Object.entries(saved.entries || {}).filter(([, e]) => isRealCompletion(e)));
+  const entries = collapseTickTickCopies(
+    Object.fromEntries(Object.entries(saved.entries || {}).filter(([, e]) => isRealCompletion(e))),
+  );
   if (Object.keys(entries).length !== Object.keys(saved.entries || {}).length) {
     saveLedger({ entries });
   }
@@ -89,7 +98,7 @@ export function recordCompletion(
   const ledger = opts?.ledger ?? loadLedger();
   const completedAt = opts?.at || new Date().toISOString();
   const key = ledgerKey(source, taskId, completedAt);
-  if (ledger.entries[key] || hasSameDay(ledger, source, taskId, completedAt)) return ledger;
+  if (ledger.entries[key] || hasSameDay(ledger, source, taskId, completedAt, opts?.title)) return ledger;
   ledger.entries[key] = {
     source,
     taskId,

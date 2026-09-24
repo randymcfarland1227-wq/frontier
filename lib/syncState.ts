@@ -27,6 +27,39 @@ export function isRealCompletion(entry: CompletionEntry): boolean {
   return !(entry.via === 'origin-snapshot' && entry.source !== 'role');
 }
 
+function localDay(iso: string) {
+  const d = new Date(iso);
+  return `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`;
+}
+
+/** Title identity for TickTick copies of one recurring task (same name, case/space-insensitive). */
+export function tickTickTitleKey(title?: string) {
+  return (title || '').toLowerCase().replace(/\s+/g, ' ').trim();
+}
+
+/**
+ * Completing an overdue recurring task in TickTick creates one completed copy per missed date
+ * (different ids, same title, done seconds apart). Count that task once per day: keep the
+ * earliest entry per (title, local day). Deterministic, so every device and the Worker agree.
+ */
+export function collapseTickTickCopies(entries: Record<string, CompletionEntry>): Record<string, CompletionEntry> {
+  const keep = new Map<string, [string, CompletionEntry]>();
+  const out: Record<string, CompletionEntry> = {};
+  for (const [key, e] of Object.entries(entries)) {
+    const title = tickTickTitleKey(e.title);
+    if (e.source !== 'ticktick' || !title) {
+      out[key] = e;
+      continue;
+    }
+    const group = `${title}|${localDay(e.completedAt)}`;
+    const prev = keep.get(group);
+    const earlier = !prev || e.completedAt < prev[1].completedAt || (e.completedAt === prev[1].completedAt && key < prev[0]);
+    if (earlier) keep.set(group, [key, e]);
+  }
+  for (const [key, e] of keep.values()) out[key] = e;
+  return out;
+}
+
 export function emptyState(): SyncedState {
   return { completions: { entries: {} }, captures: [], self: [], goalLinks: { added: [], removed: [] } };
 }
@@ -35,8 +68,10 @@ export function emptyState(): SyncedState {
 export function normalizeState(raw: unknown): SyncedState {
   const s = (raw && typeof raw === 'object' ? raw : {}) as Partial<SyncedState>;
   const rawEntries = s.completions && typeof s.completions === 'object' ? s.completions.entries : undefined;
-  const entries = Object.fromEntries(
-    Object.entries(rawEntries && typeof rawEntries === 'object' ? rawEntries : {}).filter(([, e]) => e && isRealCompletion(e)),
+  const entries = collapseTickTickCopies(
+    Object.fromEntries(
+      Object.entries(rawEntries && typeof rawEntries === 'object' ? rawEntries : {}).filter(([, e]) => e && isRealCompletion(e)),
+    ),
   );
   return {
     completions: { entries },
