@@ -800,3 +800,93 @@ a.origin-link:hover strong {
 .source-row .space-grid { padding: 0; margin: 0; }
 /* Keep the Balance window switch clear of the Review collapse button */
 .collapsible .review-side .balance-head { padding-right: 40px; }
+
+/* === Euphoria pass: neon violet / magenta / electric blue, frosted glass, iridescent edges === */
+:root, [data-theme="light"] {
+  --neon-violet: #8b5cf6;
+  --neon-pink: #ec4899;
+  --neon-blue: #3b82f6;
+  --neon-cyan: #22d3ee;
+  --iridescent: linear-gradient(120deg, rgba(139,92,246,.55), rgba(236,72,153,.45), rgba(59,130,246,.5), rgba(34,211,238,.4), rgba(139,92,246,.55));
+  --iridescent-solid: linear-gradient(120deg, #7c3aed, #db2777 45%, #2563eb 80%, #0891b2);
+  --glass: rgba(255,255,255,.58);
+  --glass-card: rgba(255,255,255,.66);
+  --aurora:
+    radial-gradient(60vw 45vw at 8% -5%, rgba(168,85,247,.20), transparent 60%),
+    radial-gradient(50vw 40vw at 100% 12%, rgba(236,72,153,.16), transparent 60%),
+    radial-gradient(55vw 45vw at 45% 60%, rgba(59,130,246,.12), transparent 65%),
+    radial-gradient(45vw 35vw at 90% 100%, rgba(34,211,238,.12), transparent 60%);
+  --glow: 0 10px 34px rgba(139,92,246,.10), 0 2px 10px rgba(236,72,153,.06);
+}
+[data-theme="dark"], .frontier-shell[data-color-mode="dark"] {
+  --bg: #0b0a14;
+  --glass: rgba(22,18,38,.58);
+  --glass-card: rgba(24,20,42,.62);
+  --line: rgba(167,139,250,.18);
+  --aurora:
+    radial-gradient(60vw 45vw at 8% -5%, rgba(139,92,246,.30), transparent 60%),
+    radial-gradient(50vw 40vw at 100% 12%, rgba(236,72,153,.22), transparent 60%),
+    radial-gradient(55vw 45vw at 45% 60%, rgba(37,99,235,.18), transparent 65%),
+    radial-gradient(45vw 35vw at 90% 100%, rgba(34,211,238,.14), transparent 60%);
+  --glow: 0 12px 40px rgba(139,92,246,.18), 0 2px 12px rgba(236,72,153,.10);
+}
+
+/* Glow lives on a fixed layer (background-attachment: fixed is unreliable on iPhone Safari) */
+.frontier-shell,
+.frontier-shell[data-color-mode="dark"] { position: relative; isolation: isolate; background: var(--bg); }
+.frontier-shell::before { content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none; background: var(--aurora); }
+
+/* Frosted, see-through cards and panels so the glow shows behind them */
+.space-card,
+.frontier-shell[data-color-mode="dark"] .space-card,
+.glass-panel,
+.frontier-shell[data-color-mode="dark"] .glass-panel {
+  background: var(--glass-card);
+  backdrop-filter: blur(18px) saturate(140%);
+  -webkit-backdrop-filter: blur(18px) saturate(140%);
+  box-shadow: var(--glow);
+}
+.iridescent-border {
+  background: linear-gradient(var(--glass-card), var(--glass-card)) padding-box, var(--iridescent) border-box;
+}
+/* Shimmering iridescent edge on cards and panels */
+.space-card::after, .priority-board::before, .review-panel::before { opacity: .7; }
+.glass-panel:not(.review-panel):not(.priority-board) { position: relative; }
+.glass-panel:not(.review-panel):not(.priority-board)::after {
+  content: ""; pointer-events: none; position: absolute; inset: 0; border-radius: inherit; padding: 1px;
+  background: var(--iridescent);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor; mask-composite: exclude;
+  opacity: .6;
+}
+.space-card, .glass-panel { transition: box-shadow .2s ease, transform .2s ease; }
+.space-card:hover, .collapsed-bar:hover {
+  box-shadow: 0 14px 44px rgba(139,92,246,.22), 0 0 0 1px rgba(236,72,153,.18);
+}
+/* Source color bar picks up a soft neon glow */
+.space-card::before { box-shadow: 0 0 14px color-mix(in srgb, var(--card-accent) 70%, transparent); }
+
+/* "Life Hub." in holographic text */
+.hero.hero-flush h1 em {
+  background: var(--iridescent-solid);
+  -webkit-background-clip: text; background-clip: text;
+  color: transparent;
+}
+
+/* The blue to-do numbers: electric blue → violet → magenta, with a little glow */
+.collapsed-count {
+  background: linear-gradient(120deg, #2563eb, #7c3aed 60%, #db2777);
+  box-shadow: 0 0 12px rgba(124,58,237,.45);
+}
+.metric-actionable strong, .room-metrics .metric-actionable strong {
+  background: linear-gradient(120deg, #2563eb, #7c3aed 70%, #db2777);
+  -webkit-background-clip: text; background-clip: text;
+  color: transparent;
+}
+.frontier-shell[data-color-mode="dark"] .metric-actionable span { color: #818cf8; }
+.frontier-shell[data-color-mode="dark"] .metric-actionable strong { background-image: linear-gradient(120deg, #60a5fa, #a78bfa 60%, #f472b6); }
+
+/* Tighter gap between the card number row and its title */
+.card-copy { margin-top: 6px; }
+.space-card.is-collapsed .card-copy { margin-top: 2px; }
