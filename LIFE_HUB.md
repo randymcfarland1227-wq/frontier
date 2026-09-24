@@ -253,3 +253,9 @@ Replaces the share-vs-target Balance. `lib/energy.ts`, `app/components/BalanceSt
 
 - Role Hub (`next_move_app` Apps Script, signed-in only) now POSTs its snapshot to the Worker `POST /api/role/snapshot` (header `X-Role-Key` = Worker secret `ROLE_PUSH_KEY`, also stored in Role Hub's Script Properties by `setupLifeHubPush`) from `getDashboardData()`, throttled to once a minute. Life Hub reads `GET /api/role/snapshot` (backup key) on load / focus / every 10 min (`lib/roleFeed.ts`); newer `refreshedAt` wins.
 - Snapshot: `appliedToday`, `applied` (all roles applied), `pipeline`, `ready`; last 14 days of applications as done tasks (count once each, on the applied date) + up to 25 ready-to-apply roles.
+
+### Balance v2.1 — capacity, counts, suggestions (2026-09-24)
+
+- **Focus is count-based and capacity-capped:** a bucket's fair count = its fair slice × the period's completions, but never more than its own goal (min 1 when it has work). Underfocused = done < ½ fair count and ≥ 1 task short; Overfocused = done > 1.4× fair count and ≥ 2 over. Small buckets (e.g. Money with 2–3 tasks) need just one task to be Balanced.
+- **Progress over a period** = total done ÷ total goal (strong and light days balance out). A bucket with nothing on its plate and nothing done is idle ("Nothing on its plate right now"), never Charge.
+- Each row shows counts ("3 done · 2 more to In-Line · 1 more to Balanced") and, when Charge or Underfocused, up to 3 open items that would charge it (`bucketSuggestions`: TickTick habits due today first, then TickTick tasks, Self, other sites).

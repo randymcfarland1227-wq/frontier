@@ -54,6 +54,7 @@ import { AreaPicker } from './components/AreaPicker';
 import { loadPriorityPins, pinKey, savePriorityPins } from '../lib/priorityPins';
 import { checkInTickTickHabit, getHabitSchedule, pullTickTickDone } from '../lib/ticktickDone';
 import {
+  bucketSuggestions,
   dayKey,
   loadBalanceSettings,
   recordAvailability,
@@ -328,6 +329,10 @@ export function LifeHub() {
   useEffect(() => {
     if (focusConfig && Object.keys(todayAvail).length) recordAvailability(dayKey(new Date()), todayAvail);
   }, [focusConfig, todayAvail]);
+  const chargeSuggestions = useMemo(
+    () => (focusConfig ? bucketSuggestions(focusConfig, snapshots, selfItems, taggedLedger, habitSchedule) : {}),
+    [focusConfig, snapshots, selfItems, taggedLedger, habitSchedule],
+  );
 
   useEffect(() => {
     if (ready) writeSaved(STORAGE_KEYS.focus, focus);
@@ -638,6 +643,7 @@ export function LifeHub() {
             focusConfig ? (
               <BalanceStrip
                 window={period}
+                suggestions={chargeSuggestions}
                 ledger={taggedLedger}
                 config={focusConfig}
                 today={todayAvail}

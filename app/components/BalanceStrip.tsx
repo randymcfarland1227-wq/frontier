@@ -13,7 +13,21 @@ import {
   type Availability,
   type BalanceSettings,
   type EnergyWindow,
+  type Suggestion,
 } from '../../lib/energy';
+
+const SHOW_SUGGESTIONS = 3;
+
+/** e.g. "3 done · 2 more to In-Line · 1 more to Balanced" */
+function meta(a: AreaEnergy) {
+  if (a.idle) return 'Nothing on its plate right now';
+  const parts = [`${a.done} done`];
+  if (a.progress === 'charge') parts.push(`${a.toInLine} more to In-Line`);
+  else if (a.goal > 0) parts.push(a.progress === 'onfire' ? 'well past its goal' : 'goal met');
+  if (a.focus === 'under') parts.push(`${a.toBalanced} more to Balanced`);
+  if (a.focus === 'over') parts.push(`${a.overBy} past its fair share`);
+  return parts.join(' · ');
+}
 
 
 
@@ -44,6 +58,7 @@ export function BalanceStrip({
   settings,
   onSaveSettings,
   window,
+  suggestions = {},
 }: {
   ledger: CompletionLedger;
   config: FocusAreaConfig;
@@ -52,6 +67,8 @@ export function BalanceStrip({
   onSaveSettings: (paces: Record<string, number>) => void;
   /** Period chosen in the Review panel */
   window: EnergyWindow;
+  /** Open work per bucket that would charge it */
+  suggestions?: Record<string, Suggestion[]>;
 }) {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState<Record<string, number>>({});
@@ -154,6 +171,22 @@ export function BalanceStrip({
               {a.ratio > 0 ? <div className="review-bar-fill" style={{ width: `${Math.min(100, (a.ratio / 1.5) * 100)}%` }} /> : null}
               <div className="balance-marker" style={{ left: `${(1 / 1.5) * 100}%` }} />
             </div>
+            <p className="energy-meta">{meta(a)}</p>
+            {(a.progress === 'charge' || a.focus === 'under') && (suggestions[a.id] || []).length ? (
+              <p className="energy-suggest">
+                <span className="energy-suggest-label">Could charge it:</span>{' '}
+                {suggestions[a.id].slice(0, SHOW_SUGGESTIONS).map((s, i) => (
+                  <span key={s.title} className="energy-suggest-item">
+                    {i ? ' · ' : ''}
+                    {s.title}
+                    {s.why === 'habit' ? <em> (habit)</em> : null}
+                  </span>
+                ))}
+                {suggestions[a.id].length > SHOW_SUGGESTIONS ? (
+                  <span className="energy-suggest-more"> · +{suggestions[a.id].length - SHOW_SUGGESTIONS} more</span>
+                ) : null}
+              </p>
+            ) : null}
           </div>
         ))}
       </div>
