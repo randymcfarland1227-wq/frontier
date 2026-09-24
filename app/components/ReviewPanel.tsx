@@ -22,11 +22,14 @@ export function ReviewPanel({
   shares,
   ledger,
   focusConfig,
+  balance,
 }: {
   stats: CompletionStats;
   shares: SourceShare[];
   ledger: CompletionLedger;
   focusConfig: FocusAreaConfig | null;
+  /** Fully wired Balance strip from LifeHub */
+  balance?: React.ReactNode;
 }) {
   const max = Math.max(1, ...shares.map(s => s.count));
   return (
@@ -106,7 +109,7 @@ export function ReviewPanel({
       </div>
       {focusConfig ? (
         <div className="review-side">
-          <BalanceStrip ledger={ledger} config={focusConfig} />
+          {balance ?? <BalanceStrip ledger={ledger} config={focusConfig} today={{}} settings={{ paces: {}, updatedAt: '' }} onSaveSettings={() => undefined} />}
         </div>
       ) : null}
       </div>

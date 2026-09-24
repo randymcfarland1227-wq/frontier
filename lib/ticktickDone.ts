@@ -6,6 +6,7 @@
 
 import { recordCompletion, loadLedger, type CompletionLedger } from './completions';
 import { syncKeyHeader } from './cloudSync';
+import type { HabitSchedule } from './energy';
 
 const WORKER_BASE =
   (import.meta as ImportMeta & { env?: { VITE_WORKER_URL?: string } }).env?.VITE_WORKER_URL ||
@@ -15,6 +16,12 @@ const DAYS = 7;
 
 type DoneTask = { id: string; projectId?: string; title?: string; completedAt?: string };
 type DoneHabit = { id: string; title?: string; stamp: string; completedAt?: string };
+
+/** Latest habit schedules from the feed (which habits are due on which days). */
+let lastSchedule: HabitSchedule[] | null = null;
+export function getHabitSchedule(): HabitSchedule[] | null {
+  return lastSchedule;
+}
 
 function stamp(d: Date) {
   return `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, '0')}${String(d.getDate()).padStart(2, '0')}`;
@@ -37,7 +44,7 @@ export async function pullTickTickDone(): Promise<CompletionLedger | null> {
     start: start.toISOString(),
     end: end.toISOString(),
   });
-  let body: { ok?: boolean; tasks?: DoneTask[]; habits?: DoneHabit[] };
+  let body: { ok?: boolean; tasks?: DoneTask[]; habits?: DoneHabit[]; schedule?: HabitSchedule[] };
   try {
     const res = await fetch(`${WORKER_BASE}/api/ticktick/done?${q}`, { headers: syncKeyHeader(), cache: 'no-store' });
     if (!res.ok) return null;
@@ -45,6 +52,7 @@ export async function pullTickTickDone(): Promise<CompletionLedger | null> {
   } catch {
     return null;
   }
+  if (Array.isArray(body.schedule) && body.schedule.length) lastSchedule = body.schedule;
   let ledger = loadLedger();
   const before = Object.keys(ledger.entries).length;
   for (const t of body.tasks || []) {

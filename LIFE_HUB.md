@@ -239,3 +239,12 @@ Star on connector items still opens the origin URL until two-way API star exists
 
 - End of `app/globals.css` ("Euphoria pass"): neon violet / magenta / electric-blue / cyan palette. A fixed glow layer (`.frontier-shell::before`, `--aurora`) sits behind frosted see-through cards and panels (`--glass-card`, blur + saturate), with shimmering iridescent edges on every panel, a soft glow around each card's source-color bar, a holographic "Life Hub." title, and blue → violet → magenta to-do numbers and count badges. Works in light and dark mode.
 - Card number row → title gap cut from 22px to 6px (2px when collapsed).
+
+### Balance v2 — progress + focus (2026-09-24)
+
+Replaces the share-vs-target Balance. `lib/energy.ts`, `app/components/BalanceStrip.tsx`.
+- **Available per bucket per day** = open items on every source (not Gmail/Outlook, not excluded sources) + done that day + TickTick habits **due** that day (schedule from the Worker's `/api/ticktick/done` `schedule`, parsed by `habitDueOn`). Recorded per day in `lifehub-daily-availability` (cloud-synced, max per day).
+- **Goal** = available × pace. Paces are set in the ⚙ panel (`lifehub-balance-settings`, cloud-synced, newest wins). Defaults: routine buckets 60%; Ventures 14%, Role 15%, Money 20%.
+- **Progress** (done ÷ goal): Charge < 0.75 ≤ In-Line ≤ 1.3 < On-Fire.
+- **Focus**: bucket's share of the day's completions vs a fair share = ½·(1/active buckets) + ½·(goal ÷ all goals). Overfocused > 1.4× fair, Underfocused < 0.5× fair (both need an 8-pt gap).
+- Week / Month average each day's ratios and shares. Area `weight`s in focus-areas.json are no longer used by Balance.

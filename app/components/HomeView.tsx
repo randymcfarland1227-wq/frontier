@@ -81,6 +81,7 @@ export function HomeView({
   completionShares,
   ledger,
   focusConfig,
+  balance,
   capturesPanel,
   whyPanel,
 }: {
@@ -94,6 +95,7 @@ export function HomeView({
   completionShares: SourceShare[];
   ledger: CompletionLedger;
   focusConfig: FocusAreaConfig | null;
+  balance?: ReactNode;
   capturesPanel: ReactNode;
   whyPanel: ReactNode;
 }) {
@@ -131,7 +133,13 @@ export function HomeView({
           count={completionStats.today}
           countLabel="completed today"
         >
-          <ReviewPanel stats={completionStats} shares={completionShares} ledger={ledger} focusConfig={focusConfig} />
+          <ReviewPanel
+            stats={completionStats}
+            shares={completionShares}
+            ledger={ledger}
+            focusConfig={focusConfig}
+            balance={balance}
+          />
         </Collapsible>
       </section>
 

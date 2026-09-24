@@ -10,11 +10,17 @@ import type { GoalLink } from './goals';
 
 export type LocalGoalLinks = { added: GoalLink[]; removed: string[] };
 
+export type BalanceSettingsState = { paces: Record<string, number>; updatedAt: string };
+
 export type SyncedState = {
   completions: CompletionLedger;
   captures: Capture[];
   self: SelfItem[];
   goalLinks: LocalGoalLinks;
+  /** Balance paces from the settings gear; newest edit wins */
+  balance: BalanceSettingsState;
+  /** day → bucket → available work that day; merges keep the larger count */
+  availability: Record<string, Record<string, number>>;
 };
 
 /**
@@ -61,7 +67,14 @@ export function collapseTickTickCopies(entries: Record<string, CompletionEntry>)
 }
 
 export function emptyState(): SyncedState {
-  return { completions: { entries: {} }, captures: [], self: [], goalLinks: { added: [], removed: [] } };
+  return {
+    completions: { entries: {} },
+    captures: [],
+    self: [],
+    goalLinks: { added: [], removed: [] },
+    balance: { paces: {}, updatedAt: '' },
+    availability: {},
+  };
 }
 
 /** Coerce anything (old payloads, partial JSON) into a full state. */
@@ -81,7 +94,26 @@ export function normalizeState(raw: unknown): SyncedState {
       added: Array.isArray(s.goalLinks?.added) ? s.goalLinks.added : [],
       removed: Array.isArray(s.goalLinks?.removed) ? s.goalLinks.removed : [],
     },
+    balance:
+      s.balance && typeof s.balance === 'object' && s.balance.paces && typeof s.balance.paces === 'object'
+        ? { paces: s.balance.paces, updatedAt: String(s.balance.updatedAt || '') }
+        : { paces: {}, updatedAt: '' },
+    availability: s.availability && typeof s.availability === 'object' ? s.availability : {},
   };
+}
+
+function mergeAvailability(a: SyncedState['availability'], b: SyncedState['availability']) {
+  const out: SyncedState['availability'] = {};
+  for (const src of [a, b]) {
+    for (const [day, row] of Object.entries(src)) {
+      if (!row || typeof row !== 'object') continue;
+      const cur = (out[day] = { ...(out[day] || {}) });
+      for (const [area, n] of Object.entries(row)) {
+        if (typeof n === 'number' && n > (cur[area] || 0)) cur[area] = n;
+      }
+    }
+  }
+  return out;
 }
 
 function mergeEntry(a: CompletionEntry, b: CompletionEntry): CompletionEntry {
@@ -129,6 +161,8 @@ export function mergeState(aRaw: unknown, bRaw: unknown): SyncedState {
       added: mergeById(a.goalLinks.added, b.goalLinks.added),
       removed: [...new Set([...a.goalLinks.removed, ...b.goalLinks.removed])],
     },
+    balance: b.balance.updatedAt > a.balance.updatedAt ? b.balance : a.balance,
+    availability: mergeAvailability(a.availability, b.availability),
   };
 }
 
