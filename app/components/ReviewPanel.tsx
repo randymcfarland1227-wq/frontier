@@ -1,11 +1,29 @@
 'use client';
 
+import { useMemo, useState } from 'react';
 import type { CompletionLedger, CompletionStats, SourceShare } from '../../lib/completions';
+import type { EnergyWindow } from '../../lib/energy';
+import { sourceById } from '../../lib/sources';
 import type { FocusAreaConfig } from '../../lib/focusAreas';
 import { BalanceStrip } from './BalanceStrip';
 import { CloudBackup } from './CloudBackup';
 
 const SHOW_DONE = 40;
+
+const PERIODS: Array<{ id: EnergyWindow; label: string; key: keyof CompletionStats }> = [
+  { id: 'today', label: 'Today', key: 'today' },
+  { id: 'last7', label: 'Past 7 days', key: 'last7' },
+  { id: 'month', label: 'This month', key: 'month' },
+  { id: 'all', label: 'All time', key: 'allTime' },
+];
+
+function periodStart(period: EnergyWindow, now = new Date()): number {
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+  if (period === 'today') return today;
+  if (period === 'last7') return today - 6 * 86400000;
+  if (period === 'month') return new Date(now.getFullYear(), now.getMonth(), 1).getTime();
+  return -Infinity;
+}
 
 function doneWhen(iso: string) {
   const d = new Date(iso);
@@ -19,19 +37,39 @@ function doneWhen(iso: string) {
 
 export function ReviewPanel({
   stats,
-  shares,
   ledger,
   focusConfig,
-  balance,
+  renderBalance,
 }: {
   stats: CompletionStats;
-  shares: SourceShare[];
   ledger: CompletionLedger;
   focusConfig: FocusAreaConfig | null;
-  /** Fully wired Balance strip from LifeHub */
-  balance?: React.ReactNode;
+  /** Balance strip from LifeHub, drawn for the period chosen here */
+  renderBalance?: (period: EnergyWindow) => React.ReactNode;
 }) {
-  const max = Math.max(1, ...shares.map(s => s.count));
+  // One period for the whole panel: the tiles pick it; By source and Balance follow.
+  const [period, setPeriod] = useState<EnergyWindow>('today');
+  const inPeriod = useMemo(() => {
+    const start = periodStart(period);
+    return Object.values(ledger.entries)
+      .filter(e => Date.parse(e.completedAt) >= start)
+      .sort((x, y) => Date.parse(y.completedAt) - Date.parse(x.completedAt));
+  }, [ledger, period]);
+  const periodShares: SourceShare[] = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const e of inPeriod) counts.set(e.source, (counts.get(e.source) || 0) + 1);
+    const total = inPeriod.length;
+    return [...counts.entries()]
+      .map(([id, count]) => ({
+        id: id as SourceShare['id'],
+        name: sourceById[id as SourceShare['id']]?.shortName || id,
+        count,
+        percent: total ? Math.round((count / total) * 1000) / 10 : 0,
+      }))
+      .sort((a, b) => b.count - a.count);
+  }, [inPeriod]);
+  const periodLabel = PERIODS.find(p => p.id === period)!.label.toLowerCase();
+  const max = Math.max(1, ...periodShares.map(s => s.count));
   return (
     <section className="review-panel glass-panel" aria-label="Completion review">
       <div className="review-columns">
@@ -47,35 +85,27 @@ export function ReviewPanel({
           <strong>{stats.inventoryTasks}</strong> in hub inventory
         </p>
       </div>
-      <div className="stats-strip" aria-label="Tasks completed">
-        <article>
-          <strong>{stats.today}</strong>
-          <span>Completed today</span>
-        </article>
-        <article>
-          <strong>{stats.last7}</strong>
-          <span>Past 7 days</span>
-        </article>
-        <article>
-          <strong>{stats.month}</strong>
-          <span>This month</span>
-        </article>
-        <article>
-          <strong>{stats.allTime}</strong>
-          <span>All time</span>
-        </article>
+      <div className="stats-strip period-tiles" role="group" aria-label="Choose a period">
+        {PERIODS.map(p => (
+          <button
+            type="button"
+            key={p.id}
+            className={p.id === period ? 'active' : ''}
+            aria-pressed={p.id === period}
+            onClick={() => setPeriod(p.id)}
+          >
+            <strong>{stats[p.key] as number}</strong>
+            <span>{p.id === 'today' ? 'Completed today' : p.label}</span>
+          </button>
+        ))}
       </div>
-      <p className="section-label review-sources-label">By source</p>
+      <p className="section-label review-sources-label">By source · {periodLabel}</p>
       <div className="review-bars">
-        {shares.length === 0 ? (
-          <p className="review-empty">
-            Complete tasks on the hub or an origin to build this chart. Counts persist in this browser.
-          </p>
+        {periodShares.length === 0 ? (
+          <p className="review-empty">Nothing completed {period === 'all' ? 'yet' : periodLabel}.</p>
         ) : (
-          shares.map(row => {
-            const done = Object.values(ledger.entries)
-              .filter(e => e.source === row.id)
-              .sort((x, y) => Date.parse(y.completedAt) - Date.parse(x.completedAt));
+          periodShares.map(row => {
+            const done = inPeriod.filter(e => e.source === row.id);
             return (
               <details className="review-bar-row review-source" key={row.id}>
                 <summary>
@@ -109,7 +139,11 @@ export function ReviewPanel({
       </div>
       {focusConfig ? (
         <div className="review-side">
-          {balance ?? <BalanceStrip ledger={ledger} config={focusConfig} today={{}} settings={{ paces: {}, updatedAt: '' }} onSaveSettings={() => undefined} />}
+          {renderBalance ? (
+            renderBalance(period)
+          ) : (
+            <BalanceStrip ledger={ledger} config={focusConfig} today={{}} settings={{ paces: {}, updatedAt: '' }} onSaveSettings={() => undefined} window={period} />
+          )}
         </div>
       ) : null}
       </div>
