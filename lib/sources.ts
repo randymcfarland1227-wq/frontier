@@ -132,7 +132,7 @@ export const sources: SourceDefinition[] = [
     name: 'Role Hub',
     shortName: 'Role',
     label: 'Applications and pipeline',
-    description: 'Applications and pipeline from Role Hub. Opening Role Hub from here sends a fresh snapshot back.',
+    description: 'Applications and pipeline from Role Hub. Updates whenever Role Hub is open (it sends its numbers to Life Hub).',
     action: 'Open Role Hub',
     marker: '↗',
     eyebrow: 'Applications and pipeline',
@@ -143,7 +143,7 @@ export const sources: SourceDefinition[] = [
     bridge: 'none',
     metrics: [
       { key: 'appliedToday', label: 'Applied today' },
-      { key: 'appliedWeek', label: 'Applied, last 7 days' },
+      { key: 'applied', label: 'All roles applied' },
       { key: 'pipeline', label: 'In pipeline' },
       { key: 'ready', label: 'Ready to apply' },
     ],

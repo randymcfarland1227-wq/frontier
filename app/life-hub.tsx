@@ -64,6 +64,7 @@ import {
   type HabitSchedule,
 } from '../lib/energy';
 import { BalanceStrip } from './components/BalanceStrip';
+import { pullRoleSnapshot } from '../lib/roleFeed';
 
 /** Sources where one bucket doesn't fit every item — ask on Done. */
 const ASK_AREA_SOURCES: SourceId[] = ['gmail', 'outlook'];
@@ -249,6 +250,28 @@ export function LifeHub() {
       setGoalLinks(mergeLinks(seed));
     });
   }, [ready, loadConnectors]);
+
+  // Role Hub's pushed snapshot (applications) — on load, on return, every 10 min. Newer wins.
+  useEffect(() => {
+    if (!ready) return;
+    const pull = () =>
+      void pullRoleSnapshot().then(snap => {
+        if (!snap) return;
+        setSnapshots(current => {
+          if (Date.parse(current.role?.refreshedAt || '') >= Date.parse(snap.refreshedAt)) return current;
+          setLedger(diffSnapshotCompletions('role', current.role, snap, loadLedger()));
+          return { ...current, role: snap };
+        });
+      });
+    pull();
+    const onVisible = () => document.visibilityState === 'visible' && pull();
+    document.addEventListener('visibilitychange', onVisible);
+    const timer = window.setInterval(pull, 10 * 60 * 1000);
+    return () => {
+      document.removeEventListener('visibilitychange', onVisible);
+      window.clearInterval(timer);
+    };
+  }, [ready]);
 
   // Work finished inside the TickTick app (tasks + habit check-ins) — on load, on return, every 10 min.
   useEffect(() => {

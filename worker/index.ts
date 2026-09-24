@@ -7,6 +7,8 @@ interface Env {
   TICKTICK_ACCESS_TOKEN?: string;
   /** Cloud backup for Life Hub state (completions, ideas, Self, goal links) */
   LIFEHUB_STATE: KVNamespace;
+  /** Shared with Role Hub (Apps Script) so it can push its snapshot */
+  ROLE_PUSH_KEY?: string;
   /** Where the retired Worker copy of the hub sends people (and their saved data) */
   PAGES_URL?: string;
 }
@@ -378,6 +380,46 @@ async function handleHabitCheckin(request: Request, env: Env): Promise<Response>
   }
 }
 
+// ---------------------------------------------------------------------------
+// Role Hub snapshot: Role Hub (Apps Script, signed-in only) POSTs its Life Hub snapshot
+// here whenever it loads; Life Hub GETs it with the backup key.
+// ---------------------------------------------------------------------------
+
+const ROLE_KEY = "role-snapshot";
+
+async function handleRoleSnapshot(request: Request, env: Env): Promise<Response> {
+  const origin = request.headers.get("Origin");
+  if (request.method === "OPTIONS") return new Response(null, { status: 204, headers: corsHeaders(origin) });
+
+  if (request.method === "POST") {
+    // Server-to-server from Apps Script (no Origin header); authenticated by the shared key.
+    const key = request.headers.get("X-Role-Key") || "";
+    if (!env.ROLE_PUSH_KEY || key !== env.ROLE_PUSH_KEY) return jsonResponse({ ok: false, error: "wrong_key" }, 401, origin);
+    const text = await request.text();
+    if (text.length > 500_000) return jsonResponse({ ok: false, error: "too_large" }, 413, origin);
+    let snap: { source?: unknown; refreshedAt?: unknown; tasks?: unknown };
+    try {
+      snap = JSON.parse(text);
+    } catch {
+      return jsonResponse({ ok: false, error: "invalid_json" }, 400, origin);
+    }
+    if (snap.source !== "role" || typeof snap.refreshedAt !== "string" || !Array.isArray(snap.tasks)) {
+      return jsonResponse({ ok: false, error: "bad_snapshot" }, 400, origin);
+    }
+    await env.LIFEHUB_STATE.put(ROLE_KEY, text);
+    return jsonResponse({ ok: true }, 200, origin);
+  }
+
+  if (request.method === "GET") {
+    if (origin && !CORS_ALLOW_ORIGINS.has(origin)) return jsonResponse({ ok: false, error: "cors_denied" }, 403, origin);
+    if (!(await syncKeyAllowed(request, env))) return jsonResponse({ ok: false, error: "wrong_key" }, 401, origin);
+    const snap = await env.LIFEHUB_STATE.get(ROLE_KEY, "json");
+    return jsonResponse({ ok: true, snapshot: snap }, 200, origin);
+  }
+
+  return jsonResponse({ ok: false, error: "method_not_allowed" }, 405, origin);
+}
+
 export default {
   async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
     const { pathname } = new URL(request.url);
@@ -392,6 +434,10 @@ export default {
 
     if (pathname === "/api/ticktick/habit-checkin") {
       return handleHabitCheckin(request, env);
+    }
+
+    if (pathname === "/api/role/snapshot") {
+      return handleRoleSnapshot(request, env);
     }
 
     if (pathname === "/api/state") {

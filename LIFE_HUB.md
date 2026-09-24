@@ -248,3 +248,8 @@ Replaces the share-vs-target Balance. `lib/energy.ts`, `app/components/BalanceSt
 - **Progress** (done ÷ goal): Charge < 0.75 ≤ In-Line ≤ 1.3 < On-Fire.
 - **Focus**: bucket's share of the day's completions vs a fair share = ½·(1/active buckets) + ½·(goal ÷ all goals). Overfocused > 1.4× fair, Underfocused < 0.5× fair (both need an 8-pt gap).
 - Week / Month average each day's ratios and shares. Area `weight`s in focus-areas.json are no longer used by Balance.
+
+### Role Hub push (2026-09-24)
+
+- Role Hub (`next_move_app` Apps Script, signed-in only) now POSTs its snapshot to the Worker `POST /api/role/snapshot` (header `X-Role-Key` = Worker secret `ROLE_PUSH_KEY`, also stored in Role Hub's Script Properties by `setupLifeHubPush`) from `getDashboardData()`, throttled to once a minute. Life Hub reads `GET /api/role/snapshot` (backup key) on load / focus / every 10 min (`lib/roleFeed.ts`); newer `refreshedAt` wins.
+- Snapshot: `appliedToday`, `applied` (all roles applied), `pipeline`, `ready`; last 14 days of applications as done tasks (count once each, on the applied date) + up to 25 ready-to-apply roles.
