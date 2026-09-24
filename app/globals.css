@@ -936,3 +936,11 @@ a.origin-link:hover strong {
 .period-tiles button:hover { border-color: color-mix(in srgb, var(--accent) 50%, var(--line)); }
 .period-tiles button.active { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent) inset, 0 0 18px color-mix(in srgb, var(--accent) 30%, transparent); }
 .period-tiles button.active span { color: var(--ink); font-weight: 650; }
+
+/* === Balance rows: counts + what would charge it === */
+.energy-meta { margin: 4px 0 0; font-size: 11px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.energy-suggest { margin: 3px 0 0; font-size: 11px; line-height: 1.45; color: var(--ink); opacity: .85; }
+.energy-suggest-label { color: var(--muted); font-weight: 650; }
+.energy-suggest-item em { font-style: normal; color: var(--muted); }
+.energy-suggest-more { color: var(--muted); }
+.energy-row { padding-bottom: 6px; }

@@ -4,10 +4,10 @@
  * 1. Progress — Charge / In-Line / On-Fire. Done that day ÷ that day's goal, where the goal
  *    is a pace (share of what was available in the bucket, from every source). It moves with
  *    the workload: 20 available at 12% → ~2–3 is In-Line; 2 available → 1 is On-Fire.
- * 2. Focus — Underfocused / Balanced / Overfocused. The bucket's slice of everything completed
- *    that day vs its fair slice: halfway between an equal split across active buckets and a
- *    split by goal size — busy routine buckets get more room, but a big backlog can't claim
- *    most of the day.
+ * 2. Focus — Underfocused / Balanced / Overfocused. The bucket's completions vs its fair count:
+ *    its fair slice of everything completed (halfway between an equal split and a split by goal
+ *    size) — capped at its own goal, so a bucket with only a few tasks isn't Underfocused just
+ *    for being small. It's only Underfocused when it's skipping the little work it has.
  *
  * The aim: every bucket In-Line and Balanced.
  */
@@ -42,10 +42,11 @@ export const DEFAULT_PACES: Record<FocusAreaId, number> = {
 /** done ÷ goal thresholds */
 const IN_LINE_FROM = 0.75;
 const ON_FIRE_ABOVE = 1.3;
-/** Focus: slice vs fair slice, with a minimum gap so tiny days don't flip labels. */
+/** Focus, in task counts vs the fair count, with minimum gaps so one task doesn't flip labels. */
 const OVER_RATIO = 1.4;
+const OVER_MIN_TASKS = 2;
 const UNDER_RATIO = 0.5;
-const MIN_GAP = 0.08;
+const UNDER_MIN_TASKS = 1;
 /** One huge day can't carry a whole week. */
 const RATIO_CAP = 3;
 
@@ -194,13 +195,23 @@ export type AreaEnergy = {
   done: number;
   goal: number;
   available: number;
-  /** average daily done ÷ goal */
+  /** done ÷ goal over the window */
   ratio: number;
   progress: Progress;
-  /** average share of the day's completions vs fair share */
+  /** share of the window's completions vs fair share (for the tooltip) */
   share: number;
   fairShare: number;
+  /** fair number of completions for this bucket over the window (capped at its goal) */
+  fairCount: number;
   focus: Focus;
+  /** tasks still needed to reach In-Line (0 when already there) */
+  toInLine: number;
+  /** tasks still needed to leave Underfocused (0 when not Underfocused) */
+  toBalanced: number;
+  /** tasks beyond the fair count when Overfocused */
+  overBy: number;
+  /** nothing was on this bucket's plate and nothing was done */
+  idle: boolean;
 };
 
 export type EnergyReport = {
@@ -229,9 +240,9 @@ function progressOf(ratio: number): Progress {
   return 'charge';
 }
 
-function focusOf(share: number, fair: number): Focus {
-  if (share > fair * OVER_RATIO && share - fair > MIN_GAP) return 'over';
-  if (share < fair * UNDER_RATIO && fair - share > MIN_GAP) return 'under';
+function focusOf(done: number, fairCount: number): Focus {
+  if (done > fairCount * OVER_RATIO && done - fairCount >= OVER_MIN_TASKS) return 'over';
+  if (done < fairCount * UNDER_RATIO && fairCount - done >= UNDER_MIN_TASKS) return 'under';
   return 'balanced';
 }
 
@@ -262,8 +273,8 @@ export function computeEnergy(
   }
 
   let estimated = false;
-  const acc = new Map<FocusAreaId, { ratio: number; ratioDays: number; share: number; fair: number; focusDays: number; done: number; goal: number; available: number }>();
-  for (const a of areas) acc.set(a.id, { ratio: 0, ratioDays: 0, share: 0, fair: 0, focusDays: 0, done: 0, goal: 0, available: 0 });
+  const acc = new Map<FocusAreaId, { fairCount: number; fairShare: number; focusDays: number; done: number; goal: number; available: number }>();
+  for (const a of areas) acc.set(a.id, { fairCount: 0, fairShare: 0, focusDays: 0, done: 0, goal: 0, available: 0 });
   let totalDone = 0;
 
   for (const day of days) {
@@ -288,14 +299,13 @@ export function computeEnergy(
       r.done += d;
       r.goal += g;
       r.available += avail[a.id] || 0;
-      if (g > 0 || d > 0) {
-        r.ratio += g > 0 ? Math.min(RATIO_CAP, d / g) : RATIO_CAP;
-        r.ratioDays += 1;
-      }
       if (doneSum > 0 && goalSum > 0) {
-        r.share += d / doneSum;
         const isActive = g > 0 || d > 0;
-        r.fair += isActive ? (1 / active + g / goalSum) / 2 : 0;
+        const fair = isActive ? (1 / active + g / goalSum) / 2 : 0;
+        // Capacity: never expect more of a bucket than its own goal (at least one task when it has any work).
+        const cap = g > 0 ? Math.max(g, 1) : 0;
+        r.fairShare += fair;
+        r.fairCount += Math.min(fair * doneSum, cap);
         r.focusDays += 1;
       }
     }
@@ -308,9 +318,13 @@ export function computeEnergy(
     estimated,
     areas: areas.map(a => {
       const r = acc.get(a.id)!;
-      const ratio = r.ratioDays ? r.ratio / r.ratioDays : 0;
-      const share = r.focusDays ? r.share / r.focusDays : 0;
-      const fair = r.focusDays ? r.fair / r.focusDays : 0;
+      // Over a window, a light day and a strong day balance out: judge the totals.
+      const ratio = r.goal > 0 ? Math.min(RATIO_CAP, r.done / r.goal) : r.done > 0 ? RATIO_CAP : 0;
+      const idle = r.goal === 0 && r.done === 0;
+      // Nothing on its plate → nothing to nudge.
+      const progress = idle ? 'inline' : progressOf(ratio);
+      const focus = r.focusDays ? focusOf(r.done, r.fairCount) : 'balanced';
+      const inLineAt = r.goal > 0 ? Math.max(1, Math.ceil(r.goal * IN_LINE_FROM - 1e-9)) : 0;
       return {
         id: a.id,
         name: a.name,
@@ -318,11 +332,77 @@ export function computeEnergy(
         goal: r.goal,
         available: r.available,
         ratio,
-        progress: progressOf(ratio),
-        share,
-        fairShare: fair,
-        focus: r.focusDays ? focusOf(share, fair) : 'balanced',
+        progress,
+        share: totalDone ? r.done / totalDone : 0,
+        fairShare: r.focusDays ? r.fairShare / r.focusDays : 0,
+        fairCount: r.fairCount,
+        focus,
+        toInLine: progress === 'charge' ? Math.max(0, inLineAt - r.done) : 0,
+        toBalanced: focus === 'under' ? Math.max(1, Math.ceil(r.fairCount * UNDER_RATIO - r.done - 1e-9)) : 0,
+        overBy: focus === 'over' ? Math.round(r.done - r.fairCount) : 0,
+        idle,
       };
     }),
   };
+}
+
+// ---------------------------------------------------------------------------
+// Suggestions: open work that would charge a bucket (habits due today first)
+// ---------------------------------------------------------------------------
+
+export type Suggestion = { title: string; source: SourceId; why: 'habit' | 'task' };
+
+export function bucketSuggestions(
+  config: FocusAreaConfig,
+  snapshots: Record<SourceId, SourceSnapshot>,
+  selfItems: SelfItem[],
+  ledger: CompletionLedger,
+  schedule: HabitSchedule[] | null,
+): Record<FocusAreaId, Suggestion[]> {
+  const out: Record<FocusAreaId, Suggestion[]> = {};
+  const seen = new Set<string>();
+  const add = (area: FocusAreaId | undefined, s: Suggestion) => {
+    if (!area || !config.areas.some(a => a.id === area)) return;
+    const key = `${area}|${s.title.toLowerCase()}`;
+    if (seen.has(key)) return;
+    seen.add(key);
+    (out[area] ||= []).push(s);
+  };
+  const todayKey = dayKey(new Date());
+  const doneToday = new Set(
+    Object.values(ledger.entries)
+      .filter(e => dayKey(new Date(e.completedAt)) === todayKey)
+      .map(e => `${e.source}::${e.taskId}`),
+  );
+
+  // 1. TickTick habits due today and not yet done
+  if (schedule) {
+    for (const h of schedule) {
+      if (!habitDueOn(h, new Date()) || doneToday.has(`ticktick::${h.id}`)) continue;
+      add(resolveFocusArea({ source: 'ticktick', taskId: h.id, title: h.title, kind: 'habit' }, config), {
+        title: h.title || 'Habit',
+        source: 'ticktick',
+        why: 'habit',
+      });
+    }
+  }
+  // 2. TickTick tasks due today / overdue, then Self tasks, then everything else that's open
+  const order: SourceId[] = [
+    'ticktick',
+    ...(Object.keys(snapshots) as SourceId[]).filter(s => s !== 'ticktick' && s !== 'self'),
+  ];
+  const fromSource = (source: SourceId) => {
+    if (NO_WORKLOAD_SOURCES.includes(source) || config.excludeSources?.includes(source)) return;
+    for (const t of snapshots[source]?.tasks || []) {
+      if (t.status === 'done' || doneToday.has(`${source}::${t.id}`)) continue;
+      if (source === 'ticktick' && (t.kind === 'habit' || t.id.startsWith('habit-'))) continue;
+      add(areaFor(config, source, t), { title: t.title, source, why: 'task' });
+    }
+  };
+  fromSource(order[0]);
+  for (const i of selfItems) {
+    if (!i.done) add(i.focusAreaId || areaFor(config, 'self', { id: i.id, title: i.title }), { title: i.title, source: 'self', why: 'task' });
+  }
+  for (const source of order.slice(1)) fromSource(source);
+  return out;
 }
