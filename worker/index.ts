@@ -303,9 +303,20 @@ async function handleTickTickDone(request: Request, env: Env): Promise<Response>
   }
 
   const habits: Array<Record<string, unknown>> = [];
+  // Each habit's schedule, so Life Hub knows which habits are due on a given day.
+  let schedule: Array<Record<string, unknown>> = [];
   try {
     const list = ((await ttFetch(env, "/habit")) as Array<Record<string, unknown>> | null) || [];
     const byId = new Map(list.filter(h => typeof h.id === "string").map(h => [h.id as string, h]));
+    schedule = list
+      .filter(h => typeof h.id === "string" && h.status === 0)
+      .map(h => ({
+        id: `habit-${h.id}`,
+        title: h.name,
+        repeatRule: h.repeatRule,
+        targetStartDate: h.targetStartDate,
+        exDates: Array.isArray(h.exDates) ? h.exDates : [],
+      }));
     if (byId.size) {
       const checkins = ((await ttFetch(
         env,
@@ -331,7 +342,7 @@ async function handleTickTickDone(request: Request, env: Env): Promise<Response>
     errors.push(`habits:${(e as Error).message}`);
   }
 
-  return jsonResponse({ ok: errors.length < 2, tasks, habits, errors }, 200, origin);
+  return jsonResponse({ ok: errors.length < 2, tasks, habits, schedule, errors }, 200, origin);
 }
 
 async function handleHabitCheckin(request: Request, env: Env): Promise<Response> {

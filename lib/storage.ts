@@ -35,6 +35,10 @@ export const STORAGE_KEYS = {
   sync: 'lifehub-sync',
   /** Source cards collapsed to their header */
   collapsedCards: 'lifehub-collapsed-cards',
+  /** Balance paces (settings gear) — cloud-synced */
+  balanceSettings: 'lifehub-balance-settings',
+  /** Each day's available work per bucket — cloud-synced */
+  dailyAvailability: 'lifehub-daily-availability',
   /** Migrate from prior Work Room keys once */
   legacyFocus: 'workroom-focus',
   legacySnapshots: 'workroom-source-snapshots',

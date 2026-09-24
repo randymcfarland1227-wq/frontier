@@ -20,7 +20,14 @@ const STATE_URL = `${WORKER_BASE.replace(/\/$/, '')}/api/state`;
 export const SYNCED_EVENT = 'lifehub:synced';
 export const SYNC_STATUS_EVENT = 'lifehub:sync-status';
 
-const SYNCED_KEYS: string[] = [STORAGE_KEYS.completions, STORAGE_KEYS.captures, STORAGE_KEYS.self, STORAGE_KEYS.goalLinks];
+const SYNCED_KEYS: string[] = [
+  STORAGE_KEYS.completions,
+  STORAGE_KEYS.captures,
+  STORAGE_KEYS.self,
+  STORAGE_KEYS.goalLinks,
+  STORAGE_KEYS.balanceSettings,
+  STORAGE_KEYS.dailyAvailability,
+];
 
 export type SyncStatus = {
   state: 'off' | 'syncing' | 'ok' | 'error';
@@ -66,6 +73,8 @@ export function readLocalState(): SyncedState {
     captures: loadCaptures(),
     self: loadSelfItems(),
     goalLinks: readSaved<LocalGoalLinks>(STORAGE_KEYS.goalLinks, { added: [], removed: [] }),
+    balance: readSaved(STORAGE_KEYS.balanceSettings, { paces: {}, updatedAt: '' }),
+    availability: readSaved(STORAGE_KEYS.dailyAvailability, {}),
   });
 }
 
@@ -77,6 +86,8 @@ function writeLocalState(next: SyncedState): boolean {
     [STORAGE_KEYS.captures, current.captures, next.captures],
     [STORAGE_KEYS.self, current.self, next.self],
     [STORAGE_KEYS.goalLinks, current.goalLinks, next.goalLinks],
+    [STORAGE_KEYS.balanceSettings, current.balance, next.balance],
+    [STORAGE_KEYS.dailyAvailability, current.availability, next.availability],
   ];
   let changed = false;
   applying = true;

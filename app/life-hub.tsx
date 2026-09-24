@@ -53,7 +53,17 @@ import { CapturesPanel } from './components/CapturesPanel';
 import { WhyPanel } from './components/WhyPanel';
 import { AreaPicker } from './components/AreaPicker';
 import { loadPriorityPins, pinKey, savePriorityPins } from '../lib/priorityPins';
-import { checkInTickTickHabit, pullTickTickDone } from '../lib/ticktickDone';
+import { checkInTickTickHabit, getHabitSchedule, pullTickTickDone } from '../lib/ticktickDone';
+import {
+  dayKey,
+  loadBalanceSettings,
+  recordAvailability,
+  saveBalanceSettings,
+  todayAvailability,
+  type BalanceSettings,
+  type HabitSchedule,
+} from '../lib/energy';
+import { BalanceStrip } from './components/BalanceStrip';
 
 /** Sources where one bucket doesn't fit every item — ask on Done. */
 const ASK_AREA_SOURCES: SourceId[] = ['gmail', 'outlook'];
@@ -169,6 +179,8 @@ export function LifeHub() {
   const [ledger, setLedger] = useState<CompletionLedger>({ entries: {} });
   const [completionStats, setCompletionStats] = useState<CompletionStats>(emptyStats());
   const [focusConfig, setFocusConfig] = useState<FocusAreaConfig | null>(null);
+  const [habitSchedule, setHabitSchedule] = useState<HabitSchedule[] | null>(null);
+  const [balanceSettings, setBalanceSettings] = useState<BalanceSettings>(() => loadBalanceSettings());
   const [captures, setCaptures] = useState<Capture[]>([]);
   const [goalsData, setGoalsData] = useState<GoalsData | null>(null);
   const [seedLinks, setSeedLinks] = useState<GoalLink[]>([]);
@@ -241,7 +253,11 @@ export function LifeHub() {
   // Work finished inside the TickTick app (tasks + habit check-ins) — on load, on return, every 10 min.
   useEffect(() => {
     if (!ready) return;
-    const pull = () => void pullTickTickDone().then(next => next && setLedger(next));
+    const pull = () =>
+      void pullTickTickDone().then(next => {
+        if (next) setLedger(next);
+        setHabitSchedule(getHabitSchedule());
+      });
     pull();
     const onVisible = () => document.visibilityState === 'visible' && pull();
     document.addEventListener('visibilitychange', onVisible);
@@ -265,6 +281,7 @@ export function LifeHub() {
       setCaptures(loadCaptures());
       syncSelf(loadSelfItems());
       setGoalLinks(mergeLinks(seedLinksRef.current));
+      setBalanceSettings(loadBalanceSettings());
     };
     window.addEventListener(SYNCED_EVENT, reload);
     return () => window.removeEventListener(SYNCED_EVENT, reload);
@@ -280,6 +297,15 @@ export function LifeHub() {
   useEffect(() => {
     if (taggedLedger !== ledger) saveLedger(taggedLedger);
   }, [taggedLedger, ledger]);
+
+  // Today's workload per bucket (open items + done today + habits due today), remembered per day.
+  const todayAvail = useMemo(
+    () => (focusConfig ? todayAvailability(focusConfig, snapshots, selfItems, taggedLedger, habitSchedule) : {}),
+    [focusConfig, snapshots, selfItems, taggedLedger, habitSchedule],
+  );
+  useEffect(() => {
+    if (focusConfig && Object.keys(todayAvail).length) recordAvailability(dayKey(new Date()), todayAvail);
+  }, [focusConfig, todayAvail]);
 
   useEffect(() => {
     if (ready) writeSaved(STORAGE_KEYS.focus, focus);
@@ -587,6 +613,17 @@ export function LifeHub() {
           completionShares={sourceShares(completionStats)}
           ledger={taggedLedger}
           focusConfig={focusConfig}
+          balance={
+            focusConfig ? (
+              <BalanceStrip
+                ledger={taggedLedger}
+                config={focusConfig}
+                today={todayAvail}
+                settings={balanceSettings}
+                onSaveSettings={paces => setBalanceSettings(saveBalanceSettings(paces))}
+              />
+            ) : null
+          }
           whyPanel={
             goalsData ? (
               <WhyPanel
