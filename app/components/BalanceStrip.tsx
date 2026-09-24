@@ -15,11 +15,7 @@ import {
   type EnergyWindow,
 } from '../../lib/energy';
 
-const WINDOWS: Array<{ id: EnergyWindow; label: string }> = [
-  { id: 'today', label: 'Today' },
-  { id: 'last7', label: 'Week' },
-  { id: 'month', label: 'Month' },
-];
+
 
 const PROGRESS_ICON = { charge: '⚡', inline: '〰', onfire: '🔥' } as const;
 
@@ -28,7 +24,7 @@ function round(n: number) {
 }
 
 function tip(a: AreaEnergy, window: EnergyWindow) {
-  const span = window === 'today' ? 'today' : window === 'last7' ? 'over the week' : 'this month';
+  const span = window === 'today' ? 'today' : window === 'last7' ? 'over the past 7 days' : window === 'month' ? 'this month' : 'overall';
   return `${a.name}: ${a.done} done ${span} · goal ≈ ${round(a.goal)} (of ${a.available} available) · ${Math.round(a.share * 100)}% of your completions vs a fair ${Math.round(a.fairShare * 100)}%`;
 }
 
@@ -47,14 +43,16 @@ export function BalanceStrip({
   today,
   settings,
   onSaveSettings,
+  window,
 }: {
   ledger: CompletionLedger;
   config: FocusAreaConfig;
   today: Availability;
   settings: BalanceSettings;
   onSaveSettings: (paces: Record<string, number>) => void;
+  /** Period chosen in the Review panel */
+  window: EnergyWindow;
 }) {
-  const [window, setWindow] = useState<EnergyWindow>('today');
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState<Record<string, number>>({});
 
@@ -72,19 +70,14 @@ export function BalanceStrip({
     <div className="balance-strip" aria-label="Balance across life buckets">
       <div className="balance-head">
         <div>
-          <p className="section-label">Balance</p>
+          <p className="section-label">
+            Balance · {window === 'today' ? 'today' : window === 'last7' ? 'past 7 days' : window === 'month' ? 'this month' : 'all time'}
+          </p>
           <p className="review-lede">
             {report.totalDone ? summary(report.areas) : 'Nothing completed in this window yet.'}
           </p>
         </div>
         <div className="balance-controls">
-          <div className="balance-windows" role="group" aria-label="Balance window">
-            {WINDOWS.map(w => (
-              <button key={w.id} type="button" className={w.id === window ? 'active' : ''} aria-pressed={w.id === window} onClick={() => setWindow(w.id)}>
-                {w.label}
-              </button>
-            ))}
-          </div>
           <button
             type="button"
             className="balance-gear"
@@ -165,7 +158,7 @@ export function BalanceStrip({
         ))}
       </div>
       <p className="review-empty balance-legend">
-        Bar = progress toward each bucket&apos;s goal (tick = goal met). Week and month average the days.
+        Bar = progress toward each bucket&apos;s goal (tick = goal met). Longer periods average the days.
         {report.estimated ? ' Earlier days use today’s workload until Life Hub has seen them.' : ''}
       </p>
     </div>

@@ -41,7 +41,6 @@ import {
   loadLedger,
   recordCompletion,
   computeStats,
-  sourceShares,
   diffSnapshotCompletions,
   emptyStats,
   type CompletionLedger,
@@ -633,12 +632,12 @@ export function LifeHub() {
           onCompleteTask={(source, task) => completeOnHub(source, task.id)}
           onStarTask={(source, task) => starOnHub(source, task)}
           completionStats={completionStats}
-          completionShares={sourceShares(completionStats)}
           ledger={taggedLedger}
           focusConfig={focusConfig}
-          balance={
+          renderBalance={period =>
             focusConfig ? (
               <BalanceStrip
+                window={period}
                 ledger={taggedLedger}
                 config={focusConfig}
                 today={todayAvail}

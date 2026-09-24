@@ -925,3 +925,14 @@ a.origin-link:hover strong {
   .balance-pace { grid-template-columns: 1fr auto; }
   .balance-pace input[type="range"] { grid-column: 1 / -1; grid-row: 2; }
 }
+
+/* === Review: tiles pick the period for the whole panel === */
+.period-tiles button {
+  padding: 12px; border-radius: 12px; background: var(--surface-2); border: 1px solid var(--line);
+  color: inherit; font: inherit; text-align: left; cursor: pointer; transition: border-color .15s, box-shadow .15s;
+}
+.period-tiles button strong { display: block; font-size: 22px; font-weight: 700; letter-spacing: -.04em; }
+.period-tiles button span { display: block; margin-top: 4px; color: var(--muted); font-size: 10px; }
+.period-tiles button:hover { border-color: color-mix(in srgb, var(--accent) 50%, var(--line)); }
+.period-tiles button.active { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent) inset, 0 0 18px color-mix(in srgb, var(--accent) 30%, transparent); }
+.period-tiles button.active span { color: var(--ink); font-weight: 650; }

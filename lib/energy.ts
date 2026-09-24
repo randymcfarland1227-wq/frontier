@@ -18,7 +18,7 @@ import type { SelfItem } from './adapters/self';
 import { resolveFocusArea, type FocusAreaConfig, type FocusAreaId } from './focusAreas';
 import { readSaved, writeSaved, STORAGE_KEYS } from './storage';
 
-export type EnergyWindow = 'today' | 'last7' | 'month';
+export type EnergyWindow = 'today' | 'last7' | 'month' | 'all';
 export type Progress = 'charge' | 'inline' | 'onfire';
 export type Focus = 'under' | 'balanced' | 'over';
 
@@ -212,9 +212,14 @@ export type EnergyReport = {
   estimated: boolean;
 };
 
-function windowDays(window: EnergyWindow, now = new Date()): Date[] {
+/** 'all' reaches back to the first completion, capped so it stays quick. */
+const ALL_DAYS_CAP = 120;
+
+function windowDays(window: EnergyWindow, firstDay: Date | null, now = new Date()): Date[] {
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const count = window === 'today' ? 1 : window === 'last7' ? 7 : today.getDate();
+  const sinceFirst = firstDay ? Math.round((today.getTime() - firstDay.getTime()) / 86400000) + 1 : 1;
+  const count =
+    window === 'today' ? 1 : window === 'last7' ? 7 : window === 'month' ? today.getDate() : Math.min(ALL_DAYS_CAP, Math.max(1, sinceFirst));
   return Array.from({ length: count }, (_, i) => new Date(today.getFullYear(), today.getMonth(), today.getDate() - (count - 1 - i)));
 }
 
@@ -239,7 +244,9 @@ export function computeEnergy(
   today: Availability,
 ): EnergyReport {
   const areas = config.areas;
-  const days = windowDays(window);
+  const firstMs = Math.min(...Object.values(ledger.entries).map(e => Date.parse(e.completedAt)).filter(t => !Number.isNaN(t)));
+  const first = Number.isFinite(firstMs) ? new Date(new Date(firstMs).setHours(0, 0, 0, 0)) : null;
+  const days = windowDays(window, first);
   const todayKey = dayKey(new Date());
 
   // Completions per day per bucket

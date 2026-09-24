@@ -4,8 +4,9 @@ import type { ReactNode } from 'react';
 import type { FeaturedItem, SourceId, SourceSnapshot, SpaceId, TaskItem } from '../../lib/types';
 import { sourceById } from '../../lib/sources';
 import { updatedLabel } from '../../lib/protocol';
-import type { CompletionLedger, CompletionStats, SourceShare } from '../../lib/completions';
+import type { CompletionLedger, CompletionStats } from '../../lib/completions';
 import type { FocusAreaConfig } from '../../lib/focusAreas';
+import type { EnergyWindow } from '../../lib/energy';
 import { SourceCard } from './SourceCard';
 import { PriorityBoard } from './PriorityBoard';
 import { ReviewPanel } from './ReviewPanel';
@@ -78,10 +79,9 @@ export function HomeView({
   onCompleteTask,
   onStarTask,
   completionStats,
-  completionShares,
   ledger,
   focusConfig,
-  balance,
+  renderBalance,
   capturesPanel,
   whyPanel,
 }: {
@@ -92,10 +92,9 @@ export function HomeView({
   onCompleteTask: (source: SourceId, task: TaskItem) => void;
   onStarTask: (source: SourceId, task: TaskItem) => void;
   completionStats: CompletionStats;
-  completionShares: SourceShare[];
   ledger: CompletionLedger;
   focusConfig: FocusAreaConfig | null;
-  balance?: ReactNode;
+  renderBalance?: (period: EnergyWindow) => ReactNode;
   capturesPanel: ReactNode;
   whyPanel: ReactNode;
 }) {
@@ -135,10 +134,9 @@ export function HomeView({
         >
           <ReviewPanel
             stats={completionStats}
-            shares={completionShares}
             ledger={ledger}
             focusConfig={focusConfig}
-            balance={balance}
+            renderBalance={renderBalance}
           />
         </Collapsible>
       </section>
