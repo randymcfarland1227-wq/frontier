@@ -987,3 +987,27 @@ a.origin-link:hover strong {
 [data-theme="dark"] select option { background: #120f1f; color: var(--ink); }
 [data-theme="dark"] .room-body .work-ledger { background: transparent; box-shadow: none; backdrop-filter: none; -webkit-backdrop-filter: none; }
 [data-theme="dark"] .focus-drawer { background: var(--pearl-sheen), rgba(14, 12, 24, .88); }
+
+/* === Balance: "Could charge it" lives in a pop-up on the Charge badge === */
+.energy-charge { position: relative; display: inline-flex; }
+.energy-charge-btn { cursor: pointer; font: inherit; font-size: 10px; font-weight: 700; }
+.energy-charge-btn::after { content: ' ▾'; font-size: 8px; opacity: .7; }
+.energy-pop {
+  position: absolute; z-index: 30; top: calc(100% + 6px); right: 0; width: min(300px, 78vw);
+  display: none; flex-direction: column; gap: 4px; padding: 10px 12px; border-radius: 12px; text-align: left;
+  background: var(--surface); border: 1px solid var(--line); box-shadow: 0 14px 40px rgba(0, 0, 0, .25);
+  font-size: 11px; line-height: 1.4; color: var(--ink); white-space: normal;
+}
+[data-theme="dark"] .energy-pop {
+  background: var(--pearl-sheen, none), rgba(16, 13, 28, .96);
+  border-color: var(--pearl-edge, var(--line));
+  backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+}
+.energy-charge:hover .energy-pop,
+.energy-charge:focus-within .energy-pop,
+.energy-charge.is-open .energy-pop { display: flex; }
+.energy-pop-title { color: var(--muted); font-size: 9px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
+.energy-pop-item { padding-left: 10px; position: relative; overflow-wrap: anywhere; }
+.energy-pop-item::before { content: '•'; position: absolute; left: 0; color: var(--muted); }
+.energy-pop-item em { font-style: normal; color: var(--muted); }
+.energy-pop-more { color: var(--muted); font-style: italic; }
