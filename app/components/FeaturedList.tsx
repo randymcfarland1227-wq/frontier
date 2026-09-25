@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { tagTone } from '../../lib/tagTone';
 import type { FeaturedItem, SourceId, SourceSnapshot } from '../../lib/types';
 import { sourceById } from '../../lib/sources';
 import { usePriorityPins } from '../../lib/priorityPins';
@@ -64,7 +65,7 @@ export function FeaturedList({
             <article className="featured-row one-line" key={item.id} title={[item.title, item.detail, item.meta].filter(Boolean).join(' — ')}>
               <LevelDot level={levelOf(sourceId, item.id)} title={item.title} onCycle={() => cycle(sourceId, item.id)} />
               <div className="featured-main">
-                {item.tag ? <span className="task-tag">{item.tag}</span> : null}
+                {item.tag ? <span className={`task-tag tone-${tagTone(item.tag)}`}>{item.tag}</span> : null}
                 {item.originUrl ? (
                   <a className="origin-link" href={item.originUrl} target="_blank" rel="noopener noreferrer">
                     <strong>{item.title}</strong>

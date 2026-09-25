@@ -1116,9 +1116,6 @@ a.origin-link:hover strong {
 /* === Priority: compact one-line rows (a touch bigger than TickTick's) === */
 .priority-list { margin-top: 12px; display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 460px), 1fr)); gap: 6px 14px; }
 .priority-row { display: flex; align-items: center; gap: 10px; min-width: 0; padding: 8px 10px; border: 1px solid var(--line); border-radius: 11px; background: var(--surface, #fff); }
-.priority-row.level-row-red { border-color: rgba(239, 68, 68, .55); }
-.priority-row.level-row-yellow { border-color: rgba(250, 204, 21, .5); }
-.priority-row.level-row-green { border-color: rgba(34, 197, 94, .5); }
 .priority-row-main { flex: 1; min-width: 0; display: flex; align-items: center; gap: 8px; }
 .priority-row-main strong, .priority-row-main .origin-link { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 14px; font-weight: 620; }
 .priority-row-main .origin-link { display: block; }
@@ -1196,7 +1193,34 @@ a.origin-link:hover strong {
 .task-tag {
   flex-shrink: 0; white-space: nowrap; padding: 1px 6px; border-radius: 6px;
   font-size: 9.5px; font-weight: 750; letter-spacing: .04em; text-transform: uppercase; line-height: 1.5;
-  color: var(--card-accent, var(--accent)); background: color-mix(in srgb, var(--card-accent, var(--accent)) 14%, transparent);
-  border: 1px solid color-mix(in srgb, var(--card-accent, var(--accent)) 35%, transparent);
+  color: var(--tag-color, var(--accent)); background: color-mix(in srgb, var(--tag-color, var(--accent)) 16%, transparent);
+  border: 1px solid color-mix(in srgb, var(--tag-color, var(--accent)) 45%, transparent);
 }
 .task-row.one-line .task-main, .featured-row.one-line .featured-main { min-width: 0; }
+
+/* Tag colors by task type */
+.task-tag.tone-ship { --tag-color: #eab308; }
+.task-tag.tone-end { --tag-color: #ef4444; }
+.task-tag.tone-list { --tag-color: #38bdf8; }
+.task-tag.tone-price { --tag-color: #22c55e; }
+.task-tag.tone-offer { --tag-color: #f97316; }
+.task-tag.tone-refresh { --tag-color: #14b8a6; }
+.task-tag.tone-deal { --tag-color: #a855f7; }
+.task-tag.tone-other { --tag-color: #94a3b8; }
+
+/* Priority rows: soft border in the origin site's color */
+.priority-row { --src: var(--line); border-color: color-mix(in srgb, var(--src) 55%, transparent); }
+.priority-row.src-ticktick { --src: #4772fa; }
+.priority-row.src-radall { --src: #c27803; }
+.priority-row.src-gmail { --src: #d93025; }
+.priority-row.src-outlook { --src: #0078d4; }
+.priority-row.src-resale { --src: #0d8f68; }
+.priority-row.src-role { --src: #5968e8; }
+.priority-row.src-candle { --src: #9d55cf; }
+.priority-row.src-income { --src: #0f766e; }
+.priority-row.src-move { --src: #ea580c; }
+.priority-row.src-repair { --src: #64748b; }
+.priority-row.src-self { --src: #7c3aed; }
+.priority-row .priority-source { color: var(--src); background: color-mix(in srgb, var(--src) 14%, transparent); }
+/* Theme rules color spans inside rows; the tag keeps its own color */
+.task-tag[class*="tone-"] { color: var(--tag-color) !important; }
