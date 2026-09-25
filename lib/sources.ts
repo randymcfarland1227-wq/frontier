@@ -21,7 +21,7 @@ export const sources: SourceDefinition[] = [
     name: 'TickTick',
     shortName: 'TickTick',
     label: 'Today · overdue · habits',
-    description: 'Today view: tasks due today or overdue, and habits due today — live from TickTick.',
+    description: '',
     action: 'Open TickTick',
     marker: '✓',
     eyebrow: 'Routines and habits',

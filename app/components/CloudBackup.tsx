@@ -79,7 +79,8 @@ export function CloudBackup() {
             {status.state === 'ok' && '● Backed up'}
             {status.state === 'error' && '▲ Backup problem'}
           </strong>{' '}
-          {status.state === 'off' && 'Your history lives only in this browser.'}
+          {status.state === 'off' &&
+            'Your history lives only in this browser, and live TickTick, Gmail and Role Hub updates need backup on here (turn it on, or open your device link).'}
           {status.state === 'ok' &&
             `${ago(status.at)}${c ? ` · ${c.completions} completions, ${c.captures} ideas, ${c.self} Self items` : ''}`}
           {status.state === 'error' && (ERRORS[status.error || ''] || status.error)}

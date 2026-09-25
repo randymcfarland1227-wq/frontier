@@ -3,6 +3,8 @@
 import { useMemo, useState } from 'react';
 import type { SourceId, SourceSnapshot, TaskItem } from '../../lib/types';
 
+/** Rows per column in the side-by-side view before "Show more". */
+const SPLIT_PREVIEW = 12;
 const PREVIEW = 6;
 
 function isHabit(task: TaskItem) {
@@ -27,12 +29,15 @@ export function TaskList({
   compact = false,
   onComplete,
   onStar,
+  split = false,
 }: {
   sourceId: SourceId;
   snapshot: SourceSnapshot;
   compact?: boolean;
   onComplete?: (task: TaskItem) => void;
   onStar?: (task: TaskItem) => void;
+  /** Wide card: tasks and habits side by side */
+  split?: boolean;
 }) {
   const [expanded, setExpanded] = useState(false);
   const [showAll, setShowAll] = useState(false);
@@ -58,48 +63,11 @@ export function TaskList({
   const hiddenCount = Math.max(0, openCount - PREVIEW);
   const habitPreview = showAll ? habits.length : Math.min(habits.length, 8);
   const habitHidden = Math.max(0, habits.length - habitPreview);
+  const moreCount = split
+    ? Math.max(0, tasks.length - SPLIT_PREVIEW, habits.length - SPLIT_PREVIEW)
+    : Math.max(hiddenCount, habitHidden);
 
-  return (
-    <section className={`task-list ${compact ? 'compact' : ''}`} data-source={sourceId}>
-      <div className="task-heading">
-        <div>
-          <span className="task-count">{tasks.length}</span>
-          <h3>{openCount ? countLabel : 'Tasks'}</h3>
-        </div>
-        {compact ? (
-          <button type="button" className="task-toggle" onClick={() => setExpanded(v => !v)} aria-expanded={expanded}>
-            {expanded ? 'Collapse' : 'Expand'}
-          </button>
-        ) : null}
-      </div>
-
-      {compact && !expanded ? (
-        <p className="task-summary">
-          {total === 0
-            ? snapshot.refreshedAt
-              ? 'No tasks from this origin yet.'
-              : 'Waiting for tasks…'
-            : `${openCount ? countLabel : 'Nothing open'} · expand for the list`}
-        </p>
-      ) : null}
-
-      {(expanded || !compact) && (
-        <>
-          {habits.length > 0 ? (
-            <div className="habit-chip-row" aria-label="Habits">
-              {habits.slice(0, habitPreview).map(h => (
-                <span className="habit-chip" key={h.id} title={h.detail || h.title}>
-                  Habit · {h.title}
-                </span>
-              ))}
-            </div>
-          ) : null}
-
-          <div className="task-board">
-            {visibleTasks.length === 0 ? (
-              <p className="featured-empty">No tasks yet.</p>
-            ) : (
-              visibleTasks.map(task => (
+  const renderRow = (task: TaskItem) => (
                 <article
                   className={`task-row one-line ${task.status === 'done' ? 'done' : ''} ${isHabit(task) ? 'habit' : ''}`}
                   key={task.id}
@@ -134,15 +102,68 @@ export function TaskList({
                     ) : null}
                   </div>
                 </article>
-              ))
+  );
+
+  return (
+    <section className={`task-list ${compact ? 'compact' : ''}`} data-source={sourceId}>
+      <div className="task-heading">
+        <div>
+          <span className="task-count">{tasks.length}</span>
+          <h3>{openCount ? countLabel : 'Tasks'}</h3>
+        </div>
+        {compact ? (
+          <button type="button" className="task-toggle" onClick={() => setExpanded(v => !v)} aria-expanded={expanded}>
+            {expanded ? 'Collapse' : 'Expand'}
+          </button>
+        ) : null}
+      </div>
+
+      {compact && !expanded && total === 0 ? (
+        <p className="task-summary">{snapshot.refreshedAt ? 'Nothing open right now.' : 'Waiting for tasks…'}</p>
+      ) : null}
+
+      {(expanded || !compact) && (
+        <>
+          {habits.length > 0 ? (
+            <div className="habit-chip-row" aria-label="Habits">
+              {habits.slice(0, habitPreview).map(h => (
+                <span className="habit-chip" key={h.id} title={h.detail || h.title}>
+                  Habit · {h.title}
+                </span>
+              ))}
+            </div>
+          ) : null}
+
+          {split ? (
+            <div className="task-split">
+              <div>
+                <p className="task-split-label">Tasks · {tasks.length}</p>
+                <div className="task-board">
+                  {tasks.length ? (showAll ? tasks : tasks.slice(0, SPLIT_PREVIEW)).map(renderRow) : <p className="featured-empty">No tasks due.</p>}
+                </div>
+              </div>
+              <div>
+                <p className="task-split-label">Habits · {habits.length}</p>
+                <div className="task-board">
+                  {habits.length ? (showAll ? habits : habits.slice(0, SPLIT_PREVIEW)).map(renderRow) : <p className="featured-empty">No habits left today.</p>}
+                </div>
+              </div>
+            </div>
+          ) : (
+          <div className="task-board">
+            {visibleTasks.length === 0 ? (
+              <p className="featured-empty">No tasks yet.</p>
+            ) : (
+              visibleTasks.map(renderRow)
             )}
           </div>
+          )}
 
-          {hiddenCount > 0 || habitHidden > 0 ? (
+          {moreCount > 0 ? (
             <button type="button" className="task-toggle show-more" onClick={() => setShowAll(v => !v)}>
               {showAll
                 ? 'Show less'
-                : `Show ${Math.max(hiddenCount, habitHidden)} more`}
+                : `Show ${moreCount} more`}
             </button>
           ) : null}
         </>

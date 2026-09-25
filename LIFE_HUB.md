@@ -288,3 +288,10 @@ Replaces the share-vs-target Balance. `lib/energy.ts`, `app/components/BalanceSt
 
 - Apps Script **Life Hub Mail Sync** (standalone, script id `1xOI9TUs_NFK7qgutWpww3obmMhX5N6F3Y3HLMAAKszoqm0kdGsQBPlnq`, in Randy's account): `syncStarredMail` runs every 10 min (trigger made by `setupLifeHubMail`, which Randy runs once), POSTs starred threads to Worker `/api/gmail/snapshot` (`X-Mail-Key` = Worker secret `MAIL_PUSH_KEY`), and unstars ids returned in the reply.
 - Life Hub pulls `GET /api/gmail/snapshot` (backup key) with the Role pull; newer than the morning file wins. Done on a Gmail item (after the area picker) → `POST /api/gmail/unstar` → unstarred in Gmail on the next run.
+
+### Cards tidy-up + red/yellow/green featured (2026-09-25)
+
+- Card header: sync time sits beside the name ("● live · 9:12 PM" when under 20 min old, else "synced …"); duplicate "Updated…" stamps and the repeated count line under Tasks are gone; TickTick has no description note.
+- TickTick (wide card) lists Tasks and Habits side by side (`TaskList split`).
+- Featured rows and Pinned priorities have a color dot: tap cycles red → yellow → green → none; lists sort red, yellow, green, then the rest (`lib/featuredLevels.ts`, `lifehub-featured-levels`, cloud-synced via `levels` in syncState — newest change wins).
+- Backup-off note now says live TickTick / Gmail / Role Hub need backup on in that browser.

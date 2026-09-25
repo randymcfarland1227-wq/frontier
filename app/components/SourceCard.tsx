@@ -3,12 +3,20 @@
 import { useState } from 'react';
 import { readSaved, writeSaved, STORAGE_KEYS } from '../../lib/storage';
 import type { FeaturedItem, SourceDefinition, SourceSnapshot, TaskItem } from '../../lib/types';
-import { updatedLabel } from '../../lib/protocol';
 import { isConnectorSource } from '../../lib/connectors';
 import { getActionableMetric } from '../../lib/actionable';
 import { MetricGrid } from './MetricGrid';
 import { FeaturedList } from './FeaturedList';
 import { TaskList } from './TaskList';
+
+/** "● live · 9:12 PM" when fresh, otherwise "synced Sep 25, 4:22 AM". */
+function syncText(iso: string) {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return '';
+  const time = d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+  if (Date.now() - d.getTime() < 20 * 60 * 1000) return `● live · ${time}`;
+  return `synced ${d.toLocaleDateString([], { month: 'short', day: 'numeric' })}, ${time}`;
+}
 
 export function SourceCard({
   source,
@@ -72,7 +80,10 @@ export function SourceCard({
             </span>
           </h2>
         ) : (
-          <h2>{source.name}</h2>
+          <h2 className="card-title-row">
+            {source.name}
+            {showSync ? <span className="sync-inline">{syncText(snapshot.refreshedAt)}</span> : null}
+          </h2>
         )}
         {collapsed ? null : (
           <>
@@ -86,8 +97,7 @@ export function SourceCard({
             <span className="related-hint">Goals → routines → TickTick</span>
           </div>
         ) : null}
-        <p className="description">{source.description}</p>
-        {showSync ? <p className="sync-stamp">Synced {updatedLabel(snapshot.refreshedAt).replace(/^Updated\s+/i, '')}</p> : null}
+        {source.description ? <p className="description">{source.description}</p> : null}
           </>
         )}
       </div>
@@ -102,6 +112,7 @@ export function SourceCard({
         compact
         onComplete={onCompleteTask}
         onStar={onStarTask}
+        split={source.id === 'ticktick'}
       />
       <div className="card-actions">
         {source.url ? (

@@ -3,6 +3,8 @@
 import type { FeaturedItem, SourceId, SourceSnapshot } from '../../lib/types';
 import { sourceById } from '../../lib/sources';
 import { usePriorityPins } from '../../lib/priorityPins';
+import { byLevel, useFeaturedLevels } from '../../lib/featuredLevels';
+import { LevelDot } from './LevelDot';
 
 export function FeaturedList({
   sourceId,
@@ -16,7 +18,10 @@ export function FeaturedList({
   onComplete?: (item: FeaturedItem) => void;
 }) {
   const copy = sourceById[sourceId];
-  const items = snapshot.featured.slice(0, compact ? 2 : 12);
+  const { levelOf, cycle } = useFeaturedLevels();
+  // Red first, then yellow, then green, then the rest.
+  const sorted = byLevel(snapshot.featured, f => levelOf(sourceId, f.id));
+  const items = sorted.slice(0, compact ? 3 : 12);
   const { addPin, removePin, isPinned } = usePriorityPins();
 
   return (
@@ -30,6 +35,7 @@ export function FeaturedList({
           const pinned = isPinned(sourceId, item.id);
           return (
             <article className="featured-row one-line" key={item.id} title={[item.title, item.detail, item.meta].filter(Boolean).join(' — ')}>
+              <LevelDot level={levelOf(sourceId, item.id)} title={item.title} onCycle={() => cycle(sourceId, item.id)} />
               <div className="featured-main">
                 {item.originUrl ? (
                   <a className="origin-link" href={item.originUrl} target="_blank" rel="noopener noreferrer">
@@ -73,8 +79,8 @@ export function FeaturedList({
               : 'Connecting to the source…'}
         </p>
       )}
-      {compact && snapshot.featured.length > 2 ? (
-        <p className="featured-more">+{snapshot.featured.length - 2} more featured</p>
+      {compact && snapshot.featured.length > 3 ? (
+        <p className="featured-more">+{snapshot.featured.length - 3} more featured</p>
       ) : null}
     </section>
   );
