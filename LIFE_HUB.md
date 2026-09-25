@@ -294,4 +294,5 @@ Replaces the share-vs-target Balance. `lib/energy.ts`, `app/components/BalanceSt
 - Card header: sync time sits beside the name ("● live · 9:12 PM" when under 20 min old, else "synced …"); duplicate "Updated…" stamps and the repeated count line under Tasks are gone; TickTick has no description note.
 - TickTick (wide card) lists Tasks and Habits side by side (`TaskList split`).
 - Featured rows and Pinned priorities have a color dot: tap cycles red → yellow → green → none; lists sort red, yellow, green, then the rest (`lib/featuredLevels.ts`, `lifehub-featured-levels`, cloud-synced via `levels` in syncState — newest change wins).
+- Each card's starred list folds to its heading (tap the heading; shows the count while folded). Remembered per card on this device (`lifehub-collapsed-featured`, not synced). TickTick's Tasks | Habits split is always open — no Expand.
 - Backup-off note now says live TickTick / Gmail / Role Hub need backup on in that browser.

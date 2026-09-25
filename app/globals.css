@@ -1088,3 +1088,11 @@ a.origin-link:hover strong {
 .task-split .task-row.one-line .task-badge { display: none; }
 .task-split > div { min-width: 0; }
 .task-split .task-board, .space-card .task-board { grid-template-columns: minmax(0, 1fr); }
+
+/* === Starred list fold (card view) === */
+.featured-heading.featured-fold { width: 100%; border: 0; border-bottom: 1px solid var(--line); background: none; color: inherit; font: inherit; text-align: left; cursor: pointer; padding: 0 0 10px; }
+.featured-fold.is-folded { border-bottom-color: transparent; padding-bottom: 2px; }
+.featured-fold:hover h3, .featured-fold:hover .featured-fold-icon { color: var(--ink); }
+.featured-fold-count { font-style: normal; font-size: 10px; font-weight: 700; color: var(--muted); border: 1px solid var(--line); border-radius: 999px; padding: 1px 7px; }
+.featured-heading > .featured-fold-icon { margin-left: auto; width: 24px; height: 24px; display: grid; place-items: center; border: 1px solid var(--line); border-radius: 7px; background: var(--surface-2); color: var(--muted); font-size: 13px; line-height: 1; }
+.featured-fold:hover .featured-fold-icon { border-color: var(--accent); }
