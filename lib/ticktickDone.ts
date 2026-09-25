@@ -4,7 +4,8 @@
  * what it marked complete. Each completion is recorded once per day.
  */
 
-import { recordCompletion, loadLedger, type CompletionLedger } from './completions';
+import { recordCompletion, loadLedger, moveCompletionEarlier, saveLedger, type CompletionLedger } from './completions';
+import { tickTickTitleKey } from './syncState';
 import { syncKeyHeader } from './cloudSync';
 import type { HabitSchedule } from './energy';
 
@@ -14,7 +15,59 @@ const WORKER_BASE =
 
 const DAYS = 7;
 
-type DoneTask = { id: string; projectId?: string; title?: string; completedAt?: string };
+type DoneTask = { id: string; projectId?: string; title?: string; completedAt?: string; dueAt?: string; allDay?: boolean };
+
+/** Ticks of the same task this close together are one catch-up, not separate completions. */
+const BURST_MS = 2 * 60 * 1000;
+
+function dayOf(iso: string) {
+  const d = new Date(iso);
+  return new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+}
+
+/**
+ * When a TickTick task counts:
+ * - Done late (ticked after the day it was due) → on its due day (all-day tasks at midday).
+ * - Done on or before its due day → when it was ticked.
+ * - Clicking through overdue copies of a recurring task (same title, ticked within a couple of
+ *   minutes) is catching up, not doing it several times: every copy lands on the latest copy's
+ *   day, so it counts once.
+ */
+export function attributeTickTickTasks(tasks: DoneTask[]): Array<DoneTask & { at: string }> {
+  const when = (t: DoneTask): string | undefined => {
+    if (!t.completedAt) return undefined;
+    if (!t.dueAt || dayOf(t.dueAt) >= dayOf(t.completedAt)) return t.completedAt;
+    const due = new Date(t.dueAt);
+    return t.allDay ? new Date(due.getFullYear(), due.getMonth(), due.getDate(), 12).toISOString() : t.dueAt;
+  };
+  const out: Array<DoneTask & { at: string }> = [];
+  const byTitle = new Map<string, DoneTask[]>();
+  for (const t of tasks) {
+    if (!t.completedAt) continue;
+    const k = tickTickTitleKey(t.title) || t.id;
+    byTitle.set(k, [...(byTitle.get(k) || []), t]);
+  }
+  for (const group of byTitle.values()) {
+    group.sort((a, b) => Date.parse(a.completedAt!) - Date.parse(b.completedAt!));
+    let burst: DoneTask[] = [];
+    const flush = () => {
+      if (!burst.length) return;
+      const latest = burst.reduce((best, t) =>
+        Date.parse(t.dueAt || t.completedAt!) >= Date.parse(best.dueAt || best.completedAt!) ? t : best,
+      );
+      const at = when(latest)!;
+      for (const t of burst) out.push({ ...t, at });
+      burst = [];
+    };
+    for (const t of group) {
+      const prev = burst[burst.length - 1];
+      if (prev && Date.parse(t.completedAt!) - Date.parse(prev.completedAt!) > BURST_MS) flush();
+      burst.push(t);
+    }
+    flush();
+  }
+  return out;
+}
 type DoneHabit = { id: string; title?: string; stamp: string; completedAt?: string };
 
 /** Latest habit schedules from the feed (which habits are due on which days). */
@@ -55,15 +108,19 @@ export async function pullTickTickDone(): Promise<CompletionLedger | null> {
   if (Array.isArray(body.schedule) && body.schedule.length) lastSchedule = body.schedule;
   let ledger = loadLedger();
   const before = Object.keys(ledger.entries).length;
-  for (const t of body.tasks || []) {
+  let moved = false;
+  for (const t of attributeTickTickTasks(body.tasks || [])) {
+    // Already recorded (e.g. hub Done, or before this rule)? Move it to the right day.
+    if (moveCompletionEarlier(ledger, 'ticktick', t.id, t.at)) moved = true;
     ledger = recordCompletion('ticktick', t.id, {
       via: 'origin-done',
-      at: t.completedAt,
+      at: t.at,
       title: t.title,
       task: { kind: 'task', projectId: t.projectId },
       ledger,
     });
   }
+  if (moved) saveLedger(ledger);
   for (const h of body.habits || []) {
     const day = stampDate(h.stamp);
     const exact = h.completedAt ? new Date(h.completedAt) : null;
@@ -76,7 +133,7 @@ export async function pullTickTickDone(): Promise<CompletionLedger | null> {
       ledger,
     });
   }
-  return Object.keys(ledger.entries).length === before ? null : ledger;
+  return Object.keys(ledger.entries).length === before && !moved ? null : ledger;
 }
 
 /** Hub Done on a habit: check it in on TickTick too (fire-and-forget). */

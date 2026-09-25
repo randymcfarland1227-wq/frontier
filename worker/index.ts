@@ -298,6 +298,9 @@ async function handleTickTickDone(request: Request, env: Env): Promise<Response>
         projectId: t.projectId,
         title: t.title,
         completedAt: ttTime(t.completedTime),
+        // When it was due, so Life Hub can count a late-logged task on its own day.
+        dueAt: ttTime(t.dueDate) || ttTime(t.startDate),
+        allDay: Boolean(t.isAllDay),
         repeat: Boolean(t.repeatFlag),
       }));
   } catch (e) {
