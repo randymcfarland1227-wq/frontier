@@ -4,7 +4,7 @@ import { useMemo, useState } from 'react';
 import type { SourceId, SourceSnapshot, TaskItem } from '../../lib/types';
 
 /** Rows per column in the side-by-side view before "Show more". */
-const SPLIT_PREVIEW = 12;
+const SPLIT_PREVIEW = 8;
 const PREVIEW = 6;
 
 function isHabit(task: TaskItem) {
@@ -39,7 +39,9 @@ export function TaskList({
   /** Wide card: tasks and habits side by side */
   split?: boolean;
 }) {
-  const [expanded, setExpanded] = useState(false);
+  const [expandedState, setExpanded] = useState(false);
+  /** The split view is always open: Tasks and Habits columns show without tapping Expand. */
+  const expanded = split || expandedState;
   const [showAll, setShowAll] = useState(false);
 
   const openTasks = snapshot.tasks.filter(t => t.status !== 'done');
@@ -106,17 +108,19 @@ export function TaskList({
 
   return (
     <section className={`task-list ${compact ? 'compact' : ''}`} data-source={sourceId}>
+      {split ? null : (
       <div className="task-heading">
         <div>
           <span className="task-count">{tasks.length}</span>
           <h3>{openCount ? countLabel : 'Tasks'}</h3>
         </div>
-        {compact ? (
+        {compact && !split ? (
           <button type="button" className="task-toggle" onClick={() => setExpanded(v => !v)} aria-expanded={expanded}>
             {expanded ? 'Collapse' : 'Expand'}
           </button>
         ) : null}
       </div>
+      )}
 
       {compact && !expanded && total === 0 ? (
         <p className="task-summary">{snapshot.refreshedAt ? 'Nothing open right now.' : 'Waiting for tasks…'}</p>
@@ -124,7 +128,7 @@ export function TaskList({
 
       {(expanded || !compact) && (
         <>
-          {habits.length > 0 ? (
+          {habits.length > 0 && !split ? (
             <div className="habit-chip-row" aria-label="Habits">
               {habits.slice(0, habitPreview).map(h => (
                 <span className="habit-chip" key={h.id} title={h.detail || h.title}>
