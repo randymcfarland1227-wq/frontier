@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import type { CompletionLedger, CompletionStats, SourceShare } from '../../lib/completions';
+import type { CompletionEntry, CompletionLedger, CompletionStats, SourceShare } from '../../lib/completions';
 import type { EnergyWindow } from '../../lib/energy';
 import { sourceById } from '../../lib/sources';
 import type { FocusAreaConfig } from '../../lib/focusAreas';
@@ -40,12 +40,15 @@ export function ReviewPanel({
   ledger,
   focusConfig,
   renderBalance,
+  renderSorting,
 }: {
   stats: CompletionStats;
   ledger: CompletionLedger;
   focusConfig: FocusAreaConfig | null;
   /** Balance strip from LifeHub, drawn for the period chosen here */
   renderBalance?: (period: EnergyWindow) => React.ReactNode;
+  /** "Needs a bucket or goal" box for this period's completions */
+  renderSorting?: (entries: CompletionEntry[]) => React.ReactNode;
 }) {
   // One period for the whole panel: the tiles pick it; By source and Balance follow.
   const [period, setPeriod] = useState<EnergyWindow>('today');
@@ -136,6 +139,7 @@ export function ReviewPanel({
           })
         )}
       </div>
+      {renderSorting ? renderSorting(inPeriod) : null}
       </div>
       {focusConfig ? (
         <div className="review-side">

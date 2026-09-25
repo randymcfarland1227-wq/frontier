@@ -1135,3 +1135,56 @@ a.origin-link:hover strong {
   .zoom-control .zoom-value { display: none; }
   .topbar-actions { gap: 6px; }
 }
+
+/* === Settings: Task sorting === */
+.settings-button { padding: 6px 10px; font-size: 14px; }
+.settings-button.active { border-color: var(--accent); color: var(--accent); }
+.settings-view { padding: 24px var(--page-gutter) 54px; }
+.sorting-page { padding: 18px 20px; }
+.sorting-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 18px; flex-wrap: wrap; }
+.sorting-head h2 { margin: 0 0 6px; font-size: 20px; font-weight: 660; letter-spacing: -.03em; }
+.sorting-head .review-lede { max-width: 760px; }
+.sorting-count { margin: 0; color: var(--muted); font-size: 12px; }
+.sorting-count strong { color: var(--ink); font-size: 16px; }
+.sorting-filters { margin: 14px 0 10px; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.sorting-filters input, .sorting-filters select, .sort-select {
+  border: 1px solid var(--line); border-radius: 9px; background: var(--surface-2); color: var(--ink);
+  font: inherit; font-size: 12px; padding: 7px 9px; min-width: 0;
+}
+.sorting-filters input { flex: 1 1 220px; }
+.sorting-list, .needs-sorting-list { display: grid; gap: 6px; }
+.sorting-row {
+  display: grid; grid-template-columns: minmax(0, 1fr) minmax(150px, 230px) minmax(150px, 260px); gap: 8px; align-items: center;
+  padding: 7px 10px; border: 1px solid var(--line); border-radius: 11px; background: var(--surface, #fff);
+}
+.sorting-row.is-unsorted { border-color: rgba(250, 204, 21, .5); }
+.sorting-row.sorting-default { margin-bottom: 10px; border-style: dashed; }
+.sorting-task { min-width: 0; display: flex; align-items: center; gap: 8px; }
+.sorting-task strong { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13px; font-weight: 620; }
+.sorting-task .priority-source { margin: 0; flex-shrink: 0; }
+.sorting-sub { flex-shrink: 0; color: var(--muted); font-size: 11px; white-space: nowrap; }
+.sorting-default .sorting-task { flex-direction: column; align-items: flex-start; gap: 2px; }
+@media (max-width: 720px) {
+  .sorting-row { grid-template-columns: 1fr 1fr; }
+  .sorting-task { grid-column: 1 / -1; }
+  .sorting-sub { display: none; }
+}
+
+/* Needs sorting box (Review) */
+.needs-sorting { margin-top: 14px; border: 1px solid rgba(250, 204, 21, .45); border-radius: 13px; padding: 10px 12px; background: color-mix(in srgb, #facc15 6%, transparent); }
+.needs-sorting-head { width: 100%; display: flex; align-items: center; gap: 8px; border: 0; background: none; color: inherit; font: inherit; font-size: 12px; text-align: left; cursor: pointer; padding: 0; }
+.needs-sorting-dot { width: 8px; height: 8px; border-radius: 50%; background: #facc15; flex-shrink: 0; }
+.needs-sorting-head .featured-fold-icon { margin-left: auto; width: 24px; height: 24px; display: grid; place-items: center; border: 1px solid var(--line); border-radius: 7px; background: var(--surface-2); color: var(--muted); font-size: 13px; }
+.needs-sorting-list { margin-top: 10px; }
+.needs-sorting .sorting-row { grid-template-columns: minmax(0, 1fr) minmax(120px, 190px) minmax(120px, 210px); }
+@media (max-width: 720px) { .needs-sorting .sorting-row { grid-template-columns: 1fr 1fr; } }
+.needs-sorting-foot { margin: 8px 0 0; color: var(--muted); font-size: 11px; }
+.link-button { border: 0; background: none; padding: 0; color: var(--accent); font: inherit; font-weight: 650; cursor: pointer; text-decoration: underline; }
+
+/* Sort prompt (mark done) */
+.area-picker-goal-label { margin-top: 12px !important; }
+.area-picker .sort-select { width: 100%; margin-top: 6px; }
+.area-picker-scope { display: flex; align-items: center; gap: 8px; margin-top: 12px; font-size: 12px; color: var(--muted); }
+.area-picker-note { margin: 6px 0 0; font-size: 11px; color: var(--muted); }
+.area-picker-actions { display: flex; gap: 8px; margin-top: 14px; flex-wrap: wrap; }
+.area-picker-actions .row-action:disabled { opacity: .45; cursor: default; }

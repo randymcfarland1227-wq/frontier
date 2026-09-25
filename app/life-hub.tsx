@@ -69,12 +69,25 @@ import { BalanceStrip } from './components/BalanceStrip';
 import { completeRoleTask, pullRoleSnapshot, starRoleItem } from '../lib/roleFeed';
 import { pullGmailSnapshot, unstarGmail } from '../lib/gmailFeed';
 import { buildTickTickToday, fetchOpenTickTick } from '../lib/ticktickLive';
-import { isIgnoredItem } from '../lib/focusAreas';
+import { isIgnoredItem, resolveFocusArea } from '../lib/focusAreas';
 
 /** Sources where one bucket doesn't fit every item — ask on Done. */
 const ASK_AREA_SOURCES: SourceId[] = ['gmail', 'outlook'];
 import { consumeLocationHash, startCloudSync, SYNCED_EVENT } from '../lib/cloudSync';
-import { addLink, loadGoals, loadSeedLinks, mergeLinks, removeLink, type GoalLink, type GoalsData } from '../lib/goals';
+import {
+  addLink,
+  goalOf,
+  linkGoalIndex,
+  loadGoals,
+  loadSeedLinks,
+  mergeLinks,
+  removeLink,
+  type GoalLink,
+  type GoalsData,
+} from '../lib/goals';
+import { ruleFor, saveTaskRule, sourceRuleKey, taskRuleKey, useTaskRules } from '../lib/taskRules';
+import { TaskSorting } from './components/TaskSorting';
+import { NeedsSorting } from './components/NeedsSorting';
 import { backfillFocusAreas, loadFocusAreas, type FocusAreaConfig } from '../lib/focusAreas';
 
 const starterFocus: FocusItem[] = [
@@ -192,7 +205,13 @@ export function LifeHub() {
   const [goalsData, setGoalsData] = useState<GoalsData | null>(null);
   const [seedLinks, setSeedLinks] = useState<GoalLink[]>([]);
   const [goalLinks, setGoalLinks] = useState<GoalLink[]>([]);
-  const [pendingArea, setPendingArea] = useState<{ source: SourceId; id: string; title: string } | null>(null);
+  const [pendingArea, setPendingArea] = useState<{
+    source: SourceId;
+    id: string;
+    title: string;
+    area?: string;
+    goal?: string;
+  } | null>(null);
   const snapshotsRef = useRef(snapshots);
   const frameRefs = useRef<Partial<Record<SourceId, HTMLIFrameElement | null>>>({});
   const sourceWindows = useRef<Partial<Record<SourceId, Window>>>({});
@@ -346,13 +365,22 @@ export function LifeHub() {
   }, [taggedLedger, ledger]);
 
   // What the page shows and scores: without reminders / reference notes (kept in storage, just not counted).
+  // Task sorting rules (bucket + goal per task), cloud-synced.
+  const { rules: taskRules } = useTaskRules();
+  const linkIdx = useMemo(() => linkGoalIndex(goalLinks, captures), [goalLinks, captures]);
+
   const visibleLedger = useMemo(() => {
     if (!focusConfig) return taggedLedger;
-    const entries = Object.fromEntries(
-      Object.entries(taggedLedger.entries).filter(([, e]) => !isIgnoredItem(e.source, e.title, focusConfig)),
-    );
-    return Object.keys(entries).length === Object.keys(taggedLedger.entries).length ? taggedLedger : { entries };
-  }, [taggedLedger, focusConfig]);
+    const entries: typeof taggedLedger.entries = {};
+    for (const [k, e] of Object.entries(taggedLedger.entries)) {
+      if (isIgnoredItem(e.source, e.title, focusConfig)) continue;
+      // A bucket picked on Task sorting re-sorts past completions of that task too.
+      const picked = ruleFor(e.source, e.title, e.taskId, taskRules).area;
+      entries[k] =
+        picked && picked !== e.focusAreaId && focusConfig.areas.some(a => a.id === picked) ? { ...e, focusAreaId: picked } : e;
+    }
+    return { entries };
+  }, [taggedLedger, focusConfig, taskRules]);
 
   // TickTick has no star of its own: Life Hub keeps those stars (cloud-synced).
   const [hubStars, setHubStars] = useState(() => loadHubStars());
@@ -579,15 +607,26 @@ export function LifeHub() {
     const snapNow = snapshotsRef.current[source];
     const taskNow = snapNow?.tasks?.find(t => t.id === id);
     const featuredNow = snapNow?.featured?.find(f => f.id === id);
-    const title = taskNow?.title || featuredNow?.title;
-    if (!chosenArea && ASK_AREA_SOURCES.includes(source) && focusConfig) {
-      setPendingArea({ source, id, title: title || '' });
-      return;
+    const selfItem = source === 'self' ? loadSelfItems().find(i => i.id === id) : undefined;
+    const title = taskNow?.title || featuredNow?.title || selfItem?.title;
+    if (!chosenArea && focusConfig) {
+      // Ask what it's for when the bucket or goal isn't known yet (mail always needs its bucket picked).
+      const picked = ruleFor(source, title, id);
+      const area =
+        picked.area ||
+        selfItem?.focusAreaId ||
+        (ASK_AREA_SOURCES.includes(source)
+          ? undefined
+          : resolveFocusArea({ source, taskId: id, title, kind: taskNow?.kind, projectId: taskNow?.projectId }));
+      const goal = goalOf(source, title, [id], taskRules, linkIdx);
+      if (!area || !goal) {
+        setPendingArea({ source, id, title: title || '', area, goal });
+        return;
+      }
     }
     if (source === 'self') {
-      const selfItem = loadSelfItems().find(i => i.id === id);
       setLedger(
-        recordCompletion('self', id, { via: 'self', title, task: taskNow, focusAreaId: selfItem?.focusAreaId }),
+        recordCompletion('self', id, { via: 'self', title, task: taskNow, focusAreaId: chosenArea || selfItem?.focusAreaId }),
       );
       syncSelf(toggleSelfComplete(id));
       return;
@@ -705,7 +744,7 @@ export function LifeHub() {
   };
 
   return (
-    <main className={`frontier-shell theme-${active === 'home' ? 'home' : active}`} data-color-mode={theme}>
+    <main className={`frontier-shell theme-${active === 'home' || active === 'settings' ? 'home' : active}`} data-color-mode={theme}>
       <Header
         active={active}
         enter={enter}
@@ -727,6 +766,18 @@ export function LifeHub() {
           completionStats={completionStats}
           ledger={visibleLedger}
           focusConfig={focusConfig}
+          renderSorting={entries =>
+            focusConfig ? (
+              <NeedsSorting
+                entries={entries}
+                areas={focusConfig.areas}
+                goals={goalsData}
+                links={goalLinks}
+                captures={captures}
+                openSorting={() => enter('settings')}
+              />
+            ) : null
+          }
           renderBalance={period =>
             focusConfig ? (
               <BalanceStrip
@@ -786,6 +837,17 @@ export function LifeHub() {
             />
           }
         />
+      ) : active === 'settings' ? (
+        <div className="settings-view">
+          <TaskSorting
+            snapshots={visibleSnapshots}
+            ledger={visibleLedger}
+            config={focusConfig}
+            goals={goalsData}
+            links={goalLinks}
+            captures={captures}
+          />
+        </div>
       ) : (
         <SourceView
           sourceId={active}
@@ -807,11 +869,21 @@ export function LifeHub() {
           title={pendingArea.title}
           sourceName={sourceById[pendingArea.source].shortName}
           areas={focusConfig.areas}
-          suggested={focusConfig.areas.find(a => a.sourceMap.some(r => r.source === pendingArea.source && !r.match))?.id}
-          onPick={areaId => {
+          goals={goalsData}
+          suggested={
+            pendingArea.area ||
+            focusConfig.areas.find(a => a.sourceMap.some(r => r.source === pendingArea.source && !r.match))?.id
+          }
+          initialGoal={pendingArea.goal}
+          onPick={choice => {
             const p = pendingArea;
             setPendingArea(null);
-            completeOnHub(p.source, p.id, areaId);
+            // Remember it, so the same task (or every task from this site) sorts itself next time.
+            saveTaskRule(choice.wholeSource ? sourceRuleKey(p.source) : taskRuleKey(p.source, p.title, p.id), {
+              area: choice.area,
+              goal: choice.goal,
+            });
+            completeOnHub(p.source, p.id, choice.area);
           }}
           onCancel={() => setPendingArea(null)}
         />

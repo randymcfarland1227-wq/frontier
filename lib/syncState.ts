@@ -25,6 +25,8 @@ export type SyncedState = {
   levels: Record<string, { level: string | null; at: string }>;
   /** Stars kept in Life Hub (TickTick): "source::id" → starred; newest change wins */
   stars: Record<string, { starred: boolean; at: string }>;
+  /** Task sorting rules: "source::t:name" → bucket / goal; newest change wins */
+  rules: Record<string, { area?: string | null; goal?: string | null; at: string }>;
 };
 
 /**
@@ -80,6 +82,7 @@ export function emptyState(): SyncedState {
     availability: {},
     levels: {},
     stars: {},
+    rules: {},
   };
 }
 
@@ -107,6 +110,7 @@ export function normalizeState(raw: unknown): SyncedState {
     availability: s.availability && typeof s.availability === 'object' ? s.availability : {},
     levels: s.levels && typeof s.levels === 'object' ? s.levels : {},
     stars: s.stars && typeof s.stars === 'object' ? s.stars : {},
+    rules: s.rules && typeof s.rules === 'object' ? s.rules : {},
   };
 }
 
@@ -182,6 +186,7 @@ export function mergeState(aRaw: unknown, bRaw: unknown): SyncedState {
     availability: mergeAvailability(a.availability, b.availability),
     levels: mergeLevels(a.levels, b.levels),
     stars: mergeLevels(a.stars, b.stars),
+    rules: mergeLevels(a.rules, b.rules),
   };
 }
 
