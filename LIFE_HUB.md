@@ -272,3 +272,9 @@ Replaces the share-vs-target Balance. `lib/energy.ts`, `app/components/BalanceSt
 - Completion rule: a done task that was never seen open and has no date isn't counted (avoids counting old finished tasks as done today).
 - Resale: Life Hub now keeps the featured list Resale sends (it used to ignore it for the embedded copy); sell-hub reloads its stars when another tab changes them.
 - Dark mode: source pages, form fields and the Today drawer use translucent "pearl" glass (`--pearl-glass`, `--pearl-sheen`, `--pearl-edge`) instead of white.
+
+### Role Hub certs + portfolio ideas (2026-09-25)
+
+- Role Hub (v39) sends certs (`cert:<ID>`, open until Completed) and portfolio ideas (`portfolio:<ID>`, open while Idea/Exploring/In progress; Parked left out; done at Added to portfolio). Both count toward Role & Professional Development.
+- Featuring: Role Hub's cert cards and portfolio rows have a ☆ that uses the same `_Hub Featured` tab as roles (`Cert|<ID>`, `Portfolio|<ID>`); featured ones appear on the Role card. Starring on Life Hub queues `{ id, action: 'star'|'unstar' }` via `POST /api/role/complete`; Done on certs/ideas queues a completion (cert → Completed, idea → ADDED). Role Hub applies the queue on its next push.
+- Role Hub's star no longer pops open a Life Hub tab; it pushes the change directly.

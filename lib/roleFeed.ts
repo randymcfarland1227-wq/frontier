@@ -20,12 +20,25 @@ export async function pullRoleSnapshot(): Promise<SourceSnapshot | null> {
   }
 }
 
-/** Done on a Role Hub task: queue it; Role Hub marks it Done in its sheet on its next check-in. */
-export function completeRoleTask(id: string) {
-  if (!id.startsWith('hubtask:')) return;
+function queueRoleAction(id: string, action: 'complete' | 'star' | 'unstar') {
   void fetch(`${WORKER_BASE}/api/role/complete`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...syncKeyHeader() },
-    body: JSON.stringify({ id }),
+    body: JSON.stringify({ id, action }),
   }).catch(() => undefined);
+}
+
+/** Role Hub items Done can reach: its own tasks, certs, and portfolio ideas (not applications). */
+export function isRoleCompletable(id: string) {
+  return /^(hubtask|cert|portfolio):/.test(id);
+}
+
+/** Done on a Role Hub task / cert / portfolio idea: queued; Role Hub applies it on its next check-in. */
+export function completeRoleTask(id: string) {
+  if (isRoleCompletable(id)) queueRoleAction(id, 'complete');
+}
+
+/** Star / unstar a Role Hub item (roles, certs, portfolio ideas): queued the same way. */
+export function starRoleItem(id: string, starred: boolean) {
+  if (!id.startsWith('hubtask:')) queueRoleAction(id, starred ? 'star' : 'unstar');
 }
