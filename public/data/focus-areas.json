@@ -255,5 +255,18 @@
       "organizing-life-path-note": "home",
       "organizing-job-search-map-note": "work"
     }
+  },
+  "ignore": {
+    "note": "Not tasks — never listed, never counted as available work or as completed. titleIncludes matches any part of a title (any case); titles must match exactly.",
+    "ticktick": {
+      "titleIncludes": [
+        "reminder"
+      ],
+      "titles": [
+        "Nutrition Flow — Use Macro Tracker",
+        "Gym Session Standards",
+        "Life Path & Active Project Direction"
+      ]
+    }
   }
 }

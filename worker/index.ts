@@ -350,6 +350,51 @@ async function handleTickTickDone(request: Request, env: Env): Promise<Response>
   return jsonResponse({ ok: errors.length < 2, tasks, habits, schedule, errors }, 200, origin);
 }
 
+/**
+ * GET /api/ticktick/open — every open (not completed) TickTick task with a date, across all lists
+ * and the inbox. Life Hub keeps the ones due today or overdue (it knows the local day).
+ */
+async function handleTickTickOpen(request: Request, env: Env): Promise<Response> {
+  const origin = request.headers.get("Origin");
+  if (request.method === "OPTIONS") return new Response(null, { status: 204, headers: corsHeaders(origin) });
+  if (origin && !CORS_ALLOW_ORIGINS.has(origin)) return jsonResponse({ ok: false, error: "cors_denied" }, 403, origin);
+  if (request.method !== "GET") return jsonResponse({ ok: false, error: "method_not_allowed" }, 405, origin);
+  if (!env.TICKTICK_ACCESS_TOKEN) return jsonResponse({ ok: false, error: "token_not_configured" }, 503, origin);
+  if (!(await syncKeyAllowed(request, env))) return jsonResponse({ ok: false, error: "wrong_key" }, 401, origin);
+
+  try {
+    const projects = ((await ttFetch(env, "/project")) as Array<{ id: string; name?: string; closed?: boolean }> | null) || [];
+    const lists = [{ id: "inbox", name: "Inbox" }, ...projects.filter(p => p && p.id && !p.closed && p.id !== "inbox")];
+    const results = await Promise.all(
+      lists.map(async list => {
+        try {
+          const data = (await ttFetch(env, `/project/${encodeURIComponent(list.id)}/data`)) as {
+            tasks?: Array<Record<string, unknown>>;
+          } | null;
+          return (data?.tasks || [])
+            .filter(t => t && t.status === 0 && typeof t.id === "string" && (t.dueDate || t.startDate))
+            .map(t => ({
+              id: t.id,
+              projectId: t.projectId || list.id,
+              list: list.name,
+              title: t.title,
+              detail: String(t.desc || t.content || "").replace(/\s+/g, " ").slice(0, 180),
+              dueAt: ttTime(t.dueDate) || ttTime(t.startDate),
+              allDay: Boolean(t.isAllDay),
+              priority: Number(t.priority) || 0,
+              tags: Array.isArray(t.tags) ? t.tags : [],
+            }));
+        } catch {
+          return [];
+        }
+      }),
+    );
+    return jsonResponse({ ok: true, tasks: results.flat() }, 200, origin);
+  } catch (e) {
+    return jsonResponse({ ok: false, error: (e as Error).message }, 502, origin);
+  }
+}
+
 async function handleHabitCheckin(request: Request, env: Env): Promise<Response> {
   const origin = request.headers.get("Origin");
   if (request.method === "OPTIONS") return new Response(null, { status: 204, headers: corsHeaders(origin) });
@@ -469,6 +514,10 @@ export default {
 
     if (pathname === "/api/ticktick/done") {
       return handleTickTickDone(request, env);
+    }
+
+    if (pathname === "/api/ticktick/open") {
+      return handleTickTickOpen(request, env);
     }
 
     if (pathname === "/api/ticktick/habit-checkin") {
