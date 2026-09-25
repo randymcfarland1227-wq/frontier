@@ -64,7 +64,7 @@ import {
   type HabitSchedule,
 } from '../lib/energy';
 import { BalanceStrip } from './components/BalanceStrip';
-import { completeRoleTask, pullRoleSnapshot } from '../lib/roleFeed';
+import { completeRoleTask, pullRoleSnapshot, starRoleItem } from '../lib/roleFeed';
 
 /** Sources where one bucket doesn't fit every item — ask on Done. */
 const ASK_AREA_SOURCES: SourceId[] = ['gmail', 'outlook'];
@@ -575,11 +575,13 @@ export function LifeHub() {
       syncSelf(toggleSelfStar(task.id));
       return;
     }
-    if (isConnectorSource(source)) {
+    // Role Hub stars are queued and applied in Role Hub; other file-fed sources open their site.
+    if (isConnectorSource(source) && !(source === 'role' && !task.id.startsWith('hubtask:'))) {
       openConnectorOrigin(task, sourceById[source].url);
       return;
     }
     const nextStarred = !task.starred;
+    if (source === 'role') starRoleItem(task.id, nextStarred);
     setSnapshots(current => {
       const snap = current[source];
       const tasks = snap.tasks.map(t => (t.id === task.id ? { ...t, starred: nextStarred } : t));
@@ -601,7 +603,7 @@ export function LifeHub() {
       }
       return { ...current, [source]: { ...snap, tasks, featured } };
     });
-    broadcastStar(source, task.id, nextStarred);
+    if (source !== 'role') broadcastStar(source, task.id, nextStarred);
   };
 
   const promoteCapture = (capture: Capture) => {

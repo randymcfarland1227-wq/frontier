@@ -413,7 +413,7 @@ async function handleRoleSnapshot(request: Request, env: Env): Promise<Response>
     }
     await env.LIFEHUB_STATE.put(ROLE_KEY, text);
     // Hand over tasks finished on Life Hub; Role Hub marks them Done in its sheet.
-    const pending = ((await env.LIFEHUB_STATE.get(ROLE_PENDING_KEY, "json")) as string[] | null) || [];
+    const pending = ((await env.LIFEHUB_STATE.get(ROLE_PENDING_KEY, "json")) as unknown[] | null) || [];
     if (pending.length) await env.LIFEHUB_STATE.delete(ROLE_PENDING_KEY);
     return jsonResponse({ ok: true, complete: pending }, 200, origin);
   }
@@ -434,16 +434,27 @@ async function handleRoleComplete(request: Request, env: Env): Promise<Response>
   if (origin && !CORS_ALLOW_ORIGINS.has(origin)) return jsonResponse({ ok: false, error: "cors_denied" }, 403, origin);
   if (request.method !== "POST") return jsonResponse({ ok: false, error: "method_not_allowed" }, 405, origin);
   if (!(await syncKeyAllowed(request, env))) return jsonResponse({ ok: false, error: "wrong_key" }, 401, origin);
-  let body: { id?: unknown };
+  let body: { id?: unknown; action?: unknown };
   try {
-    body = (await request.json()) as { id?: unknown };
+    body = (await request.json()) as { id?: unknown; action?: unknown };
   } catch {
     return jsonResponse({ ok: false, error: "invalid_json" }, 400, origin);
   }
   const id = typeof body.id === "string" ? body.id.trim() : "";
-  if (!/^hubtask:[\w-]{1,80}$/.test(id)) return jsonResponse({ ok: false, error: "bad_id" }, 400, origin);
-  const pending = ((await env.LIFEHUB_STATE.get(ROLE_PENDING_KEY, "json")) as string[] | null) || [];
-  if (!pending.includes(id)) pending.push(id);
+  const action = body.action === "star" || body.action === "unstar" ? body.action : "complete";
+  if (!/^[\w .|:@&'-]{3,200}$/.test(id)) return jsonResponse({ ok: false, error: "bad_id" }, 400, origin);
+  if (action === "complete" && !/^(hubtask|cert|portfolio):/.test(id)) {
+    return jsonResponse({ ok: false, error: "not_completable" }, 400, origin);
+  }
+  // Completions stay plain strings (what Role Hub v38 understands); stars are objects.
+  type Pending = string | { id: string; action: string };
+  const pending = ((await env.LIFEHUB_STATE.get(ROLE_PENDING_KEY, "json")) as Pending[] | null) || [];
+  const entry: Pending = action === "complete" ? id : { id, action };
+  // A newer star/unstar for the same item replaces the older one.
+  const kept = pending.filter(p => (typeof p === "string" ? p !== id : !(p.id === id && action !== "complete")));
+  kept.push(entry);
+  pending.length = 0;
+  pending.push(...kept);
   await env.LIFEHUB_STATE.put(ROLE_PENDING_KEY, JSON.stringify(pending.slice(-200)));
   return jsonResponse({ ok: true, queued: pending.length }, 200, origin);
 }
