@@ -1,6 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
+import { tagTone } from '../../lib/tagTone';
 import type { SourceId, SourceSnapshot, TaskItem } from '../../lib/types';
 
 /** Rows per column in the side-by-side view before "Show more". */
@@ -77,7 +78,7 @@ export function TaskList({
                 >
                   <div className="task-main">
                     {isHabit(task) ? <span className="task-badge">Habit</span> : null}
-                    {task.tag ? <span className="task-tag">{task.tag}</span> : null}
+                    {task.tag ? <span className={`task-tag tone-${tagTone(task.tag)}`}>{task.tag}</span> : null}
                     {task.originUrl ? (
                       <a className="origin-link" href={task.originUrl} target="_blank" rel="noopener noreferrer">
                         <strong>{task.title}</strong>

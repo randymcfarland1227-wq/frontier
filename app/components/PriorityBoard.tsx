@@ -1,6 +1,7 @@
 'use client';
 
 import { useMemo } from 'react';
+import { tagTone } from '../../lib/tagTone';
 import type { FeaturedItem, SourceId, SourceSnapshot } from '../../lib/types';
 import { SOURCE_IDS, sourceById } from '../../lib/sources';
 import { pinKey, usePriorityPins } from '../../lib/priorityPins';
@@ -76,12 +77,12 @@ export function PriorityBoard({
           {ordered.map(item => (
             <article
               key={pinKey(item.source, item.id)}
-              className={`priority-row level-row-${levelOf(item.source, item.id) || 'none'}`}
+              className={`priority-row src-${item.source}`}
               title={[item.title, item.detail, item.meta].filter(Boolean).join(' — ')}
             >
               <LevelDot level={levelOf(item.source, item.id)} title={item.title} onCycle={() => cycle(item.source, item.id)} />
               <div className="priority-row-main">
-                {item.tag ? <span className="task-tag">{item.tag}</span> : null}
+                {item.tag ? <span className={`task-tag tone-${tagTone(item.tag)}`}>{item.tag}</span> : null}
                 {item.originUrl ? (
                   <a className="origin-link" href={item.originUrl} target="_blank" rel="noopener noreferrer">
                     <strong>{item.title}</strong>
