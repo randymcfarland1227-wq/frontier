@@ -77,6 +77,7 @@ export function TaskList({
                 >
                   <div className="task-main">
                     {isHabit(task) ? <span className="task-badge">Habit</span> : null}
+                    {task.tag ? <span className="task-tag">{task.tag}</span> : null}
                     {task.originUrl ? (
                       <a className="origin-link" href={task.originUrl} target="_blank" rel="noopener noreferrer">
                         <strong>{task.title}</strong>

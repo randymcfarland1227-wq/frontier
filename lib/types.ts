@@ -26,6 +26,8 @@ export type FeaturedItem = {
   meta: string;
   originUrl?: string;
   completable?: boolean;
+  /** Short task-type label shown before the title, e.g. "Ship", "End Listing · Depop" */
+  tag?: string;
 };
 
 export type TaskItem = {
@@ -44,6 +46,8 @@ export type TaskItem = {
   tags?: string[];
   /** When the origin marked it done (ISO) — used as the completion time */
   completedAt?: string;
+  /** Short task-type label shown before the title, e.g. "Ship", "End Listing · Depop" */
+  tag?: string;
 };
 
 export type SourceSnapshot = {
