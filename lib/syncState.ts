@@ -21,6 +21,8 @@ export type SyncedState = {
   balance: BalanceSettingsState;
   /** day → bucket → available work that day; merges keep the larger count */
   availability: Record<string, Record<string, number>>;
+  /** Red / yellow / green on featured items: "source::id" → level; newest change wins */
+  levels: Record<string, { level: string | null; at: string }>;
 };
 
 /**
@@ -74,6 +76,7 @@ export function emptyState(): SyncedState {
     goalLinks: { added: [], removed: [] },
     balance: { paces: {}, updatedAt: '' },
     availability: {},
+    levels: {},
   };
 }
 
@@ -99,6 +102,7 @@ export function normalizeState(raw: unknown): SyncedState {
         ? { paces: s.balance.paces, updatedAt: String(s.balance.updatedAt || '') }
         : { paces: {}, updatedAt: '' },
     availability: s.availability && typeof s.availability === 'object' ? s.availability : {},
+    levels: s.levels && typeof s.levels === 'object' ? s.levels : {},
   };
 }
 
@@ -112,6 +116,14 @@ function mergeAvailability(a: SyncedState['availability'], b: SyncedState['avail
         if (typeof n === 'number' && n > (cur[area] || 0)) cur[area] = n;
       }
     }
+  }
+  return out;
+}
+
+function mergeLevels(a: SyncedState['levels'], b: SyncedState['levels']) {
+  const out: SyncedState['levels'] = { ...a };
+  for (const [key, v] of Object.entries(b)) {
+    if (v && typeof v.at === 'string' && (!out[key] || v.at > out[key].at)) out[key] = v;
   }
   return out;
 }
@@ -163,6 +175,7 @@ export function mergeState(aRaw: unknown, bRaw: unknown): SyncedState {
     },
     balance: b.balance.updatedAt > a.balance.updatedAt ? b.balance : a.balance,
     availability: mergeAvailability(a.availability, b.availability),
+    levels: mergeLevels(a.levels, b.levels),
   };
 }
 

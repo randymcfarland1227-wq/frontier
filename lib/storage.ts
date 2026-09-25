@@ -35,6 +35,8 @@ export const STORAGE_KEYS = {
   sync: 'lifehub-sync',
   /** Source cards collapsed to their header */
   collapsedCards: 'lifehub-collapsed-cards',
+  /** Red / yellow / green on featured + pinned items — cloud-synced */
+  featuredLevels: 'lifehub-featured-levels',
   /** Balance paces (settings gear) — cloud-synced */
   balanceSettings: 'lifehub-balance-settings',
   /** Each day's available work per bucket — cloud-synced */

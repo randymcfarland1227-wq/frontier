@@ -39,7 +39,7 @@ export function MetricGrid({
           <span>{metric.label}</span>
         </article>
       ))}
-      <p>{updatedLabel(snapshot.refreshedAt)}</p>
+      {compact ? null : <p>{updatedLabel(snapshot.refreshedAt)}</p>}
     </div>
   );
 }

@@ -1060,3 +1060,31 @@ a.origin-link:hover strong {
 }
 .featured-row.one-line .row-action { padding: 3px 8px; font-size: 10px; }
 .habit-chip-row { display: none; } /* habits are listed as rows now */
+
+/* === TickTick: tasks and habits side by side; sync time beside the name === */
+.task-split { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 18px; }
+.task-split-label { margin: 6px 0 2px; color: var(--muted); font-size: 10px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
+@media (max-width: 720px) { .task-split { grid-template-columns: 1fr; } }
+.card-title-row { display: flex; align-items: baseline; flex-wrap: wrap; gap: 4px 10px; }
+.sync-inline { font-size: 11px; font-weight: 600; letter-spacing: 0; color: var(--muted); white-space: nowrap; }
+
+/* === Red / yellow / green priority dots === */
+.level-dot {
+  flex-shrink: 0; width: 12px; height: 12px; padding: 0; border-radius: 50%; cursor: pointer;
+  border: 1.5px dashed var(--muted); background: transparent; opacity: .7; transition: transform .12s;
+}
+.level-dot:hover { transform: scale(1.25); opacity: 1; }
+.level-dot.level-red { border: 0; opacity: 1; background: #ef4444; box-shadow: 0 0 8px rgba(239, 68, 68, .6); }
+.level-dot.level-yellow { border: 0; opacity: 1; background: #facc15; box-shadow: 0 0 8px rgba(250, 204, 21, .5); }
+.level-dot.level-green { border: 0; opacity: 1; background: #22c55e; box-shadow: 0 0 8px rgba(34, 197, 94, .5); }
+.priority-card-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 8px; }
+.priority-card-top .priority-source { margin-bottom: 0; }
+.priority-card.level-card-red { border-color: rgba(239, 68, 68, .55); }
+.priority-card.level-card-yellow { border-color: rgba(250, 204, 21, .5); }
+.priority-card.level-card-green { border-color: rgba(34, 197, 94, .5); }
+/* One-line rows win over older habit-row styles; the Habits column doesn't need a badge */
+.task-row.one-line.habit, .space-card .task-row.one-line.habit { display: flex; flex-direction: row; align-items: center; grid-template-columns: none; }
+.task-row.one-line.habit .task-main { flex-direction: row; }
+.task-split .task-row.one-line .task-badge { display: none; }
+.task-split > div { min-width: 0; }
+.task-split .task-board, .space-card .task-board { grid-template-columns: minmax(0, 1fr); }

@@ -4,6 +4,8 @@ import { useMemo } from 'react';
 import type { FeaturedItem, SourceId, SourceSnapshot } from '../../lib/types';
 import { SOURCE_IDS, sourceById } from '../../lib/sources';
 import { pinKey, usePriorityPins } from '../../lib/priorityPins';
+import { byLevel, useFeaturedLevels } from '../../lib/featuredLevels';
+import { LevelDot } from './LevelDot';
 
 type PriorityItem = FeaturedItem & { source: SourceId };
 
@@ -51,7 +53,11 @@ export function PriorityBoard({
   onComplete?: (source: SourceId, item: FeaturedItem) => void;
 }) {
   const { pins, removePin } = usePriorityPins();
-  const ordered = useMemo(() => resolvePinned(snapshots, pins), [snapshots, pins]);
+  const { levelOf, cycle } = useFeaturedLevels();
+  const ordered = byLevel(
+    useMemo(() => resolvePinned(snapshots, pins), [snapshots, pins]),
+    item => levelOf(item.source, item.id),
+  );
 
   return (
     <section className="priority-board glass-panel iridescent-border" aria-label="Priority">
@@ -67,10 +73,13 @@ export function PriorityBoard({
       ) : (
         <div className="priority-grid">
           {ordered.map(item => (
-            <article key={pinKey(item.source, item.id)} className="priority-card">
-              <button type="button" className="priority-source" onClick={() => enter(item.source)}>
-                {sourceById[item.source].shortName}
-              </button>
+            <article key={pinKey(item.source, item.id)} className={`priority-card level-card-${levelOf(item.source, item.id) || 'none'}`}>
+              <div className="priority-card-top">
+                <button type="button" className="priority-source" onClick={() => enter(item.source)}>
+                  {sourceById[item.source].shortName}
+                </button>
+                <LevelDot level={levelOf(item.source, item.id)} title={item.title} onCycle={() => cycle(item.source, item.id)} />
+              </div>
               {item.originUrl ? (
                 <a className="origin-link" href={item.originUrl} target="_blank" rel="noopener noreferrer">
                   <strong>{item.title}</strong>
