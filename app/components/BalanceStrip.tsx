@@ -16,7 +16,8 @@ import {
   type Suggestion,
 } from '../../lib/energy';
 
-const SHOW_SUGGESTIONS = 3;
+/** Items listed in the Charge pop-up before "+N more". */
+const SHOW_SUGGESTIONS = 6;
 
 /** e.g. "3 done · 2 more to In-Line · 1 more to Balanced" */
 function meta(a: AreaEnergy) {
@@ -71,6 +72,8 @@ export function BalanceStrip({
   suggestions?: Record<string, Suggestion[]>;
 }) {
   const [editing, setEditing] = useState(false);
+  /** Charge pop-up opened by tap (touch screens); hover/focus opens it on desktop. */
+  const [openCharge, setOpenCharge] = useState<string | null>(null);
   const [draft, setDraft] = useState<Record<string, number>>({});
 
   const report = useMemo(
@@ -157,13 +160,39 @@ export function BalanceStrip({
 
       <div className="review-bars">
         {report.areas.map(a => (
-          <div className={`review-bar-row energy-row is-${a.progress} focus-${a.focus}`} key={a.id} title={tip(a, window)}>
+          <div className={`review-bar-row energy-row is-${a.progress} focus-${a.focus}`} key={a.id}>
             <div className="review-bar-label">
               <span>{a.name}</span>
               <span className="energy-badges">
-                <span className={`energy-badge progress-${a.progress}`}>
-                  {PROGRESS_ICON[a.progress]} {PROGRESS_LABEL[a.progress]}
-                </span>
+                {(a.progress === 'charge' || a.focus === 'under') && (suggestions[a.id] || []).length ? (
+                  <span className={`energy-charge${openCharge === a.id ? ' is-open' : ''}`}>
+                    <button
+                      type="button"
+                      className={`energy-badge progress-${a.progress} energy-charge-btn`}
+                      aria-expanded={openCharge === a.id}
+                      aria-label={`${PROGRESS_LABEL[a.progress]} — show what could charge ${a.name}`}
+                      onClick={() => setOpenCharge(o => (o === a.id ? null : a.id))}
+                    >
+                      {PROGRESS_ICON[a.progress]} {PROGRESS_LABEL[a.progress]}
+                    </button>
+                    <span className="energy-pop" role="tooltip">
+                      <span className="energy-pop-title">Could charge it</span>
+                      {suggestions[a.id].slice(0, SHOW_SUGGESTIONS).map(s => (
+                        <span key={s.title} className="energy-pop-item">
+                          {s.title}
+                          {s.why === 'habit' ? <em> · habit</em> : null}
+                        </span>
+                      ))}
+                      {suggestions[a.id].length > SHOW_SUGGESTIONS ? (
+                        <span className="energy-pop-more">+{suggestions[a.id].length - SHOW_SUGGESTIONS} more</span>
+                      ) : null}
+                    </span>
+                  </span>
+                ) : (
+                  <span className={`energy-badge progress-${a.progress}`}>
+                    {PROGRESS_ICON[a.progress]} {PROGRESS_LABEL[a.progress]}
+                  </span>
+                )}
                 <span className={`energy-badge focus-${a.focus}`}>{FOCUS_LABEL[a.focus]}</span>
               </span>
             </div>
@@ -172,21 +201,6 @@ export function BalanceStrip({
               <div className="balance-marker" style={{ left: `${(1 / 1.5) * 100}%` }} />
             </div>
             <p className="energy-meta">{meta(a)}</p>
-            {(a.progress === 'charge' || a.focus === 'under') && (suggestions[a.id] || []).length ? (
-              <p className="energy-suggest">
-                <span className="energy-suggest-label">Could charge it:</span>{' '}
-                {suggestions[a.id].slice(0, SHOW_SUGGESTIONS).map((s, i) => (
-                  <span key={s.title} className="energy-suggest-item">
-                    {i ? ' · ' : ''}
-                    {s.title}
-                    {s.why === 'habit' ? <em> (habit)</em> : null}
-                  </span>
-                ))}
-                {suggestions[a.id].length > SHOW_SUGGESTIONS ? (
-                  <span className="energy-suggest-more"> · +{suggestions[a.id].length - SHOW_SUGGESTIONS} more</span>
-                ) : null}
-              </p>
-            ) : null}
           </div>
         ))}
       </div>
