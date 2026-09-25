@@ -35,6 +35,8 @@ export const STORAGE_KEYS = {
   sync: 'lifehub-sync',
   /** Source cards collapsed to their header */
   collapsedCards: 'lifehub-collapsed-cards',
+  /** Page zoom % on this device */
+  zoom: 'lifehub-zoom',
   /** Cards whose starred list is folded to its heading */
   collapsedFeatured: 'lifehub-collapsed-featured',
   /** Red / yellow / green on featured + pinned items — cloud-synced */
