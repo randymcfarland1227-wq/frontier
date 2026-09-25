@@ -1013,21 +1013,24 @@ a.origin-link:hover strong {
 .energy-pop-more { color: var(--muted); font-style: italic; }
 
 /* === Daily ops: TickTick wide, Gmail + Outlook stacked, Repair beside === */
+/* TickTick spans both rows; Self over Gmail, Outlook over Repair — every edge lines up. */
 .space-grid.space-grid-daily {
   grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) minmax(0, 1fr);
-  grid-template-areas: "tt gm rp" "tt ol rp";
-  align-items: start;
+  grid-template-areas: "tt sf ol" "tt gm rp";
+  grid-auto-rows: 1fr;
+  align-items: stretch;
 }
 .space-grid-daily > .space-card.ticktick { grid-area: tt; }
+.space-grid-daily > .space-card.self { grid-area: sf; }
 .space-grid-daily > .space-card.gmail { grid-area: gm; }
 .space-grid-daily > .space-card.outlook { grid-area: ol; }
 .space-grid-daily > .space-card.repair { grid-area: rp; }
 .space-grid-daily > .space-card { min-height: 0; height: auto; }
 @media (max-width: 1100px) {
-  .space-grid.space-grid-daily { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); grid-template-areas: "tt tt" "gm ol" "rp rp"; }
+  .space-grid.space-grid-daily { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); grid-template-areas: "tt tt" "sf gm" "ol rp"; grid-auto-rows: auto; }
 }
 @media (max-width: 720px) {
-  .space-grid.space-grid-daily { grid-template-columns: 1fr; grid-template-areas: "tt" "gm" "ol" "rp"; }
+  .space-grid.space-grid-daily { grid-template-columns: 1fr; grid-template-areas: "tt" "sf" "gm" "ol" "rp"; }
 }
 
 /* === One line per task: title · tag … buttons at the end === */

@@ -13,7 +13,7 @@ import { ReviewPanel } from './ReviewPanel';
 import { Collapsible } from './Collapsible';
 import { getActionableMetric } from '../../lib/actionable';
 
-const ROW_1: SourceId[] = ['ticktick', 'gmail', 'outlook', 'repair'];
+const ROW_1: SourceId[] = ['ticktick', 'self', 'gmail', 'outlook', 'repair'];
 const ROW_2: SourceId[] = ['radall', 'role', 'move'];
 const ROW_3: SourceId[] = ['income', 'resale', 'candle'];
 
