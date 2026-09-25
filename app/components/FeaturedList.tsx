@@ -1,10 +1,12 @@
 'use client';
 
+import { useState } from 'react';
 import type { FeaturedItem, SourceId, SourceSnapshot } from '../../lib/types';
 import { sourceById } from '../../lib/sources';
 import { usePriorityPins } from '../../lib/priorityPins';
 import { byLevel, useFeaturedLevels } from '../../lib/featuredLevels';
 import { LevelDot } from './LevelDot';
+import { readSaved, writeSaved, STORAGE_KEYS } from '../../lib/storage';
 
 export function FeaturedList({
   sourceId,
@@ -23,14 +25,39 @@ export function FeaturedList({
   const sorted = byLevel(snapshot.featured, f => levelOf(sourceId, f.id));
   const items = sorted.slice(0, compact ? 3 : 12);
   const { addPin, removePin, isPinned } = usePriorityPins();
+  /** Card view only: the starred list can fold down to its heading (remembered per card). */
+  const [folded, setFolded] = useState(() =>
+    compact && readSaved<string[]>(STORAGE_KEYS.collapsedFeatured, []).includes(sourceId),
+  );
+  const toggleFolded = () => {
+    const next = !folded;
+    const saved = readSaved<string[]>(STORAGE_KEYS.collapsedFeatured, []).filter(id => id !== sourceId);
+    writeSaved(STORAGE_KEYS.collapsedFeatured, next ? [...saved, sourceId] : saved);
+    setFolded(next);
+  };
 
   return (
     <section className={`featured-list ${compact ? 'compact' : ''}`}>
-      <div className="featured-heading">
-        <span>★</span>
-        <h3>{copy.feature}</h3>
-      </div>
-      {items.length ? (
+      {compact ? (
+        <button
+          type="button"
+          className={`featured-heading featured-fold${folded ? ' is-folded' : ''}`}
+          aria-expanded={!folded}
+          title={folded ? 'Show starred items' : 'Collapse starred items'}
+          onClick={toggleFolded}
+        >
+          <span>★</span>
+          <h3>{copy.feature}</h3>
+          {folded && snapshot.featured.length ? <em className="featured-fold-count">{snapshot.featured.length}</em> : null}
+          <span className="featured-fold-icon" aria-hidden="true">{folded ? '▸' : '▾'}</span>
+        </button>
+      ) : (
+        <div className="featured-heading">
+          <span>★</span>
+          <h3>{copy.feature}</h3>
+        </div>
+      )}
+      {folded ? null : items.length ? (
         items.map(item => {
           const pinned = isPinned(sourceId, item.id);
           return (
@@ -79,7 +106,7 @@ export function FeaturedList({
               : 'Connecting to the source…'}
         </p>
       )}
-      {compact && snapshot.featured.length > 3 ? (
+      {compact && !folded && snapshot.featured.length > 3 ? (
         <p className="featured-more">+{snapshot.featured.length - 3} more featured</p>
       ) : null}
     </section>
