@@ -295,4 +295,5 @@ Replaces the share-vs-target Balance. `lib/energy.ts`, `app/components/BalanceSt
 - TickTick (wide card) lists Tasks and Habits side by side (`TaskList split`).
 - Featured rows and Pinned priorities have a color dot: tap cycles red → yellow → green → none; lists sort red, yellow, green, then the rest (`lib/featuredLevels.ts`, `lifehub-featured-levels`, cloud-synced via `levels` in syncState — newest change wins).
 - Each card's starred list folds to its heading (tap the heading; shows the count while folded). Remembered per card on this device (`lifehub-collapsed-featured`, not synced). TickTick's Tasks | Habits split is always open — no Expand.
+- TickTick has no star of its own, so its ☆ is kept by Life Hub (`lib/hubStars.ts`, `lifehub-hub-stars`, cloud-synced via `stars` in syncState — newest change wins). Starring adds the task to the Starred list; unstarring removes it (even items the old morning file featured).
 - Backup-off note now says live TickTick / Gmail / Role Hub need backup on in that browser.

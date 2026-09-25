@@ -39,6 +39,8 @@ export const STORAGE_KEYS = {
   collapsedFeatured: 'lifehub-collapsed-featured',
   /** Red / yellow / green on featured + pinned items — cloud-synced */
   featuredLevels: 'lifehub-featured-levels',
+  /** Stars Life Hub keeps for sources without their own (TickTick) — cloud-synced */
+  hubStars: 'lifehub-hub-stars',
   /** Balance paces (settings gear) — cloud-synced */
   balanceSettings: 'lifehub-balance-settings',
   /** Each day's available work per bucket — cloud-synced */

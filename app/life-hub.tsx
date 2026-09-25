@@ -11,6 +11,7 @@ import type {
 } from '../lib/types';
 import { emptySnapshots, normalizeSourceId, sourceById, sources } from '../lib/sources';
 import { readSaved, writeSaved, STORAGE_KEYS } from '../lib/storage';
+import { applyHubStars, HUB_STAR_SOURCES, HUB_STARS_EVENT, loadHubStars, setHubStar } from '../lib/hubStars';
 import { originAllowed, requestSnapshot, sendComplete, sendStar } from '../lib/protocol';
 import {
   addSelfItem,
@@ -352,10 +353,25 @@ export function LifeHub() {
     return Object.keys(entries).length === Object.keys(taggedLedger.entries).length ? taggedLedger : { entries };
   }, [taggedLedger, focusConfig]);
 
+  // TickTick has no star of its own: Life Hub keeps those stars (cloud-synced).
+  const [hubStars, setHubStars] = useState(() => loadHubStars());
+  useEffect(() => {
+    const reload = () => setHubStars(loadHubStars());
+    window.addEventListener(HUB_STARS_EVENT, reload);
+    window.addEventListener('lifehub:synced', reload);
+    return () => {
+      window.removeEventListener(HUB_STARS_EVENT, reload);
+      window.removeEventListener('lifehub:synced', reload);
+    };
+  }, []);
+
   // Same for what's listed: reminders / reference notes never show, wherever they came from.
   const visibleSnapshots = useMemo(() => {
-    if (!focusConfig?.ignore) return snapshots;
     const out = { ...snapshots };
+    for (const id of HUB_STAR_SOURCES) {
+      if (out[id]) out[id] = applyHubStars(id, out[id], hubStars);
+    }
+    if (!focusConfig?.ignore) return out;
     for (const id of Object.keys(out) as SourceId[]) {
       const snap = out[id];
       if (!snap || !focusConfig.ignore[id]) continue;
@@ -381,7 +397,7 @@ export function LifeHub() {
       };
     }
     return out;
-  }, [snapshots, focusConfig]);
+  }, [snapshots, focusConfig, hubStars]);
 
   // Today's workload per bucket (open items + done today + habits due today), remembered per day.
   const todayAvail = useMemo(
@@ -636,6 +652,10 @@ export function LifeHub() {
   const starOnHub = (source: SourceId, task: TaskItem) => {
     if (source === 'self') {
       syncSelf(toggleSelfStar(task.id));
+      return;
+    }
+    if (HUB_STAR_SOURCES.includes(source)) {
+      setHubStar(source, task.id, !task.starred);
       return;
     }
     // Role Hub stars are queued and applied in Role Hub; other file-fed sources open their site.
