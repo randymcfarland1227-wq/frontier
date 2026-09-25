@@ -71,46 +71,48 @@ export function PriorityBoard({
           Nothing pinned yet.
         </p>
       ) : (
-        <div className="priority-grid">
+        <div className="priority-list">
           {ordered.map(item => (
-            <article key={pinKey(item.source, item.id)} className={`priority-card level-card-${levelOf(item.source, item.id) || 'none'}`}>
-              <div className="priority-card-top">
+            <article
+              key={pinKey(item.source, item.id)}
+              className={`priority-row level-row-${levelOf(item.source, item.id) || 'none'}`}
+              title={[item.title, item.detail, item.meta].filter(Boolean).join(' — ')}
+            >
+              <LevelDot level={levelOf(item.source, item.id)} title={item.title} onCycle={() => cycle(item.source, item.id)} />
+              <div className="priority-row-main">
+                {item.originUrl ? (
+                  <a className="origin-link" href={item.originUrl} target="_blank" rel="noopener noreferrer">
+                    <strong>{item.title}</strong>
+                  </a>
+                ) : (
+                  <strong>{item.title}</strong>
+                )}
                 <button type="button" className="priority-source" onClick={() => enter(item.source)}>
                   {sourceById[item.source].shortName}
                 </button>
-                <LevelDot level={levelOf(item.source, item.id)} title={item.title} onCycle={() => cycle(item.source, item.id)} />
               </div>
-              {item.originUrl ? (
-                <a className="origin-link" href={item.originUrl} target="_blank" rel="noopener noreferrer">
-                  <strong>{item.title}</strong>
-                </a>
-              ) : (
-                <strong>{item.title}</strong>
-              )}
-              {item.detail ? <p>{item.detail}</p> : null}
-              <div className="priority-actions">
-                <span>{item.meta}</span>
-                <div className="priority-action-buttons">
-                  {onComplete ? (
-                    <button
-                      type="button"
-                      className="row-action"
-                      onClick={() => {
-                        onComplete(item.source, item);
-                        removePin(item.source, item.id);
-                      }}
-                    >
-                      Done
-                    </button>
-                  ) : null}
+              <div className="priority-action-buttons">
+                {onComplete ? (
                   <button
                     type="button"
-                    className="row-action ghost"
-                    onClick={() => removePin(item.source, item.id)}
+                    className="row-action"
+                    onClick={() => {
+                      onComplete(item.source, item);
+                      removePin(item.source, item.id);
+                    }}
                   >
-                    Remove
+                    Done
                   </button>
-                </div>
+                ) : null}
+                <button
+                  type="button"
+                  className="row-action ghost"
+                  aria-label={`Unpin ${item.title}`}
+                  title="Unpin"
+                  onClick={() => removePin(item.source, item.id)}
+                >
+                  ✕
+                </button>
               </div>
             </article>
           ))}

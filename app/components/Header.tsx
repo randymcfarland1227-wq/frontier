@@ -1,6 +1,7 @@
 'use client';
 
 import type { SourceId, SpaceId } from '../../lib/types';
+import { ZoomControl } from './ZoomControl';
 import { sources } from '../../lib/sources';
 
 export function Header({
@@ -41,6 +42,7 @@ export function Header({
         ))}
       </nav>
       <div className="topbar-actions">
+        <ZoomControl />
         <button
           className="mode-button ghost"
           type="button"
