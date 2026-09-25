@@ -23,6 +23,8 @@ export type SyncedState = {
   availability: Record<string, Record<string, number>>;
   /** Red / yellow / green on featured items: "source::id" → level; newest change wins */
   levels: Record<string, { level: string | null; at: string }>;
+  /** Stars kept in Life Hub (TickTick): "source::id" → starred; newest change wins */
+  stars: Record<string, { starred: boolean; at: string }>;
 };
 
 /**
@@ -77,6 +79,7 @@ export function emptyState(): SyncedState {
     balance: { paces: {}, updatedAt: '' },
     availability: {},
     levels: {},
+    stars: {},
   };
 }
 
@@ -103,6 +106,7 @@ export function normalizeState(raw: unknown): SyncedState {
         : { paces: {}, updatedAt: '' },
     availability: s.availability && typeof s.availability === 'object' ? s.availability : {},
     levels: s.levels && typeof s.levels === 'object' ? s.levels : {},
+    stars: s.stars && typeof s.stars === 'object' ? s.stars : {},
   };
 }
 
@@ -120,8 +124,9 @@ function mergeAvailability(a: SyncedState['availability'], b: SyncedState['avail
   return out;
 }
 
-function mergeLevels(a: SyncedState['levels'], b: SyncedState['levels']) {
-  const out: SyncedState['levels'] = { ...a };
+/** Newest change per key wins (levels, stars). */
+function mergeLevels<T extends { at: string }>(a: Record<string, T>, b: Record<string, T>) {
+  const out: Record<string, T> = { ...a };
   for (const [key, v] of Object.entries(b)) {
     if (v && typeof v.at === 'string' && (!out[key] || v.at > out[key].at)) out[key] = v;
   }
@@ -176,6 +181,7 @@ export function mergeState(aRaw: unknown, bRaw: unknown): SyncedState {
     balance: b.balance.updatedAt > a.balance.updatedAt ? b.balance : a.balance,
     availability: mergeAvailability(a.availability, b.availability),
     levels: mergeLevels(a.levels, b.levels),
+    stars: mergeLevels(a.stars, b.stars),
   };
 }
 
