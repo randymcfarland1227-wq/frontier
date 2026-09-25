@@ -33,6 +33,7 @@ function resolvePinned(
         meta: task.starred ? 'Starred' : task.status || 'Task',
         originUrl: task.originUrl,
         completable: true,
+        tag: task.tag,
         source: id,
       });
     }
@@ -80,6 +81,7 @@ export function PriorityBoard({
             >
               <LevelDot level={levelOf(item.source, item.id)} title={item.title} onCycle={() => cycle(item.source, item.id)} />
               <div className="priority-row-main">
+                {item.tag ? <span className="task-tag">{item.tag}</span> : null}
                 {item.originUrl ? (
                   <a className="origin-link" href={item.originUrl} target="_blank" rel="noopener noreferrer">
                     <strong>{item.title}</strong>
