@@ -283,3 +283,8 @@ Replaces the share-vs-target Balance. `lib/energy.ts`, `app/components/BalanceSt
 
 - Worker `GET /api/ticktick/open` (backup key): every open, dated task across all lists + inbox. `lib/ticktickLive.ts` keeps tasks due today or overdue, plus habits due today (schedule) not yet checked in, and replaces the morning-file TickTick snapshot (newer wins in `mergeConnectorSnapshots`). Metrics: dueToday, overdue, habits.
 - `focus-areas.json` → `ignore.ticktick`: titles containing "reminder", plus "Nutrition Flow — Use Macro Tracker", "Gym Session Standards", "Life Path & Active Project Direction". Ignored items are dropped from the card, workload and suggestions, never recorded as completions, and hidden from counts (`visibleLedger`; kept in storage).
+
+### Gmail starred, live (2026-09-25)
+
+- Apps Script **Life Hub Mail Sync** (standalone, script id `1xOI9TUs_NFK7qgutWpww3obmMhX5N6F3Y3HLMAAKszoqm0kdGsQBPlnq`, in Randy's account): `syncStarredMail` runs every 10 min (trigger made by `setupLifeHubMail`, which Randy runs once), POSTs starred threads to Worker `/api/gmail/snapshot` (`X-Mail-Key` = Worker secret `MAIL_PUSH_KEY`), and unstars ids returned in the reply.
+- Life Hub pulls `GET /api/gmail/snapshot` (backup key) with the Role pull; newer than the morning file wins. Done on a Gmail item (after the area picker) → `POST /api/gmail/unstar` → unstarred in Gmail on the next run.

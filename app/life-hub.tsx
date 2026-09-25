@@ -65,6 +65,7 @@ import {
 } from '../lib/energy';
 import { BalanceStrip } from './components/BalanceStrip';
 import { completeRoleTask, pullRoleSnapshot, starRoleItem } from '../lib/roleFeed';
+import { pullGmailSnapshot, unstarGmail } from '../lib/gmailFeed';
 import { buildTickTickToday, fetchOpenTickTick } from '../lib/ticktickLive';
 import { isIgnoredItem } from '../lib/focusAreas';
 
@@ -114,7 +115,7 @@ function mergeConnectorSnapshots(
     const snap = incoming[id];
     if (!snap) continue;
     // Role Hub and TickTick also arrive live; keep whichever is newer than the morning file.
-    if ((id === 'role' || id === 'ticktick') && Date.parse(current[id]?.refreshedAt || '') > Date.parse(snap.refreshedAt || '')) continue;
+    if ((id === 'role' || id === 'ticktick' || id === 'gmail') && Date.parse(current[id]?.refreshedAt || '') > Date.parse(snap.refreshedAt || '')) continue;
     // Always overwrite the four connector sources from network (do not wipe iframe sources).
     next[id] = {
       source: id,
@@ -257,7 +258,14 @@ export function LifeHub() {
   // Role Hub's pushed snapshot (applications) — on load, on return, every 10 min. Newer wins.
   useEffect(() => {
     if (!ready) return;
-    const pull = () =>
+    const pullGmail = () =>
+      void pullGmailSnapshot().then(snap => {
+        if (!snap) return;
+        setSnapshots(current =>
+          Date.parse(current.gmail?.refreshedAt || '') >= Date.parse(snap.refreshedAt) ? current : { ...current, gmail: snap },
+        );
+      });
+    const pullRole = () =>
       void pullRoleSnapshot().then(snap => {
         if (!snap) return;
         setSnapshots(current => {
@@ -266,6 +274,10 @@ export function LifeHub() {
           return { ...current, role: snap };
         });
       });
+    const pull = () => {
+      pullRole();
+      pullGmail();
+    };
     pull();
     const onVisible = () => document.visibilityState === 'visible' && pull();
     document.addEventListener('visibilitychange', onVisible);
@@ -593,6 +605,7 @@ export function LifeHub() {
     });
 
     if (source === 'role') completeRoleTask(id);
+    if (source === 'gmail') unstarGmail(id);
 
     if (source === 'ticktick') {
       const habit = isTickTickHabit({ id, kind: taskNow?.kind });

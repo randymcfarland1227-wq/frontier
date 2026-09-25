@@ -9,6 +9,8 @@ interface Env {
   LIFEHUB_STATE: KVNamespace;
   /** Shared with Role Hub (Apps Script) so it can push its snapshot */
   ROLE_PUSH_KEY?: string;
+  /** Shared with the "Life Hub Mail Sync" Apps Script (starred Gmail) */
+  MAIL_PUSH_KEY?: string;
   /** Where the retired Worker copy of the hub sends people (and their saved data) */
   PAGES_URL?: string;
 }
@@ -504,6 +506,63 @@ async function handleRoleComplete(request: Request, env: Env): Promise<Response>
   return jsonResponse({ ok: true, queued: pending.length }, 200, origin);
 }
 
+// ---------------------------------------------------------------------------
+// Gmail starred: the "Life Hub Mail Sync" Apps Script POSTs its snapshot every ~10 min
+// (X-Mail-Key); Life Hub GETs it with the backup key. Done on Life Hub queues an unstar the
+// script applies on its next run (returned in the POST reply).
+// ---------------------------------------------------------------------------
+
+const GMAIL_KEY = "gmail-snapshot";
+const GMAIL_PENDING_KEY = "gmail-pending-unstar";
+
+async function handleGmail(request: Request, env: Env, pathname: string): Promise<Response> {
+  const origin = request.headers.get("Origin");
+  if (request.method === "OPTIONS") return new Response(null, { status: 204, headers: corsHeaders(origin) });
+
+  if (pathname.endsWith("/snapshot") && request.method === "POST") {
+    if (!env.MAIL_PUSH_KEY || request.headers.get("X-Mail-Key") !== env.MAIL_PUSH_KEY) {
+      return jsonResponse({ ok: false, error: "wrong_key" }, 401, origin);
+    }
+    const text = await request.text();
+    if (text.length > 500_000) return jsonResponse({ ok: false, error: "too_large" }, 413, origin);
+    let snap: { source?: unknown; refreshedAt?: unknown; tasks?: unknown };
+    try {
+      snap = JSON.parse(text);
+    } catch {
+      return jsonResponse({ ok: false, error: "invalid_json" }, 400, origin);
+    }
+    if (snap.source !== "gmail" || typeof snap.refreshedAt !== "string" || !Array.isArray(snap.tasks)) {
+      return jsonResponse({ ok: false, error: "bad_snapshot" }, 400, origin);
+    }
+    await env.LIFEHUB_STATE.put(GMAIL_KEY, text);
+    const pending = ((await env.LIFEHUB_STATE.get(GMAIL_PENDING_KEY, "json")) as string[] | null) || [];
+    if (pending.length) await env.LIFEHUB_STATE.delete(GMAIL_PENDING_KEY);
+    return jsonResponse({ ok: true, unstar: pending }, 200, origin);
+  }
+
+  if (origin && !CORS_ALLOW_ORIGINS.has(origin)) return jsonResponse({ ok: false, error: "cors_denied" }, 403, origin);
+  if (!(await syncKeyAllowed(request, env))) return jsonResponse({ ok: false, error: "wrong_key" }, 401, origin);
+
+  if (pathname.endsWith("/snapshot") && request.method === "GET") {
+    return jsonResponse({ ok: true, snapshot: await env.LIFEHUB_STATE.get(GMAIL_KEY, "json") }, 200, origin);
+  }
+  if (pathname.endsWith("/unstar") && request.method === "POST") {
+    let body: { id?: unknown };
+    try {
+      body = (await request.json()) as { id?: unknown };
+    } catch {
+      return jsonResponse({ ok: false, error: "invalid_json" }, 400, origin);
+    }
+    const id = typeof body.id === "string" ? body.id.trim() : "";
+    if (!/^[0-9a-f]{8,32}$/i.test(id)) return jsonResponse({ ok: false, error: "bad_id" }, 400, origin);
+    const pending = ((await env.LIFEHUB_STATE.get(GMAIL_PENDING_KEY, "json")) as string[] | null) || [];
+    if (!pending.includes(id)) pending.push(id);
+    await env.LIFEHUB_STATE.put(GMAIL_PENDING_KEY, JSON.stringify(pending.slice(-200)));
+    return jsonResponse({ ok: true }, 200, origin);
+  }
+  return jsonResponse({ ok: false, error: "not_found" }, 404, origin);
+}
+
 export default {
   async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
     const { pathname } = new URL(request.url);
@@ -522,6 +581,10 @@ export default {
 
     if (pathname === "/api/ticktick/habit-checkin") {
       return handleHabitCheckin(request, env);
+    }
+
+    if (pathname === "/api/gmail/snapshot" || pathname === "/api/gmail/unstar") {
+      return handleGmail(request, env, pathname);
     }
 
     if (pathname === "/api/role/complete") {
