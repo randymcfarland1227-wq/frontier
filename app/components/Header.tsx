@@ -44,6 +44,16 @@ export function Header({
       <div className="topbar-actions">
         <ZoomControl />
         <button
+          className={`mode-button ghost settings-button${active === 'settings' ? ' active' : ''}`}
+          type="button"
+          onClick={() => enter(active === 'settings' ? 'home' : 'settings')}
+          title="Settings · Task sorting"
+          aria-label="Settings — task sorting"
+          aria-pressed={active === 'settings'}
+        >
+          ⚙
+        </button>
+        <button
           className="mode-button ghost"
           type="button"
           onClick={onToggleTheme}

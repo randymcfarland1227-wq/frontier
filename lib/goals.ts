@@ -9,6 +9,7 @@ import type { FocusAreaId } from './focusAreas';
 import type { CompletionLedger } from './completions';
 import type { Capture } from './captures';
 import { readSaved, writeSaved, STORAGE_KEYS } from './storage';
+import { ruleFor, type TaskRuleMap } from './taskRules';
 
 export type Momentum = 'On Track' | 'Slipping' | 'Stalled';
 
@@ -190,22 +191,47 @@ export function ledgerTaskKeys(link: GoalLink, captures: Capture[]): string[] {
   return [targetKey(t)];
 }
 
-/** Completions in the last `days` (incl. today) whose task is linked to the goal. */
+/** Link lookup: ledger key (`source::taskId`) → goal id. */
+export function linkGoalIndex(links: GoalLink[], captures: Capture[]): Map<string, string> {
+  const idx = new Map<string, string>();
+  for (const l of links) for (const k of ledgerTaskKeys(l, captures)) if (!idx.has(k)) idx.set(k, l.goalId);
+  return idx;
+}
+
+/** A task's goal: its sorting rule first, then any link. undefined = unknown (not sorted yet). */
+export function goalOf(
+  source: SourceId,
+  title: string | undefined,
+  taskIds: string[],
+  rules: TaskRuleMap,
+  linkIdx: Map<string, string>,
+): string | undefined {
+  const picked = ruleFor(source, title, taskIds[0] || '', rules).goal;
+  if (picked) return picked;
+  for (const id of taskIds) {
+    const g = linkIdx.get(`${source}::${id}`);
+    if (g) return g;
+  }
+  return undefined;
+}
+
+/** Completions in the last `days` (incl. today) that belong to the goal (sorting rule, else link). */
 export function goalMomentum(
   goalId: string,
   links: GoalLink[],
   ledger: CompletionLedger,
   captures: Capture[],
   days = 7,
+  rules: TaskRuleMap = {},
 ): number {
-  const keys = new Set(links.filter(l => l.goalId === goalId).flatMap(l => ledgerTaskKeys(l, captures)));
-  if (!keys.size) return 0;
+  const idx = linkGoalIndex(links, captures);
   const now = new Date();
   const start = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime() - (days - 1) * 86400000;
   let n = 0;
   for (const e of Object.values(ledger.entries)) {
     const t = Date.parse(e.completedAt);
-    if (!Number.isNaN(t) && t >= start && keys.has(`${e.source}::${e.taskId}`)) n += 1;
+    if (Number.isNaN(t) || t < start) continue;
+    if (goalOf(e.source, e.title, [e.taskId], rules, idx) === goalId) n += 1;
   }
   return n;
 }

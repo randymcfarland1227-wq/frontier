@@ -43,6 +43,8 @@ export const STORAGE_KEYS = {
   featuredLevels: 'lifehub-featured-levels',
   /** Stars Life Hub keeps for sources without their own (TickTick) — cloud-synced */
   hubStars: 'lifehub-hub-stars',
+  /** Task sorting: bucket + goal per task name — cloud-synced */
+  taskRules: 'lifehub-task-rules',
   /** Balance paces (settings gear) — cloud-synced */
   balanceSettings: 'lifehub-balance-settings',
   /** Each day's available work per bucket — cloud-synced */

@@ -4,7 +4,7 @@ import type { ReactNode } from 'react';
 import type { FeaturedItem, SourceId, SourceSnapshot, SpaceId, TaskItem } from '../../lib/types';
 import { sourceById } from '../../lib/sources';
 import { updatedLabel } from '../../lib/protocol';
-import type { CompletionLedger, CompletionStats } from '../../lib/completions';
+import type { CompletionLedger, CompletionStats, CompletionEntry } from '../../lib/completions';
 import type { FocusAreaConfig } from '../../lib/focusAreas';
 import type { EnergyWindow } from '../../lib/energy';
 import { SourceCard } from './SourceCard';
@@ -85,6 +85,7 @@ export function HomeView({
   ledger,
   focusConfig,
   renderBalance,
+  renderSorting,
   capturesPanel,
   whyPanel,
 }: {
@@ -98,6 +99,7 @@ export function HomeView({
   ledger: CompletionLedger;
   focusConfig: FocusAreaConfig | null;
   renderBalance?: (period: EnergyWindow) => ReactNode;
+  renderSorting?: (entries: CompletionEntry[]) => ReactNode;
   capturesPanel: ReactNode;
   whyPanel: ReactNode;
 }) {
@@ -140,6 +142,7 @@ export function HomeView({
             ledger={ledger}
             focusConfig={focusConfig}
             renderBalance={renderBalance}
+            renderSorting={renderSorting}
           />
         </Collapsible>
       </section>

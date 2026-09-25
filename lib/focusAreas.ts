@@ -1,6 +1,7 @@
 /** Focus areas (life balance): map completions to areas and score share vs benchmark. */
 
 import type { SourceId, SourceSnapshot } from './types';
+import { ruleFor } from './taskRules';
 import type { CompletionEntry, CompletionLedger } from './completions';
 
 export type FocusAreaId = string;
@@ -203,8 +204,13 @@ function ruleScore(rule: FocusSourceRule, subject: FocusSubject): number {
 export function resolveFocusArea(
   subject: FocusSubject,
   config: FocusAreaConfig | null = loadedConfig,
+  /** false = only the default rules (what "Auto" means on the Task sorting page) */
+  useTaskRules = true,
 ): FocusAreaId | undefined {
   if (!config) return undefined;
+  // A bucket you picked for this task (Task sorting) beats every default rule.
+  const picked = useTaskRules ? ruleFor(subject.source, subject.title, subject.taskId).area : undefined;
+  if (picked && config.areas.some(a => a.id === picked)) return picked as FocusAreaId;
   let best: { id: FocusAreaId; score: number } | undefined;
   // Routine Hub category: beats a single project/tag rule (3), loses to project+title combos (5)
   if (subject.source === 'ticktick') {

@@ -16,7 +16,8 @@ export type SourceId =
 /** Legacy Work Room id for Role Hub snapshots */
 export type LegacySourceId = 'search';
 
-export type SpaceId = 'home' | SourceId;
+/** 'settings' = Task sorting page */
+export type SpaceId = 'home' | 'settings' | SourceId;
 
 export type FeaturedItem = {
   id: string;

@@ -298,3 +298,12 @@ Replaces the share-vs-target Balance. `lib/energy.ts`, `app/components/BalanceSt
 - TickTick has no star of its own, so its ☆ is kept by Life Hub (`lib/hubStars.ts`, `lifehub-hub-stars`, cloud-synced via `stars` in syncState — newest change wins). Starring adds the task to the Starred list; unstarring removes it (even items the old morning file featured).
 - Self panel **Log done**: records something already finished off-site as a done Self task with a chosen day (past days land at noon) and a required area; counts in Review + Balance (`logSelfItem`, `recordCompletion(..., { at, focusAreaId })`). Undo reopens the task but does not remove the completion (the ledger has no removal yet).
 - Backup-off note now says live TickTick / Gmail / Role Hub need backup on in that browser.
+
+## Task sorting (bucket + goal per task)
+
+- `lib/taskRules.ts`: rules keyed `source::t:<normalized title>` (or `source::id:<id>`), plus `source::*` site-wide defaults that fill unset fields. `{ area?, goal?, at }`; goal `none` = no goal on purpose. Stored `lifehub-task-rules`, cloud-synced as `rules` (newest wins — Worker redeploy needed when adding synced fields).
+- Bucket: `resolveFocusArea` checks the rule first; `visibleLedger` re-sorts past completions by rule. Goal: `goalOf` = rule, else goal link; `goalMomentum` + Why "linked" counts include rule-sorted tasks.
+- ⚙ in the header opens Settings → **Task sorting** (`app/components/TaskSorting.tsx`): every open task + every completed task, grouped by rule key, Bucket / Goal dropdowns, site-wide default row when a site is filtered.
+- Marking done in Life Hub asks bucket + goal (`AreaPicker`) when either is unknown and saves the answer (option: every task from that site). Gmail/Outlook still ask the bucket unless a rule sets it.
+- Review shows **N completed tasks need a bucket or goal** (`NeedsSorting`) for the chosen period — for things done on their own site.
+- Won't-do TickTick tasks (status −1) and habits marked not completed (check-in status 1) never count: the Worker keeps only status 2.

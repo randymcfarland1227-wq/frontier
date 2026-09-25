@@ -7,6 +7,7 @@ import type { Capture } from '../../lib/captures';
 import type { FocusArea } from '../../lib/focusAreas';
 import type { SelfItem } from '../../lib/adapters/self';
 import { sourceById } from '../../lib/sources';
+import { useTaskRules } from '../../lib/taskRules';
 import {
   goalMomentum,
   ledgerTaskKeys,
@@ -50,6 +51,7 @@ export function WhyPanel({
   onLink: (goalId: string, target: GoalLinkTarget, label: string) => void;
   onUnlink: (linkId: string) => void;
 }) {
+  const { rules } = useTaskRules();
   const [category, setCategory] = useState<string>('all');
   const [open, setOpen] = useState<string | null>(null);
   const [query, setQuery] = useState('');
@@ -114,7 +116,10 @@ export function WhyPanel({
   const shown = data.goals.filter(g => g.status === 'active' && (category === 'all' || g.categoryId === category));
   const visible = expanded ? shown : shown.slice(0, PREVIEW_COUNT);
   const byGoal = (g: Goal) => links.filter(l => l.goalId === g.id);
-  const unlinkedCount = data.goals.filter(g => byGoal(g).length === 0).length;
+  // Tasks sorted to a goal on the Task sorting page count as attached work too.
+  const sortedTo = (g: Goal) => Object.entries(rules).filter(([k, r]) => r.goal === g.id && !k.endsWith('::*')).length;
+  const attached = (g: Goal) => byGoal(g).length + sortedTo(g);
+  const unlinkedCount = data.goals.filter(g => attached(g) === 0).length;
 
   return (
     <section className="why-panel glass-panel" aria-label="Why — goals and attached work">
@@ -157,7 +162,8 @@ export function WhyPanel({
       <div className="why-grid">
         {visible.map(goal => {
           const goalLinks = byGoal(goal);
-          const momentum = goalMomentum(goal.id, links, ledger, captures, WEEK);
+          const momentum = goalMomentum(goal.id, links, ledger, captures, WEEK, rules);
+          const linkedCount = attached(goal);
           const isOpen = open === goal.id;
           const linkedKeys = new Set(goalLinks.map(l => targetKey(l.target)));
           const q = query.trim().toLowerCase();
@@ -166,7 +172,7 @@ export function WhyPanel({
             : [];
           const cat = data.categories.find(c => c.id === goal.categoryId);
           return (
-            <article className={`why-card ${goalLinks.length ? '' : 'is-unlinked'}`} key={goal.id}>
+            <article className={`why-card ${linkedCount ? '' : 'is-unlinked'}`} key={goal.id}>
               <div className="why-card-meta">
                 <span>{cat?.icon} {cat?.label}</span>
                 {areaName(goal.focusAreaId) ? <span className="capture-area">{areaName(goal.focusAreaId)}</span> : null}
@@ -181,9 +187,9 @@ export function WhyPanel({
               <p className="why-quote">{goal.why}</p>
               <div className="why-card-foot">
                 <span>
-                  {goalLinks.length ? (
+                  {linkedCount ? (
                     <>
-                      <strong>{momentum}</strong> done this week · {goalLinks.length} linked
+                      <strong>{momentum}</strong> done this week · {linkedCount} linked
                     </>
                   ) : (
                     'No work attached yet'
