@@ -67,7 +67,7 @@ export const sources: SourceDefinition[] = [
     name: 'Gmail Starred',
     shortName: 'Gmail',
     label: 'Action emails',
-    description: 'Starred Gmail threads that need action. Live-ish data from public/data/gmail.json.',
+    description: 'Starred Gmail threads that need action — refreshed every 10 minutes. Done here unstars it in Gmail.',
     action: 'Open Gmail',
     marker: '✉',
     eyebrow: 'Starred action mail',
