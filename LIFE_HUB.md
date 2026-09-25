@@ -259,3 +259,9 @@ Replaces the share-vs-target Balance. `lib/energy.ts`, `app/components/BalanceSt
 - **Focus is count-based and capacity-capped:** a bucket's fair count = its fair slice × the period's completions, but never more than its own goal (min 1 when it has work). Underfocused = done < ½ fair count and ≥ 1 task short; Overfocused = done > 1.4× fair count and ≥ 2 over. Small buckets (e.g. Money with 2–3 tasks) need just one task to be Balanced.
 - **Progress over a period** = total done ÷ total goal (strong and light days balance out). A bucket with nothing on its plate and nothing done is idle ("Nothing on its plate right now"), never Charge.
 - Each row shows counts ("3 done · 2 more to In-Line · 1 more to Balanced") and, when Charge or Underfocused, up to 3 open items that would charge it (`bucketSuggestions`: TickTick habits due today first, then TickTick tasks, Self, other sites).
+
+### TickTick: count late-logged work on its due day (2026-09-25)
+
+- The Worker's done feed now includes each completed task's `dueAt` / `allDay`.
+- `attributeTickTickTasks` (lib/ticktickDone.ts): a task ticked after its due day counts on its due day (all-day → midday); ticked on/before its due day → when ticked. Several ticks of the same task within 2 minutes = clicking through overdue recurring copies (postponing), so every copy lands on the latest copy's day and counts once.
+- Already-recorded entries (hub Done, older rules) are moved earlier with `moveCompletionEarlier` — only ever earlier, so the backup merge (keeps earliest) converges. Habits already counted on their check-in day.

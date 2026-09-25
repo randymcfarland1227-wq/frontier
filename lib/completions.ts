@@ -226,3 +226,19 @@ export function emptyStats(): CompletionStats {
     inventoryTasks: 0,
   };
 }
+
+/**
+ * Move an already-recorded completion to an earlier moment (e.g. a TickTick task logged late
+ * counts on the day it was due). Only ever moves earlier, so every device and the backup
+ * converge (merges keep the earliest time). Returns true if anything changed.
+ */
+export function moveCompletionEarlier(ledger: CompletionLedger, source: SourceId, taskId: string, at: string): boolean {
+  let changed = false;
+  for (const e of Object.values(ledger.entries)) {
+    if (e.source === source && e.taskId === taskId && Date.parse(at) < Date.parse(e.completedAt)) {
+      e.completedAt = at;
+      changed = true;
+    }
+  }
+  return changed;
+}
