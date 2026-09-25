@@ -64,7 +64,7 @@ import {
   type HabitSchedule,
 } from '../lib/energy';
 import { BalanceStrip } from './components/BalanceStrip';
-import { pullRoleSnapshot } from '../lib/roleFeed';
+import { completeRoleTask, pullRoleSnapshot } from '../lib/roleFeed';
 
 /** Sources where one bucket doesn't fit every item — ask on Done. */
 const ASK_AREA_SOURCES: SourceId[] = ['gmail', 'outlook'];
@@ -420,8 +420,8 @@ export function LifeHub() {
       }
 
       if (!originAllowed(event.origin, def.allowedOrigins)) return;
-      const fromBridge = event.source === frameRefs.current[id]?.contentWindow;
-      saveSnapshot(payload, Boolean(fromBridge && id === 'resale'));
+      // Resale's featured list is its own (stars set on the Resale site or from here), so take it as sent.
+      saveSnapshot(payload);
     };
 
     const readHashSync = () => {
@@ -541,6 +541,8 @@ export function LifeHub() {
         },
       };
     });
+
+    if (source === 'role') completeRoleTask(id);
 
     if (source === 'ticktick') {
       const habit = isTickTickHabit({ id, kind: taskNow?.kind });

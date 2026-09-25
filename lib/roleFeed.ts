@@ -19,3 +19,13 @@ export async function pullRoleSnapshot(): Promise<SourceSnapshot | null> {
     return null;
   }
 }
+
+/** Done on a Role Hub task: queue it; Role Hub marks it Done in its sheet on its next check-in. */
+export function completeRoleTask(id: string) {
+  if (!id.startsWith('hubtask:')) return;
+  void fetch(`${WORKER_BASE}/api/role/complete`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...syncKeyHeader() },
+    body: JSON.stringify({ id }),
+  }).catch(() => undefined);
+}

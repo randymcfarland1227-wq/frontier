@@ -265,3 +265,10 @@ Replaces the share-vs-target Balance. `lib/energy.ts`, `app/components/BalanceSt
 - The Worker's done feed now includes each completed task's `dueAt` / `allDay`.
 - `attributeTickTickTasks` (lib/ticktickDone.ts): a task ticked after its due day counts on its due day (all-day → midday); ticked on/before its due day → when ticked. Several ticks of the same task within 2 minutes = clicking through overdue recurring copies (postponing), so every copy lands on the latest copy's day and counts once.
 - Already-recorded entries (hub Done, older rules) are moved earlier with `moveCompletionEarlier` — only ever earlier, so the backup merge (keeps earliest) converges. Habits already counted on their check-in day.
+
+### Role Hub tasks, Resale stars, pearl dark mode (2026-09-25)
+
+- Role Hub's own task list (`_Hub Tasks`) is in its snapshot (`hubtask:<ID>`, open + last 50 done). Done on Life Hub → `POST /api/role/complete` (backup key) queues it in KV; Role Hub's next push gets `{ complete: [...] }` back and sets Done in its sheet (`applyLifeHubCompletions_`).
+- Completion rule: a done task that was never seen open and has no date isn't counted (avoids counting old finished tasks as done today).
+- Resale: Life Hub now keeps the featured list Resale sends (it used to ignore it for the embedded copy); sell-hub reloads its stars when another tab changes them.
+- Dark mode: source pages, form fields and the Today drawer use translucent "pearl" glass (`--pearl-glass`, `--pearl-sheen`, `--pearl-edge`) instead of white.
