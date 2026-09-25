@@ -16,6 +16,7 @@ import { originAllowed, requestSnapshot, sendComplete, sendStar } from '../lib/p
 import {
   addSelfItem,
   loadSelfItems,
+  logSelfItem,
   selfSnapshotFrom,
   toggleSelfComplete,
   toggleSelfStar,
@@ -763,6 +764,13 @@ export function LifeHub() {
               onAddTask={(title, detail, focusAreaId) =>
                 syncSelf(addSelfItem(title, detail, focusAreaId ? { focusAreaId } : undefined))
               }
+              onLogTask={(title, detail, focusAreaId, at) => {
+                const items = logSelfItem(title, detail, focusAreaId || undefined, at);
+                setLedger(
+                  recordCompletion('self', items[0].id, { via: 'self', title: items[0].title, at, focusAreaId: focusAreaId || undefined }),
+                );
+                syncSelf(items);
+              }}
               onTaskDone={id => completeOnHub('self', id)}
               onTaskUndo={id => syncSelf(toggleSelfComplete(id))}
               onTaskStar={id => {

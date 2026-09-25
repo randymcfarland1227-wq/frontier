@@ -75,6 +75,24 @@ export function addSelfItem(
   return updated;
 }
 
+/** A task already done elsewhere, recorded after the fact (counts in Review + Balance). */
+export function logSelfItem(title: string, detail: string, focusAreaId: string | undefined, at: string): SelfItem[] {
+  const items = loadSelfItems();
+  const next: SelfItem = {
+    id: `self-${Date.now()}`,
+    title: title.trim(),
+    detail: detail.trim() || undefined,
+    done: true,
+    starred: false,
+    createdAt: at,
+    updatedAt: new Date().toISOString(),
+    ...(focusAreaId ? { focusAreaId } : {}),
+  };
+  const updated = [next, ...items];
+  saveSelfItems(updated);
+  return updated;
+}
+
 export function toggleSelfComplete(id: string): SelfItem[] {
   const at = new Date().toISOString();
   const updated = loadSelfItems().map(i => (i.id === id ? { ...i, done: !i.done, updatedAt: at } : i));

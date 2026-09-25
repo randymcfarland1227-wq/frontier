@@ -11,9 +11,28 @@ import type { FocusArea } from '../../lib/focusAreas';
 import type { SelfItem } from '../../lib/adapters/self';
 
 type Tab = CaptureStatus | 'tasks';
-type Kind = 'task' | CaptureKind;
+type Kind = 'task' | 'log' | CaptureKind;
 
-const KINDS: Array<{ id: Kind; label: string }> = [{ id: 'task', label: 'Task' }, ...CAPTURE_KINDS];
+const KINDS: Array<{ id: Kind; label: string }> = [
+  { id: 'task', label: 'Task' },
+  { id: 'log', label: 'Log done' },
+  ...CAPTURE_KINDS,
+];
+
+function localDay(d = new Date()) {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
+/** Today → now; an earlier day → noon that day, so it lands on the right day everywhere. */
+function loggedAt(day: string) {
+  if (!day || day >= localDay()) return new Date().toISOString();
+  const [y, m, d] = day.split('-').map(Number);
+  return new Date(y, m - 1, d, 12).toISOString();
+}
+
+function shortDay(iso: string) {
+  return new Date(iso).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+}
 
 const TABS: Array<{ id: Tab; label: string }> = [
   { id: 'inbox', label: 'Inbox' },
@@ -41,6 +60,7 @@ export function CapturesPanel({
   onStatus,
   onPromote,
   onAddTask,
+  onLogTask,
   onTaskDone,
   onTaskUndo,
   onTaskStar,
@@ -52,6 +72,8 @@ export function CapturesPanel({
   onStatus: (id: string, status: Exclude<CaptureStatus, 'promoted'>) => void;
   onPromote: (capture: Capture) => void;
   onAddTask: (title: string, detail: string, focusAreaId: string) => void;
+  /** Record something already done (off-site) so it counts */
+  onLogTask: (title: string, detail: string, focusAreaId: string, at: string) => void;
   onTaskDone: (id: string) => void;
   onTaskUndo: (id: string) => void;
   onTaskStar: (id: string) => void;
@@ -62,6 +84,8 @@ export function CapturesPanel({
   const [notes, setNotes] = useState('');
   const [area, setArea] = useState('');
   const [tab, setTab] = useState<Tab>('inbox');
+  const [doneDay, setDoneDay] = useState(() => localDay());
+  const [logged, setLogged] = useState('');
 
   const areaName = (id?: string) => areas.find(a => a.id === id)?.name;
   const openTasks = selfItems.filter(i => !i.done);
@@ -74,7 +98,13 @@ export function CapturesPanel({
   function submit(event: FormEvent) {
     event.preventDefault();
     if (!title.trim()) return;
-    if (kind === 'task') {
+    if (kind === 'log') {
+      if (!area) return;
+      onLogTask(title, [notes, url].filter(Boolean).join('\n'), area, loggedAt(doneDay));
+      setLogged(`Logged “${title.trim()}” · ${areaName(area)}${doneDay < localDay() ? ` · ${shortDay(loggedAt(doneDay))}` : ''}`);
+      setDoneDay(localDay());
+      setTab('tasks');
+    } else if (kind === 'task') {
       onAddTask(title, [notes, url].filter(Boolean).join('\n'), area);
       setTab('tasks');
     } else {
@@ -94,7 +124,7 @@ export function CapturesPanel({
           <p className="section-label">Self</p>
           <h2>Thoughts, ideas, research &amp; tasks</h2>
           <p className="review-lede">
-            Tasks count toward Review when done. Thoughts, ideas, and research stay off task boards and Balance —
+            Tasks count toward Review when done. Log done records something you already finished off-site. Thoughts, ideas, and research stay off task boards and Balance —
             promote one when it becomes a task.
           </p>
         </div>
@@ -108,7 +138,10 @@ export function CapturesPanel({
               type="button"
               className={k.id === kind ? 'active' : ''}
               aria-pressed={k.id === kind}
-              onClick={() => setKind(k.id)}
+              onClick={() => {
+                setKind(k.id);
+                setLogged('');
+              }}
             >
               {k.label}
             </button>
@@ -117,13 +150,25 @@ export function CapturesPanel({
         <input
           value={title}
           onChange={e => setTitle(e.target.value)}
-          placeholder={kind === 'task' ? 'What needs doing?' : "What's the thought, idea, or question?"}
+          placeholder={
+            kind === 'task' ? 'What needs doing?' : kind === 'log' ? 'What did you get done?' : "What's the thought, idea, or question?"
+          }
           aria-label="Capture title"
         />
-        <div className="capture-form-row">
+        <div className={`capture-form-row${kind === 'log' ? ' has-date' : ''}`}>
           <input value={url} onChange={e => setUrl(e.target.value)} placeholder="Link (optional)" aria-label="Link" inputMode="url" />
-          <select value={area} onChange={e => setArea(e.target.value)} aria-label="Focus area">
-            <option value="">No area</option>
+          {kind === 'log' ? (
+            <input
+              type="date"
+              value={doneDay}
+              max={localDay()}
+              onChange={e => setDoneDay(e.target.value)}
+              aria-label="Day it was done"
+              title="Day it was done"
+            />
+          ) : null}
+          <select value={area} onChange={e => setArea(e.target.value)} aria-label="Focus area" required={kind === 'log'}>
+            <option value="">{kind === 'log' ? 'Pick an area…' : 'No area'}</option>
             {areas.map(a => (
               <option key={a.id} value={a.id}>
                 {a.name}
@@ -132,9 +177,10 @@ export function CapturesPanel({
           </select>
         </div>
         <textarea value={notes} onChange={e => setNotes(e.target.value)} rows={2} placeholder="Notes (optional)" aria-label="Notes" />
-        <button type="submit" disabled={!title.trim()}>
-          {kind === 'task' ? 'Add task' : 'Capture'}
+        <button type="submit" disabled={!title.trim() || (kind === 'log' && !area)}>
+          {kind === 'task' ? 'Add task' : kind === 'log' ? 'Log as done' : 'Capture'}
         </button>
+        {kind === 'log' && logged ? <p className="capture-logged" role="status">✓ {logged}</p> : null}
       </form>
 
       <div className="seg capture-tabs" role="tablist" aria-label="Capture status">
@@ -163,7 +209,7 @@ export function CapturesPanel({
                 <div className="capture-meta">
                   <span className="capture-kind kind-task">Task</span>
                   {areaName(t.focusAreaId) ? <span className="capture-area">{areaName(t.focusAreaId)}</span> : null}
-                  {t.done ? <span>done</span> : <span>{ago(t.createdAt)}</span>}
+                  {t.done ? <span>done · {shortDay(t.createdAt)}</span> : <span>{ago(t.createdAt)}</span>}
                 </div>
                 <h3>{t.title}</h3>
                 {t.detail ? <p>{t.detail}</p> : null}
