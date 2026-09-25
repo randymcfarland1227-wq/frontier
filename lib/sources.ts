@@ -21,7 +21,7 @@ export const sources: SourceDefinition[] = [
     name: 'TickTick',
     shortName: 'TickTick',
     label: 'Today · overdue · habits',
-    description: 'Today view: due today, overdue, and habits. Synced into public/data/ticktick.json.',
+    description: 'Today view: tasks due today or overdue, and habits due today — live from TickTick.',
     action: 'Open TickTick',
     marker: '✓',
     eyebrow: 'Routines and habits',

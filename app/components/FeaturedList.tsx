@@ -29,8 +29,8 @@ export function FeaturedList({
         items.map(item => {
           const pinned = isPinned(sourceId, item.id);
           return (
-            <article className="featured-row" key={item.id}>
-              <div>
+            <article className="featured-row one-line" key={item.id} title={[item.title, item.detail, item.meta].filter(Boolean).join(' — ')}>
+              <div className="featured-main">
                 {item.originUrl ? (
                   <a className="origin-link" href={item.originUrl} target="_blank" rel="noopener noreferrer">
                     <strong>{item.title}</strong>
@@ -38,8 +38,7 @@ export function FeaturedList({
                 ) : (
                   <strong>{item.title}</strong>
                 )}
-                <p>{item.detail}</p>
-                <span>{item.meta}</span>
+                {item.meta ? <span className="featured-meta">{item.meta}</span> : null}
               </div>
               <div className="featured-actions">
                 <button

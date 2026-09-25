@@ -340,17 +340,48 @@ export function LifeHub() {
     return Object.keys(entries).length === Object.keys(taggedLedger.entries).length ? taggedLedger : { entries };
   }, [taggedLedger, focusConfig]);
 
+  // Same for what's listed: reminders / reference notes never show, wherever they came from.
+  const visibleSnapshots = useMemo(() => {
+    if (!focusConfig?.ignore) return snapshots;
+    const out = { ...snapshots };
+    for (const id of Object.keys(out) as SourceId[]) {
+      const snap = out[id];
+      if (!snap || !focusConfig.ignore[id]) continue;
+      const tasks = snap.tasks.filter(t => !isIgnoredItem(id, t.title, focusConfig));
+      let metrics = snap.metrics;
+      if (id === 'ticktick') {
+        // Counts come from what's listed, so they match the list.
+        const today = dayKey(new Date());
+        const open = tasks.filter(t => t.status !== 'done');
+        const isHabit = (t: TaskItem) => t.kind === 'habit' || t.id.startsWith('habit-');
+        metrics = {
+          ...metrics,
+          dueToday: open.filter(t => !isHabit(t) && (t.due || '').slice(0, 10) >= today).length,
+          overdue: open.filter(t => !isHabit(t) && t.due && t.due.slice(0, 10) < today).length,
+          habits: open.filter(isHabit).length,
+        };
+      }
+      out[id] = {
+        ...snap,
+        metrics,
+        tasks,
+        featured: snap.featured.filter(f => !isIgnoredItem(id, f.title, focusConfig)),
+      };
+    }
+    return out;
+  }, [snapshots, focusConfig]);
+
   // Today's workload per bucket (open items + done today + habits due today), remembered per day.
   const todayAvail = useMemo(
-    () => (focusConfig ? todayAvailability(focusConfig, snapshots, selfItems, visibleLedger, habitSchedule) : {}),
-    [focusConfig, snapshots, selfItems, visibleLedger, habitSchedule],
+    () => (focusConfig ? todayAvailability(focusConfig, visibleSnapshots, selfItems, visibleLedger, habitSchedule) : {}),
+    [focusConfig, visibleSnapshots, selfItems, visibleLedger, habitSchedule],
   );
   useEffect(() => {
     if (focusConfig && Object.keys(todayAvail).length) recordAvailability(dayKey(new Date()), todayAvail);
   }, [focusConfig, todayAvail]);
   const chargeSuggestions = useMemo(
-    () => (focusConfig ? bucketSuggestions(focusConfig, snapshots, selfItems, visibleLedger, habitSchedule) : {}),
-    [focusConfig, snapshots, selfItems, visibleLedger, habitSchedule],
+    () => (focusConfig ? bucketSuggestions(focusConfig, visibleSnapshots, selfItems, visibleLedger, habitSchedule) : {}),
+    [focusConfig, visibleSnapshots, selfItems, visibleLedger, habitSchedule],
   );
 
   useEffect(() => {
@@ -367,8 +398,8 @@ export function LifeHub() {
 
   useEffect(() => {
     if (!ready) return;
-    setCompletionStats(computeStats(visibleLedger, snapshots));
-  }, [visibleLedger, snapshots, ready]);
+    setCompletionStats(computeStats(visibleLedger, visibleSnapshots));
+  }, [visibleLedger, visibleSnapshots, ready]);
 
   useEffect(() => {
     document.documentElement.dataset.theme = theme;
@@ -654,7 +685,7 @@ export function LifeHub() {
       {active === 'home' ? (
         <HomeView
           enter={enter}
-          snapshots={snapshots}
+          snapshots={visibleSnapshots}
           openSource={openSource}
           onCompleteFeatured={(source, item) => completeOnHub(source, item.id)}
           onCompleteTask={(source, task) => completeOnHub(source, task.id)}
@@ -682,7 +713,7 @@ export function LifeHub() {
                 links={goalLinks}
                 ledger={visibleLedger}
                 captures={captures}
-                snapshots={snapshots}
+                snapshots={visibleSnapshots}
                 selfItems={selfItems}
                 areas={focusConfig?.areas || []}
                 onLink={(goalId, target, label) => setGoalLinks(addLink(seedLinks, goalId, target, label))}
@@ -717,7 +748,7 @@ export function LifeHub() {
       ) : (
         <SourceView
           sourceId={active}
-          snapshot={snapshots[active]}
+          snapshot={visibleSnapshots[active]}
           openSource={() => openSource(active)}
           onCompleteFeatured={(item: FeaturedItem) => completeOnHub(active, item.id)}
           onCompleteTask={(task: TaskItem) => completeOnHub(active, task.id)}
