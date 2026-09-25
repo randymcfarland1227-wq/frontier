@@ -28,6 +28,7 @@ function SourceRow({
   onStarTask,
   fullWidth,
   extra,
+  gridClass,
 }: {
   ids: SourceId[];
   label: string;
@@ -39,6 +40,8 @@ function SourceRow({
   onStarTask: (source: SourceId, task: TaskItem) => void;
   fullWidth?: boolean;
   extra?: Partial<Record<SourceId, ReactNode>>;
+  /** Custom grid (e.g. Daily ops: TickTick wide, Gmail + Outlook stacked) */
+  gridClass?: string;
 }) {
   return (
     <section className={`source-row ${fullWidth ? 'source-row-self' : ''}`} aria-label={label}>
@@ -50,7 +53,7 @@ function SourceRow({
         countLabel="to do"
       >
       <div
-        className={`space-grid ${fullWidth ? 'space-grid-self' : ids.length === 4 ? 'space-grid-4' : 'space-grid-3'}`}
+        className={`space-grid ${gridClass || (fullWidth ? 'space-grid-self' : ids.length === 4 ? 'space-grid-4' : 'space-grid-3')}`}
       >
         {ids.map(id => (
           <SourceCard
@@ -160,6 +163,7 @@ export function HomeView({
       <SourceRow
         ids={ROW_1}
         label="Daily ops"
+        gridClass="space-grid-daily"
         snapshots={snapshots}
         enter={enter}
         openSource={openSource}

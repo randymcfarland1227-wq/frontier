@@ -1011,3 +1011,52 @@ a.origin-link:hover strong {
 .energy-pop-item::before { content: '•'; position: absolute; left: 0; color: var(--muted); }
 .energy-pop-item em { font-style: normal; color: var(--muted); }
 .energy-pop-more { color: var(--muted); font-style: italic; }
+
+/* === Daily ops: TickTick wide, Gmail + Outlook stacked, Repair beside === */
+.space-grid.space-grid-daily {
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) minmax(0, 1fr);
+  grid-template-areas: "tt gm rp" "tt ol rp";
+  align-items: start;
+}
+.space-grid-daily > .space-card.ticktick { grid-area: tt; }
+.space-grid-daily > .space-card.gmail { grid-area: gm; }
+.space-grid-daily > .space-card.outlook { grid-area: ol; }
+.space-grid-daily > .space-card.repair { grid-area: rp; }
+.space-grid-daily > .space-card { min-height: 0; height: auto; }
+@media (max-width: 1100px) {
+  .space-grid.space-grid-daily { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); grid-template-areas: "tt tt" "gm ol" "rp rp"; }
+}
+@media (max-width: 720px) {
+  .space-grid.space-grid-daily { grid-template-columns: 1fr; grid-template-areas: "tt" "gm" "ol" "rp"; }
+}
+
+/* === One line per task: title · tag … buttons at the end === */
+.task-board { gap: 0; }
+.task-row.one-line, .space-card .task-row.one-line {
+  display: flex; align-items: center; gap: 8px; padding: 6px 0; min-height: 0;
+  border-bottom: 1px solid var(--line); border-radius: 0; background: transparent; box-shadow: none;
+}
+.task-row.one-line .task-main { display: flex; align-items: baseline; gap: 6px; min-width: 0; flex: 1 1 auto; }
+.task-row.one-line .task-main strong, .task-row.one-line .task-main a {
+  min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12px; font-weight: 600;
+}
+.task-row.one-line .task-main a { flex: 0 1 auto; }
+.task-row.one-line .task-badge { flex-shrink: 0; font-size: 9px; padding: 1px 6px; }
+.task-row.one-line .task-when { flex-shrink: 0; font-size: 10px; color: var(--muted); }
+.task-row.one-line .task-actions, .space-card .task-row.one-line .task-actions {
+  flex-direction: row; flex-shrink: 0; gap: 4px; width: auto; align-items: center;
+}
+.task-row.one-line .row-action { padding: 3px 8px; font-size: 10px; }
+.featured-row.one-line, .space-card .featured-row.one-line {
+  display: flex; flex-wrap: nowrap; align-items: center; gap: 8px; padding: 7px 0; border-bottom: 1px solid var(--line);
+}
+.featured-row.one-line .featured-main { display: flex; align-items: baseline; gap: 6px; min-width: 0; flex: 1 1 auto; }
+.featured-row.one-line .featured-main strong, .featured-row.one-line .featured-main a {
+  min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12px; font-weight: 600;
+}
+.featured-row.one-line .featured-meta { flex-shrink: 0; font-size: 10px; color: var(--accent); white-space: nowrap; max-width: 40%; overflow: hidden; text-overflow: ellipsis; }
+.featured-row.one-line .featured-actions, .space-card .featured-row.one-line .featured-actions {
+  display: flex; flex-direction: row; flex-wrap: nowrap; flex-shrink: 0; gap: 4px; width: auto; max-width: none;
+}
+.featured-row.one-line .row-action { padding: 3px 8px; font-size: 10px; }
+.habit-chip-row { display: none; } /* habits are listed as rows now */
