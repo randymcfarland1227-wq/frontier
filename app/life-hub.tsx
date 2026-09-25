@@ -65,6 +65,8 @@ import {
 } from '../lib/energy';
 import { BalanceStrip } from './components/BalanceStrip';
 import { completeRoleTask, pullRoleSnapshot, starRoleItem } from '../lib/roleFeed';
+import { buildTickTickToday, fetchOpenTickTick } from '../lib/ticktickLive';
+import { isIgnoredItem } from '../lib/focusAreas';
 
 /** Sources where one bucket doesn't fit every item — ask on Done. */
 const ASK_AREA_SOURCES: SourceId[] = ['gmail', 'outlook'];
@@ -111,14 +113,15 @@ function mergeConnectorSnapshots(
   for (const id of CONNECTOR_SOURCE_IDS) {
     const snap = incoming[id];
     if (!snap) continue;
-    // Role Hub also posts live snapshots; keep whichever is newer.
-    if (id === 'role' && Date.parse(current[id]?.refreshedAt || '') > Date.parse(snap.refreshedAt || '')) continue;
+    // Role Hub and TickTick also arrive live; keep whichever is newer than the morning file.
+    if ((id === 'role' || id === 'ticktick') && Date.parse(current[id]?.refreshedAt || '') > Date.parse(snap.refreshedAt || '')) continue;
     // Always overwrite the four connector sources from network (do not wipe iframe sources).
     next[id] = {
       source: id,
       metrics: snap.metrics || {},
       featured: snap.featured || [],
-      tasks: snap.tasks || [],
+      // Reminders / reference notes aren't tasks.
+      tasks: (snap.tasks || []).filter(t => !isIgnoredItem(id, t.title)),
       refreshedAt: snap.refreshedAt || new Date().toISOString(),
     };
   }
@@ -277,9 +280,16 @@ export function LifeHub() {
   useEffect(() => {
     if (!ready) return;
     const pull = () =>
-      void pullTickTickDone().then(next => {
+      void pullTickTickDone().then(async next => {
         if (next) setLedger(next);
-        setHabitSchedule(getHabitSchedule());
+        const schedule = getHabitSchedule();
+        setHabitSchedule(schedule);
+        // Live Today list: due today + overdue tasks, and habits due today not yet checked in.
+        const open = await fetchOpenTickTick();
+        if (open) {
+          const led = next ?? loadLedger();
+          setSnapshots(current => ({ ...current, ticktick: buildTickTickToday(open, schedule, led, current.ticktick) }));
+        }
       });
     pull();
     const onVisible = () => document.visibilityState === 'visible' && pull();
@@ -321,17 +331,26 @@ export function LifeHub() {
     if (taggedLedger !== ledger) saveLedger(taggedLedger);
   }, [taggedLedger, ledger]);
 
+  // What the page shows and scores: without reminders / reference notes (kept in storage, just not counted).
+  const visibleLedger = useMemo(() => {
+    if (!focusConfig) return taggedLedger;
+    const entries = Object.fromEntries(
+      Object.entries(taggedLedger.entries).filter(([, e]) => !isIgnoredItem(e.source, e.title, focusConfig)),
+    );
+    return Object.keys(entries).length === Object.keys(taggedLedger.entries).length ? taggedLedger : { entries };
+  }, [taggedLedger, focusConfig]);
+
   // Today's workload per bucket (open items + done today + habits due today), remembered per day.
   const todayAvail = useMemo(
-    () => (focusConfig ? todayAvailability(focusConfig, snapshots, selfItems, taggedLedger, habitSchedule) : {}),
-    [focusConfig, snapshots, selfItems, taggedLedger, habitSchedule],
+    () => (focusConfig ? todayAvailability(focusConfig, snapshots, selfItems, visibleLedger, habitSchedule) : {}),
+    [focusConfig, snapshots, selfItems, visibleLedger, habitSchedule],
   );
   useEffect(() => {
     if (focusConfig && Object.keys(todayAvail).length) recordAvailability(dayKey(new Date()), todayAvail);
   }, [focusConfig, todayAvail]);
   const chargeSuggestions = useMemo(
-    () => (focusConfig ? bucketSuggestions(focusConfig, snapshots, selfItems, taggedLedger, habitSchedule) : {}),
-    [focusConfig, snapshots, selfItems, taggedLedger, habitSchedule],
+    () => (focusConfig ? bucketSuggestions(focusConfig, snapshots, selfItems, visibleLedger, habitSchedule) : {}),
+    [focusConfig, snapshots, selfItems, visibleLedger, habitSchedule],
   );
 
   useEffect(() => {
@@ -348,8 +367,8 @@ export function LifeHub() {
 
   useEffect(() => {
     if (!ready) return;
-    setCompletionStats(computeStats(ledger, snapshots));
-  }, [ledger, snapshots, ready]);
+    setCompletionStats(computeStats(visibleLedger, snapshots));
+  }, [visibleLedger, snapshots, ready]);
 
   useEffect(() => {
     document.documentElement.dataset.theme = theme;
@@ -641,14 +660,14 @@ export function LifeHub() {
           onCompleteTask={(source, task) => completeOnHub(source, task.id)}
           onStarTask={(source, task) => starOnHub(source, task)}
           completionStats={completionStats}
-          ledger={taggedLedger}
+          ledger={visibleLedger}
           focusConfig={focusConfig}
           renderBalance={period =>
             focusConfig ? (
               <BalanceStrip
                 window={period}
                 suggestions={chargeSuggestions}
-                ledger={taggedLedger}
+                ledger={visibleLedger}
                 config={focusConfig}
                 today={todayAvail}
                 settings={balanceSettings}
@@ -661,7 +680,7 @@ export function LifeHub() {
               <WhyPanel
                 data={goalsData}
                 links={goalLinks}
-                ledger={taggedLedger}
+                ledger={visibleLedger}
                 captures={captures}
                 snapshots={snapshots}
                 selfItems={selfItems}

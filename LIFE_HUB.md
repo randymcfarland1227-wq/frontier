@@ -278,3 +278,8 @@ Replaces the share-vs-target Balance. `lib/energy.ts`, `app/components/BalanceSt
 - Role Hub (v39) sends certs (`cert:<ID>`, open until Completed) and portfolio ideas (`portfolio:<ID>`, open while Idea/Exploring/In progress; Parked left out; done at Added to portfolio). Both count toward Role & Professional Development.
 - Featuring: Role Hub's cert cards and portfolio rows have a ☆ that uses the same `_Hub Featured` tab as roles (`Cert|<ID>`, `Portfolio|<ID>`); featured ones appear on the Role card. Starring on Life Hub queues `{ id, action: 'star'|'unstar' }` via `POST /api/role/complete`; Done on certs/ideas queues a completion (cert → Completed, idea → ADDED). Role Hub applies the queue on its next push.
 - Role Hub's star no longer pops open a Life Hub tab; it pushes the change directly.
+
+### TickTick card = live Today view; reminders ignored (2026-09-25)
+
+- Worker `GET /api/ticktick/open` (backup key): every open, dated task across all lists + inbox. `lib/ticktickLive.ts` keeps tasks due today or overdue, plus habits due today (schedule) not yet checked in, and replaces the morning-file TickTick snapshot (newer wins in `mergeConnectorSnapshots`). Metrics: dueToday, overdue, habits.
+- `focus-areas.json` → `ignore.ticktick`: titles containing "reminder", plus "Nutrition Flow — Use Macro Tracker", "Gym Session Standards", "Life Path & Active Project Direction". Ignored items are dropped from the card, workload and suggestions, never recorded as completions, and hidden from counts (`visibleLedger`; kept in storage).

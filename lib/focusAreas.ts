@@ -45,6 +45,8 @@ export type FocusAreaConfig = {
   rulesVersion?: number;
   routines?: RoutineConfig;
   areas: FocusArea[];
+  /** Items that aren't tasks (reminders, reference notes), per source */
+  ignore?: Partial<Record<SourceId, { titleIncludes?: string[]; titles?: string[] }>>;
   /** Sources whose completions never count toward Balance (e.g. site repair) */
   excludeSources?: SourceId[];
 };
@@ -97,6 +99,17 @@ function routineArea(title?: string): FocusAreaId | undefined {
 
 export function getFocusConfig(): FocusAreaConfig | null {
   return loadedConfig;
+}
+
+/** True for items that aren't tasks (reminders, reference notes) per focus-areas.json `ignore`. */
+export function isIgnoredItem(source: SourceId, title: string | undefined, config: FocusAreaConfig | null = loadedConfig): boolean {
+  const rule = config?.ignore?.[source];
+  if (!rule || !title) return false;
+  const t = title.trim().toLowerCase();
+  return (
+    (rule.titles || []).some(x => x.trim().toLowerCase() === t) ||
+    (rule.titleIncludes || []).some(x => x && t.includes(x.toLowerCase()))
+  );
 }
 
 function baseUrl(): string {
