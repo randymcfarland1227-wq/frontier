@@ -136,7 +136,7 @@ export const sources: SourceDefinition[] = [
     action: 'Open Role Hub',
     marker: '↗',
     eyebrow: 'Applications and pipeline',
-    intro: 'Iframe bridge blocked by Google. Use Open for the live app. Agent can refresh public/data/role.json when export exists.',
+    intro: 'Applications and Role Hub tasks, sent by Role Hub whenever it is open. Done on a Role Hub task here marks it done in Role Hub the next time it opens.',
     feature: 'Starred pipeline items',
     empty: 'No starred roles — star one in Role Hub to feature it here. Tap Open to refresh this card.',
     url: 'https://script.google.com/macros/s/AKfycbyYuq1_GDfbLtx1YZwIk7Khvewegl3_xocLnM_gv7zzujapMXxxXDlgWsqaiCiI4a9EIA/exec',

@@ -204,6 +204,9 @@ export function diffSnapshotCompletions(
     if (task.status !== 'done') continue;
     const prev = prevById.get(task.id);
     if (prev?.status === 'done') continue;
+    // A done task we never saw open, with no date: we can't tell when it was done (e.g. old
+    // finished Role Hub tasks appearing for the first time), so don't count it as done now.
+    if (!prev && !task.completedAt) continue;
     current = recordCompletion(source, task.id, {
       title: task.title || prev?.title,
       via: source === 'self' ? 'self' : 'origin-done',

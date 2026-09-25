@@ -944,3 +944,46 @@ a.origin-link:hover strong {
 .energy-suggest-item em { font-style: normal; color: var(--muted); }
 .energy-suggest-more { color: var(--muted); }
 .energy-row { padding-bottom: 6px; }
+
+/* === Dark mode: translucent "mother-of-pearl" panels (source pages + any leftover white) === */
+[data-theme="dark"] {
+  --pearl-glass: rgba(14, 12, 24, .58);
+  --pearl-sheen: linear-gradient(125deg,
+    rgba(255, 255, 255, .055) 0%,
+    rgba(186, 164, 255, .045) 22%,
+    rgba(140, 230, 220, .035) 44%,
+    rgba(255, 190, 225, .045) 66%,
+    rgba(255, 255, 255, .02) 100%);
+  --pearl-edge: rgba(236, 228, 255, .12);
+}
+[data-theme="dark"] .room-metrics,
+[data-theme="dark"] .room-body,
+[data-theme="dark"] .work-ledger,
+[data-theme="dark"] .room-aside,
+[data-theme="dark"] .focus-drawer {
+  background: var(--pearl-sheen), var(--pearl-glass);
+  backdrop-filter: blur(18px) saturate(1.35);
+  -webkit-backdrop-filter: blur(18px) saturate(1.35);
+  border-color: var(--pearl-edge);
+  color: var(--ink);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, .06) inset, 0 18px 50px rgba(0, 0, 0, .35);
+}
+[data-theme="dark"] .room-metrics article { border-color: var(--pearl-edge); }
+[data-theme="dark"] .room-metrics > p { background: rgba(255, 255, 255, .025); border-color: var(--pearl-edge); }
+[data-theme="dark"] .room-metrics .metric-actionable strong,
+[data-theme="dark"] .room-metrics .metric-actionable span { color: #93c5fd; }
+[data-theme="dark"] .work-ledger .ledger-row,
+[data-theme="dark"] .work-ledger .task-row { border-color: var(--pearl-edge); }
+[data-theme="dark"] .entry-form { background: rgba(255, 255, 255, .03); border: 1px solid var(--pearl-edge); }
+[data-theme="dark"] input,
+[data-theme="dark"] select,
+[data-theme="dark"] textarea {
+  background-color: rgba(8, 7, 16, .55);
+  color: var(--ink);
+  border-color: var(--pearl-edge);
+}
+[data-theme="dark"] input::placeholder,
+[data-theme="dark"] textarea::placeholder { color: rgba(220, 214, 240, .45); }
+[data-theme="dark"] select option { background: #120f1f; color: var(--ink); }
+[data-theme="dark"] .room-body .work-ledger { background: transparent; box-shadow: none; backdrop-filter: none; -webkit-backdrop-filter: none; }
+[data-theme="dark"] .focus-drawer { background: var(--pearl-sheen), rgba(14, 12, 24, .88); }

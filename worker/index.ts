@@ -389,6 +389,8 @@ async function handleHabitCheckin(request: Request, env: Env): Promise<Response>
 // ---------------------------------------------------------------------------
 
 const ROLE_KEY = "role-snapshot";
+/** Role Hub tasks marked Done on Life Hub, waiting for Role Hub's next check-in */
+const ROLE_PENDING_KEY = "role-pending-complete";
 
 async function handleRoleSnapshot(request: Request, env: Env): Promise<Response> {
   const origin = request.headers.get("Origin");
@@ -410,7 +412,10 @@ async function handleRoleSnapshot(request: Request, env: Env): Promise<Response>
       return jsonResponse({ ok: false, error: "bad_snapshot" }, 400, origin);
     }
     await env.LIFEHUB_STATE.put(ROLE_KEY, text);
-    return jsonResponse({ ok: true }, 200, origin);
+    // Hand over tasks finished on Life Hub; Role Hub marks them Done in its sheet.
+    const pending = ((await env.LIFEHUB_STATE.get(ROLE_PENDING_KEY, "json")) as string[] | null) || [];
+    if (pending.length) await env.LIFEHUB_STATE.delete(ROLE_PENDING_KEY);
+    return jsonResponse({ ok: true, complete: pending }, 200, origin);
   }
 
   if (request.method === "GET") {
@@ -421,6 +426,26 @@ async function handleRoleSnapshot(request: Request, env: Env): Promise<Response>
   }
 
   return jsonResponse({ ok: false, error: "method_not_allowed" }, 405, origin);
+}
+
+async function handleRoleComplete(request: Request, env: Env): Promise<Response> {
+  const origin = request.headers.get("Origin");
+  if (request.method === "OPTIONS") return new Response(null, { status: 204, headers: corsHeaders(origin) });
+  if (origin && !CORS_ALLOW_ORIGINS.has(origin)) return jsonResponse({ ok: false, error: "cors_denied" }, 403, origin);
+  if (request.method !== "POST") return jsonResponse({ ok: false, error: "method_not_allowed" }, 405, origin);
+  if (!(await syncKeyAllowed(request, env))) return jsonResponse({ ok: false, error: "wrong_key" }, 401, origin);
+  let body: { id?: unknown };
+  try {
+    body = (await request.json()) as { id?: unknown };
+  } catch {
+    return jsonResponse({ ok: false, error: "invalid_json" }, 400, origin);
+  }
+  const id = typeof body.id === "string" ? body.id.trim() : "";
+  if (!/^hubtask:[\w-]{1,80}$/.test(id)) return jsonResponse({ ok: false, error: "bad_id" }, 400, origin);
+  const pending = ((await env.LIFEHUB_STATE.get(ROLE_PENDING_KEY, "json")) as string[] | null) || [];
+  if (!pending.includes(id)) pending.push(id);
+  await env.LIFEHUB_STATE.put(ROLE_PENDING_KEY, JSON.stringify(pending.slice(-200)));
+  return jsonResponse({ ok: true, queued: pending.length }, 200, origin);
 }
 
 export default {
@@ -437,6 +462,10 @@ export default {
 
     if (pathname === "/api/ticktick/habit-checkin") {
       return handleHabitCheckin(request, env);
+    }
+
+    if (pathname === "/api/role/complete") {
+      return handleRoleComplete(request, env);
     }
 
     if (pathname === "/api/role/snapshot") {
