@@ -7,6 +7,6 @@ export function tagTone(tag?: string): string {
   if (t.startsWith('local')) return 'deal';
   if (/offer/.test(t)) return 'offer';
   if (/price|drop/.test(t)) return 'price';
-  if (/refresh|relist/.test(t)) return 'refresh';
+  if (/refresh|relist|boost/.test(t)) return 'refresh';
   return 'other';
 }
