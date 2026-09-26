@@ -86,8 +86,10 @@ export function getActionableMetric(sourceId: SourceId, snapshot: SourceSnapshot
         value: Number.isFinite(m.open) ? Number(m.open) : open,
         consumes: ['open'],
       };
-    case 'resale':
     case 'income':
+      // Only tasks on active items are sent, so this is "open tasks on active items".
+      return { key: 'actionable', label: 'Active tasks', value: open };
+    case 'resale':
     case 'role':
       return { key: 'actionable', label: 'Open tasks', value: open };
     default:
