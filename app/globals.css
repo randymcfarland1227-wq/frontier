@@ -1224,3 +1224,6 @@ a.origin-link:hover strong {
 .priority-row .priority-source { color: var(--src); background: color-mix(in srgb, var(--src) 14%, transparent); }
 /* Theme rules color spans inside rows; the tag keeps its own color */
 .task-tag[class*="tone-"] { color: var(--tag-color) !important; }
+
+/* Daily ops: collapsed cards still fill their grid cells, so TickTick lines up with Self + Gmail */
+.space-grid-daily > .space-card.is-collapsed { align-self: stretch; }
