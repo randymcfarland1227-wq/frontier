@@ -5,8 +5,9 @@ import { tagTone } from '../../lib/tagTone';
 import type { FeaturedItem, SourceId, SourceSnapshot } from '../../lib/types';
 import { SOURCE_IDS, sourceById } from '../../lib/sources';
 import { pinKey, usePriorityPins } from '../../lib/priorityPins';
-import { byLevel, useFeaturedLevels } from '../../lib/featuredLevels';
+import { byLevel, criticalKeys, useFeaturedLevels } from '../../lib/featuredLevels';
 import { LevelDot } from './LevelDot';
+import { CriticalFlag } from './CriticalFlag';
 
 type PriorityItem = FeaturedItem & { source: SourceId };
 
@@ -55,10 +56,19 @@ export function PriorityBoard({
   onComplete?: (source: SourceId, item: FeaturedItem) => void;
 }) {
   const { pins, removePin } = usePriorityPins();
-  const { levelOf, cycle } = useFeaturedLevels();
+  const { levels, levelOf, cycle, isCritical, toggleCritical } = useFeaturedLevels();
+  // Pinned items plus anything marked critical (critical always shows here, pinned or not).
   const ordered = byLevel(
-    useMemo(() => resolvePinned(snapshots, pins), [snapshots, pins]),
+    useMemo(() => {
+      const keys = [...pins];
+      for (const [source, id] of criticalKeys(levels)) {
+        const key = pinKey(source, id);
+        if (!keys.includes(key)) keys.push(key);
+      }
+      return resolvePinned(snapshots, keys);
+    }, [snapshots, pins, levels]),
     item => levelOf(item.source, item.id),
+    item => isCritical(item.source, item.id),
   );
 
   return (
@@ -66,7 +76,7 @@ export function PriorityBoard({
       <div className="priority-head">
         <p className="section-label">Priority</p>
         <h2>Pinned priorities</h2>
-        <p>Pin a featured item from any source card, or star a Self task, to keep it here.</p>
+        <p>Pin a featured item from any source card, or star a Self task, to keep it here. Anything marked Critical shows here too.</p>
       </div>
       {ordered.length === 0 ? (
         <p className="priority-empty">
@@ -77,10 +87,15 @@ export function PriorityBoard({
           {ordered.map(item => (
             <article
               key={pinKey(item.source, item.id)}
-              className={`priority-row src-${item.source}`}
+              className={`priority-row src-${item.source}${isCritical(item.source, item.id) ? ' is-critical' : ''}`}
               title={[item.title, item.detail, item.meta].filter(Boolean).join(' — ')}
             >
               <LevelDot level={levelOf(item.source, item.id)} title={item.title} onCycle={() => cycle(item.source, item.id)} />
+              <CriticalFlag
+                on={isCritical(item.source, item.id)}
+                title={item.title}
+                onToggle={() => toggleCritical(item.source, item.id)}
+              />
               <div className="priority-row-main">
                 {item.tag ? <span className={`task-tag tone-${tagTone(item.tag)}`}>{item.tag}</span> : null}
                 {item.originUrl ? (
@@ -102,6 +117,7 @@ export function PriorityBoard({
                     onClick={() => {
                       onComplete(item.source, item);
                       removePin(item.source, item.id);
+                      if (isCritical(item.source, item.id)) toggleCritical(item.source, item.id);
                     }}
                   >
                     Done
@@ -112,7 +128,11 @@ export function PriorityBoard({
                   className="row-action ghost"
                   aria-label={`Unpin ${item.title}`}
                   title="Unpin"
-                  onClick={() => removePin(item.source, item.id)}
+                  onClick={() => {
+                    removePin(item.source, item.id);
+                    // Critical items live here until done or un-marked; ✕ clears both.
+                    if (isCritical(item.source, item.id)) toggleCritical(item.source, item.id);
+                  }}
                 >
                   ✕
                 </button>
