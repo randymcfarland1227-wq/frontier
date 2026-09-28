@@ -7,6 +7,7 @@ import { sourceById } from '../../lib/sources';
 import { usePriorityPins } from '../../lib/priorityPins';
 import { byLevel, useFeaturedLevels } from '../../lib/featuredLevels';
 import { LevelDot } from './LevelDot';
+import { CriticalFlag } from './CriticalFlag';
 import { readSaved, writeSaved, STORAGE_KEYS } from '../../lib/storage';
 
 export function FeaturedList({
@@ -21,9 +22,9 @@ export function FeaturedList({
   onComplete?: (item: FeaturedItem) => void;
 }) {
   const copy = sourceById[sourceId];
-  const { levelOf, cycle } = useFeaturedLevels();
-  // Red first, then yellow, then green, then the rest.
-  const sorted = byLevel(snapshot.featured, f => levelOf(sourceId, f.id));
+  const { levelOf, cycle, isCritical, toggleCritical } = useFeaturedLevels();
+  // Critical first, then red, yellow, green, then the rest.
+  const sorted = byLevel(snapshot.featured, f => levelOf(sourceId, f.id), f => isCritical(sourceId, f.id));
   const items = sorted.slice(0, compact ? 3 : 12);
   const { addPin, removePin, isPinned } = usePriorityPins();
   /** Card view only: the starred list can fold down to its heading (remembered per card). */
@@ -62,8 +63,13 @@ export function FeaturedList({
         items.map(item => {
           const pinned = isPinned(sourceId, item.id);
           return (
-            <article className="featured-row one-line" key={item.id} title={[item.title, item.detail, item.meta].filter(Boolean).join(' — ')}>
+            <article
+              className={`featured-row one-line${isCritical(sourceId, item.id) ? ' is-critical' : ''}`}
+              key={item.id}
+              title={[item.title, item.detail, item.meta].filter(Boolean).join(' — ')}
+            >
               <LevelDot level={levelOf(sourceId, item.id)} title={item.title} onCycle={() => cycle(sourceId, item.id)} />
+              <CriticalFlag on={isCritical(sourceId, item.id)} title={item.title} onToggle={() => toggleCritical(sourceId, item.id)} />
               <div className="featured-main">
                 {item.tag ? <span className={`task-tag tone-${tagTone(item.tag)}`}>{item.tag}</span> : null}
                 {item.originUrl ? (
