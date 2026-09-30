@@ -1,5 +1,5 @@
 /**
- * Stars kept by Life Hub itself, for sources that have no star of their own (TickTick).
+ * Stars kept by Life Hub itself, for sources that have no star of their own (TickTick, Radall).
  * "source::id" → starred or not; newest change wins. Cloud-synced like levels.
  */
 
@@ -10,7 +10,7 @@ export type HubStarMap = Record<string, { starred: boolean; at: string }>;
 
 export const HUB_STARS_EVENT = 'lifehub:hub-stars';
 /** Sources whose ☆ is stored in Life Hub instead of opening the source site. */
-export const HUB_STAR_SOURCES: readonly SourceId[] = ['ticktick'];
+export const HUB_STAR_SOURCES: readonly SourceId[] = ['ticktick', 'radall'];
 
 const starKey = (source: SourceId, id: string) => `${source}::${id}`;
 
