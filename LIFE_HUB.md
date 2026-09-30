@@ -25,7 +25,7 @@ Node **>= 22.13** (`engines` in package.json). Use `fnm use 22` if needed.
 | # | id | Name | Bridge / adapter |
 |---|----|------|------------------|
 | 01 | `ticktick` | TickTick | Static JSON stub (`public/data/ticktick.json`) until token |
-| 02 | `radall` | Radall Finances (Sheet) | Static JSON from Sheets MCP → `public/data/radall.json` |
+| 02 | `radall` | Radall Finances (Sheet) | Live: "Life Hub Mail Sync" Apps Script reads the **Task List** tab every 10 min → Worker `/api/radall/snapshot` (X-Mail-Key) → `lib/radallFeed.ts` (fallback `public/data/radall.json`) |
 | 03 | `gmail` | Gmail Starred | Static JSON from Gmail MCP → `public/data/gmail.json` |
 | 04 | `outlook` | Outlook job inquiries | Static JSON from Outlook MCP → `public/data/outlook.json` |
 | 05 | `resale` | Resale Hub | Hidden iframe + postMessage (existing sell-hub) |

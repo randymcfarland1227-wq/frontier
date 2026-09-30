@@ -563,6 +563,44 @@ async function handleGmail(request: Request, env: Env, pathname: string): Promis
   return jsonResponse({ ok: false, error: "not_found" }, 404, origin);
 }
 
+// ---------------------------------------------------------------------------
+// Radall Finances "Task List": the same Mail Sync Apps Script reads the Sheet and POSTs a
+// snapshot (X-Mail-Key) on each 10-minute run; Life Hub GETs it with the backup key.
+// ---------------------------------------------------------------------------
+
+const RADALL_KEY = "radall-snapshot";
+
+async function handleRadall(request: Request, env: Env): Promise<Response> {
+  const origin = request.headers.get("Origin");
+  if (request.method === "OPTIONS") return new Response(null, { status: 204, headers: corsHeaders(origin) });
+
+  if (request.method === "POST") {
+    if (!env.MAIL_PUSH_KEY || request.headers.get("X-Mail-Key") !== env.MAIL_PUSH_KEY) {
+      return jsonResponse({ ok: false, error: "wrong_key" }, 401, origin);
+    }
+    const text = await request.text();
+    if (text.length > 200_000) return jsonResponse({ ok: false, error: "too_large" }, 413, origin);
+    let snap: { source?: unknown; refreshedAt?: unknown; tasks?: unknown };
+    try {
+      snap = JSON.parse(text);
+    } catch {
+      return jsonResponse({ ok: false, error: "invalid_json" }, 400, origin);
+    }
+    if (snap.source !== "radall" || typeof snap.refreshedAt !== "string" || !Array.isArray(snap.tasks)) {
+      return jsonResponse({ ok: false, error: "bad_snapshot" }, 400, origin);
+    }
+    await env.LIFEHUB_STATE.put(RADALL_KEY, text);
+    return jsonResponse({ ok: true }, 200, origin);
+  }
+
+  if (origin && !CORS_ALLOW_ORIGINS.has(origin)) return jsonResponse({ ok: false, error: "cors_denied" }, 403, origin);
+  if (!(await syncKeyAllowed(request, env))) return jsonResponse({ ok: false, error: "wrong_key" }, 401, origin);
+  if (request.method === "GET") {
+    return jsonResponse({ ok: true, snapshot: await env.LIFEHUB_STATE.get(RADALL_KEY, "json") }, 200, origin);
+  }
+  return jsonResponse({ ok: false, error: "method_not_allowed" }, 405, origin);
+}
+
 export default {
   async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
     const { pathname } = new URL(request.url);
@@ -585,6 +623,10 @@ export default {
 
     if (pathname === "/api/gmail/snapshot" || pathname === "/api/gmail/unstar") {
       return handleGmail(request, env, pathname);
+    }
+
+    if (pathname === "/api/radall/snapshot") {
+      return handleRadall(request, env);
     }
 
     if (pathname === "/api/role/complete") {

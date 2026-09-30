@@ -68,6 +68,7 @@ import {
 import { BalanceStrip } from './components/BalanceStrip';
 import { completeRoleTask, pullRoleSnapshot, starRoleItem } from '../lib/roleFeed';
 import { pullGmailSnapshot, unstarGmail } from '../lib/gmailFeed';
+import { pullRadallSnapshot } from '../lib/radallFeed';
 import { buildTickTickToday, fetchOpenTickTick } from '../lib/ticktickLive';
 import { isIgnoredItem, resolveFocusArea } from '../lib/focusAreas';
 
@@ -130,7 +131,7 @@ function mergeConnectorSnapshots(
     const snap = incoming[id];
     if (!snap) continue;
     // Role Hub and TickTick also arrive live; keep whichever is newer than the morning file.
-    if ((id === 'role' || id === 'ticktick' || id === 'gmail') && Date.parse(current[id]?.refreshedAt || '') > Date.parse(snap.refreshedAt || '')) continue;
+    if ((id === 'role' || id === 'ticktick' || id === 'gmail' || id === 'radall') && Date.parse(current[id]?.refreshedAt || '') > Date.parse(snap.refreshedAt || '')) continue;
     // Always overwrite the four connector sources from network (do not wipe iframe sources).
     next[id] = {
       source: id,
@@ -295,9 +296,20 @@ export function LifeHub() {
           return { ...current, role: snap };
         });
       });
+    // Finance Task List (live from the Sheet); tasks already Done on Life Hub stay hidden.
+    const pullRadall = () =>
+      void pullRadallSnapshot().then(snap => {
+        if (!snap) return;
+        setSnapshots(current =>
+          Date.parse(current.radall?.refreshedAt || '') >= Date.parse(snap.refreshedAt)
+            ? current
+            : hideLedgerDone({ ...current, radall: snap }, loadLedger()),
+        );
+      });
     const pull = () => {
       pullRole();
       pullGmail();
+      pullRadall();
     };
     pull();
     const onVisible = () => document.visibilityState === 'visible' && pull();
