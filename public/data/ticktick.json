@@ -2,7 +2,7 @@
   "source": "ticktick",
   "metrics": {
     "dueToday": 3,
-    "overdue": 20,
+    "overdue": 14,
     "habits": 36
   },
   "featured": [
@@ -15,11 +15,11 @@
       "completable": false
     },
     {
-      "id": "6a93a5018f087e0df42e2df8",
-      "title": "Gym Session Standards",
-      "detail": "FULL SESSION • Warm up before working sets. • Complete the planned exercises, sets, and reps. • Choose enough weight for the intended effort while keeping controlled form. • Follow",
+      "id": "6a7f89246b0ed10273275b21",
+      "title": "Reset Medicine and Vitamin Holder",
+      "detail": "Medical",
       "meta": "Overdue · Medical",
-      "originUrl": "https://ticktick.com/webapp/#p/69dd6ff6d3e8d1a95e9a96ca/tasks/6a93a5018f087e0df42e2df8",
+      "originUrl": "https://ticktick.com/webapp/#p/69dd6ff6d3e8d1a95e9a96ca/tasks/6a7f89246b0ed10273275b21",
       "completable": false
     },
     {
@@ -28,22 +28,6 @@
       "detail": "Complete the active Job, Resale, and Candle actions. Items marked “when needed” may be skipped when they do not apply.",
       "meta": "Overdue · Life Planning",
       "originUrl": "https://ticktick.com/webapp/#p/69dd701e1ca911a95e9a97c7/tasks/6a9fb6d68f08ecb120d1a125",
-      "completable": false
-    },
-    {
-      "id": "6a93a4ba8f08defd9591a81c",
-      "title": "Life Path & Active Project Direction",
-      "detail": "SHORT TERM • What do I want? • What immediate problem does it solve? • What method or milestone gets me there? • Why am I doing it? GROWTH STRATEGY • Choose one pattern or habit to",
-      "meta": "Overdue · Life Planning",
-      "originUrl": "https://ticktick.com/webapp/#p/69dd701e1ca911a95e9a97c7/tasks/6a93a4ba8f08defd9591a81c",
-      "completable": false
-    },
-    {
-      "id": "6a93a5018f080f71bbb405a7",
-      "title": "Marvel Care & Attention Menu",
-      "detail": "ATTENTION AND PATIENCE Pause, lower urgency, and give Marvel time to respond. DAILY / FLEXIBLE OPTIONS • Sniff activity • Movement: walk, play, or backyard time • Think: training o",
-      "meta": "Overdue · Marvel",
-      "originUrl": "https://ticktick.com/webapp/#p/69dd705c1bd491a95e9a99ca/tasks/6a93a5018f080f71bbb405a7",
       "completable": false
     },
     {
@@ -63,11 +47,27 @@
       "completable": false
     },
     {
+      "id": "69cef56677461102bc8969e4",
+      "title": "Music Month Review",
+      "detail": "[Monthly Music Review](https://docs.google.com/document/d/1nxgWIYZ-1jaaYeraiSaXYPbr-58amkJT5ZbuWHTCwgQ/edit?tab=t.0#heading=h.nqhdk9kcwqzo)",
+      "meta": "Overdue · Creativity",
+      "originUrl": "https://ticktick.com/webapp/#p/69def09b442591a95e9af9db/tasks/69cef56677461102bc8969e4",
+      "completable": false
+    },
+    {
       "id": "6a93a4ba8f0861e0f0e2ae3a",
       "title": "Creative / Tinkering & Project Menu",
       "detail": "SESSION OPTIONS • Music and singing • Curiosity “recess” exploration • Intentional learning • Unrestricted, non-guided making ACTIVE PROJECT MENUS • Deep dives / larger projects • ",
       "meta": "Overdue · Creativity",
       "originUrl": "https://ticktick.com/webapp/#p/69def09b442591a95e9af9db/tasks/6a93a4ba8f0861e0f0e2ae3a",
+      "completable": false
+    },
+    {
+      "id": "6a92084c8f087e0df3ef1720",
+      "title": "Wipe Down Phone, Laptop, and Glasses & Sunglasses",
+      "detail": "Maintenance Organization",
+      "meta": "Overdue · Maintenance Organization",
+      "originUrl": "https://ticktick.com/webapp/#p/69eef620b4b19119328b4dff/tasks/6a92084c8f087e0df3ef1720",
       "completable": false
     },
     {
@@ -109,20 +109,20 @@
       "title": "Nutrition Flow — Use Macro Tracker",
       "detail": "The macro tracker remains authoritative for detailed nutrition. Keep visible: • Protein intake • Antioxidant-rich fruit or vegetable • Daily fluids • Energy snack available before ",
       "status": "open",
-      "due": "2026-09-08",
+      "due": "2026-09-28",
       "starred": false,
       "originUrl": "https://ticktick.com/webapp/#p/69dd6ff6d3e8d1a95e9a96ca/tasks/6a93a4ba8f087e0df42e265c",
       "kind": "task",
       "projectId": "69dd6ff6d3e8d1a95e9a96ca"
     },
     {
-      "id": "6a93a5018f087e0df42e2df8",
-      "title": "Gym Session Standards",
-      "detail": "FULL SESSION • Warm up before working sets. • Complete the planned exercises, sets, and reps. • Choose enough weight for the intended effort while keeping controlled form. • Follow",
+      "id": "6a7f89246b0ed10273275b21",
+      "title": "Reset Medicine and Vitamin Holder",
+      "detail": "Medical",
       "status": "open",
-      "due": "2026-09-08",
+      "due": "2026-09-25",
       "starred": false,
-      "originUrl": "https://ticktick.com/webapp/#p/69dd6ff6d3e8d1a95e9a96ca/tasks/6a93a5018f087e0df42e2df8",
+      "originUrl": "https://ticktick.com/webapp/#p/69dd6ff6d3e8d1a95e9a96ca/tasks/6a7f89246b0ed10273275b21",
       "kind": "task",
       "projectId": "69dd6ff6d3e8d1a95e9a96ca"
     },
@@ -131,40 +131,18 @@
       "title": "Daily Work & Income Flow",
       "detail": "Complete the active Job, Resale, and Candle actions. Items marked “when needed” may be skipped when they do not apply.",
       "status": "open",
-      "due": "2026-09-21",
+      "due": "2026-09-28",
       "starred": true,
       "originUrl": "https://ticktick.com/webapp/#p/69dd701e1ca911a95e9a97c7/tasks/6a9fb6d68f08ecb120d1a125",
       "kind": "task",
       "projectId": "69dd701e1ca911a95e9a97c7"
     },
     {
-      "id": "6a93a4ba8f08defd9591a81c",
-      "title": "Life Path & Active Project Direction",
-      "detail": "SHORT TERM • What do I want? • What immediate problem does it solve? • What method or milestone gets me there? • Why am I doing it? GROWTH STRATEGY • Choose one pattern or habit to",
-      "status": "open",
-      "due": "2026-09-13",
-      "starred": false,
-      "originUrl": "https://ticktick.com/webapp/#p/69dd701e1ca911a95e9a97c7/tasks/6a93a4ba8f08defd9591a81c",
-      "kind": "task",
-      "projectId": "69dd701e1ca911a95e9a97c7"
-    },
-    {
-      "id": "6a93a5018f080f71bbb405a7",
-      "title": "Marvel Care & Attention Menu",
-      "detail": "ATTENTION AND PATIENCE Pause, lower urgency, and give Marvel time to respond. DAILY / FLEXIBLE OPTIONS • Sniff activity • Movement: walk, play, or backyard time • Think: training o",
-      "status": "open",
-      "due": "2026-09-08",
-      "starred": false,
-      "originUrl": "https://ticktick.com/webapp/#p/69dd705c1bd491a95e9a99ca/tasks/6a93a5018f080f71bbb405a7",
-      "kind": "task",
-      "projectId": "69dd705c1bd491a95e9a99ca"
-    },
-    {
       "id": "6a97ae00443fc5b861dea735",
       "title": "Marvel-August 2026 Review",
       "detail": "Marvel has been doing better but i feel like he needs more stimulation. Things have been hard for me in terms of giving unadulterated attention but i am just working so hard to get",
       "status": "open",
-      "due": "2026-09-01",
+      "due": "2026-09-25",
       "starred": false,
       "originUrl": "https://ticktick.com/webapp/#p/69dd705c1bd491a95e9a99ca/tasks/6a97ae00443fc5b861dea735",
       "kind": "task",
@@ -175,9 +153,20 @@
       "title": "Music Session- Main",
       "detail": "May 19- Short production was done --- May 26-Small production session done using train horn- good stuff tbh --- June 2- No session Done --- June 9- Bonaroo ( No Session Done) --- J",
       "status": "open",
-      "due": "2026-09-22",
+      "due": "2026-09-29",
       "starred": false,
       "originUrl": "https://ticktick.com/webapp/#p/69def09b442591a95e9af9db/tasks/6a124c4c639b9152c7faa9b4",
+      "kind": "task",
+      "projectId": "69def09b442591a95e9af9db"
+    },
+    {
+      "id": "69cef56677461102bc8969e4",
+      "title": "Music Month Review",
+      "detail": "[Monthly Music Review](https://docs.google.com/document/d/1nxgWIYZ-1jaaYeraiSaXYPbr-58amkJT5ZbuWHTCwgQ/edit?tab=t.0#heading=h.nqhdk9kcwqzo)",
+      "status": "open",
+      "due": "2026-09-28",
+      "starred": false,
+      "originUrl": "https://ticktick.com/webapp/#p/69def09b442591a95e9af9db/tasks/69cef56677461102bc8969e4",
       "kind": "task",
       "projectId": "69def09b442591a95e9af9db"
     },
@@ -186,42 +175,31 @@
       "title": "Creative / Tinkering & Project Menu",
       "detail": "SESSION OPTIONS • Music and singing • Curiosity “recess” exploration • Intentional learning • Unrestricted, non-guided making ACTIVE PROJECT MENUS • Deep dives / larger projects • ",
       "status": "open",
-      "due": "2026-09-08",
+      "due": "2026-09-28",
       "starred": false,
       "originUrl": "https://ticktick.com/webapp/#p/69def09b442591a95e9af9db/tasks/6a93a4ba8f0861e0f0e2ae3a",
       "kind": "task",
       "projectId": "69def09b442591a95e9af9db"
     },
     {
-      "id": "69f658e5e81f9118d36dc4b0",
-      "title": "Music Sessions Log",
-      "detail": "[Music Session- Main](https://ticktick.com/webapp/#p/69def09b442591a95e9af9db/tasks/6a124c4c639b9152c7faa9b4)-Tuesdays [Music Session](https://ticktick.com/webapp/#p/69def09b442591",
+      "id": "6a92084c8f087e0df3ef1720",
+      "title": "Wipe Down Phone, Laptop, and Glasses & Sunglasses",
+      "detail": "Maintenance Organization",
       "status": "open",
-      "due": "2026-09-08",
+      "due": "2026-09-29",
       "starred": false,
-      "originUrl": "https://ticktick.com/webapp/#p/69def09b442591a95e9af9db/tasks/69f658e5e81f9118d36dc4b0",
+      "originUrl": "https://ticktick.com/webapp/#p/69eef620b4b19119328b4dff/tasks/6a92084c8f087e0df3ef1720",
       "kind": "task",
-      "projectId": "69def09b442591a95e9af9db"
+      "projectId": "69eef620b4b19119328b4dff"
     },
     {
       "id": "6a7e99def51a11ef72a47632",
       "title": "Water Plants 🪴",
       "detail": "Maintenance Organization",
       "status": "open",
-      "due": "2026-09-21",
+      "due": "2026-09-28",
       "starred": false,
       "originUrl": "https://ticktick.com/webapp/#p/69eef620b4b19119328b4dff/tasks/6a7e99def51a11ef72a47632",
-      "kind": "task",
-      "projectId": "69eef620b4b19119328b4dff"
-    },
-    {
-      "id": "69ffbe88cd20d11954046851",
-      "title": "Digital Declutter",
-      "detail": "- [ ] Emails - [ ] Phone Numbers - [ ] Chrome/Safari History - [ ] Saved Payment Methods/Emails - [ ] Old Pictures",
-      "status": "open",
-      "due": "2026-09-20",
-      "starred": false,
-      "originUrl": "https://ticktick.com/webapp/#p/69eef620b4b19119328b4dff/tasks/69ffbe88cd20d11954046851",
       "kind": "task",
       "projectId": "69eef620b4b19119328b4dff"
     },
@@ -230,64 +208,31 @@
       "title": "Clean Headphones",
       "detail": "Maintenance Organization",
       "status": "open",
-      "due": "2026-09-19",
+      "due": "2026-09-28",
       "starred": false,
       "originUrl": "https://ticktick.com/webapp/#p/69eef620b4b19119328b4dff/tasks/6a92084c8f0861e0f0c122e3",
       "kind": "task",
       "projectId": "69eef620b4b19119328b4dff"
     },
     {
-      "id": "6a92084c8f087e0df3ef1720",
-      "title": "Wipe Down Phone, Laptop, and Glasses",
+      "id": "6a4de9df868a5143d5911ff6",
+      "title": "Put Grocery Order In",
+      "detail": "* Sept 6- Dont need to much so just going to shop for it",
+      "status": "open",
+      "due": "2026-09-25",
+      "starred": false,
+      "originUrl": "https://ticktick.com/webapp/#p/69eef620b4b19119328b4dff/tasks/6a4de9df868a5143d5911ff6",
+      "kind": "task",
+      "projectId": "69eef620b4b19119328b4dff"
+    },
+    {
+      "id": "6a92084c8f0861e0f0c122e6",
+      "title": "Reset Drawers, Closet, and Fireplace",
       "detail": "Maintenance Organization",
       "status": "open",
-      "due": "2026-09-19",
+      "due": "2026-09-25",
       "starred": false,
-      "originUrl": "https://ticktick.com/webapp/#p/69eef620b4b19119328b4dff/tasks/6a92084c8f087e0df3ef1720",
-      "kind": "task",
-      "projectId": "69eef620b4b19119328b4dff"
-    },
-    {
-      "id": "6a92084c8f0869c15148f147",
-      "title": "Clean Out Tote",
-      "detail": "Maintenance Organization",
-      "status": "open",
-      "due": "2026-09-19",
-      "starred": false,
-      "originUrl": "https://ticktick.com/webapp/#p/69eef620b4b19119328b4dff/tasks/6a92084c8f0869c15148f147",
-      "kind": "task",
-      "projectId": "69eef620b4b19119328b4dff"
-    },
-    {
-      "id": "6a92084c8f0869c15148f148",
-      "title": "Vacuum Car",
-      "detail": "Aug 29-Skipping Sep 5- Skipping",
-      "status": "open",
-      "due": "2026-09-19",
-      "starred": false,
-      "originUrl": "https://ticktick.com/webapp/#p/69eef620b4b19119328b4dff/tasks/6a92084c8f0869c15148f148",
-      "kind": "task",
-      "projectId": "69eef620b4b19119328b4dff"
-    },
-    {
-      "id": "6a92084c8f0869c15148f149",
-      "title": "Foot Care and Moisturize",
-      "detail": "* Sep 6- Skipped ( Returning Home from Motown)",
-      "status": "open",
-      "due": "2026-09-19",
-      "starred": false,
-      "originUrl": "https://ticktick.com/webapp/#p/69eef620b4b19119328b4dff/tasks/6a92084c8f0869c15148f149",
-      "kind": "task",
-      "projectId": "69eef620b4b19119328b4dff"
-    },
-    {
-      "id": "6a93a4ba8f080f71bbb4017b",
-      "title": "Clean Bathroom — Weekly",
-      "detail": "Clean the toilet, sink, mirror, tub or shower, floor, and remove trash. Complete when the bathroom is reset and usable.",
-      "status": "open",
-      "due": "2026-09-19",
-      "starred": false,
-      "originUrl": "https://ticktick.com/webapp/#p/69eef620b4b19119328b4dff/tasks/6a93a4ba8f080f71bbb4017b",
+      "originUrl": "https://ticktick.com/webapp/#p/69eef620b4b19119328b4dff/tasks/6a92084c8f0861e0f0c122e6",
       "kind": "task",
       "projectId": "69eef620b4b19119328b4dff"
     },
@@ -296,20 +241,9 @@
       "title": "Open Grounding (Reminders)",
       "detail": "# First: Protect Sleep and Rest - Sleep is a priority because it protects healing, regulation, and the ability to act. - Rest during the day when recovery is the real need; do not ",
       "status": "open",
-      "due": "2026-09-21",
+      "due": "2026-09-28",
       "starred": false,
       "originUrl": "https://ticktick.com/webapp/#p/69f65a3753619118d36dd220/tasks/6a39ed1a55fe118362fb8887",
-      "kind": "task",
-      "projectId": "69f65a3753619118d36dd220"
-    },
-    {
-      "id": "6a4d3200f017d143d59110c7",
-      "title": "Personal Check In (Bi Weekly)",
-      "detail": "- [ ] Routines Check In - [ ] Projects and Tasks - [ ] Self Grounding",
-      "status": "open",
-      "due": "2026-09-19",
-      "starred": false,
-      "originUrl": "https://ticktick.com/webapp/#p/69f65a3753619118d36dd220/tasks/6a4d3200f017d143d59110c7",
       "kind": "task",
       "projectId": "69f65a3753619118d36dd220"
     },
@@ -318,29 +252,29 @@
       "title": "Rest & Sleep Priorities",
       "detail": "REST WHILE AWAKE Pause before filling every open moment. Choose physical or mental rest when recovery is the real need. SLEEP Protect sleep as a foundation for healing, regulation,",
       "status": "open",
-      "due": "2026-09-08",
+      "due": "2026-09-28",
       "starred": false,
       "originUrl": "https://ticktick.com/webapp/#p/69f65a3753619118d36dd220/tasks/6a93a4ba8f080f71bbb40176",
       "kind": "task",
       "projectId": "69f65a3753619118d36dd220"
     },
     {
-      "id": "69cefe89a8a19102bc8976dc",
-      "title": "Weekly Finances Review",
-      "detail": "- [x] **Personal Finance Allocation** ::-Review upcoming bills and needed expenses and allocate:: - [x] **Needed/Reoccurring Purchase Review** ::-Review inventory and sheet to see ",
+      "id": "6a7e9be5f535d1ef72a47920",
+      "title": "Marvel Review",
+      "detail": "[Marvel-August 2026 Review](https://ticktick.com/webapp/#p/69dd705c1bd491a95e9a99ca/tasks/6a97ae00443fc5b861dea735)",
       "status": "open",
-      "due": "2026-09-23",
+      "due": "2026-09-30",
       "starred": false,
-      "originUrl": "https://ticktick.com/webapp/#p/69dd701e1ca911a95e9a97c7/tasks/69cefe89a8a19102bc8976dc",
+      "originUrl": "https://ticktick.com/webapp/#p/69dd705c1bd491a95e9a99ca/tasks/6a7e9be5f535d1ef72a47920",
       "kind": "task",
-      "projectId": "69dd701e1ca911a95e9a97c7"
+      "projectId": "69dd705c1bd491a95e9a99ca"
     },
     {
       "id": "69f65956b6485118d36dca31",
       "title": "Music  Session-Maintenance",
       "detail": "Wed- May 20- No music Session Done --- Wed May 27- Production/ No session done --- June 3- No Session Done --- June 10- No Music Session Done ( Bonaroo) --- June 17- When it rains,",
       "status": "open",
-      "due": "2026-09-23",
+      "due": "2026-09-30",
       "starred": false,
       "originUrl": "https://ticktick.com/webapp/#p/69def09b442591a95e9af9db/tasks/69f65956b6485118d36dca31",
       "kind": "task",
@@ -351,7 +285,7 @@
       "title": "Nail and Cuticle Care",
       "detail": "Maintenance Organization",
       "status": "open",
-      "due": "2026-09-23",
+      "due": "2026-09-30",
       "starred": false,
       "originUrl": "https://ticktick.com/webapp/#p/69eef620b4b19119328b4dff/tasks/6a7e9d3c4a4491ef72a47fad",
       "kind": "task",
@@ -396,7 +330,7 @@
     {
       "id": "habit-69cef07abe6e5102bc896025",
       "title": "Wipe Room Surfaces",
-      "detail": "Check-ins: 18",
+      "detail": "Check-ins: 19",
       "status": "open",
       "starred": false,
       "originUrl": "https://ticktick.com/webapp/#q/all/habit",
@@ -405,7 +339,7 @@
     {
       "id": "habit-69cef0cab8fe5102bc89607c",
       "title": "Vacuum Room",
-      "detail": "Check-ins: 29",
+      "detail": "Check-ins: 30",
       "status": "open",
       "starred": false,
       "originUrl": "https://ticktick.com/webapp/#q/all/habit",
@@ -459,7 +393,7 @@
     {
       "id": "habit-69d002d0055a11026a8d9251",
       "title": "Shower or Epsom Salt Bath",
-      "detail": "Check-ins: 12",
+      "detail": "Check-ins: 13",
       "status": "open",
       "starred": false,
       "originUrl": "https://ticktick.com/webapp/#q/all/habit",
@@ -477,7 +411,7 @@
     {
       "id": "habit-69d0150bb3b091026a8d97ce",
       "title": "Train/Play with Marvel",
-      "detail": "Check-ins: 5",
+      "detail": "Check-ins: 6",
       "status": "open",
       "starred": false,
       "originUrl": "https://ticktick.com/webapp/#q/all/habit",
@@ -504,7 +438,7 @@
     {
       "id": "habit-69dd72cff6865117249a9b2d",
       "title": "Smile to yourself",
-      "detail": "Check-ins: 75",
+      "detail": "Check-ins: 79",
       "status": "open",
       "starred": false,
       "originUrl": "https://ticktick.com/webapp/#q/all/habit",
@@ -540,7 +474,7 @@
     {
       "id": "habit-6a939b8e8f087e0df42d2bb6",
       "title": "Full Gym Session — Complete Flow",
-      "detail": "Check-ins: 6",
+      "detail": "Check-ins: 9",
       "status": "open",
       "starred": false,
       "originUrl": "https://ticktick.com/webapp/#q/all/habit",
@@ -549,7 +483,7 @@
     {
       "id": "habit-6a939b928f080f71bbb37508",
       "title": "Active PT — Follow PDF",
-      "detail": "Check-ins: 2",
+      "detail": "Check-ins: 4",
       "status": "open",
       "starred": false,
       "originUrl": "https://ticktick.com/webapp/#q/all/habit",
@@ -576,7 +510,7 @@
     {
       "id": "habit-6a939bbb8f0861e0f0e21dcf",
       "title": "Clean Room Reset",
-      "detail": "Check-ins: 6",
+      "detail": "Check-ins: 8",
       "status": "open",
       "starred": false,
       "originUrl": "https://ticktick.com/webapp/#q/all/habit",
@@ -585,7 +519,7 @@
     {
       "id": "habit-6a939bbe8f08defd95911933",
       "title": "Make Kitchen Usable",
-      "detail": "Check-ins: 7",
+      "detail": "Check-ins: 9",
       "status": "open",
       "starred": false,
       "originUrl": "https://ticktick.com/webapp/#q/all/habit",
@@ -594,7 +528,7 @@
     {
       "id": "habit-6a939bc28f08defd95911956",
       "title": "Daily Marvel Care — Attention + Enrichment",
-      "detail": "Check-ins: 0",
+      "detail": "Check-ins: 1",
       "status": "open",
       "starred": false,
       "originUrl": "https://ticktick.com/webapp/#q/all/habit",
@@ -603,7 +537,7 @@
     {
       "id": "habit-6a93a46e8f0869c15168d502",
       "title": "Daytime Rest / Quiet Reset",
-      "detail": "Check-ins: 6",
+      "detail": "Check-ins: 7",
       "status": "open",
       "starred": false,
       "originUrl": "https://ticktick.com/webapp/#q/all/habit",
@@ -612,7 +546,7 @@
     {
       "id": "habit-6a93a4728f08defd9591a2d1",
       "title": "Eat a Fruit or Vegetable",
-      "detail": "Check-ins: 6",
+      "detail": "Check-ins: 7",
       "status": "open",
       "starred": false,
       "originUrl": "https://ticktick.com/webapp/#q/all/habit",
@@ -621,7 +555,7 @@
     {
       "id": "habit-6a93a4788f080f71bbb3fcdf",
       "title": "Movement Break — Walk, Stretch, or Stand",
-      "detail": "Check-ins: 5",
+      "detail": "Check-ins: 8",
       "status": "open",
       "starred": false,
       "originUrl": "https://ticktick.com/webapp/#q/all/habit",
@@ -657,7 +591,7 @@
     {
       "id": "habit-6a9fb6ba8f08ecb120d19e23",
       "title": "Cardio — Gym",
-      "detail": "Check-ins: 1",
+      "detail": "Check-ins: 2",
       "status": "open",
       "starred": false,
       "originUrl": "https://ticktick.com/webapp/#q/all/habit",
@@ -666,7 +600,7 @@
     {
       "id": "habit-6a9fb6d18f0852d54c2d7860",
       "title": "Recovery: TENS/Massage Gun/Dry Brush/Chair/Stretch-Yoga/Relax",
-      "detail": "Check-ins: 0",
+      "detail": "Check-ins: 1",
       "status": "open",
       "starred": false,
       "originUrl": "https://ticktick.com/webapp/#q/all/habit",
@@ -682,5 +616,5 @@
       "kind": "habit"
     }
   ],
-  "refreshedAt": "2026-09-23T13:05:04.348Z"
+  "refreshedAt": "2026-09-30T12:44:07.004Z"
 }
