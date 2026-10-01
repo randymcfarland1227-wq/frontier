@@ -1,9 +1,9 @@
 {
   "source": "gmail",
   "metrics": {
-    "starred": 7,
+    "starred": 5,
     "unread": 1,
-    "action": 7
+    "action": 5
   },
   "featured": [
     {
@@ -31,22 +31,6 @@
       "completable": false
     },
     {
-      "id": "1a0d99e1e0311733",
-      "title": "Information about your application to C.A.",
-      "detail": "Randy, Thank you for your interest in CA! We received an overwhelming response to the IT Support Specialist position, which makes us feel both humble and proud that so many talente",
-      "meta": "From no-reply@us.greenhouse-mail.io",
-      "originUrl": "https://mail.google.com/mail/?authuser=randymcfarland1227@gmail.com#all/thread-f:1877325815091369779",
-      "completable": false
-    },
-    {
-      "id": "1a0d3f308a7357d9",
-      "title": "You made the sale for Size 12- Vans UltraRange 2.0 Black",
-      "detail": "Next, pack it up and ship it out.",
-      "meta": "From ebay@ebay.com",
-      "originUrl": "https://mail.google.com/mail/?authuser=randymcfarland1227@gmail.com#all/thread-f:1877226097397159897",
-      "completable": false
-    },
-    {
       "id": "1a0ca8746bd9e24c",
       "title": "AutoPay failed—make your payment now",
       "detail": "We weren't able to process your scheduled payment. Please make this payment today. Affirm AutoPay failed for your Shotgun plan We couldn't process your $7.12 payment due Sep 22, 20",
@@ -57,7 +41,7 @@
     {
       "id": "1a0b567ce591d78a",
       "title": "RE: Senior Cvent Platform Administrator - REMOTE",
-      "detail": "Hi Randy, please let me know the best time to call Best regards, Armeena Syiemlieh Lead Recruiter",
+      "detail": "Hi Randy, please let me know the best time to call Best regards, Armeena Syiemlieh Lead Recruiter https://www.linkedin.com/in/asyiemlieh/ ApTask Global Workforce",
       "meta": "From asyiemlieh@agwtalent.com",
       "originUrl": "https://mail.google.com/mail/?authuser=randymcfarland1227@gmail.com#all/thread-f:1876688764157417354",
       "completable": false
@@ -89,22 +73,6 @@
       "originUrl": "https://mail.google.com/mail/?authuser=randymcfarland1227@gmail.com#all/thread-f:1877648636063365386"
     },
     {
-      "id": "1a0d99e1e0311733",
-      "title": "Information about your application to C.A.",
-      "detail": "Randy, Thank you for your interest in CA! We received an overwhelming response to the IT Support Specialist position, which makes us feel both humble and proud that so many talente",
-      "status": "open",
-      "starred": true,
-      "originUrl": "https://mail.google.com/mail/?authuser=randymcfarland1227@gmail.com#all/thread-f:1877325815091369779"
-    },
-    {
-      "id": "1a0d3f308a7357d9",
-      "title": "You made the sale for Size 12- Vans UltraRange 2.0 Black",
-      "detail": "Next, pack it up and ship it out.",
-      "status": "open",
-      "starred": true,
-      "originUrl": "https://mail.google.com/mail/?authuser=randymcfarland1227@gmail.com#all/thread-f:1877226097397159897"
-    },
-    {
       "id": "1a0ca8746bd9e24c",
       "title": "AutoPay failed—make your payment now",
       "detail": "We weren't able to process your scheduled payment. Please make this payment today. Affirm AutoPay failed for your Shotgun plan We couldn't process your $7.12 payment due Sep 22, 20",
@@ -115,11 +83,11 @@
     {
       "id": "1a0b567ce591d78a",
       "title": "RE: Senior Cvent Platform Administrator - REMOTE",
-      "detail": "Hi Randy, please let me know the best time to call Best regards, Armeena Syiemlieh Lead Recruiter",
+      "detail": "Hi Randy, please let me know the best time to call Best regards, Armeena Syiemlieh Lead Recruiter https://www.linkedin.com/in/asyiemlieh/ ApTask Global Workforce",
       "status": "open",
       "starred": true,
       "originUrl": "https://mail.google.com/mail/?authuser=randymcfarland1227@gmail.com#all/thread-f:1876688764157417354"
     }
   ],
-  "refreshedAt": "2026-09-30T12:44:07.004Z"
+  "refreshedAt": "2026-10-01T12:43:42.862Z"
 }
