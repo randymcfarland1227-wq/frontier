@@ -309,6 +309,11 @@ Replaces the share-vs-target Balance. `lib/energy.ts`, `app/components/BalanceSt
 - Review shows **N completed tasks need a bucket or goal** (`NeedsSorting`) for the chosen period — for things done on their own site.
 - Won't-do TickTick tasks (status −1) and habits marked not completed (check-in status 1) never count: the Worker keeps only status 2.
 
-### Live counts under the title (2026-10-01)
+### Live counts beside the title (2026-10-01)
 
-- Under "Randy's Life Hub." (above Why): **N done today** (same number as Review's collapsed count — `completionStats.today`, real completions only) and **N open across K sites** (sum of every card's blue to-do number, `getActionableMetric`), plus a chip per site with open work (tap to open that site). All update as soon as something is marked done here or a source reports it done. `app/components/HomeView.tsx`, `.hero-counts` in `app/globals.css`.
+- Right of "Randy's Life Hub." (above Why; drops below the title on a phone): **N done today** in green (same number as Review's collapsed count — `completionStats.today`, real completions only) and **N open · K sites** in amber (sum of every card's blue to-do number, `getActionableMetric`), plus a chip per site with open work (tap to open that site). Own colors on purpose — not the title's gradient. `app/components/HomeView.tsx`, `.hero-title-row` / `.hero-stat` in `app/globals.css`.
+- Dark mode: header buttons (⚙, Light, Refresh, Today) were white boxes with pale text; now dark surface + light text.
+
+### TickTick: "won't do" habits leave the to-do list (2026-10-01)
+
+- A habit marked not completed for a day (check-in status 1) was dropped by the Worker, so the hub still listed it as to do. `/api/ticktick/done` now also returns `skipped: [{ id, stamp }]`; `pullTickTickDone` adds each stamp to that habit's `exDates`, so `habitDueOn` treats it as off that day — off the TickTick card, the habit count, Balance availability and suggestions. Still never a completion. Needs the Worker redeploy (`npm run deploy`); until then nothing changes.

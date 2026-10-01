@@ -120,29 +120,37 @@ export function HomeView({
   return (
     <>
       <section className="hero hero-flush" id="top">
-        <h1>
-          Randy&apos;s <em>Life Hub.</em>
-        </h1>
+        <div className="hero-title-row">
+          <h1>
+            Randy&apos;s <em>Life Hub.</em>
+          </h1>
+          <div className="hero-counts" aria-live="polite">
+            <div className="hero-stats">
+              <div className="hero-stat stat-done" title="Real completions recorded today, across every site">
+                <strong>{completionStats.today}</strong>
+                <span>done today</span>
+              </div>
+              <div className="hero-stat stat-open" title="Open to-dos across every site (each card's blue number)">
+                <strong>{openTotal}</strong>
+                <span>
+                  open · {openBySite.length} {openBySite.length === 1 ? 'site' : 'sites'}
+                </span>
+              </div>
+            </div>
+            {openBySite.length ? (
+              <div className="hero-count-sites">
+                {openBySite.map(site => (
+                  <button key={site.id} type="button" onClick={() => enter(site.id)} title={`Open ${site.name}`}>
+                    {site.name} <b>{site.count}</b>
+                  </button>
+                ))}
+              </div>
+            ) : null}
+          </div>
+        </div>
         <p className="hero-status" title="Most recent source refresh">
           {updatedLabel(latest)}
         </p>
-        <div className="hero-counts" aria-live="polite">
-          <span className="hero-count" title="Real completions recorded today, across every site">
-            <strong>{completionStats.today}</strong> done today
-          </span>
-          <span className="hero-count" title="Open to-dos across every site (each card's blue number)">
-            <strong>{openTotal}</strong> open across {openBySite.length} {openBySite.length === 1 ? 'site' : 'sites'}
-          </span>
-          {openBySite.length ? (
-            <span className="hero-count-sites">
-              {openBySite.map(site => (
-                <button key={site.id} type="button" onClick={() => enter(site.id)} title={`Open ${site.name}`}>
-                  {site.name} <b>{site.count}</b>
-                </button>
-              ))}
-            </span>
-          ) : null}
-        </div>
       </section>
 
       {whyPanel ? (
