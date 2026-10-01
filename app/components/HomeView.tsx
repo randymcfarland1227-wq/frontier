@@ -110,6 +110,13 @@ export function HomeView({
       .sort()
       .at(-1) || '';
 
+  // Open to-dos per site — the same blue numbers each card shows.
+  const openBySite = [...ROW_1, ...ROW_2, ...ROW_3]
+    .map(id => ({ id, name: sourceById[id].shortName, count: getActionableMetric(id, snapshots[id]).value || 0 }))
+    .filter(site => site.count > 0)
+    .sort((a, b) => b.count - a.count);
+  const openTotal = openBySite.reduce((sum, site) => sum + site.count, 0);
+
   return (
     <>
       <section className="hero hero-flush" id="top">
@@ -119,6 +126,23 @@ export function HomeView({
         <p className="hero-status" title="Most recent source refresh">
           {updatedLabel(latest)}
         </p>
+        <div className="hero-counts" aria-live="polite">
+          <span className="hero-count" title="Real completions recorded today, across every site">
+            <strong>{completionStats.today}</strong> done today
+          </span>
+          <span className="hero-count" title="Open to-dos across every site (each card's blue number)">
+            <strong>{openTotal}</strong> open across {openBySite.length} {openBySite.length === 1 ? 'site' : 'sites'}
+          </span>
+          {openBySite.length ? (
+            <span className="hero-count-sites">
+              {openBySite.map(site => (
+                <button key={site.id} type="button" onClick={() => enter(site.id)} title={`Open ${site.name}`}>
+                  {site.name} <b>{site.count}</b>
+                </button>
+              ))}
+            </span>
+          ) : null}
+        </div>
       </section>
 
       {whyPanel ? (
