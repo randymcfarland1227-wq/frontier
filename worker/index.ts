@@ -310,6 +310,8 @@ async function handleTickTickDone(request: Request, env: Env): Promise<Response>
   }
 
   const habits: Array<Record<string, unknown>> = [];
+  // Habits marked "won't do" (check-in status 1) for a day — not done, but no longer to do that day.
+  const skipped: Array<{ id: string; stamp: string }> = [];
   // Each habit's schedule, so Life Hub knows which habits are due on a given day.
   let schedule: Array<Record<string, unknown>> = [];
   try {
@@ -335,7 +337,9 @@ async function handleTickTickDone(request: Request, env: Env): Promise<Response>
           const value = Number(c.value) || 0;
           const goal = Number(c.goal) || Number(habit?.goal) || 1;
           const done = c.status === 2 || (c.status == null && value >= goal && value > 0);
-          if (!done || !stampRe.test(String(c.stamp))) continue;
+          if (!stampRe.test(String(c.stamp))) continue;
+          if (c.status === 1) skipped.push({ id: `habit-${doc.habitId}`, stamp: String(c.stamp) });
+          if (!done) continue;
           habits.push({
             id: `habit-${doc.habitId}`,
             title: habit?.name,
@@ -349,7 +353,7 @@ async function handleTickTickDone(request: Request, env: Env): Promise<Response>
     errors.push(`habits:${(e as Error).message}`);
   }
 
-  return jsonResponse({ ok: errors.length < 2, tasks, habits, schedule, errors }, 200, origin);
+  return jsonResponse({ ok: errors.length < 2, tasks, habits, schedule, skipped, errors }, 200, origin);
 }
 
 /**

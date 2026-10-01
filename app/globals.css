@@ -1245,15 +1245,26 @@ a.origin-link:hover strong {
 .priority-row.is-critical { --src: #dc2626; background: color-mix(in srgb, #dc2626 8%, var(--surface, #fff)); box-shadow: inset 3px 0 0 #dc2626; }
 .featured-row.one-line { gap: 8px; }
 
-/* Live counts under the title: done today + open across sites */
-.hero-counts { flex-basis: 100%; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 4px; }
-.hero-count { padding: 5px 12px; border: 1px solid var(--line); border-radius: 999px; background: var(--glass); color: var(--muted); font-size: 13px; font-weight: 600; white-space: nowrap; }
-.hero-count strong {
-  margin-right: 2px; font-size: 15px; font-weight: 750;
-  background: linear-gradient(120deg, #2563eb, #7c3aed 60%, #db2777);
-  -webkit-background-clip: text; background-clip: text; color: transparent;
-}
-.hero-count-sites { display: flex; flex-wrap: wrap; gap: 4px; }
-.hero-count-sites button { padding: 3px 9px; border: 1px solid var(--line); border-radius: 999px; background: transparent; color: var(--muted); font: inherit; font-size: 11px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+/* Live counts beside the title: done today + open across sites (own colors, not the title gradient) */
+.hero-title-row { display: flex; align-items: center; flex-wrap: wrap; gap: 14px 28px; min-width: 0; }
+.hero-counts { display: grid; gap: 6px; }
+.hero-stats { display: flex; gap: 8px; }
+.hero-stat { display: grid; justify-items: start; padding: 8px 14px 7px; border: 1px solid var(--line); border-radius: 14px; background: var(--glass); backdrop-filter: blur(10px); min-width: 96px; }
+.hero-stat strong { font-size: clamp(26px, 3.2vw, 38px); font-weight: 760; line-height: 1; letter-spacing: -.04em; font-variant-numeric: tabular-nums; }
+.hero-stat span { margin-top: 3px; color: var(--muted); font-size: 12px; font-weight: 650; white-space: nowrap; }
+.hero-stat.stat-done { border-color: color-mix(in srgb, #10b981 45%, var(--line)); }
+.hero-stat.stat-done strong { color: #059669; }
+.hero-stat.stat-open { border-color: color-mix(in srgb, #f59e0b 45%, var(--line)); }
+.hero-stat.stat-open strong { color: #d97706; }
+[data-theme="dark"] .hero-stat.stat-done strong { color: #34d399; }
+[data-theme="dark"] .hero-stat.stat-open strong { color: #fbbf24; }
+.hero-count-sites { display: flex; flex-wrap: wrap; gap: 4px; max-width: 420px; }
+.hero-count-sites button { padding: 3px 9px; border: 1px solid var(--line); border-radius: 999px; background: var(--glass); color: var(--muted); font: inherit; font-size: 11px; font-weight: 600; cursor: pointer; white-space: nowrap; }
 .hero-count-sites button:hover, .hero-count-sites button:focus-visible { color: var(--ink); border-color: var(--accent); outline: none; }
 .hero-count-sites b { color: var(--ink); font-weight: 700; }
+
+/* Dark mode: header buttons were white boxes with pale text */
+[data-theme="dark"] .mode-button { background: var(--surface-2); border-color: var(--line); color: var(--ink); opacity: 1; }
+[data-theme="dark"] .mode-button:hover:not(:disabled) { border-color: var(--accent); }
+[data-theme="dark"] .mode-button span { background: var(--ink); color: var(--bg); }
+[data-theme="dark"] .mode-button:disabled { opacity: .6; }

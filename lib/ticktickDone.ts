@@ -98,7 +98,13 @@ export async function pullTickTickDone(): Promise<CompletionLedger | null> {
     start: start.toISOString(),
     end: end.toISOString(),
   });
-  let body: { ok?: boolean; tasks?: DoneTask[]; habits?: DoneHabit[]; schedule?: HabitSchedule[] };
+  let body: {
+    ok?: boolean;
+    tasks?: DoneTask[];
+    habits?: DoneHabit[];
+    schedule?: HabitSchedule[];
+    skipped?: Array<{ id: string; stamp: string }>;
+  };
   try {
     const res = await fetch(`${WORKER_BASE}/api/ticktick/done?${q}`, { headers: syncKeyHeader(), cache: 'no-store' });
     if (!res.ok) return null;
@@ -106,7 +112,15 @@ export async function pullTickTickDone(): Promise<CompletionLedger | null> {
   } catch {
     return null;
   }
-  if (Array.isArray(body.schedule) && body.schedule.length) lastSchedule = body.schedule;
+  if (Array.isArray(body.schedule) && body.schedule.length) {
+    // A habit marked "won't do" for a day is off that day: not on the to-do list, not counted
+    // as available work. Treated like TickTick's own skipped dates (exDates).
+    const skipped = Array.isArray(body.skipped) ? body.skipped : [];
+    lastSchedule = body.schedule.map(h => {
+      const off = skipped.filter(s => s.id === h.id).map(s => s.stamp);
+      return off.length ? { ...h, exDates: [...(h.exDates || []), ...off] } : h;
+    });
+  }
   let ledger = loadLedger();
   const before = Object.keys(ledger.entries).length;
   let moved = false;
