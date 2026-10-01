@@ -308,3 +308,7 @@ Replaces the share-vs-target Balance. `lib/energy.ts`, `app/components/BalanceSt
 - Marking done in Life Hub asks bucket + goal (`AreaPicker`) when either is unknown and saves the answer (option: every task from that site). Gmail/Outlook still ask the bucket unless a rule sets it.
 - Review shows **N completed tasks need a bucket or goal** (`NeedsSorting`) for the chosen period — for things done on their own site.
 - Won't-do TickTick tasks (status −1) and habits marked not completed (check-in status 1) never count: the Worker keeps only status 2.
+
+### Live counts under the title (2026-10-01)
+
+- Under "Randy's Life Hub." (above Why): **N done today** (same number as Review's collapsed count — `completionStats.today`, real completions only) and **N open across K sites** (sum of every card's blue to-do number, `getActionableMetric`), plus a chip per site with open work (tap to open that site). All update as soon as something is marked done here or a source reports it done. `app/components/HomeView.tsx`, `.hero-counts` in `app/globals.css`.

@@ -1244,3 +1244,16 @@ a.origin-link:hover strong {
 .featured-row.is-critical { background: color-mix(in srgb, #dc2626 9%, transparent); box-shadow: inset 3px 0 0 #dc2626; }
 .priority-row.is-critical { --src: #dc2626; background: color-mix(in srgb, #dc2626 8%, var(--surface, #fff)); box-shadow: inset 3px 0 0 #dc2626; }
 .featured-row.one-line { gap: 8px; }
+
+/* Live counts under the title: done today + open across sites */
+.hero-counts { flex-basis: 100%; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 4px; }
+.hero-count { padding: 5px 12px; border: 1px solid var(--line); border-radius: 999px; background: var(--glass); color: var(--muted); font-size: 13px; font-weight: 600; white-space: nowrap; }
+.hero-count strong {
+  margin-right: 2px; font-size: 15px; font-weight: 750;
+  background: linear-gradient(120deg, #2563eb, #7c3aed 60%, #db2777);
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+.hero-count-sites { display: flex; flex-wrap: wrap; gap: 4px; }
+.hero-count-sites button { padding: 3px 9px; border: 1px solid var(--line); border-radius: 999px; background: transparent; color: var(--muted); font: inherit; font-size: 11px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+.hero-count-sites button:hover, .hero-count-sites button:focus-visible { color: var(--ink); border-color: var(--accent); outline: none; }
+.hero-count-sites b { color: var(--ink); font-weight: 700; }
