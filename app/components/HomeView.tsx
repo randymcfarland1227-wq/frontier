@@ -148,9 +148,6 @@ export function HomeView({
   renderBalance,
   renderSorting,
   capturesPanel,
-  whyPanel,
-  whySummary,
-  selfSummary,
 }: {
   snapshots: Record<SourceId, SourceSnapshot>;
   enter: (id: SpaceId) => void;
@@ -164,10 +161,6 @@ export function HomeView({
   renderBalance?: (period: EnergyWindow) => ReactNode;
   renderSorting?: (entries: CompletionEntry[]) => ReactNode;
   capturesPanel: ReactNode;
-  whyPanel: ReactNode;
-  /** Collapsed-bar summaries built by LifeHub (it holds goals / Self data) */
-  whySummary?: ReactNode;
-  selfSummary?: ReactNode;
 }) {
   const latest =
     Object.values(snapshots)

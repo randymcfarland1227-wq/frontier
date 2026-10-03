@@ -134,15 +134,3 @@ export function SourceCard({
     </article>
   );
 }
-
-/** The card's blue "to do" number, shown beside the name while the card is collapsed. */
-function CollapsedCount({ source, snapshot }: { source: SourceDefinition; snapshot: SourceSnapshot }) {
-  const actionable = getActionableMetric(source.id, snapshot);
-  if (!Number.isFinite(actionable.value)) return null;
-  return (
-    <span className="collapsed-count" title={`${actionable.value} ${actionable.label}`}>
-      {actionable.value.toLocaleString()}
-      <span className="sr-only"> {actionable.label}</span>
-    </span>
-  );
-}

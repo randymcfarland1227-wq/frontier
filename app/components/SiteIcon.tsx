@@ -11,6 +11,8 @@ export function SiteIcon({ source, className = '' }: { source: SourceId; classNa
   const def = sourceById[source];
   return (
     <span className={`site-icon ${src ? 'has-img' : ''} ${isCustom(source) ? 'is-photo' : ''} ${className}`} aria-hidden="true">
+      {/* Plain <img>: this is a Vite site (no next/image), and sources are tiny SVGs / data URLs */}
+      {/* eslint-disable-next-line @next/next/no-img-element */}
       {src ? <img src={src} alt="" /> : def?.marker}
     </span>
   );
