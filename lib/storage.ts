@@ -29,6 +29,8 @@ export const STORAGE_KEYS = {
   completions: 'lifehub-completions',
   theme: 'lifehub-theme',
   priorityPins: 'lifehub-priority-pins',
+  /** Priority workstation lanes: "source:id" → { lane, order, at } — cloud-synced */
+  priorityLanes: 'lifehub-priority-lanes',
   captures: 'lifehub-captures',
   goalLinks: 'lifehub-goal-links',
   /** Cloud backup key for this device — never synced */

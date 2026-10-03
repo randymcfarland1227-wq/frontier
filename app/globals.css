@@ -1450,3 +1450,69 @@ a.origin-link:hover strong {
   .card-v2 .card-head { padding: 12px 12px 10px; }
   .card-v2 .card-body { padding: 10px 12px 12px; }
 }
+
+/* ======================================================================
+   UI pass 3: Priority workstation — Now / Next / Later lanes.
+   ====================================================================== */
+.workstation .priority-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; flex-wrap: wrap; }
+.ws-add { position: relative; display: flex; gap: 8px; flex: 0 1 520px; min-width: min(100%, 320px); }
+.ws-add input, .ws-add select {
+  border: 1px solid var(--line); border-radius: 10px; background: var(--surface-2); color: var(--ink);
+  font: inherit; font-size: 14px; padding: 9px 12px; min-width: 0;
+}
+.ws-add input { flex: 1 1 auto; }
+.ws-add input:focus, .ws-add select:focus { outline: none; border-color: var(--sec, var(--accent)); }
+.workstation .ws-matches.glass-panel {
+  position: absolute; top: calc(100% + 6px); left: 0; right: 0; z-index: 30; padding: 6px; display: grid; gap: 2px;
+  background: #ffffff; backdrop-filter: none; box-shadow: 0 18px 40px rgba(0, 0, 0, .3); border-radius: 12px;
+}
+.frontier-shell[data-color-mode="dark"] .workstation .ws-matches.glass-panel { background: #15122a; }
+.ws-match {
+  display: flex; align-items: center; gap: 8px; min-width: 0; padding: 8px 10px; border: 0; border-radius: 9px;
+  background: none; color: var(--ink); font: inherit; text-align: left; cursor: pointer;
+}
+.ws-match:hover { background: color-mix(in srgb, var(--accent) 14%, transparent); }
+.ws-match strong { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 14px; font-weight: 600; }
+.ws-match .priority-source { margin: 0; flex-shrink: 0; }
+.ws-match-add { flex-shrink: 0; color: var(--muted); font-size: 12px; font-weight: 700; }
+
+.ws-lanes { margin-top: 16px; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; align-items: start; }
+.ws-lane {
+  --lane: #fb7185; min-height: 160px; border-radius: 14px; padding: 10px;
+  border: 1px solid color-mix(in srgb, var(--lane) 30%, var(--line));
+  background: color-mix(in srgb, var(--lane) 6%, transparent); transition: border-color .15s, background .15s;
+}
+.ws-lane.lane-next { --lane: #f59e0b; }
+.ws-lane.lane-later { --lane: #60a5fa; }
+.ws-lane.is-over { border-color: var(--lane); background: color-mix(in srgb, var(--lane) 14%, transparent); }
+.ws-lane-head { display: flex; align-items: baseline; gap: 8px; padding: 2px 4px 10px; }
+.ws-lane-head strong { color: var(--lane); font-size: 15px; font-weight: 800; letter-spacing: .02em; text-transform: uppercase; }
+.ws-lane-head span { color: var(--muted); font-size: 12.5px; }
+.ws-lane-head b { margin-left: auto; min-width: 24px; text-align: center; padding: 1px 8px; border-radius: 999px; background: color-mix(in srgb, var(--lane) 22%, transparent); color: var(--ink); font-size: 13px; }
+.ws-lane-list { display: grid; gap: 8px; }
+.ws-empty { margin: 0; padding: 22px 8px; border: 1px dashed color-mix(in srgb, var(--lane) 40%, var(--line)); border-radius: 10px; text-align: center; color: var(--muted); font-size: 13px; }
+
+.ws-card {
+  --src: #64748b; display: grid; gap: 6px; padding: 10px 11px; border-radius: 11px; cursor: grab;
+  border: 1px solid color-mix(in srgb, var(--src) 45%, var(--line)); box-shadow: inset 3px 0 0 var(--src);
+  background: var(--surface, #fff);
+}
+.ws-card:active { cursor: grabbing; }
+.ws-card.is-dragging { opacity: .45; }
+.ws-card.is-over { box-shadow: inset 3px 0 0 var(--src), 0 -3px 0 var(--lane); }
+.ws-card.is-critical { --src: #dc2626; background: color-mix(in srgb, #dc2626 8%, var(--surface, #fff)); }
+.ws-card.src-ticktick { --src: #4772fa; } .ws-card.src-radall { --src: #c27803; } .ws-card.src-gmail { --src: #d93025; }
+.ws-card.src-outlook { --src: #0078d4; } .ws-card.src-resale { --src: #0d8f68; } .ws-card.src-role { --src: #5968e8; }
+.ws-card.src-candle { --src: #9d55cf; } .ws-card.src-income { --src: #0f766e; } .ws-card.src-move { --src: #ea580c; }
+.ws-card.src-repair { --src: #64748b; } .ws-card.src-self { --src: #7c3aed; }
+.ws-card-top { display: flex; align-items: center; gap: 6px; min-width: 0; }
+.ws-card-top .priority-source { margin: 0; color: var(--src); background: color-mix(in srgb, var(--src) 16%, transparent); }
+.ws-card-top .task-tag { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.ws-grip { margin-left: auto; color: var(--muted); font-size: 12px; letter-spacing: -2px; opacity: .6; }
+.ws-card-title strong { display: block; font-size: 15px; font-weight: 650; line-height: 1.3; overflow-wrap: anywhere; }
+.ws-card-title a { color: inherit; text-decoration: none; }
+.ws-card-title a:hover strong { text-decoration: underline; }
+.ws-card-actions { display: flex; align-items: center; gap: 5px; }
+.ws-card-actions .row-action:disabled { opacity: .3; cursor: default; }
+.ws-spacer { flex: 1; }
+@media (max-width: 900px) { .ws-lanes { grid-template-columns: 1fr; } }

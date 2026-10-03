@@ -27,6 +27,8 @@ export type SyncedState = {
   stars: Record<string, { starred: boolean; at: string }>;
   /** Task sorting rules: "source::t:name" → bucket / goal; newest change wins */
   rules: Record<string, { area?: string | null; goal?: string | null; at: string }>;
+  /** Priority workstation: "source:id" → lane + order; newest change per task wins */
+  priority: Record<string, { lane: string | null; order: number; at: string }>;
 };
 
 /**
@@ -83,6 +85,7 @@ export function emptyState(): SyncedState {
     levels: {},
     stars: {},
     rules: {},
+    priority: {},
   };
 }
 
@@ -111,6 +114,7 @@ export function normalizeState(raw: unknown): SyncedState {
     levels: s.levels && typeof s.levels === 'object' ? s.levels : {},
     stars: s.stars && typeof s.stars === 'object' ? s.stars : {},
     rules: s.rules && typeof s.rules === 'object' ? s.rules : {},
+    priority: s.priority && typeof s.priority === 'object' ? s.priority : {},
   };
 }
 
@@ -187,6 +191,7 @@ export function mergeState(aRaw: unknown, bRaw: unknown): SyncedState {
     levels: mergeLevels(a.levels, b.levels),
     stars: mergeLevels(a.stars, b.stars),
     rules: mergeLevels(a.rules, b.rules),
+    priority: mergeLevels(a.priority, b.priority),
   };
 }
 

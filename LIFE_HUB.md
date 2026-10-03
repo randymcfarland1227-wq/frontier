@@ -317,3 +317,9 @@ Replaces the share-vs-target Balance. `lib/energy.ts`, `app/components/BalanceSt
 ### TickTick: "won't do" habits leave the to-do list (2026-10-01)
 
 - A habit marked not completed for a day (check-in status 1) was dropped by the Worker, so the hub still listed it as to do. `/api/ticktick/done` now also returns `skipped: [{ id, stamp }]`; `pullTickTickDone` adds each stamp to that habit's `exDates`, so `habitDueOn` treats it as off that day — off the TickTick card, the habit count, Balance availability and suggestions. Still never a completion. Needs the Worker redeploy (`npm run deploy`); until then nothing changes.
+
+## UI passes (2026-10-03)
+
+- **Pass 1:** sections carry a tone + icon (`Collapsible` `tone`/`icon`/`summary`): Why gold, Review green, Self violet, Priority rose, Daily ops blue, Money amber, Ventures teal; collapsed bars show summary chips. Header site row → **Sites ▾** menu. Auto page size by width (`ZoomControl`: 100/112/125% at <1400/≥1400/≥1750 until a size is picked; % resets to Auto; an old stored 100 counts as unset). Review: tiles left, By source right; Balance two columns ≥1300px.
+- **Pass 2:** `SourceCard` (`.card-v2`): header = icon · name · to-do chip + other metrics · one-line subtext (label · sync · links), ↗ and ▾; no number/metric grid/description/footer; Starred hidden when empty; `TaskList open` shows the list immediately.
+- **Pass 3:** Priority is a workstation (`PriorityBoard`): Now / Next / Later lanes, drag to move/reorder (or ◀ ▶), search to pull any open task in, Done completes on its site. Stored in `lifehub-priority-lanes` (`source:id` → `{lane, order, at}`), cloud-synced as `priority`; the old `lifehub-priority-pins` list folds into Now once. Critical items show in Now until placed.
