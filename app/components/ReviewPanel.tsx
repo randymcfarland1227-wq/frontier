@@ -88,6 +88,7 @@ export function ReviewPanel({
           <strong>{stats.inventoryTasks}</strong> in hub inventory
         </p>
       </div>
+      <div className="review-body">
       <div className="stats-strip period-tiles" role="group" aria-label="Choose a period">
         {PERIODS.map(p => (
           <button
@@ -102,6 +103,7 @@ export function ReviewPanel({
           </button>
         ))}
       </div>
+      <div className="review-sources-col">
       <p className="section-label review-sources-label">By source · {periodLabel}</p>
       <div className="review-bars">
         {periodShares.length === 0 ? (
@@ -138,6 +140,8 @@ export function ReviewPanel({
             );
           })
         )}
+      </div>
+      </div>
       </div>
       {renderSorting ? renderSorting(inPeriod) : null}
       </div>
