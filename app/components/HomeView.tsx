@@ -47,14 +47,16 @@ function DailyOps({ card }: { card: (id: SourceId) => ReactNode }) {
         const colH = (c: Col) => c.reduce((sum, id) => sum + h(id), 0) + GAP * (c.length - 1);
         const tt = grid.querySelector('.space-card.ticktick') as HTMLElement | null;
         const threeCols = getComputedStyle(grid).gridTemplateColumns.split(' ').length >= 3;
-        if (!tt || !threeCols || tt.classList.contains('is-collapsed')) {
+        if (!tt || !threeCols) {
           setTtHeight(prev => (prev === null ? prev : null));
           return;
         }
+        const tallest = Math.max(colH(DAILY_COLS[0]), colH(DAILY_COLS[1]));
+        // Collapsed: TickTick's bar matches the stacked bars beside it. Open: capped at its own list.
         const head = tt.querySelector('.card-head') as HTMLElement | null;
         const body = tt.querySelector('.card-body') as HTMLElement | null;
         const natural = (head?.offsetHeight || 0) + (body?.scrollHeight || 0) + 8;
-        const next = Math.round(Math.min(natural, Math.max(colH(DAILY_COLS[0]), colH(DAILY_COLS[1]))));
+        const next = Math.round(tt.classList.contains('is-collapsed') ? tallest : Math.min(natural, tallest));
         setTtHeight(prev => (prev !== null && Math.abs(prev - next) < 2 ? prev : next));
       });
     };
