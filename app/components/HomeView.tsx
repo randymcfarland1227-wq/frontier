@@ -37,6 +37,8 @@ function DailyOps({ card }: { card: (id: SourceId) => ReactNode }) {
   const ref = useRef<HTMLDivElement>(null);
   const [cols, setCols] = useState<[Col, Col]>(DAILY_LAYOUTS[0]);
   const [ttHeight, setTtHeight] = useState<number | null>(null);
+  // Guard against flip-flopping: only re-arrange for a clear win, and not again for a few seconds.
+  const lastSwitch = useRef(0);
 
   useLayoutEffect(() => {
     const grid = ref.current?.parentElement;
@@ -47,16 +49,23 @@ function DailyOps({ card }: { card: (id: SourceId) => ReactNode }) {
       frame = requestAnimationFrame(() => {
         const h = (id: SourceId) => (grid.querySelector(`.space-card.${id}`) as HTMLElement | null)?.offsetHeight || 0;
         const colH = (c: Col) => c.reduce((sum, id) => sum + h(id), 0) + GAP * (c.length - 1);
-        let best = DAILY_LAYOUTS[0];
-        let bestDiff = Math.abs(colH(best[0]) - colH(best[1]));
-        for (const layout of DAILY_LAYOUTS.slice(1)) {
-          const diff = Math.abs(colH(layout[0]) - colH(layout[1]));
-          if (diff < bestDiff - 8) {
+        const diffOf = (layout: [Col, Col]) => Math.abs(colH(layout[0]) - colH(layout[1]));
+        let best = cols;
+        let bestDiff = diffOf(cols);
+        for (const layout of DAILY_LAYOUTS) {
+          const diff = diffOf(layout);
+          if (diff < bestDiff - 60) {
             best = layout;
             bestDiff = diff;
           }
         }
-        setCols(prev => (prev.join('|') === best.join('|') ? prev : best));
+        const now = Date.now();
+        if (best !== cols && now - lastSwitch.current > 4000) {
+          lastSwitch.current = now;
+          setCols(best);
+        } else {
+          best = cols;
+        }
         const tt = grid.querySelector('.space-card.ticktick') as HTMLElement | null;
         const threeCols = getComputedStyle(grid).gridTemplateColumns.split(' ').length >= 3;
         if (!tt || !threeCols || tt.classList.contains('is-collapsed')) {
