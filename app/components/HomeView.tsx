@@ -115,14 +115,14 @@ function SourceRow({
       >
         {gridClass === 'space-grid-daily' ? (
           <>
-            {/* TickTick on the left; two independent stacks on the right, so no card is padded to match a neighbor */}
+            {/* TickTick (fills the row, scrolls) | Self tool over Outlook | Gmail over Repair */}
             {card('ticktick')}
             <div className="daily-col">
               {card('self')}
-              {card('gmail')}
+              {card('outlook')}
             </div>
             <div className="daily-col">
-              {card('outlook')}
+              {card('gmail')}
               {card('repair')}
             </div>
           </>
@@ -219,13 +219,6 @@ export function HomeView({
         </p>
       </section>
 
-      {whyPanel ? (
-        <section className="source-row" aria-label="Why">
-          <Collapsible id="why" label="Why" title="What the work is for" tone="why" icon="✦" summary={whySummary}>
-            {whyPanel}
-          </Collapsible>
-        </section>
-      ) : null}
 
       <section className="source-row" aria-label="Review">
         <Collapsible
@@ -261,14 +254,9 @@ export function HomeView({
         </Collapsible>
       </section>
 
-      <section className="source-row" aria-label="Self — thoughts, ideas, research and tasks">
-        <Collapsible id="self" label="Self" title="Thoughts, ideas, research & tasks" tone="self" icon="✧" summary={selfSummary}>
-          {capturesPanel}
-        </Collapsible>
-      </section>
 
       <section className="source-row" aria-label="Priority">
-        <Collapsible id="priority" label="Priority" title="Your plan" tone="priority" icon="◎" summary={<PrioritySummary />}>
+        <Collapsible id="priority" label="Priority" title="Doing now" tone="priority" icon="◎" summary={<PrioritySummary />}>
           <PriorityBoard
             snapshots={snapshots}
             enter={id => enter(id)}
@@ -279,6 +267,7 @@ export function HomeView({
 
       <SourceRow
         ids={ROW_1}
+        extra={{ self: capturesPanel }}
         label="Daily ops"
         tone="ops"
         icon="◐"

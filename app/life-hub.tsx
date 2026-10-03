@@ -88,6 +88,7 @@ import {
 } from '../lib/goals';
 import { ruleFor, saveTaskRule, sourceRuleKey, taskRuleKey, useTaskRules } from '../lib/taskRules';
 import { TaskSorting } from './components/TaskSorting';
+import { SiteIconSettings } from './components/SiteIconSettings';
 import { NeedsSorting } from './components/NeedsSorting';
 import { backfillFocusAreas, loadFocusAreas, type FocusAreaConfig } from '../lib/focusAreas';
 
@@ -755,8 +756,25 @@ export function LifeHub() {
     frameRefs.current[id] = el;
   };
 
+  // Why lives on its own page (header ✦ Why); the same panel feeds Home's summary data.
+  const whyPanel = (
+goalsData ? (
+              <WhyPanel
+                data={goalsData}
+                links={goalLinks}
+                ledger={visibleLedger}
+                captures={captures}
+                snapshots={visibleSnapshots}
+                selfItems={selfItems}
+                areas={focusConfig?.areas || []}
+                onLink={(goalId, target, label) => setGoalLinks(addLink(seedLinks, goalId, target, label))}
+                onUnlink={linkId => setGoalLinks(removeLink(seedLinks, linkId))}
+              />
+            ) : null
+  );
+
   return (
-    <main className={`frontier-shell theme-${active === 'home' || active === 'settings' ? 'home' : active}`} data-color-mode={theme}>
+    <main className={`frontier-shell theme-${active === 'home' || active === 'settings' || active === 'why' ? 'home' : active}`} data-color-mode={theme}>
       <Header
         active={active}
         enter={enter}
@@ -830,21 +848,7 @@ export function LifeHub() {
               </span>
             </>
           }
-          whyPanel={
-            goalsData ? (
-              <WhyPanel
-                data={goalsData}
-                links={goalLinks}
-                ledger={visibleLedger}
-                captures={captures}
-                snapshots={visibleSnapshots}
-                selfItems={selfItems}
-                areas={focusConfig?.areas || []}
-                onLink={(goalId, target, label) => setGoalLinks(addLink(seedLinks, goalId, target, label))}
-                onUnlink={linkId => setGoalLinks(removeLink(seedLinks, linkId))}
-              />
-            ) : null
-          }
+          whyPanel={whyPanel}
           capturesPanel={
             <CapturesPanel
               captures={captures}
@@ -876,8 +880,11 @@ export function LifeHub() {
             />
           }
         />
+      ) : active === 'why' ? (
+        <div className="settings-view why-view">{whyPanel || <p className="review-empty">Loading goals…</p>}</div>
       ) : active === 'settings' ? (
         <div className="settings-view">
+          <SiteIconSettings />
           <TaskSorting
             snapshots={visibleSnapshots}
             ledger={visibleLedger}

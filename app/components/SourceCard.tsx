@@ -8,6 +8,7 @@ import { getActionableMetric } from '../../lib/actionable';
 import { metricValue } from '../../lib/protocol';
 import { FeaturedList } from './FeaturedList';
 import { TaskList } from './TaskList';
+import { SiteIcon } from './SiteIcon';
 
 /** "● live · 9:12 PM" when fresh, otherwise "synced Sep 25, 4:22 AM". */
 function syncText(iso: string) {
@@ -59,7 +60,7 @@ export function SourceCard({
     <article className={`space-card card-v2 ${source.id}${source.placeholder ? ' placeholder' : ''}${collapsed ? ' is-collapsed' : ''}`}>
       <header className="card-head">
         <button type="button" className="card-icon" onClick={onEnter} title={`Open ${source.name} page`} aria-label={`Open ${source.name} page`}>
-          {source.marker}
+          <SiteIcon source={source.id} />
         </button>
         <div className="card-head-main">
           <div className="card-head-line">
@@ -109,6 +110,9 @@ export function SourceCard({
       {collapsed ? null : (
         <div className="card-body">
           {extra}
+          {/* The Self card's body is the Self tool itself (it has its own task list) */}
+          {extra && source.id === 'self' ? null : (
+          <>
           {snapshot.featured.length ? (
             <FeaturedList sourceId={source.id} snapshot={snapshot} compact onComplete={onCompleteFeatured} />
           ) : null}
@@ -121,7 +125,10 @@ export function SourceCard({
             onComplete={onCompleteTask}
             onStar={onStarTask}
             split={source.id === 'ticktick'}
+            fill={source.id === 'ticktick'}
           />
+          </>
+          )}
         </div>
       )}
     </article>
