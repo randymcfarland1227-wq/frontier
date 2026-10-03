@@ -1604,3 +1604,47 @@ button.featured-more:hover { text-decoration: underline; }
 .priority-row.src-repair, .ws-card.src-repair { --src: var(--c-repair); } .site-chip.src-repair b { color: var(--c-repair); } .sites-pop button.src-repair .sites-mark { color: var(--c-repair); background: color-mix(in srgb, var(--c-repair) 18%, transparent); }
 .space-card.self { --card-accent: var(--c-self); } .theme-self { --accent: var(--c-self); --accent-soft: color-mix(in srgb, var(--c-self) 14%, var(--surface)); }
 .priority-row.src-self, .ws-card.src-self { --src: var(--c-self); } .site-chip.src-self b { color: var(--c-self); } .sites-pop button.src-self .sites-mark { color: var(--c-self); background: color-mix(in srgb, var(--c-self) 18%, transparent); }
+
+/* ======================================================================
+   Font (2026-10): Barlow Condensed, lighter. Only 400/500/600 are loaded,
+   so any heavier weight in older rules renders as semi-bold at most.
+   Body text is regular; titles, names and numbers are semi-bold.
+   ====================================================================== */
+body, .frontier-shell, button, input, select, textarea {
+  font-family: 'Barlow Condensed', system-ui, -apple-system, 'Segoe UI', sans-serif;
+}
+.frontier-shell { font-weight: 400; letter-spacing: .01em; }
+/* Condensed letters need no negative tracking */
+.frontier-shell h1, .frontier-shell h2, .frontier-shell h3,
+.card-head-line h2, .hero-stat strong, .period-tiles button strong { letter-spacing: 0; }
+.hero.hero-flush h1 { font-weight: 600; letter-spacing: -.005em; }
+/* Lighter everyday text: task rows, lists, chips, buttons */
+.task-row.one-line .task-main strong, .task-row.one-line .task-main a,
+.featured-row.one-line .featured-main strong, .priority-row-main strong,
+.ws-card-title strong, .ws-match strong, .sorting-task strong, .capture-row h3,
+.review-done-list span, .why-card h3 { font-weight: 500; }
+.row-action, .mode-button, .sites-trigger, .sum-chip, .card-stat, .hero-count-sites button,
+.task-when, .featured-meta, .section-label, .task-split-label { font-weight: 500; }
+.sum-chip b, .card-stat b, .hero-count-sites b { font-weight: 600; }
+/* Condensed reads a touch small at the same size: nudge body sizes up */
+.task-row.one-line .task-main strong, .task-row.one-line .task-main a,
+.featured-row.one-line .featured-main strong { font-size: 15.5px; }
+.review-lede, .card-sub, .description, .review-empty, .featured-empty, .body, .why-quote { font-size: 15px; }
+.section-label { font-size: 12.5px; letter-spacing: .1em; }
+.card-head-line h2 { font-size: 23px; }
+
+/* Barlow Condensed, two faces: "LH Text" never goes past medium (any bold request → 500);
+   "LH Title" (semi-bold) is only used for headings, site names and big numbers. */
+@font-face { font-family: 'LH Text'; font-style: normal; font-weight: 100 450; font-display: swap; src: url(https://fonts.gstatic.com/s/barlowcondensed/v13/HTx3L3I-JCGChYJ8VI-L6OO_au7B6xHT2lv0tKk.woff2) format('woff2'); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+@font-face { font-family: 'LH Text'; font-style: normal; font-weight: 100 450; font-display: swap; src: url(https://fonts.gstatic.com/s/barlowcondensed/v13/HTx3L3I-JCGChYJ8VI-L6OO_au7B6x_T2lv0tKk7aw.woff2) format('woff2'); unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF; }
+@font-face { font-family: 'LH Text'; font-style: normal; font-weight: 451 1000; font-display: swap; src: url(https://fonts.gstatic.com/s/barlowcondensed/v13/HTxwL3I-JCGChYJ8VI-L6OO_au7B4-Lwz3bWuYMBYro.woff2) format('woff2'); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+@font-face { font-family: 'LH Text'; font-style: normal; font-weight: 451 1000; font-display: swap; src: url(https://fonts.gstatic.com/s/barlowcondensed/v13/HTxwL3I-JCGChYJ8VI-L6OO_au7B4-Lwz3jWuYMBYrp0xg.woff2) format('woff2'); unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF; }
+@font-face { font-family: 'LH Title'; font-style: normal; font-weight: 100 1000; font-display: swap; src: url(https://fonts.gstatic.com/s/barlowcondensed/v13/HTxwL3I-JCGChYJ8VI-L6OO_au7B4873z3bWuYMBYro.woff2) format('woff2'); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+@font-face { font-family: 'LH Title'; font-style: normal; font-weight: 100 1000; font-display: swap; src: url(https://fonts.gstatic.com/s/barlowcondensed/v13/HTxwL3I-JCGChYJ8VI-L6OO_au7B4873z3jWuYMBYrp0xg.woff2) format('woff2'); unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF; }
+body, .frontier-shell, button, input, select, textarea {
+  font-family: 'LH Text', 'Barlow Condensed', system-ui, -apple-system, 'Segoe UI', sans-serif;
+}
+.frontier-shell :is(h1, h2), .card-name, .hero-stat strong, .period-tiles button strong,
+.collapsed-bar-title, .ws-lane-head strong, .sites-pop button strong, .card-stat.is-main b {
+  font-family: 'LH Title', 'Barlow Condensed', system-ui, sans-serif;
+}
