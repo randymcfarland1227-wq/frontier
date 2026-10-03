@@ -5,7 +5,7 @@ import { tagTone } from '../../lib/tagTone';
 import type { SourceId, SourceSnapshot, TaskItem } from '../../lib/types';
 
 /** Rows per column in the side-by-side view before "Show more". */
-const SPLIT_PREVIEW = 8;
+const SPLIT_PREVIEW = 6;
 const PREVIEW = 6;
 
 function isHabit(task: TaskItem) {
@@ -31,6 +31,7 @@ export function TaskList({
   onComplete,
   onStar,
   split = false,
+  open = false,
 }: {
   sourceId: SourceId;
   snapshot: SourceSnapshot;
@@ -39,10 +40,13 @@ export function TaskList({
   onStar?: (task: TaskItem) => void;
   /** Wide card: tasks and habits side by side */
   split?: boolean;
+  /** Card view: list shows straight away (no Expand, no count heading) */
+  open?: boolean;
 }) {
   const [expandedState, setExpanded] = useState(false);
   /** The split view is always open: Tasks and Habits columns show without tapping Expand. */
-  const expanded = split || expandedState;
+  const expanded = split || open || expandedState;
+  const bare = split || open;
   const [showAll, setShowAll] = useState(false);
 
   const openTasks = snapshot.tasks.filter(t => t.status !== 'done');
@@ -110,7 +114,7 @@ export function TaskList({
 
   return (
     <section className={`task-list ${compact ? 'compact' : ''}`} data-source={sourceId}>
-      {split ? null : (
+      {bare ? null : (
       <div className="task-heading">
         <div>
           <span className="task-count">{tasks.length}</span>
@@ -130,7 +134,7 @@ export function TaskList({
 
       {(expanded || !compact) && (
         <>
-          {habits.length > 0 && !split ? (
+          {habits.length > 0 && !bare ? (
             <div className="habit-chip-row" aria-label="Habits">
               {habits.slice(0, habitPreview).map(h => (
                 <span className="habit-chip" key={h.id} title={h.detail || h.title}>
@@ -158,7 +162,7 @@ export function TaskList({
           ) : (
           <div className="task-board">
             {visibleTasks.length === 0 ? (
-              <p className="featured-empty">No tasks yet.</p>
+              <p className="featured-empty">Nothing open right now.</p>
             ) : (
               visibleTasks.map(renderRow)
             )}
