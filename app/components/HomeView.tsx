@@ -20,25 +20,21 @@ const ROW_2: SourceId[] = ['radall', 'role', 'move'];
 const ROW_3: SourceId[] = ['income', 'resale', 'candle'];
 
 type Col = SourceId[];
-const DAILY_LAYOUTS: Array<[Col, Col]> = [
-  [['self', 'outlook'], ['gmail', 'repair']],
-  [['self', 'repair'], ['gmail', 'outlook']],
-  [['self'], ['gmail', 'outlook', 'repair']],
-  [['self', 'outlook', 'repair'], ['gmail']],
+/** Fixed spots: Self over Gmail, Outlook over Repair. Cards never move. */
+const DAILY_COLS: [Col, Col] = [
+  ['self', 'gmail'],
+  ['outlook', 'repair'],
 ];
 const GAP = 14;
 
 /**
- * Daily ops without padded boxes: no card is stretched. Self and Gmail anchor two columns and
- * Outlook / Repair go wherever the columns come out most even; TickTick is as tall as the taller
- * column (scrolling inside) but never taller than its own list. Re-measures whenever a card changes.
+ * Daily ops without padded boxes: no card is stretched. TickTick is as tall as the taller of the
+ * two right columns (scrolling inside) but never taller than its own list. Re-measures whenever a
+ * card changes size (open, collapse, new items).
  */
 function DailyOps({ card }: { card: (id: SourceId) => ReactNode }) {
   const ref = useRef<HTMLDivElement>(null);
-  const [cols, setCols] = useState<[Col, Col]>(DAILY_LAYOUTS[0]);
   const [ttHeight, setTtHeight] = useState<number | null>(null);
-  // Guard against flip-flopping: only re-arrange for a clear win, and not again for a few seconds.
-  const lastSwitch = useRef(0);
 
   useLayoutEffect(() => {
     const grid = ref.current?.parentElement;
@@ -49,23 +45,6 @@ function DailyOps({ card }: { card: (id: SourceId) => ReactNode }) {
       frame = requestAnimationFrame(() => {
         const h = (id: SourceId) => (grid.querySelector(`.space-card.${id}`) as HTMLElement | null)?.offsetHeight || 0;
         const colH = (c: Col) => c.reduce((sum, id) => sum + h(id), 0) + GAP * (c.length - 1);
-        const diffOf = (layout: [Col, Col]) => Math.abs(colH(layout[0]) - colH(layout[1]));
-        let best = cols;
-        let bestDiff = diffOf(cols);
-        for (const layout of DAILY_LAYOUTS) {
-          const diff = diffOf(layout);
-          if (diff < bestDiff - 60) {
-            best = layout;
-            bestDiff = diff;
-          }
-        }
-        const now = Date.now();
-        if (best !== cols && now - lastSwitch.current > 4000) {
-          lastSwitch.current = now;
-          setCols(best);
-        } else {
-          best = cols;
-        }
         const tt = grid.querySelector('.space-card.ticktick') as HTMLElement | null;
         const threeCols = getComputedStyle(grid).gridTemplateColumns.split(' ').length >= 3;
         if (!tt || !threeCols || tt.classList.contains('is-collapsed')) {
@@ -75,7 +54,7 @@ function DailyOps({ card }: { card: (id: SourceId) => ReactNode }) {
         const head = tt.querySelector('.card-head') as HTMLElement | null;
         const body = tt.querySelector('.card-body') as HTMLElement | null;
         const natural = (head?.offsetHeight || 0) + (body?.scrollHeight || 0) + 8;
-        const next = Math.round(Math.min(natural, Math.max(colH(best[0]), colH(best[1]))));
+        const next = Math.round(Math.min(natural, Math.max(colH(DAILY_COLS[0]), colH(DAILY_COLS[1]))));
         setTtHeight(prev => (prev !== null && Math.abs(prev - next) < 2 ? prev : next));
       });
     };
@@ -88,15 +67,15 @@ function DailyOps({ card }: { card: (id: SourceId) => ReactNode }) {
       window.removeEventListener('resize', measure);
       cancelAnimationFrame(frame);
     };
-  }, [cols]);
+  }, []);
 
   return (
     <>
       <div className="daily-tt" ref={ref} style={ttHeight ? { height: ttHeight } : undefined}>
         {card('ticktick')}
       </div>
-      <div className="daily-col">{cols[0].map(id => card(id))}</div>
-      <div className="daily-col">{cols[1].map(id => card(id))}</div>
+      <div className="daily-col">{DAILY_COLS[0].map(id => card(id))}</div>
+      <div className="daily-col">{DAILY_COLS[1].map(id => card(id))}</div>
     </>
   );
 }
