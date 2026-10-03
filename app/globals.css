@@ -1898,3 +1898,6 @@ body { background: var(--bg); }
 .space-card.candle, .plan-group.grp-candle, .icon-tile.candle { --card-accent: var(--c-candle); } .theme-candle { --accent: var(--c-candle); } .priority-row.src-candle, .ws-card.src-candle { --src: var(--c-candle); }
 /* Right columns are the same width, so a card is the same height in either (no re-arrange loops) */
 .space-grid.space-grid-daily { grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr) minmax(0, 1fr); }
+/* Cards always fill their column exactly (collapsed cards used to shrink-wrap and spill over) */
+.daily-col > .space-card, .daily-col > .space-card.is-collapsed { align-self: stretch; width: auto; min-width: 0; max-width: 100%; }
+.daily-tt > .space-card.is-collapsed { align-self: stretch; }
