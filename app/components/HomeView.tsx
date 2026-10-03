@@ -1,6 +1,6 @@
 'use client';
 
-import type { ReactNode } from 'react';
+import { useLayoutEffect, useRef, useState, type ReactNode } from 'react';
 import type { FeaturedItem, SourceId, SourceSnapshot, SpaceId, TaskItem } from '../../lib/types';
 import { sourceById } from '../../lib/sources';
 import { updatedLabel } from '../../lib/protocol';
@@ -18,6 +18,79 @@ import { criticalKeys, useFeaturedLevels } from '../../lib/featuredLevels';
 const ROW_1: SourceId[] = ['ticktick', 'self', 'gmail', 'outlook', 'repair'];
 const ROW_2: SourceId[] = ['radall', 'role', 'move'];
 const ROW_3: SourceId[] = ['income', 'resale', 'candle'];
+
+type Col = SourceId[];
+const DAILY_LAYOUTS: Array<[Col, Col]> = [
+  [['self', 'outlook'], ['gmail', 'repair']],
+  [['self', 'repair'], ['gmail', 'outlook']],
+  [['self'], ['gmail', 'outlook', 'repair']],
+  [['self', 'outlook', 'repair'], ['gmail']],
+];
+const GAP = 14;
+
+/**
+ * Daily ops without padded boxes: no card is stretched. Self and Gmail anchor two columns and
+ * Outlook / Repair go wherever the columns come out most even; TickTick is as tall as the taller
+ * column (scrolling inside) but never taller than its own list. Re-measures whenever a card changes.
+ */
+function DailyOps({ card }: { card: (id: SourceId) => ReactNode }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [cols, setCols] = useState<[Col, Col]>(DAILY_LAYOUTS[0]);
+  const [ttHeight, setTtHeight] = useState<number | null>(null);
+
+  useLayoutEffect(() => {
+    const grid = ref.current?.parentElement;
+    if (!grid) return;
+    let frame = 0;
+    const measure = () => {
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(() => {
+        const h = (id: SourceId) => (grid.querySelector(`.space-card.${id}`) as HTMLElement | null)?.offsetHeight || 0;
+        const colH = (c: Col) => c.reduce((sum, id) => sum + h(id), 0) + GAP * (c.length - 1);
+        let best = DAILY_LAYOUTS[0];
+        let bestDiff = Math.abs(colH(best[0]) - colH(best[1]));
+        for (const layout of DAILY_LAYOUTS.slice(1)) {
+          const diff = Math.abs(colH(layout[0]) - colH(layout[1]));
+          if (diff < bestDiff - 8) {
+            best = layout;
+            bestDiff = diff;
+          }
+        }
+        setCols(prev => (prev.join('|') === best.join('|') ? prev : best));
+        const tt = grid.querySelector('.space-card.ticktick') as HTMLElement | null;
+        const threeCols = getComputedStyle(grid).gridTemplateColumns.split(' ').length >= 3;
+        if (!tt || !threeCols || tt.classList.contains('is-collapsed')) {
+          setTtHeight(prev => (prev === null ? prev : null));
+          return;
+        }
+        const head = tt.querySelector('.card-head') as HTMLElement | null;
+        const body = tt.querySelector('.card-body') as HTMLElement | null;
+        const natural = (head?.offsetHeight || 0) + (body?.scrollHeight || 0) + 8;
+        const next = Math.round(Math.min(natural, Math.max(colH(best[0]), colH(best[1]))));
+        setTtHeight(prev => (prev !== null && Math.abs(prev - next) < 2 ? prev : next));
+      });
+    };
+    const ro = new ResizeObserver(measure);
+    grid.querySelectorAll('.space-card').forEach(el => ro.observe(el));
+    window.addEventListener('resize', measure);
+    measure();
+    return () => {
+      ro.disconnect();
+      window.removeEventListener('resize', measure);
+      cancelAnimationFrame(frame);
+    };
+  }, [cols]);
+
+  return (
+    <>
+      <div className="daily-tt" ref={ref} style={ttHeight ? { height: ttHeight } : undefined}>
+        {card('ticktick')}
+      </div>
+      <div className="daily-col">{cols[0].map(id => card(id))}</div>
+      <div className="daily-col">{cols[1].map(id => card(id))}</div>
+    </>
+  );
+}
 
 /** Pinned + critical counts for the collapsed Priority bar. */
 function PrioritySummary() {
@@ -114,18 +187,7 @@ function SourceRow({
         className={`space-grid ${gridClass || (fullWidth ? 'space-grid-self' : ids.length === 4 ? 'space-grid-4' : 'space-grid-3')}`}
       >
         {gridClass === 'space-grid-daily' ? (
-          <>
-            {/* TickTick (fills the row, scrolls) | Self tool over Outlook | Gmail over Repair */}
-            {card('ticktick')}
-            <div className="daily-col">
-              {card('self')}
-              {card('outlook')}
-            </div>
-            <div className="daily-col">
-              {card('gmail')}
-              {card('repair')}
-            </div>
-          </>
+          <DailyOps card={card} />
         ) : (
           ids.map(card)
         )}
