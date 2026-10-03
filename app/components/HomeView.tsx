@@ -84,6 +84,20 @@ function SourceRow({
   /** Custom grid (e.g. Daily ops: TickTick wide, Gmail + Outlook stacked) */
   gridClass?: string;
 }) {
+  const card = (id: SourceId) => (
+    <SourceCard
+      key={id}
+      source={sourceById[id]}
+      snapshot={snapshots[id]}
+      onEnter={() => enter(id)}
+      onOpen={() => openSource(id)}
+      onCompleteFeatured={item => onCompleteFeatured(id, item)}
+      onCompleteTask={task => onCompleteTask(id, task)}
+      onStarTask={task => onStarTask(id, task)}
+      extra={extra?.[id]}
+    />
+  );
+
   return (
     <section className={`source-row ${fullWidth ? 'source-row-self' : ''}`} aria-label={label}>
       <Collapsible
@@ -99,19 +113,22 @@ function SourceRow({
       <div
         className={`space-grid ${gridClass || (fullWidth ? 'space-grid-self' : ids.length === 4 ? 'space-grid-4' : 'space-grid-3')}`}
       >
-        {ids.map(id => (
-          <SourceCard
-            key={id}
-            source={sourceById[id]}
-            snapshot={snapshots[id]}
-            onEnter={() => enter(id)}
-            onOpen={() => openSource(id)}
-            onCompleteFeatured={item => onCompleteFeatured(id, item)}
-            onCompleteTask={task => onCompleteTask(id, task)}
-            onStarTask={task => onStarTask(id, task)}
-            extra={extra?.[id]}
-          />
-        ))}
+        {gridClass === 'space-grid-daily' ? (
+          <>
+            {/* TickTick on the left; two independent stacks on the right, so no card is padded to match a neighbor */}
+            {card('ticktick')}
+            <div className="daily-col">
+              {card('self')}
+              {card('gmail')}
+            </div>
+            <div className="daily-col">
+              {card('outlook')}
+              {card('repair')}
+            </div>
+          </>
+        ) : (
+          ids.map(card)
+        )}
       </div>
       </Collapsible>
     </section>

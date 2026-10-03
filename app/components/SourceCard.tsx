@@ -117,6 +117,7 @@ export function SourceCard({
             snapshot={snapshot}
             compact
             open
+            exclude={new Set(snapshot.featured.map(f => f.id))}
             onComplete={onCompleteTask}
             onStar={onStarTask}
             split={source.id === 'ticktick'}
