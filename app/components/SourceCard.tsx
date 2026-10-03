@@ -5,7 +5,7 @@ import { readSaved, writeSaved, STORAGE_KEYS } from '../../lib/storage';
 import type { FeaturedItem, SourceDefinition, SourceSnapshot, TaskItem } from '../../lib/types';
 import { isConnectorSource } from '../../lib/connectors';
 import { getActionableMetric } from '../../lib/actionable';
-import { MetricGrid } from './MetricGrid';
+import { metricValue } from '../../lib/protocol';
 import { FeaturedList } from './FeaturedList';
 import { TaskList } from './TaskList';
 
@@ -50,14 +50,53 @@ export function SourceCard({
   };
   const links = source.relatedLinks || [];
 
+  const actionable = getActionableMetric(source.id, snapshot);
+  const consumed = new Set(actionable.consumes || [actionable.key]);
+  const stats = source.metrics.filter(m => !consumed.has(m.key)).slice(0, 2);
+  const sub = [source.label, showSync ? syncText(snapshot.refreshedAt) : ''].filter(Boolean).join(' · ');
+
   return (
-    <article className={`space-card ${source.id}${source.placeholder ? ' placeholder' : ''}${collapsed ? ' is-collapsed' : ''}`}>
-      <div className="card-top">
-        <span>{source.number}</span>
-        <div className="card-top-right">
+    <article className={`space-card card-v2 ${source.id}${source.placeholder ? ' placeholder' : ''}${collapsed ? ' is-collapsed' : ''}`}>
+      <header className="card-head">
+        <button type="button" className="card-icon" onClick={onEnter} title={`Open ${source.name} page`} aria-label={`Open ${source.name} page`}>
+          {source.marker}
+        </button>
+        <div className="card-head-main">
+          <div className="card-head-line">
+            <h2>
+              <button type="button" className="card-name" onClick={onEnter} title={source.action}>
+                {source.name}
+              </button>
+            </h2>
+            <span className="card-stats">
+              <span className="card-stat is-main" title={actionable.label}>
+                <b>{Number.isFinite(actionable.value) ? actionable.value.toLocaleString() : '—'}</b> {actionable.label.toLowerCase()}
+              </span>
+              {stats.map(m => (
+                <span key={m.key} className="card-stat" title={m.label}>
+                  <b>{metricValue(snapshot.metrics, m.key)}</b> {m.label.toLowerCase()}
+                </span>
+              ))}
+            </span>
+          </div>
+          <p className="card-sub">
+            {sub}
+            {links.map(link => (
+              <a key={link.url} href={link.url} target="_blank" rel="noopener noreferrer">
+                {link.label}
+              </a>
+            ))}
+          </p>
+        </div>
+        <div className="card-head-actions">
+          {source.url ? (
+            <button type="button" className="card-mini" onClick={onOpen} title={`Open ${source.shortName} site`} aria-label={`Open ${source.shortName} site`}>
+              ↗
+            </button>
+          ) : null}
           <button
             type="button"
-            className="card-collapse"
+            className="card-mini card-collapse"
             aria-expanded={!collapsed}
             aria-label={`${collapsed ? 'Expand' : 'Collapse'} ${source.name}`}
             title={collapsed ? 'Expand' : 'Collapse to header'}
@@ -65,71 +104,24 @@ export function SourceCard({
           >
             {collapsed ? '▸' : '▾'}
           </button>
-          <span className="marker">{source.marker}</span>
         </div>
-      </div>
-      <div className="card-copy">
-        <p>{source.label}</p>
-        {collapsed ? (
-          <h2 className="card-title-row">
-            {/* Keep the count on the same line as the last word of the name */}
-            {source.name.slice(0, source.name.lastIndexOf(' ') + 1)}
-            <span className="title-tail">
-              {source.name.slice(source.name.lastIndexOf(' ') + 1)}
-              <CollapsedCount source={source} snapshot={snapshot} />
-            </span>
-          </h2>
-        ) : (
-          <h2 className="card-title-row">
-            {source.name}
-            {showSync ? <span className="sync-inline">{syncText(snapshot.refreshedAt)}</span> : null}
-          </h2>
-        )}
-        {collapsed ? null : (
-          <>
-        {links.length ? (
-          <div className="related-links">
-            {links.map(link => (
-              <a key={link.url} href={link.url} target="_blank" rel="noopener noreferrer">
-                {link.label}
-              </a>
-            ))}
-            <span className="related-hint">Goals → routines → TickTick</span>
-          </div>
-        ) : null}
-        {source.description ? <p className="description">{source.description}</p> : null}
-          </>
-        )}
-      </div>
+      </header>
       {collapsed ? null : (
-        <>
-      {extra}
-      <MetricGrid sourceId={source.id} snapshot={snapshot} compact />
-      <FeaturedList sourceId={source.id} snapshot={snapshot} compact onComplete={onCompleteFeatured} />
-      <TaskList
-        sourceId={source.id}
-        snapshot={snapshot}
-        compact
-        onComplete={onCompleteTask}
-        onStar={onStarTask}
-        split={source.id === 'ticktick'}
-      />
-      <div className="card-actions">
-        {source.url ? (
-          <button type="button" className="open-button" onClick={onOpen}>
-            Open <span>↗</span>
-          </button>
-        ) : (
-          <button type="button" className="open-button muted" disabled>
-            {source.placeholder ? 'Placeholder' : 'Hub-native'}
-          </button>
-        )}
-        <button type="button" className="enter-button" onClick={onEnter}>
-          {source.action}
-          <span>→</span>
-        </button>
-      </div>
-        </>
+        <div className="card-body">
+          {extra}
+          {snapshot.featured.length ? (
+            <FeaturedList sourceId={source.id} snapshot={snapshot} compact onComplete={onCompleteFeatured} />
+          ) : null}
+          <TaskList
+            sourceId={source.id}
+            snapshot={snapshot}
+            compact
+            open
+            onComplete={onCompleteTask}
+            onStar={onStarTask}
+            split={source.id === 'ticktick'}
+          />
+        </div>
       )}
     </article>
   );
