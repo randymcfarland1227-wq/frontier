@@ -14,6 +14,9 @@ export function Collapsible({
   count,
   countLabel,
   labelHeader = false,
+  tone = 'default',
+  icon,
+  summary,
   children,
 }: {
   id: string;
@@ -24,6 +27,12 @@ export function Collapsible({
   countLabel?: string;
   /** Expanded: show the label as the toggle (for rows of cards) instead of a corner button */
   labelHeader?: boolean;
+  /** Section color family (why, review, self, priority, ops, money, ventures) */
+  tone?: string;
+  /** Small glyph shown before the label */
+  icon?: string;
+  /** What fills the collapsed bar: chips / short stats instead of empty space */
+  summary?: ReactNode;
   children: ReactNode;
 }) {
   const key = `section:${id}`;
@@ -36,47 +45,61 @@ export function Collapsible({
   };
   const name = title ? `${label} — ${title}` : label;
 
+  const mark = icon ? (
+    <span className="sec-icon" aria-hidden="true">
+      {icon}
+    </span>
+  ) : null;
+
   if (collapsed) {
     return (
-      <button type="button" className="collapsed-bar glass-panel" aria-expanded={false} aria-label={`Expand ${name}`} onClick={toggle}>
-        <span className="collapsed-bar-caret" aria-hidden="true">▸</span>
-        <span className="section-label">{label}</span>
-        {title ? <span className="collapsed-bar-title">{title}</span> : null}
-        {count !== undefined && Number.isFinite(count) ? (
-          <span className="collapsed-count" title={countLabel ? `${count} ${countLabel}` : undefined}>
-            {count.toLocaleString()}
-            {countLabel ? <span className="sr-only"> {countLabel}</span> : null}
-          </span>
-        ) : null}
-      </button>
+      <div className={`sec tone-${tone} is-collapsed`}>
+        <button type="button" className="collapsed-bar glass-panel" aria-expanded={false} aria-label={`Expand ${name}`} onClick={toggle}>
+          <span className="collapsed-bar-caret" aria-hidden="true">▸</span>
+          {mark}
+          <span className="section-label">{label}</span>
+          {title ? <span className="collapsed-bar-title">{title}</span> : null}
+          {summary ? <span className="collapsed-summary">{summary}</span> : null}
+          {count !== undefined && Number.isFinite(count) ? (
+            <span className="collapsed-count" title={countLabel ? `${count} ${countLabel}` : undefined}>
+              {count.toLocaleString()}
+              {countLabel ? <span className="sr-only"> {countLabel}</span> : null}
+            </span>
+          ) : null}
+        </button>
+      </div>
     );
   }
 
   if (labelHeader) {
     return (
-      <>
+      <div className={`sec tone-${tone}`}>
         <button type="button" className="section-toggle" aria-expanded aria-label={`Collapse ${name}`} onClick={toggle}>
           <span aria-hidden="true">▾</span>
+          {mark}
           <span className="section-label">{label}</span>
+          {summary ? <span className="section-toggle-summary">{summary}</span> : null}
         </button>
         {children}
-      </>
+      </div>
     );
   }
 
   return (
-    <div className="collapsible">
-      <button
-        type="button"
-        className="card-collapse section-collapse"
-        aria-expanded
-        aria-label={`Collapse ${name}`}
-        title="Collapse"
-        onClick={toggle}
-      >
-        ▾
-      </button>
-      {children}
+    <div className={`sec tone-${tone}`}>
+      <div className="collapsible">
+        <button
+          type="button"
+          className="card-collapse section-collapse"
+          aria-expanded
+          aria-label={`Collapse ${name}`}
+          title="Collapse"
+          onClick={toggle}
+        >
+          ▾
+        </button>
+        {children}
+      </div>
     </div>
   );
 }

@@ -803,6 +803,33 @@ export function LifeHub() {
               />
             ) : null
           }
+          whySummary={
+            goalsData ? (
+              <>
+                <span className="sum-chip">
+                  <b>{goalsData.goals.filter(g => g.status === 'active').length}</b> goals
+                </span>
+                {(['On Track', 'Slipping', 'Stalled'] as const).map(m => {
+                  const n = goalsData.goals.filter(g => g.review?.momentum === m).length;
+                  return n ? (
+                    <span key={m} className={`sum-chip m-${m.toLowerCase().replace(' ', '-')}`}>
+                      <b>{n}</b> {m.toLowerCase()}
+                    </span>
+                  ) : null;
+                })}
+              </>
+            ) : null
+          }
+          selfSummary={
+            <>
+              <span className="sum-chip">
+                <b>{selfItems.filter(i => !i.done).length}</b> open tasks
+              </span>
+              <span className="sum-chip">
+                <b>{captures.filter(c => c.status === 'inbox').length}</b> in inbox
+              </span>
+            </>
+          }
           whyPanel={
             goalsData ? (
               <WhyPanel

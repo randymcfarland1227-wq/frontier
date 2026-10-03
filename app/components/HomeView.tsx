@@ -12,10 +12,47 @@ import { PriorityBoard } from './PriorityBoard';
 import { ReviewPanel } from './ReviewPanel';
 import { Collapsible } from './Collapsible';
 import { getActionableMetric } from '../../lib/actionable';
+import { usePriorityPins } from '../../lib/priorityPins';
+import { criticalKeys, useFeaturedLevels } from '../../lib/featuredLevels';
 
 const ROW_1: SourceId[] = ['ticktick', 'self', 'gmail', 'outlook', 'repair'];
 const ROW_2: SourceId[] = ['radall', 'role', 'move'];
 const ROW_3: SourceId[] = ['income', 'resale', 'candle'];
+
+/** Pinned + critical counts for the collapsed Priority bar. */
+function PrioritySummary() {
+  const { pins } = usePriorityPins();
+  const { levels } = useFeaturedLevels();
+  const critical = criticalKeys(levels).length;
+  return (
+    <>
+      <span className="sum-chip">
+        <b>{pins.length}</b> pinned
+      </span>
+      {critical ? (
+        <span className="sum-chip is-critical">
+          <b>{critical}</b> critical
+        </span>
+      ) : null}
+    </>
+  );
+}
+
+/** "TickTick 17 · Gmail 5" — one chip per site in a row, for its section bar. */
+function SiteChips({ ids, snapshots }: { ids: SourceId[]; snapshots: Record<SourceId, SourceSnapshot> }) {
+  return (
+    <>
+      {ids.map(id => {
+        const n = getActionableMetric(id, snapshots[id]).value || 0;
+        return (
+          <span key={id} className={`sum-chip site-chip src-${id}${n ? '' : ' is-zero'}`}>
+            {sourceById[id].shortName} <b>{n}</b>
+          </span>
+        );
+      })}
+    </>
+  );
+}
 
 function SourceRow({
   ids,
@@ -29,7 +66,11 @@ function SourceRow({
   fullWidth,
   extra,
   gridClass,
+  tone,
+  icon,
 }: {
+  tone?: string;
+  icon?: string;
   ids: SourceId[];
   label: string;
   snapshots: Record<SourceId, SourceSnapshot>;
@@ -49,6 +90,9 @@ function SourceRow({
         id={`row-${ids.join('-')}`}
         label={label}
         labelHeader
+        tone={tone}
+        icon={icon}
+        summary={<SiteChips ids={ids} snapshots={snapshots} />}
         count={ids.reduce((sum, id) => sum + (getActionableMetric(id, snapshots[id]).value || 0), 0)}
         countLabel="to do"
       >
@@ -88,6 +132,8 @@ export function HomeView({
   renderSorting,
   capturesPanel,
   whyPanel,
+  whySummary,
+  selfSummary,
 }: {
   snapshots: Record<SourceId, SourceSnapshot>;
   enter: (id: SpaceId) => void;
@@ -102,6 +148,9 @@ export function HomeView({
   renderSorting?: (entries: CompletionEntry[]) => ReactNode;
   capturesPanel: ReactNode;
   whyPanel: ReactNode;
+  /** Collapsed-bar summaries built by LifeHub (it holds goals / Self data) */
+  whySummary?: ReactNode;
+  selfSummary?: ReactNode;
 }) {
   const latest =
     Object.values(snapshots)
@@ -155,7 +204,7 @@ export function HomeView({
 
       {whyPanel ? (
         <section className="source-row" aria-label="Why">
-          <Collapsible id="why" label="Why" title="What the work is for">
+          <Collapsible id="why" label="Why" title="What the work is for" tone="why" icon="✦" summary={whySummary}>
             {whyPanel}
           </Collapsible>
         </section>
@@ -166,8 +215,24 @@ export function HomeView({
           id="review"
           label="Review"
           title="Completions across sites"
-          count={completionStats.today}
-          countLabel="completed today"
+          tone="review"
+          icon="✓"
+          summary={
+            <>
+              <span className="sum-chip">
+                <b>{completionStats.today}</b> today
+              </span>
+              <span className="sum-chip">
+                <b>{completionStats.last7}</b> past 7 days
+              </span>
+              <span className="sum-chip">
+                <b>{completionStats.month}</b> this month
+              </span>
+              <span className="sum-chip">
+                <b>{openTotal}</b> open
+              </span>
+            </>
+          }
         >
           <ReviewPanel
             stats={completionStats}
@@ -180,13 +245,13 @@ export function HomeView({
       </section>
 
       <section className="source-row" aria-label="Self — thoughts, ideas, research and tasks">
-        <Collapsible id="self" label="Self" title="Thoughts, ideas, research & tasks">
+        <Collapsible id="self" label="Self" title="Thoughts, ideas, research & tasks" tone="self" icon="✧" summary={selfSummary}>
           {capturesPanel}
         </Collapsible>
       </section>
 
       <section className="source-row" aria-label="Priority">
-        <Collapsible id="priority" label="Priority" title="Pinned priorities">
+        <Collapsible id="priority" label="Priority" title="Pinned priorities" tone="priority" icon="◎" summary={<PrioritySummary />}>
           <PriorityBoard
             snapshots={snapshots}
             enter={id => enter(id)}
@@ -198,6 +263,8 @@ export function HomeView({
       <SourceRow
         ids={ROW_1}
         label="Daily ops"
+        tone="ops"
+        icon="◐"
         gridClass="space-grid-daily"
         snapshots={snapshots}
         enter={enter}
@@ -209,6 +276,8 @@ export function HomeView({
       <SourceRow
         ids={ROW_2}
         label="Money · role · move"
+        tone="money"
+        icon="◆"
         snapshots={snapshots}
         enter={enter}
         openSource={openSource}
@@ -219,6 +288,8 @@ export function HomeView({
       <SourceRow
         ids={ROW_3}
         label="Ventures"
+        tone="ventures"
+        icon="▲"
         snapshots={snapshots}
         enter={enter}
         openSource={openSource}

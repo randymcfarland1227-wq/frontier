@@ -1268,3 +1268,131 @@ a.origin-link:hover strong {
 [data-theme="dark"] .mode-button:hover:not(:disabled) { border-color: var(--accent); }
 [data-theme="dark"] .mode-button span { background: var(--ink); color: var(--bg); }
 [data-theme="dark"] .mode-button:disabled { opacity: .6; }
+
+/* ======================================================================
+   UI pass 1 (2026-10): section identity, collapsed summaries, Sites menu,
+   one-line title row, readable type, two-column Review.
+   ====================================================================== */
+
+/* Section color families */
+.sec { --sec: var(--accent); --sec-icon: ''; }
+.sec.tone-why { --sec: #f5b83d; --sec-icon: '✦'; }
+.sec.tone-review { --sec: #22c55e; --sec-icon: '✓'; }
+.sec.tone-self { --sec: #a78bfa; --sec-icon: '✧'; }
+.sec.tone-priority { --sec: #fb7185; --sec-icon: '◎'; }
+.sec.tone-ops { --sec: #60a5fa; }
+.sec.tone-money { --sec: #f59e0b; }
+.sec.tone-ventures { --sec: #2dd4bf; }
+
+/* Expanded panels: a colored top edge, tinted head, colored label with its icon */
+.sec > .collapsible > .glass-panel {
+  border-top: 3px solid var(--sec);
+  background-image: linear-gradient(180deg, color-mix(in srgb, var(--sec) 9%, transparent), transparent 160px);
+}
+.sec :is(.why-head, .review-head, .captures-head, .priority-head) .section-label {
+  color: var(--sec); font-size: 12px; letter-spacing: .08em;
+}
+.sec :is(.why-head, .review-head, .captures-head, .priority-head) .section-label::before {
+  content: var(--sec-icon); margin-right: 6px;
+}
+.sec-icon {
+  display: inline-grid; place-items: center; width: 24px; height: 24px; flex-shrink: 0; border-radius: 7px;
+  background: color-mix(in srgb, var(--sec) 18%, transparent); color: var(--sec); font-size: 13px;
+}
+
+/* Collapsed bars: color edge + summary chips fill the bar instead of empty space */
+.sec .collapsed-bar { border-left: 4px solid var(--sec); padding: 12px 18px; gap: 12px; flex-wrap: wrap; }
+.sec .collapsed-bar .section-label { color: var(--sec); font-size: 12px; }
+.sec .collapsed-bar-title { font-size: 18px; }
+.collapsed-summary, .section-toggle-summary { display: flex; flex-wrap: wrap; gap: 6px; flex: 1 1 auto; min-width: 0; margin-left: 8px; }
+.sum-chip {
+  display: inline-flex; align-items: baseline; gap: 5px; padding: 4px 11px; border-radius: 999px; white-space: nowrap;
+  border: 1px solid color-mix(in srgb, var(--sec) 35%, var(--line)); background: color-mix(in srgb, var(--sec) 10%, transparent);
+  color: var(--muted); font-size: 13px; font-weight: 600;
+}
+.sum-chip b { color: var(--ink); font-size: 14px; font-weight: 750; }
+.sum-chip.is-zero { opacity: .5; }
+.sum-chip.is-critical { border-color: #dc2626; background: color-mix(in srgb, #dc2626 18%, transparent); }
+.sum-chip.m-on-track b { color: #22c55e; }
+.sum-chip.m-slipping b { color: #f59e0b; }
+.sum-chip.m-stalled b { color: #ef4444; }
+
+/* Card-row headers ("Daily ops"): bigger, colored, with the same chips */
+.sec .section-toggle { gap: 10px; margin: 6px 0 10px; font-size: 13px; width: 100%; flex-wrap: wrap; }
+.sec .section-toggle .section-label { color: var(--sec); font-size: 13px; letter-spacing: .08em; }
+.section-toggle-summary .sum-chip { font-size: 12px; padding: 2px 9px; }
+
+/* Sites menu (replaces the row of every site) */
+.sites-menu { position: relative; justify-self: start; }
+.sites-trigger {
+  display: inline-flex; align-items: center; gap: 8px; padding: 8px 14px; border: 1px solid var(--line); border-radius: 10px;
+  background: var(--surface-2); color: var(--ink); font: inherit; font-size: 14px; font-weight: 650; cursor: pointer;
+}
+.sites-trigger:hover, .sites-trigger[aria-expanded="true"] { border-color: var(--accent); }
+.sites-caret { color: var(--muted); font-size: 12px; }
+.sites-mark { display: inline-grid; place-items: center; width: 22px; color: var(--accent); }
+.sites-pop {
+  position: absolute; top: calc(100% + 6px); left: 0; z-index: 40; width: min(560px, 92vw); padding: 8px;
+  display: grid; grid-template-columns: 1fr 1fr; gap: 4px; border-radius: 14px;
+  box-shadow: 0 18px 50px rgba(0, 0, 0, .35);
+}
+.sites-pop::before { content: ''; position: absolute; top: -8px; left: 0; right: 0; height: 8px; }
+.sites-pop button {
+  display: flex; align-items: center; gap: 10px; padding: 9px 10px; border: 0; border-radius: 10px; background: none;
+  color: var(--ink); font: inherit; text-align: left; cursor: pointer;
+}
+.sites-pop button:hover, .sites-pop button.active { background: color-mix(in srgb, var(--accent) 14%, transparent); }
+.sites-pop button strong { display: block; font-size: 14px; font-weight: 650; }
+.sites-pop button small { display: block; color: var(--muted); font-size: 12px; }
+.sites-pop .sites-mark { width: 30px; height: 30px; border-radius: 8px; background: var(--surface-2); font-size: 15px; }
+@media (max-width: 560px) { .sites-pop { grid-template-columns: 1fr; } }
+
+/* Title row: title, counts, site chips and the update time on one centered line */
+.hero.hero-flush { align-items: center; padding-top: 28px; padding-bottom: 14px; }
+.hero-title-row { align-items: center; flex: 1 1 auto; }
+.hero-counts { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; }
+.hero-count-sites { max-width: 520px; }
+.hero-count-sites button { font-size: 13px; padding: 4px 11px; }
+.hero-status { margin: 0; align-self: center; font-size: 12.5px; }
+
+/* Readable type: lift the smallest text across the hub */
+.section-label { font-size: 11.5px; }
+.review-lede, .priority-head p, .priority-empty, .review-empty { font-size: 14px; }
+.review-head h2, .priority-head h2, .why-head h2, .captures-head h2 { font-size: 23px; }
+.description { font-size: 13.5px; max-width: none; }
+.featured-empty, .task-summary { font-size: 13.5px; }
+.task-row.one-line .task-main strong, .task-row.one-line .task-main a,
+.featured-row.one-line .featured-main strong { font-size: 14px; }
+.task-when, .featured-meta { font-size: 12px; }
+.priority-row-main strong, .priority-row-main .origin-link { font-size: 15px; }
+
+/* Review: tiles on the left, By source on the right */
+.review-body { display: grid; grid-template-columns: minmax(220px, .85fr) minmax(0, 1.15fr); gap: 18px; align-items: start; margin-top: 12px; }
+.review-body .period-tiles { margin: 0; grid-template-columns: 1fr 1fr; gap: 8px; }
+.period-tiles button strong { font-size: 26px; }
+.period-tiles button span { font-size: 12.5px; }
+.review-sources-col .review-sources-label { margin-top: 0; }
+.review-bar-label { font-size: 13.5px; }
+@media (max-width: 900px) { .review-body { grid-template-columns: 1fr; } }
+/* Balance: two columns of buckets beside Review on wide screens */
+@media (min-width: 1300px) {
+  .review-side .balance-strip .review-bars { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 22px; }
+}
+/* Why: the 6 preview goals fit one row on wide screens */
+.why-grid { grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); }
+/* Sites menu panel floats above the page and is solid (glass rules made it in-flow and see-through) */
+.topbar .sites-pop.glass-panel { position: absolute; background: #ffffff; backdrop-filter: none; }
+.frontier-shell[data-color-mode="dark"] .topbar .sites-pop.glass-panel { background: #15122a; }
+.topbar .sites-pop.glass-panel::after { display: none; }
+.why-grid { grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
+/* Header on tablets/phones: logo · Sites · buttons, one line */
+@media (max-width: 900px) {
+  .topbar { grid-template-columns: auto auto minmax(0, 1fr); height: auto; min-height: 60px; padding-block: 8px; }
+  .topbar-actions { justify-self: end; flex-wrap: nowrap; }
+}
+@media (max-width: 560px) {
+  .topbar { gap: 8px; padding-inline: 12px; }
+  .topbar .zoom-control, .topbar-actions .refresh-button { display: none; }
+  .sites-trigger { padding: 7px 10px; font-size: 13px; }
+  .sites-pop { position: fixed !important; left: 8px !important; right: 8px; top: 64px !important; width: auto; max-height: 75vh; overflow: auto; }
+}
