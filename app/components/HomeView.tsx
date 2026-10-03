@@ -251,7 +251,7 @@ export function HomeView({
       </section>
 
       <section className="source-row" aria-label="Priority">
-        <Collapsible id="priority" label="Priority" title="Pinned priorities" tone="priority" icon="◎" summary={<PrioritySummary />}>
+        <Collapsible id="priority" label="Priority" title="Your plan" tone="priority" icon="◎" summary={<PrioritySummary />}>
           <PriorityBoard
             snapshots={snapshots}
             enter={id => enter(id)}
