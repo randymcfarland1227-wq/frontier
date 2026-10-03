@@ -1545,3 +1545,62 @@ a.origin-link:hover strong {
 }
 button.featured-more { border: 0; background: none; padding: 6px 0 0; color: var(--card-accent, var(--accent)); font: inherit; font-size: 12.5px; font-weight: 650; cursor: pointer; text-align: left; }
 button.featured-more:hover { text-decoration: underline; }
+
+/* ======================================================================
+   Palette v2 (2026-10): neutral base, rich saturated color per site/section.
+   Last layer on purpose — overrides the Euphoria / mother-of-pearl themes.
+   ====================================================================== */
+:root {--c-ticktick: #3b82f6; --c-radall: #f59e0b; --c-gmail: #ef4444; --c-outlook: #0ea5e9; --c-resale: #10b981; --c-role: #6366f1; --c-candle: #d946ef; --c-income: #14b8a6; --c-move: #f97316; --c-repair: #eab308; --c-self: #a855f7; }
+:root, [data-theme="light"] {
+  --bg: #f4f4f5; --surface: #ffffff; --surface-2: #f4f4f5; --ink: #18181b; --muted: #52525b; --line: #e4e4e7;
+  --glass: #ffffff; --glass-card: #ffffff; --aurora: none; --iridescent: linear-gradient(#e4e4e7, #e4e4e7);
+  --glow: 0 1px 2px rgba(0, 0, 0, .05), 0 6px 20px rgba(0, 0, 0, .05);
+}
+[data-theme="dark"], .frontier-shell[data-color-mode="dark"] {
+  --bg: #0a0a0c; --surface: #141417; --surface-2: #1c1c20; --ink: #f4f4f5; --muted: #a1a1aa; --line: #2a2a30;
+  --glass: #141417; --glass-card: #141417; --aurora: none; --iridescent: linear-gradient(#2a2a30, #2a2a30);
+  --glow: 0 10px 28px rgba(0, 0, 0, .45);
+  --pearl-sheen: linear-gradient(transparent, transparent); --pearl-glass: #141417; --pearl-edge: #2a2a30;
+  --accent-soft: color-mix(in srgb, var(--accent) 22%, #141417);
+}
+.theme-home, .theme-search { --accent: #6366f1; --accent-soft: color-mix(in srgb, #6366f1 14%, var(--surface)); }
+/* Flat, solid surfaces: no frosted glass, glow or iridescent edges */
+.space-card, .glass-panel, .frontier-shell[data-color-mode="dark"] .space-card, .frontier-shell[data-color-mode="dark"] .glass-panel {
+  background-color: var(--glass-card); backdrop-filter: none; -webkit-backdrop-filter: none; box-shadow: var(--glow);
+}
+.glass-panel:not(.review-panel):not(.priority-board)::after, .space-card::after, .priority-board::before, .review-panel::before { opacity: 0 !important; }
+.iridescent-border { background: var(--glass-card); border: 1px solid var(--line); }
+.space-card:hover, .collapsed-bar:hover { box-shadow: var(--glow), 0 0 0 1px color-mix(in srgb, var(--ink) 18%, transparent); }
+.space-card::before { box-shadow: none; }
+.frontier-shell[data-color-mode="dark"] .topbar { background: rgba(10, 10, 12, .92); }
+.frontier-shell:not([data-color-mode="dark"]) .topbar { background: rgba(255, 255, 255, .92); }
+.hero.hero-flush h1 em { background: none !important; -webkit-text-fill-color: currentColor; color: var(--accent); }
+/* Section tones, richer */
+.sec.tone-why { --sec: #facc15; } .sec.tone-review { --sec: #22c55e; } .sec.tone-self { --sec: #a855f7; }
+.sec.tone-priority { --sec: #f43f5e; } .sec.tone-ops { --sec: #3b82f6; } .sec.tone-money { --sec: #f59e0b; }
+.sec.tone-ventures { --sec: #14b8a6; }
+/* Cards: stronger color band so each site reads at a glance */
+.card-v2 .card-head { background: linear-gradient(100deg, color-mix(in srgb, var(--card-accent) 26%, transparent), transparent 80%); }
+.space-card.card-v2 { border-top-width: 4px; }
+.space-card.ticktick { --card-accent: var(--c-ticktick); } .theme-ticktick { --accent: var(--c-ticktick); --accent-soft: color-mix(in srgb, var(--c-ticktick) 14%, var(--surface)); }
+.priority-row.src-ticktick, .ws-card.src-ticktick { --src: var(--c-ticktick); } .site-chip.src-ticktick b { color: var(--c-ticktick); } .sites-pop button.src-ticktick .sites-mark { color: var(--c-ticktick); background: color-mix(in srgb, var(--c-ticktick) 18%, transparent); }
+.space-card.radall { --card-accent: var(--c-radall); } .theme-radall { --accent: var(--c-radall); --accent-soft: color-mix(in srgb, var(--c-radall) 14%, var(--surface)); }
+.priority-row.src-radall, .ws-card.src-radall { --src: var(--c-radall); } .site-chip.src-radall b { color: var(--c-radall); } .sites-pop button.src-radall .sites-mark { color: var(--c-radall); background: color-mix(in srgb, var(--c-radall) 18%, transparent); }
+.space-card.gmail { --card-accent: var(--c-gmail); } .theme-gmail { --accent: var(--c-gmail); --accent-soft: color-mix(in srgb, var(--c-gmail) 14%, var(--surface)); }
+.priority-row.src-gmail, .ws-card.src-gmail { --src: var(--c-gmail); } .site-chip.src-gmail b { color: var(--c-gmail); } .sites-pop button.src-gmail .sites-mark { color: var(--c-gmail); background: color-mix(in srgb, var(--c-gmail) 18%, transparent); }
+.space-card.outlook { --card-accent: var(--c-outlook); } .theme-outlook { --accent: var(--c-outlook); --accent-soft: color-mix(in srgb, var(--c-outlook) 14%, var(--surface)); }
+.priority-row.src-outlook, .ws-card.src-outlook { --src: var(--c-outlook); } .site-chip.src-outlook b { color: var(--c-outlook); } .sites-pop button.src-outlook .sites-mark { color: var(--c-outlook); background: color-mix(in srgb, var(--c-outlook) 18%, transparent); }
+.space-card.resale { --card-accent: var(--c-resale); } .theme-resale { --accent: var(--c-resale); --accent-soft: color-mix(in srgb, var(--c-resale) 14%, var(--surface)); }
+.priority-row.src-resale, .ws-card.src-resale { --src: var(--c-resale); } .site-chip.src-resale b { color: var(--c-resale); } .sites-pop button.src-resale .sites-mark { color: var(--c-resale); background: color-mix(in srgb, var(--c-resale) 18%, transparent); }
+.space-card.role { --card-accent: var(--c-role); } .theme-role { --accent: var(--c-role); --accent-soft: color-mix(in srgb, var(--c-role) 14%, var(--surface)); }
+.priority-row.src-role, .ws-card.src-role { --src: var(--c-role); } .site-chip.src-role b { color: var(--c-role); } .sites-pop button.src-role .sites-mark { color: var(--c-role); background: color-mix(in srgb, var(--c-role) 18%, transparent); }
+.space-card.candle { --card-accent: var(--c-candle); } .theme-candle { --accent: var(--c-candle); --accent-soft: color-mix(in srgb, var(--c-candle) 14%, var(--surface)); }
+.priority-row.src-candle, .ws-card.src-candle { --src: var(--c-candle); } .site-chip.src-candle b { color: var(--c-candle); } .sites-pop button.src-candle .sites-mark { color: var(--c-candle); background: color-mix(in srgb, var(--c-candle) 18%, transparent); }
+.space-card.income { --card-accent: var(--c-income); } .theme-income { --accent: var(--c-income); --accent-soft: color-mix(in srgb, var(--c-income) 14%, var(--surface)); }
+.priority-row.src-income, .ws-card.src-income { --src: var(--c-income); } .site-chip.src-income b { color: var(--c-income); } .sites-pop button.src-income .sites-mark { color: var(--c-income); background: color-mix(in srgb, var(--c-income) 18%, transparent); }
+.space-card.move { --card-accent: var(--c-move); } .theme-move { --accent: var(--c-move); --accent-soft: color-mix(in srgb, var(--c-move) 14%, var(--surface)); }
+.priority-row.src-move, .ws-card.src-move { --src: var(--c-move); } .site-chip.src-move b { color: var(--c-move); } .sites-pop button.src-move .sites-mark { color: var(--c-move); background: color-mix(in srgb, var(--c-move) 18%, transparent); }
+.space-card.repair { --card-accent: var(--c-repair); } .theme-repair { --accent: var(--c-repair); --accent-soft: color-mix(in srgb, var(--c-repair) 14%, var(--surface)); }
+.priority-row.src-repair, .ws-card.src-repair { --src: var(--c-repair); } .site-chip.src-repair b { color: var(--c-repair); } .sites-pop button.src-repair .sites-mark { color: var(--c-repair); background: color-mix(in srgb, var(--c-repair) 18%, transparent); }
+.space-card.self { --card-accent: var(--c-self); } .theme-self { --accent: var(--c-self); --accent-soft: color-mix(in srgb, var(--c-self) 14%, var(--surface)); }
+.priority-row.src-self, .ws-card.src-self { --src: var(--c-self); } .site-chip.src-self b { color: var(--c-self); } .sites-pop button.src-self .sites-mark { color: var(--c-self); background: color-mix(in srgb, var(--c-self) 18%, transparent); }
