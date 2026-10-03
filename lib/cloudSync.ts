@@ -31,6 +31,7 @@ const SYNCED_KEYS: string[] = [
   STORAGE_KEYS.hubStars,
   STORAGE_KEYS.taskRules,
   STORAGE_KEYS.priorityLanes,
+  STORAGE_KEYS.siteIcons,
 ];
 
 export type SyncStatus = {
@@ -83,6 +84,7 @@ export function readLocalState(): SyncedState {
     stars: readSaved(STORAGE_KEYS.hubStars, {}),
     rules: readSaved(STORAGE_KEYS.taskRules, {}),
     priority: readSaved(STORAGE_KEYS.priorityLanes, {}),
+    icons: readSaved(STORAGE_KEYS.siteIcons, {}),
   });
 }
 
@@ -100,6 +102,7 @@ function writeLocalState(next: SyncedState): boolean {
     [STORAGE_KEYS.hubStars, current.stars, next.stars],
     [STORAGE_KEYS.taskRules, current.rules, next.rules],
     [STORAGE_KEYS.priorityLanes, current.priority, next.priority],
+    [STORAGE_KEYS.siteIcons, current.icons, next.icons],
   ];
   let changed = false;
   applying = true;

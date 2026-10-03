@@ -31,7 +31,17 @@ export function Header({
         <span className="wordmark-mark">R</span>
         <span>RANDY&apos;S LIFE HUB</span>
       </button>
-      <SitesMenu active={active} enter={enter} />
+      <div className="top-nav">
+        <SitesMenu active={active} enter={enter} />
+        <button
+          type="button"
+          className={`nav-pill${active === 'why' ? ' active' : ''}`}
+          onClick={() => enter(active === 'why' ? 'home' : 'why')}
+          title="Why: your goals and the work attached to them"
+        >
+          <span aria-hidden="true">✦</span> Why
+        </button>
+      </div>
       <div className="topbar-actions">
         <ZoomControl />
         <button

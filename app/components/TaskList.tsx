@@ -33,6 +33,7 @@ export function TaskList({
   split = false,
   open = false,
   exclude,
+  fill = false,
 }: {
   sourceId: SourceId;
   snapshot: SourceSnapshot;
@@ -45,12 +46,15 @@ export function TaskList({
   open?: boolean;
   /** Ids already shown above (e.g. in Starred) — not listed twice */
   exclude?: Set<string>;
+  /** List everything (the card scrolls) instead of a short preview + Show more */
+  fill?: boolean;
 }) {
   const [expandedState, setExpanded] = useState(false);
   /** The split view is always open: Tasks and Habits columns show without tapping Expand. */
   const expanded = split || open || expandedState;
   const bare = split || open;
-  const [showAll, setShowAll] = useState(false);
+  const [showAllState, setShowAll] = useState(false);
+  const showAll = fill || showAllState;
 
   const openTasks = snapshot.tasks.filter(t => t.status !== 'done' && !exclude?.has(t.id));
   const habits = openTasks.filter(isHabit);
@@ -173,7 +177,7 @@ export function TaskList({
           </div>
           )}
 
-          {moreCount > 0 ? (
+          {moreCount > 0 && !fill ? (
             <button type="button" className="task-toggle show-more" onClick={() => setShowAll(v => !v)}>
               {showAll
                 ? 'Show less'

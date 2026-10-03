@@ -31,6 +31,8 @@ export const STORAGE_KEYS = {
   priorityPins: 'lifehub-priority-pins',
   /** Priority workstation lanes: "source:id" → { lane, order, at } — cloud-synced */
   priorityLanes: 'lifehub-priority-lanes',
+  /** Uploaded site pictures (Self photo, brand logos) — cloud-synced */
+  siteIcons: 'lifehub-site-icons',
   captures: 'lifehub-captures',
   goalLinks: 'lifehub-goal-links',
   /** Cloud backup key for this device — never synced */
