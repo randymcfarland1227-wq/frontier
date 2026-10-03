@@ -1808,3 +1808,91 @@ body { background: var(--bg); }
 .plan-item-main a { flex: 1 1 auto; min-width: 0; }
 .plan-item-main a strong, .plan-item-main > strong { display: block; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .plan-item > .row-action { flex-shrink: 0; }
+
+/* ======================================================================
+   Refined fall (2026-10): darker brown, deeper orange, calmer shapes.
+   One color family per group; the group's header and collapsed bars are solid
+   bars of that color, and its sites are shades within the family.
+   ====================================================================== */
+:root {--c-ticktick: #b84a1c; --c-self: #8f3a2e; --c-gmail: #c0562a; --c-outlook: #9a4f2b; --c-repair: #a5622f; --c-radall: #b5821f; --c-role: #946a24; --c-move: #c08a2e; --c-income: #5b6e30; --c-resale: #6d7f38; --c-candle: #556b3a; }
+:root, [data-theme="light"] {
+  --bg: #24180f; --surface: #f6efe4; --surface-2: #ece2d3; --ink: #24170e; --muted: #6b5848; --line: #ddcdb7;
+  --glass: #f6efe4; --glass-card: #f6efe4; --row: #efe5d6; --row-line: #e0d1bc;
+  --glow: 0 1px 2px rgba(0, 0, 0, .25), 0 8px 22px rgba(0, 0, 0, .28);
+  --page-ink: #f2e6d6; --page-muted: #c9b39b; --page-line: rgba(242, 230, 214, .14); --page-chip: #33241a;
+}
+[data-theme="dark"], .frontier-shell[data-color-mode="dark"] {
+  --bg: #0f0a06; --surface: #1a120c; --surface-2: #241911; --ink: #f2e6d8; --muted: #b8a089; --line: #2f2218;
+  --glass: #1a120c; --glass-card: #1a120c; --row: #22180f; --row-line: #312419;
+  --glow: 0 10px 26px rgba(0, 0, 0, .55);
+  --page-ink: #f2e6d8; --page-muted: #b8a089; --page-line: #2f2218; --page-chip: #1f160e;
+}
+.theme-home, .theme-search { --accent: #c4501b; --accent-soft: color-mix(in srgb, #c4501b 14%, var(--surface)); }
+.frontier-shell[data-color-mode="dark"].theme-home { --accent: #d8662c; }
+.topbar, .frontier-shell[data-color-mode="dark"] .topbar, .frontier-shell:not([data-color-mode="dark"]) .topbar { background: #1a110a; border-color: #2c1f15; }
+.topbar .mode-button, .topbar .zoom-control, .nav-pill, .sites-trigger { background: #2c1f15; border-color: #3d2c1e; border-radius: 8px; }
+.hero.hero-flush h1 em { color: #e07a3c !important; }
+/* Group families: section bars */
+.sec.tone-why { --sec: #9c7426; } .sec.tone-review { --sec: #35574f; } .sec.tone-priority { --sec: #7a2618; }
+.sec.tone-ops { --sec: #8f3a1b; } .sec.tone-money { --sec: #8a6114; } .sec.tone-ventures { --sec: #4a5a2a; }
+/* Collapsed bars: the whole bar is the group's color */
+.sec .collapsed-bar, .frontier-shell[data-color-mode="dark"] .sec .collapsed-bar {
+  background: var(--sec); border: 0; border-radius: 10px; color: #f7ecdf; box-shadow: var(--glow);
+}
+.sec .collapsed-bar .section-label, .sec .collapsed-bar .collapsed-bar-title { color: #f7ecdf; filter: none; }
+.sec .collapsed-bar .sec-icon { background: rgba(255, 255, 255, .14); color: #f7ecdf; }
+.sec .collapsed-bar .collapsed-bar-caret { color: rgba(247, 236, 223, .7); }
+.sec .collapsed-bar .sum-chip { background: rgba(0, 0, 0, .18); border-color: rgba(255, 255, 255, .16); color: rgba(247, 236, 223, .8); border-radius: 6px; }
+.sec .collapsed-bar .sum-chip b { color: #fff; }
+.sec .collapsed-bar .collapsed-count { background: rgba(0, 0, 0, .25); color: #fff; }
+.sec .collapsed-bar:hover { filter: brightness(1.08); }
+/* Card-row headers ("Daily ops", "Money · role · move", "Ventures"): a solid bar too */
+.sec .section-toggle {
+  background: var(--sec); color: #f7ecdf; border-radius: 10px; padding: 9px 14px; margin: 4px 0 12px; box-shadow: var(--glow);
+}
+.sec .section-toggle .section-label { color: #f7ecdf; filter: none; }
+.sec .section-toggle .sec-icon { background: rgba(255, 255, 255, .14); color: #f7ecdf; }
+.sec .section-toggle-summary .sum-chip { background: rgba(0, 0, 0, .18); border-color: rgba(255, 255, 255, .16); color: rgba(247, 236, 223, .8); border-radius: 6px; }
+.sec .section-toggle-summary .sum-chip b, .sec .section-toggle-summary .site-chip b { color: #fff; }
+/* Expanded panels (Review, Priority): a solid top bar in the group's color */
+.sec > .collapsible > .glass-panel { border-top: 6px solid var(--sec); background-image: none; border-radius: 12px; }
+.sec :is(.why-head, .review-head, .captures-head, .priority-head) .section-label { color: var(--sec); filter: brightness(1.15); }
+/* Calmer shapes: less round, flatter fills, no gradients */
+.space-card, .glass-panel, .plan-group { border-radius: 12px; }
+.space-card.card-v2 { border-top-width: 3px; }
+.card-v2 .card-head { background: color-mix(in srgb, var(--card-accent) 9%, var(--surface)); }
+.frontier-shell[data-color-mode="dark"] .card-v2 .card-head { background: color-mix(in srgb, var(--card-accent) 14%, var(--surface)); }
+.card-icon, .plan-group-icon, .icon-tile-img { border-radius: 8px; }
+.card-stat.is-main { border-radius: 6px; }
+.card-stat:not(.is-main) { color: var(--muted); }
+.task-row.one-line, .featured-row.one-line, .space-card .task-row.one-line, .space-card .featured-row.one-line, .plan-item, .capture-row, .sorting-row { border-radius: 7px; }
+.row-action { border-radius: 6px; }
+.sum-chip, .hero-count-sites button, .hero-status, .card-stat { border-radius: 6px; }
+.hero-stat { border-radius: 10px; }
+.plan-group-head { background: color-mix(in srgb, var(--card-accent) 10%, var(--surface)); }
+.plan-group-count { border-radius: 6px; }
+.task-tag { border-radius: 4px; }
+.collapsed-count { border-radius: 6px; }
+/* Daily ops: nothing stretches (see DailyOps in HomeView) */
+.space-grid.space-grid-daily { align-items: start; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1.2fr) minmax(0, 1fr); }
+.daily-col > .space-card, .daily-col > .space-card:last-child { flex: 0 0 auto; }
+.daily-tt { min-width: 0; }
+.daily-tt > .space-card { height: 100%; display: flex; flex-direction: column; }
+.daily-tt > .space-card:not(.is-collapsed) > .card-body { flex: 1 1 auto; min-height: 0; overflow-y: auto; scrollbar-width: thin; }
+@media (max-width: 1100px) {
+  .space-grid.space-grid-daily { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .daily-tt { grid-column: 1 / -1; }
+  .daily-tt > .space-card:not(.is-collapsed) > .card-body { max-height: 520px; }
+}
+@media (max-width: 720px) { .space-grid.space-grid-daily { grid-template-columns: 1fr; } }
+.space-card.ticktick, .plan-group.grp-ticktick, .icon-tile.ticktick { --card-accent: var(--c-ticktick); } .theme-ticktick { --accent: var(--c-ticktick); } .priority-row.src-ticktick, .ws-card.src-ticktick { --src: var(--c-ticktick); }
+.space-card.self, .plan-group.grp-self, .icon-tile.self { --card-accent: var(--c-self); } .theme-self { --accent: var(--c-self); } .priority-row.src-self, .ws-card.src-self { --src: var(--c-self); }
+.space-card.gmail, .plan-group.grp-gmail, .icon-tile.gmail { --card-accent: var(--c-gmail); } .theme-gmail { --accent: var(--c-gmail); } .priority-row.src-gmail, .ws-card.src-gmail { --src: var(--c-gmail); }
+.space-card.outlook, .plan-group.grp-outlook, .icon-tile.outlook { --card-accent: var(--c-outlook); } .theme-outlook { --accent: var(--c-outlook); } .priority-row.src-outlook, .ws-card.src-outlook { --src: var(--c-outlook); }
+.space-card.repair, .plan-group.grp-repair, .icon-tile.repair { --card-accent: var(--c-repair); } .theme-repair { --accent: var(--c-repair); } .priority-row.src-repair, .ws-card.src-repair { --src: var(--c-repair); }
+.space-card.radall, .plan-group.grp-radall, .icon-tile.radall { --card-accent: var(--c-radall); } .theme-radall { --accent: var(--c-radall); } .priority-row.src-radall, .ws-card.src-radall { --src: var(--c-radall); }
+.space-card.role, .plan-group.grp-role, .icon-tile.role { --card-accent: var(--c-role); } .theme-role { --accent: var(--c-role); } .priority-row.src-role, .ws-card.src-role { --src: var(--c-role); }
+.space-card.move, .plan-group.grp-move, .icon-tile.move { --card-accent: var(--c-move); } .theme-move { --accent: var(--c-move); } .priority-row.src-move, .ws-card.src-move { --src: var(--c-move); }
+.space-card.income, .plan-group.grp-income, .icon-tile.income { --card-accent: var(--c-income); } .theme-income { --accent: var(--c-income); } .priority-row.src-income, .ws-card.src-income { --src: var(--c-income); }
+.space-card.resale, .plan-group.grp-resale, .icon-tile.resale { --card-accent: var(--c-resale); } .theme-resale { --accent: var(--c-resale); } .priority-row.src-resale, .ws-card.src-resale { --src: var(--c-resale); }
+.space-card.candle, .plan-group.grp-candle, .icon-tile.candle { --card-accent: var(--c-candle); } .theme-candle { --accent: var(--c-candle); } .priority-row.src-candle, .ws-card.src-candle { --src: var(--c-candle); }
