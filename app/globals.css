@@ -1901,3 +1901,18 @@ body { background: var(--bg); }
 /* Cards always fill their column exactly (collapsed cards used to shrink-wrap and spill over) */
 .daily-col > .space-card, .daily-col > .space-card.is-collapsed { align-self: stretch; width: auto; min-width: 0; max-width: 100%; }
 .daily-tt > .space-card.is-collapsed { align-self: stretch; }
+/* Collapsed cards: one uniform compact bar (logo · name · main count), so stacks line up */
+.card-v2.is-collapsed .card-stat:not(.is-main), .card-v2.is-collapsed .card-sub { display: none; }
+.card-v2.is-collapsed .card-head { padding: 10px 14px; align-items: center; }
+.card-v2.is-collapsed .card-head-line { flex-wrap: nowrap; min-width: 0; }
+.card-v2.is-collapsed .card-head-line h2 { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.card-v2.is-collapsed .card-icon { width: 36px; height: 36px; }
+.card-v2.is-collapsed .card-head-actions { align-self: center; }
+/* Collapsed TickTick stretched to the stack height: keep its bar content centered */
+.daily-tt > .space-card.is-collapsed { justify-content: center; }
+.daily-tt > .space-card.is-collapsed > .card-head { border-bottom: 0; }
+.card-v2.is-collapsed .card-stat.is-main .stat-label { display: none; }
+.card-v2.is-collapsed .card-stat.is-main { padding: 0 10px 1px; }
+/* Beat the old ".space-card.is-collapsed { height: auto !important }" so collapsed TickTick fills its slot */
+.daily-tt > .space-card.is-collapsed { height: 100% !important; min-height: 0 !important; }
+.daily-tt > .space-card.is-collapsed > .card-head { flex: 1 1 auto; }

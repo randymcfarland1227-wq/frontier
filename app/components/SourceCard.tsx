@@ -71,7 +71,8 @@ export function SourceCard({
             </h2>
             <span className="card-stats">
               <span className="card-stat is-main" title={actionable.label}>
-                <b>{Number.isFinite(actionable.value) ? actionable.value.toLocaleString() : '—'}</b> {actionable.label.toLowerCase()}
+                <b>{Number.isFinite(actionable.value) ? actionable.value.toLocaleString() : '—'}</b>
+                <span className="stat-label"> {actionable.label.toLowerCase()}</span>
               </span>
               {stats.map(m => (
                 <span key={m.key} className="card-stat" title={m.label}>
