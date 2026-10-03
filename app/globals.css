@@ -1916,3 +1916,13 @@ body { background: var(--bg); }
 /* Beat the old ".space-card.is-collapsed { height: auto !important }" so collapsed TickTick fills its slot */
 .daily-tt > .space-card.is-collapsed { height: 100% !important; min-height: 0 !important; }
 .daily-tt > .space-card.is-collapsed > .card-head { flex: 1 1 auto; }
+
+/* Daily ops v6: TickTick + Radall in the wide left column; TickTick has its own height (scrolls) */
+.daily-main > .space-card.ticktick:not(.is-collapsed) > .card-body { max-height: 470px; overflow-y: auto; scrollbar-width: thin; }
+@media (max-width: 1100px) {
+  .daily-main { grid-column: 1 / -1; }
+}
+/* Role · move: two cards share the row */
+.space-grid-3:has(> :nth-child(2):last-child) { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+/* Radall now lives in Daily ops: a copper shade in the rust family */
+:root { --c-radall: #a8632a; }

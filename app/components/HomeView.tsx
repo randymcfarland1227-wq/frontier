@@ -1,6 +1,6 @@
 'use client';
 
-import { useLayoutEffect, useRef, useState, type ReactNode } from 'react';
+import type { ReactNode } from 'react';
 import type { FeaturedItem, SourceId, SourceSnapshot, SpaceId, TaskItem } from '../../lib/types';
 import { sourceById } from '../../lib/sources';
 import { updatedLabel } from '../../lib/protocol';
@@ -15,69 +15,30 @@ import { getActionableMetric } from '../../lib/actionable';
 import { usePriorityPins } from '../../lib/priorityPins';
 import { criticalKeys, useFeaturedLevels } from '../../lib/featuredLevels';
 
-const ROW_1: SourceId[] = ['ticktick', 'self', 'gmail', 'outlook', 'repair'];
-const ROW_2: SourceId[] = ['radall', 'role', 'move'];
+const ROW_1: SourceId[] = ['ticktick', 'radall', 'self', 'gmail', 'outlook', 'repair'];
+const ROW_2: SourceId[] = ['role', 'move'];
 const ROW_3: SourceId[] = ['income', 'resale', 'candle'];
 
-type Col = SourceId[];
-/** Fixed spots: Self over Gmail, Outlook over Repair. Cards never move. */
-const DAILY_COLS: [Col, Col] = [
-  ['self', 'gmail'],
-  ['outlook', 'repair'],
-];
-const GAP = 14;
-
 /**
- * Daily ops without padded boxes: no card is stretched. TickTick is as tall as the taller of the
- * two right columns (scrolling inside) but never taller than its own list. Re-measures whenever a
- * card changes size (open, collapse, new items).
+ * Daily ops: TickTick (wide, its own fixed height, tasks | habits side by side) with Radall
+ * Finances under it; Self over Gmail; Outlook over Repair. Every card sizes itself — opening
+ * one never resizes another.
  */
 function DailyOps({ card }: { card: (id: SourceId) => ReactNode }) {
-  const ref = useRef<HTMLDivElement>(null);
-  const [ttHeight, setTtHeight] = useState<number | null>(null);
-
-  useLayoutEffect(() => {
-    const grid = ref.current?.parentElement;
-    if (!grid) return;
-    let frame = 0;
-    const measure = () => {
-      cancelAnimationFrame(frame);
-      frame = requestAnimationFrame(() => {
-        const h = (id: SourceId) => (grid.querySelector(`.space-card.${id}`) as HTMLElement | null)?.offsetHeight || 0;
-        const colH = (c: Col) => c.reduce((sum, id) => sum + h(id), 0) + GAP * (c.length - 1);
-        const tt = grid.querySelector('.space-card.ticktick') as HTMLElement | null;
-        const threeCols = getComputedStyle(grid).gridTemplateColumns.split(' ').length >= 3;
-        if (!tt || !threeCols) {
-          setTtHeight(prev => (prev === null ? prev : null));
-          return;
-        }
-        const tallest = Math.max(colH(DAILY_COLS[0]), colH(DAILY_COLS[1]));
-        // Collapsed: TickTick's bar matches the stacked bars beside it. Open: capped at its own list.
-        const head = tt.querySelector('.card-head') as HTMLElement | null;
-        const body = tt.querySelector('.card-body') as HTMLElement | null;
-        const natural = (head?.offsetHeight || 0) + (body?.scrollHeight || 0) + 8;
-        const next = Math.round(tt.classList.contains('is-collapsed') ? tallest : Math.min(natural, tallest));
-        setTtHeight(prev => (prev !== null && Math.abs(prev - next) < 2 ? prev : next));
-      });
-    };
-    const ro = new ResizeObserver(measure);
-    grid.querySelectorAll('.space-card').forEach(el => ro.observe(el));
-    window.addEventListener('resize', measure);
-    measure();
-    return () => {
-      ro.disconnect();
-      window.removeEventListener('resize', measure);
-      cancelAnimationFrame(frame);
-    };
-  }, []);
-
   return (
     <>
-      <div className="daily-tt" ref={ref} style={ttHeight ? { height: ttHeight } : undefined}>
+      <div className="daily-col daily-main">
         {card('ticktick')}
+        {card('radall')}
       </div>
-      <div className="daily-col">{DAILY_COLS[0].map(id => card(id))}</div>
-      <div className="daily-col">{DAILY_COLS[1].map(id => card(id))}</div>
+      <div className="daily-col">
+        {card('self')}
+        {card('gmail')}
+      </div>
+      <div className="daily-col">
+        {card('outlook')}
+        {card('repair')}
+      </div>
     </>
   );
 }
@@ -326,7 +287,7 @@ export function HomeView({
       />
       <SourceRow
         ids={ROW_2}
-        label="Money · role · move"
+        label="Role · move"
         tone="money"
         icon="◆"
         snapshots={snapshots}
