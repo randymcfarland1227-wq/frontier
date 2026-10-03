@@ -25,7 +25,9 @@ export function FeaturedList({
   const { levelOf, cycle, isCritical, toggleCritical } = useFeaturedLevels();
   // Critical first, then red, yellow, green, then the rest.
   const sorted = byLevel(snapshot.featured, f => levelOf(sourceId, f.id), f => isCritical(sourceId, f.id));
-  const items = sorted.slice(0, compact ? 3 : 12);
+  const [showAll, setShowAll] = useState(false);
+  const PREVIEW = compact ? 4 : 12;
+  const items = showAll ? sorted : sorted.slice(0, PREVIEW);
   const { addPin, removePin, isPinned } = usePriorityPins();
   /** Card view only: the starred list can fold down to its heading (remembered per card). */
   const [folded, setFolded] = useState(() =>
@@ -114,8 +116,10 @@ export function FeaturedList({
               : 'Connecting to the source…'}
         </p>
       )}
-      {compact && !folded && snapshot.featured.length > 3 ? (
-        <p className="featured-more">+{snapshot.featured.length - 3} more featured</p>
+      {!folded && snapshot.featured.length > PREVIEW ? (
+        <button type="button" className="featured-more" onClick={() => setShowAll(v => !v)}>
+          {showAll ? 'Show fewer' : `+${snapshot.featured.length - PREVIEW} more starred`}
+        </button>
       ) : null}
     </section>
   );

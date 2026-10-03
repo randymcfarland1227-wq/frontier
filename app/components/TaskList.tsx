@@ -32,6 +32,7 @@ export function TaskList({
   onStar,
   split = false,
   open = false,
+  exclude,
 }: {
   sourceId: SourceId;
   snapshot: SourceSnapshot;
@@ -42,6 +43,8 @@ export function TaskList({
   split?: boolean;
   /** Card view: list shows straight away (no Expand, no count heading) */
   open?: boolean;
+  /** Ids already shown above (e.g. in Starred) — not listed twice */
+  exclude?: Set<string>;
 }) {
   const [expandedState, setExpanded] = useState(false);
   /** The split view is always open: Tasks and Habits columns show without tapping Expand. */
@@ -49,7 +52,7 @@ export function TaskList({
   const bare = split || open;
   const [showAll, setShowAll] = useState(false);
 
-  const openTasks = snapshot.tasks.filter(t => t.status !== 'done');
+  const openTasks = snapshot.tasks.filter(t => t.status !== 'done' && !exclude?.has(t.id));
   const habits = openTasks.filter(isHabit);
   const tasks = openTasks.filter(t => !isHabit(t));
   const done = snapshot.tasks.filter(t => t.status === 'done');
@@ -162,7 +165,8 @@ export function TaskList({
           ) : (
           <div className="task-board">
             {visibleTasks.length === 0 ? (
-              <p className="featured-empty">Nothing open right now.</p>
+              // Everything open is already in Starred above — say nothing rather than "nothing open".
+              exclude?.size && snapshot.tasks.some(t => t.status !== 'done') ? null : <p className="featured-empty">Nothing open right now.</p>
             ) : (
               visibleTasks.map(renderRow)
             )}

@@ -1516,3 +1516,32 @@ a.origin-link:hover strong {
 .ws-card-actions .row-action:disabled { opacity: .3; cursor: default; }
 .ws-spacer { flex: 1; }
 @media (max-width: 900px) { .ws-lanes { grid-template-columns: 1fr; } }
+
+/* ======================================================================
+   Daily ops v3: TickTick | Self over Gmail | Outlook over Repair.
+   The right columns stack independently (cards size to their content);
+   TickTick matches the row's height and scrolls inside instead of growing.
+   ====================================================================== */
+.space-grid.space-grid-daily {
+  display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) minmax(0, 1fr);
+  grid-template-areas: none; grid-auto-rows: auto; align-items: stretch;
+}
+.space-grid-daily > .space-card.ticktick, .space-grid-daily > .daily-col { grid-area: auto; }
+.daily-col { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+.daily-col > .space-card { grid-area: auto; flex: 0 0 auto; }
+/* The last card in the taller column fills it, so the outer edges still line up */
+.daily-col > .space-card:last-child { flex: 1 1 auto; }
+.space-grid-daily > .space-card.ticktick { display: flex; flex-direction: column; min-height: 0; }
+.space-grid-daily > .space-card.ticktick:not(.is-collapsed) > .card-body {
+  flex: 1 1 auto; height: 0; min-height: 240px; overflow-y: auto; scrollbar-width: thin;
+}
+@media (max-width: 1100px) {
+  .space-grid.space-grid-daily { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .space-grid-daily > .space-card.ticktick { grid-column: 1 / -1; }
+  .space-grid-daily > .space-card.ticktick:not(.is-collapsed) > .card-body { height: auto; max-height: 520px; min-height: 0; }
+}
+@media (max-width: 720px) {
+  .space-grid.space-grid-daily { grid-template-columns: 1fr; }
+}
+button.featured-more { border: 0; background: none; padding: 6px 0 0; color: var(--card-accent, var(--accent)); font: inherit; font-size: 12.5px; font-weight: 650; cursor: pointer; text-align: left; }
+button.featured-more:hover { text-decoration: underline; }
