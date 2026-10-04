@@ -1926,3 +1926,26 @@ body { background: var(--bg); }
 .space-grid-3:has(> :nth-child(2):last-child) { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 /* Radall now lives in Daily ops: a copper shade in the rust family */
 :root { --c-radall: #a8632a; }
+
+/* Text is dark by default; only things sitting directly on the brown page use the light page text.
+   (Site pages' panels inherited the light page text, so it blended into their cream rows.) */
+.frontier-shell, .frontier-shell[data-color-mode="dark"] { color: var(--ink); }
+.hero, .room-hero, .section-toggle, .home-footer, .settings-view > .review-empty {
+  --ink: var(--page-ink); --muted: var(--page-muted); color: var(--page-ink);
+}
+.room-metrics, .room-body, .room-aside, .work-ledger {
+  background: var(--surface); color: var(--ink); border-color: var(--line);
+}
+.room-metrics article, .room-body .room-aside { border-color: var(--line); }
+.room-metrics strong, .room-body strong, .room-body h2, .room-body h3 { color: var(--ink); }
+.room-aside { background: var(--surface-2); }
+/* Readable accents: colored labels get lifted toward cream where they sit on dark surfaces */
+.frontier-shell[data-color-mode="dark"] .sec :is(.why-head, .review-head, .captures-head, .priority-head) .section-label {
+  color: color-mix(in srgb, var(--sec) 45%, #f7ecdf); filter: none;
+}
+.room-hero .room-eyebrow, .room-hero .room-symbol, .room-hero .room-index { color: color-mix(in srgb, var(--accent) 45%, #f7ecdf); }
+.topbar .zoom-control button { color: #f7ecdf; }
+.sites-pop .sites-mark { filter: saturate(1.2) brightness(.85); }
+.frontier-shell[data-color-mode="dark"] .sites-pop .sites-mark { filter: brightness(1.5); }
+.quick-add button { background: var(--accent); color: #fff; border-color: var(--accent); }
+.task-count { background: var(--accent); color: #fff; }
