@@ -53,7 +53,10 @@ export function SourceCard({
 
   const actionable = getActionableMetric(source.id, snapshot);
   const consumed = new Set(actionable.consumes || [actionable.key]);
-  const stats = source.metrics.filter(m => !consumed.has(m.key)).slice(0, 2);
+  // Only stats that have a value — a row of "— applied today" placeholders is noise.
+  const stats = source.metrics
+    .filter(m => !consumed.has(m.key) && metricValue(snapshot.metrics, m.key) !== '—')
+    .slice(0, 2);
   const sub = [source.label, showSync ? syncText(snapshot.refreshedAt) : ''].filter(Boolean).join(' · ');
 
   return (

@@ -69,7 +69,7 @@ export function Header({
             type="button"
             onClick={onRefreshConnectors}
             disabled={connectorSyncing}
-            title="Reload connector JSON from this site"
+            title="Pull the latest from every site"
           >
             {connectorSyncing ? 'Syncing…' : 'Refresh'}
           </button>
