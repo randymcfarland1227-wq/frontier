@@ -20,8 +20,6 @@ import {
 
 const MOMENTUM_MARK: Record<string, string> = { 'On Track': '●', Slipping: '◐', Stalled: '○' };
 const WEEK = 7;
-/** Cards shown before "Show all" so the home page doesn't bury Self and sources. */
-const PREVIEW_COUNT = 6;
 
 type Candidate = { key: string; target: GoalLinkTarget; title: string; where: string };
 type Resolved = { title: string; where: string; state: string };
@@ -55,7 +53,6 @@ export function WhyPanel({
   const [category, setCategory] = useState<string>('all');
   const [open, setOpen] = useState<string | null>(null);
   const [query, setQuery] = useState('');
-  const [expanded, setExpanded] = useState(false);
 
   const doneKeys = useMemo(() => {
     const now = new Date();
@@ -114,7 +111,8 @@ export function WhyPanel({
 
   const areaName = (id?: string) => areas.find(a => a.id === id)?.name;
   const shown = data.goals.filter(g => g.status === 'active' && (category === 'all' || g.categoryId === category));
-  const visible = expanded ? shown : shown.slice(0, PREVIEW_COUNT);
+  // Why has its own page now, so every goal shows (no 6-card preview).
+  const visible = shown;
   const byGoal = (g: Goal) => links.filter(l => l.goalId === g.id);
   // Tasks sorted to a goal on the Task sorting page count as attached work too.
   const sortedTo = (g: Goal) => Object.entries(rules).filter(([k, r]) => r.goal === g.id && !k.endsWith('::*')).length;
@@ -256,11 +254,6 @@ export function WhyPanel({
           );
         })}
       </div>
-      {shown.length > PREVIEW_COUNT ? (
-        <button type="button" className="row-action ghost why-more" onClick={() => setExpanded(e => !e)}>
-          {expanded ? 'Show fewer' : `Show all ${shown.length}`}
-        </button>
-      ) : null}
     </section>
   );
 }

@@ -6,6 +6,7 @@ import type { SelfItem } from '../../lib/adapters/self';
 import { MetricGrid } from './MetricGrid';
 import { FeaturedList } from './FeaturedList';
 import { TaskList } from './TaskList';
+import { SiteIcon } from './SiteIcon';
 import { SelfInbox } from './SelfInbox';
 
 export function SourceView({
@@ -36,8 +37,8 @@ export function SourceView({
   return (
     <div className="room">
       <section className="room-hero">
-        <div className="room-index">{copy.number}</div>
-        <div>
+        <SiteIcon source={sourceId} className="room-icon" />
+        <div className="room-hero-main">
           <p className="room-eyebrow">{copy.eyebrow}</p>
           <h1>{copy.name}</h1>
           {links.length ? (
@@ -52,9 +53,6 @@ export function SourceView({
           ) : null}
           <p className="room-intro">{copy.intro}</p>
         </div>
-        <div className="room-symbol" aria-hidden="true">
-          {copy.marker}
-        </div>
       </section>
       <MetricGrid sourceId={sourceId} snapshot={snapshot} />
       <section className="room-body">
@@ -63,9 +61,9 @@ export function SourceView({
           <h2>{copy.placeholder ? 'Placeholder for now.' : copy.bridge === 'local' ? 'Capture here.' : 'Use the full site.'}</h2>
           <p>
             {copy.placeholder
-              ? 'This source is reserved. Metrics and bridge wiring come in a later pass.'
+              ? 'This site isn\'t connected yet, so there are no numbers or tasks here.'
               : copy.bridge === 'local'
-                ? 'Add, star, and complete Self items on this hub. They stay in this browser until you categorize them to another origin.'
+                ? 'Add, star, and complete Self tasks right here on the hub.'
                 : 'Open the site from here. Star items there to feature them on this card. Marking something Done here also marks it done on that site when it supports it.'}
           </p>
           {copy.url ? (

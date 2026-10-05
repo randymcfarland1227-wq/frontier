@@ -81,7 +81,7 @@ export function FeaturedList({
                 ) : (
                   <strong>{item.title}</strong>
                 )}
-                {item.meta ? <span className="featured-meta">{item.meta}</span> : null}
+                {item.meta ? <span className="featured-meta">{compact ? item.meta.replace(/^From /, '') : item.meta}</span> : null}
               </div>
               <div className="featured-actions">
                 <button

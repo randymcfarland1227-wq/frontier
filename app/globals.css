@@ -2043,3 +2043,39 @@ button.featured-more { color: var(--accent-ink); }
 /* Move's gold one step deeper so white text on its button and pill passes (was 3.0:1). */
 :root { --c-move: #94681c; }
 .priority-source, .focus-copy span { color: var(--accent-ink); font-size: 12px; }
+
+/* ===== Five decisions (2026-10-05) ===== */
+
+/* Compact site page header: logo + name + one-line intro; no "03" index or decorative circle. */
+.room-hero {
+  min-height: 0; padding: 22px var(--page-gutter) 18px; gap: 16px;
+  grid-template-columns: 56px minmax(0, 1fr); align-items: center;
+}
+.room-hero::after { display: none; }
+.room-icon {
+  width: 56px; height: 56px; border-radius: 12px; overflow: hidden;
+  background: var(--surface); border: 1px solid color-mix(in srgb, var(--accent) 50%, var(--line));
+  font-size: 26px; color: var(--accent);
+}
+.room-hero .room-eyebrow { margin: 0 0 4px; font-size: 12px; letter-spacing: .06em; text-transform: uppercase; }
+.room-hero h1 { font-size: clamp(30px, 3.4vw, 42px); line-height: 1.05; letter-spacing: -.03em; }
+.room-hero .room-intro { margin: 6px 0 0; font-size: 14.5px; max-width: 760px; }
+.room-hero .room-related { margin-top: 8px; }
+@media (max-width: 720px) {
+  .room-hero { grid-template-columns: 44px minmax(0, 1fr); padding-top: 16px; min-height: 0; }
+  .room-icon { width: 44px; height: 44px; font-size: 21px; }
+}
+
+/* Self card: the add form is one line until you click into it. */
+.capture-form.is-compact { gap: 0; padding: 8px; }
+.capture-form.is-compact input { margin: 0; }
+
+/* Gmail keeps its sender visible (shorter, so the subject still leads). */
+.space-card.gmail .featured-row.one-line .featured-meta { display: block; max-width: 34%; }
+/* Site pages on phones: the body column was sizing to its widest row (437px) and got clipped. */
+@media (max-width: 720px) {
+  .room-body { grid-template-columns: minmax(0, 1fr); }
+  .room-aside, .work-ledger { min-width: 0; }
+}
+/* "1fr" lets a long task title stretch the column; minmax(0, 1fr) makes it truncate instead. */
+.task-board { grid-template-columns: minmax(0, 1fr); }

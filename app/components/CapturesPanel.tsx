@@ -1,6 +1,6 @@
 'use client';
 
-import { FormEvent, useState } from 'react';
+import { FormEvent, useEffect, useRef, useState } from 'react';
 import {
   CAPTURE_KINDS,
   type Capture,
@@ -86,6 +86,27 @@ export function CapturesPanel({
   const [tab, setTab] = useState<Tab>('inbox');
   const [doneDay, setDoneDay] = useState(() => localDay());
   const [logged, setLogged] = useState('');
+  // The form starts as one line; the kind buttons, link, area and notes open when you click in.
+  const [expanded, setExpanded] = useState(false);
+  const formOpen = expanded || Boolean(title || url || notes);
+  const formRef = useRef<HTMLFormElement>(null);
+  // Close only when you click or tab somewhere outside the form (Safari doesn't focus buttons on
+  // click, so a blur check would fold the form away mid-tap on "Log done").
+  useEffect(() => {
+    if (!expanded) return;
+    const away = (e: Event) => {
+      if (!formRef.current || formRef.current.contains(e.target as Node)) return;
+      setExpanded(false);
+      // Nothing typed: fold back to a plain "Task" box for next time.
+      if (!title && !url && !notes) setKind('task');
+    };
+    document.addEventListener('pointerdown', away);
+    document.addEventListener('focusin', away);
+    return () => {
+      document.removeEventListener('pointerdown', away);
+      document.removeEventListener('focusin', away);
+    };
+  }, [expanded, title, url, notes]);
 
   const areaName = (id?: string) => areas.find(a => a.id === id)?.name;
   const openTasks = selfItems.filter(i => !i.done);
@@ -130,56 +151,71 @@ export function CapturesPanel({
         </div>
       </div>
 
-      <form className="capture-form" onSubmit={submit}>
-        <div className="seg" role="group" aria-label="Capture kind">
-          {KINDS.map(k => (
-            <button
-              key={k.id}
-              type="button"
-              className={k.id === kind ? 'active' : ''}
-              aria-pressed={k.id === kind}
-              onClick={() => {
-                setKind(k.id);
-                setLogged('');
-              }}
-            >
-              {k.label}
-            </button>
-          ))}
-        </div>
+      <form
+        className={`capture-form${formOpen ? '' : ' is-compact'}`}
+        onSubmit={submit}
+        ref={formRef}
+        onFocus={() => setExpanded(true)}
+      >
         <input
           value={title}
           onChange={e => setTitle(e.target.value)}
           placeholder={
-            kind === 'task' ? 'What needs doing?' : kind === 'log' ? 'What did you get done?' : "What's the thought, idea, or question?"
+            !formOpen
+              ? 'Add a task, log something done, or jot a thought…'
+              : kind === 'task'
+                ? 'What needs doing?'
+                : kind === 'log'
+                  ? 'What did you get done?'
+                  : "What's the thought, idea, or question?"
           }
           aria-label="Capture title"
         />
-        <div className={`capture-form-row${kind === 'log' ? ' has-date' : ''}`}>
-          <input value={url} onChange={e => setUrl(e.target.value)} placeholder="Link (optional)" aria-label="Link" inputMode="url" />
-          {kind === 'log' ? (
-            <input
-              type="date"
-              value={doneDay}
-              max={localDay()}
-              onChange={e => setDoneDay(e.target.value)}
-              aria-label="Day it was done"
-              title="Day it was done"
-            />
-          ) : null}
-          <select value={area} onChange={e => setArea(e.target.value)} aria-label="Focus area" required={kind === 'log'}>
-            <option value="">{kind === 'log' ? 'Pick an area…' : 'No area'}</option>
-            {areas.map(a => (
-              <option key={a.id} value={a.id}>
-                {a.name}
-              </option>
-            ))}
-          </select>
-        </div>
-        <textarea value={notes} onChange={e => setNotes(e.target.value)} rows={2} placeholder="Notes (optional)" aria-label="Notes" />
-        <button type="submit" disabled={!title.trim() || (kind === 'log' && !area)}>
-          {kind === 'task' ? 'Add task' : kind === 'log' ? 'Log as done' : 'Capture'}
-        </button>
+        {formOpen ? (
+          <>
+            <div className="seg" role="group" aria-label="Capture kind">
+              {KINDS.map(k => (
+                <button
+                  key={k.id}
+                  type="button"
+                  className={k.id === kind ? 'active' : ''}
+                  aria-pressed={k.id === kind}
+                  onClick={() => {
+                    setKind(k.id);
+                    setLogged('');
+                  }}
+                >
+                  {k.label}
+                </button>
+              ))}
+            </div>
+            <div className={`capture-form-row${kind === 'log' ? ' has-date' : ''}`}>
+              <input value={url} onChange={e => setUrl(e.target.value)} placeholder="Link (optional)" aria-label="Link" inputMode="url" />
+              {kind === 'log' ? (
+                <input
+                  type="date"
+                  value={doneDay}
+                  max={localDay()}
+                  onChange={e => setDoneDay(e.target.value)}
+                  aria-label="Day it was done"
+                  title="Day it was done"
+                />
+              ) : null}
+              <select value={area} onChange={e => setArea(e.target.value)} aria-label="Focus area" required={kind === 'log'}>
+                <option value="">{kind === 'log' ? 'Pick an area…' : 'No area'}</option>
+                {areas.map(a => (
+                  <option key={a.id} value={a.id}>
+                    {a.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <textarea value={notes} onChange={e => setNotes(e.target.value)} rows={2} placeholder="Notes (optional)" aria-label="Notes" />
+            <button type="submit" disabled={!title.trim() || (kind === 'log' && !area)}>
+              {kind === 'task' ? 'Add task' : kind === 'log' ? 'Log as done' : 'Capture'}
+            </button>
+          </>
+        ) : null}
         {kind === 'log' && logged ? <p className="capture-logged" role="status">✓ {logged}</p> : null}
       </form>
 
