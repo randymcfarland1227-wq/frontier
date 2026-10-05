@@ -226,41 +226,6 @@ export function HomeView({
       </section>
 
 
-      <section className="source-row" aria-label="Review">
-        <Collapsible
-          id="review"
-          label="Review"
-          title="Completions across sites"
-          tone="review"
-          icon="✓"
-          summary={
-            <>
-              <span className="sum-chip">
-                <b>{completionStats.today}</b> today
-              </span>
-              <span className="sum-chip">
-                <b>{completionStats.last7}</b> past 7 days
-              </span>
-              <span className="sum-chip">
-                <b>{completionStats.month}</b> this month
-              </span>
-              <span className="sum-chip">
-                <b>{openTotal}</b> open
-              </span>
-            </>
-          }
-        >
-          <ReviewPanel
-            stats={completionStats}
-            ledger={ledger}
-            focusConfig={focusConfig}
-            renderBalance={renderBalance}
-            renderSorting={renderSorting}
-          />
-        </Collapsible>
-      </section>
-
-
       <section className="source-row" aria-label="Priority">
         <Collapsible id="priority" label="Priority" title="Doing now" tone="priority" icon="◎" summary={<PrioritySummary />}>
           <PriorityBoard
@@ -309,6 +274,40 @@ export function HomeView({
         onCompleteTask={onCompleteTask}
         onStarTask={onStarTask}
       />
+
+      <section className="source-row" aria-label="Review">
+        <Collapsible
+          id="review"
+          label="Review"
+          title="Completions across sites"
+          tone="review"
+          icon="✓"
+          summary={
+            <>
+              <span className="sum-chip">
+                <b>{completionStats.today}</b> today
+              </span>
+              <span className="sum-chip">
+                <b>{completionStats.last7}</b> past 7 days
+              </span>
+              <span className="sum-chip">
+                <b>{completionStats.month}</b> this month
+              </span>
+              <span className="sum-chip">
+                <b>{openTotal}</b> open
+              </span>
+            </>
+          }
+        >
+          <ReviewPanel
+            stats={completionStats}
+            ledger={ledger}
+            focusConfig={focusConfig}
+            renderBalance={renderBalance}
+            renderSorting={renderSorting}
+          />
+        </Collapsible>
+      </section>
 
       <footer className="home-footer">
         <span>Randy&apos;s Life Hub</span>

@@ -342,3 +342,11 @@ Design critique + WCAG 2.1 AA + copy + design-system audit, then fixes (last blo
 - Off-palette blues/purples (Balance badges, "needs action") moved into the fall palette.
 - Cards hide stats that have no value yet ("— applied today"); secondary row detail (sender / due date) shrinks first and hides in cards under 400px; "today" hides in narrow TickTick columns but "overdue" stays (red).
 - Copy: no file paths / "bridge stub" in site descriptions; "Pin" everywhere (site pages said "Priority"); Refresh tooltip in plain words.
+
+## Five decisions (2026-10-05, after the audit)
+- Home order: Priority → Daily ops → Role · move → Ventures → Review (Review + backup row moved to the bottom).
+- Self card: add form is one line until clicked; closes on a click/tab outside the form (not on blur — Safari doesn't focus buttons) and resets to Task if nothing was typed.
+- Why page shows every goal (no 6-card preview).
+- Gmail keeps the sender visible in its card (34% max, "From " dropped in compact rows).
+- Site page header is compact: logo tile + eyebrow + name + one-line intro (no "03" index, no decorative circle, no big symbol).
+- Phone fixes on site pages: `.room-body` and `.task-board` use `minmax(0, 1fr)` so long titles truncate instead of clipping the page.
