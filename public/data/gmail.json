@@ -7,19 +7,19 @@
   },
   "featured": [
     {
+      "id": "1a10a62d5ab3211a",
+      "title": "Welcome to the Zip app!",
+      "detail": "You've got access to all new features.",
+      "meta": "From hello@us-edm.zip.co",
+      "originUrl": "https://mail.google.com/mail/?authuser=randymcfarland1227@gmail.com#all/thread-f:1878183758338924826",
+      "completable": false
+    },
+    {
       "id": "1a0f147f0a7f47dc",
       "title": "You made the sale for Texas Instruments TI-84 Plus Graphing Calculator Bl...",
       "detail": "Next, pack it up and ship it out.",
       "meta": "From ebay@ebay.com",
       "originUrl": "https://mail.google.com/mail/?authuser=randymcfarland1227@gmail.com#all/thread-f:1877742105506301916",
-      "completable": false
-    },
-    {
-      "id": "1a0f11e4b8819b18",
-      "title": "Fix payment to keep your Google One membership",
-      "detail": "Take action by Oct 4, 2026 to avoid interruptions to Gmail and Google Photos",
-      "meta": "From googleone-updates-noreply@google.com",
-      "originUrl": "https://mail.google.com/mail/?authuser=randymcfarland1227@gmail.com#all/thread-f:1877739243682503448",
       "completable": false
     },
     {
@@ -41,7 +41,7 @@
     {
       "id": "1a0b567ce591d78a",
       "title": "RE: Senior Cvent Platform Administrator - REMOTE",
-      "detail": "Hi Randy, please let me know the best time to call Best regards, Armeena Syiemlieh Lead Recruiter",
+      "detail": "Hi Randy, please let me know the best time to call Best regards, Armeena Syiemlieh Lead Recruiter ApTask Global Workforce",
       "meta": "From asyiemlieh@agwtalent.com",
       "originUrl": "https://mail.google.com/mail/?authuser=randymcfarland1227@gmail.com#all/thread-f:1876688764157417354",
       "completable": false
@@ -49,20 +49,20 @@
   ],
   "tasks": [
     {
+      "id": "1a10a62d5ab3211a",
+      "title": "Welcome to the Zip app!",
+      "detail": "You've got access to all new features.",
+      "status": "open",
+      "starred": true,
+      "originUrl": "https://mail.google.com/mail/?authuser=randymcfarland1227@gmail.com#all/thread-f:1878183758338924826"
+    },
+    {
       "id": "1a0f147f0a7f47dc",
       "title": "You made the sale for Texas Instruments TI-84 Plus Graphing Calculator Bl...",
       "detail": "Next, pack it up and ship it out.",
       "status": "open",
       "starred": true,
       "originUrl": "https://mail.google.com/mail/?authuser=randymcfarland1227@gmail.com#all/thread-f:1877742105506301916"
-    },
-    {
-      "id": "1a0f11e4b8819b18",
-      "title": "Fix payment to keep your Google One membership",
-      "detail": "Take action by Oct 4, 2026 to avoid interruptions to Gmail and Google Photos",
-      "status": "open",
-      "starred": true,
-      "originUrl": "https://mail.google.com/mail/?authuser=randymcfarland1227@gmail.com#all/thread-f:1877739243682503448"
     },
     {
       "id": "1a0ebf7c7d8db90a",
@@ -83,11 +83,11 @@
     {
       "id": "1a0b567ce591d78a",
       "title": "RE: Senior Cvent Platform Administrator - REMOTE",
-      "detail": "Hi Randy, please let me know the best time to call Best regards, Armeena Syiemlieh Lead Recruiter",
+      "detail": "Hi Randy, please let me know the best time to call Best regards, Armeena Syiemlieh Lead Recruiter ApTask Global Workforce",
       "status": "open",
       "starred": true,
       "originUrl": "https://mail.google.com/mail/?authuser=randymcfarland1227@gmail.com#all/thread-f:1876688764157417354"
     }
   ],
-  "refreshedAt": "2026-10-02T12:45:20.615Z"
+  "refreshedAt": "2026-10-05T12:48:34.546Z"
 }

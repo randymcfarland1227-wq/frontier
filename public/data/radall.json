@@ -1,7 +1,7 @@
 {
   "source": "radall",
   "metrics": {
-    "open": 2,
+    "open": 3,
     "dueSoon": 0,
     "done": 0
   },
@@ -17,6 +17,14 @@
     {
       "id": "radall-row-3",
       "title": "Update MD Unemployment Estimates",
+      "detail": "",
+      "meta": "open",
+      "originUrl": "https://docs.google.com/spreadsheets/d/19rw8MAYTZ70Qy2GFAi0DaCGdsp7hQc67l8nkvw17jQk/edit#gid=138758250",
+      "completable": false
+    },
+    {
+      "id": "radall-row-4",
+      "title": "Shop For New Car Insutance",
       "detail": "",
       "meta": "open",
       "originUrl": "https://docs.google.com/spreadsheets/d/19rw8MAYTZ70Qy2GFAi0DaCGdsp7hQc67l8nkvw17jQk/edit#gid=138758250",
@@ -37,7 +45,14 @@
       "status": "open",
       "starred": false,
       "originUrl": "https://docs.google.com/spreadsheets/d/19rw8MAYTZ70Qy2GFAi0DaCGdsp7hQc67l8nkvw17jQk/edit#gid=138758250"
+    },
+    {
+      "id": "radall-row-4",
+      "title": "Shop For New Car Insutance",
+      "status": "open",
+      "starred": false,
+      "originUrl": "https://docs.google.com/spreadsheets/d/19rw8MAYTZ70Qy2GFAi0DaCGdsp7hQc67l8nkvw17jQk/edit#gid=138758250"
     }
   ],
-  "refreshedAt": "2026-10-02T12:45:20.615Z"
+  "refreshedAt": "2026-10-05T12:48:34.546Z"
 }
