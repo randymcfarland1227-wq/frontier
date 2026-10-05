@@ -1,6 +1,6 @@
 'use client';
 
-import { FormEvent, useState } from 'react';
+import { FormEvent, useEffect, useRef, useState } from 'react';
 import type { FocusItem, SourceId, SpaceId } from '../../lib/types';
 import { sources } from '../../lib/sources';
 
@@ -19,6 +19,16 @@ export function FocusDrawer({
 }) {
   const [newText, setNewText] = useState('');
   const [space, setSpace] = useState<SourceId>('self');
+  const closeRef = useRef<HTMLButtonElement>(null);
+
+  // Behave like a dialog: focus moves in when it opens, Escape closes it.
+  useEffect(() => {
+    if (!open) return;
+    closeRef.current?.focus();
+    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && close();
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [open, close]);
 
   function addFocus(event: FormEvent) {
     event.preventDefault();
@@ -30,13 +40,13 @@ export function FocusDrawer({
   return (
     <div className={`drawer-wrap ${open ? 'open' : ''}`} aria-hidden={!open}>
       <button className="drawer-scrim" onClick={close} aria-label="Close daily focus" tabIndex={open ? 0 : -1} />
-      <aside className="focus-drawer" aria-label="Today's focus">
+      <aside className="focus-drawer" role="dialog" aria-modal={open} aria-label="Today's tasks">
         <div className="drawer-head">
           <div>
             <p>Across all sources</p>
             <h2>Today&apos;s tasks</h2>
           </div>
-          <button onClick={close} aria-label="Close">
+          <button ref={closeRef} onClick={close} aria-label="Close Today's tasks" tabIndex={open ? 0 : -1}>
             ×
           </button>
         </div>
@@ -60,7 +70,7 @@ export function FocusDrawer({
                   close();
                 }}
               >
-                <span>{item.space}</span>
+                <span>{sources.find(src => src.id === item.space)?.shortName || item.space}</span>
                 <strong>{item.text}</strong>
               </button>
             </div>
@@ -80,9 +90,8 @@ export function FocusDrawer({
             placeholder="Add a task for today…"
             aria-label="New focus item"
           />
-          <button type="submit">+</button>
+          <button type="submit" aria-label="Add task">+</button>
         </form>
-        <p className="drawer-foot">These tasks are stored in this browser.</p>
       </aside>
     </div>
   );

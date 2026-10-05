@@ -331,3 +331,14 @@ Replaces the share-vs-target Balance. `lib/energy.ts`, `app/components/BalanceSt
 - **Logos:** `public/logos/*.svg` (simple-icons, brand colors) for Gmail/Outlook/TickTick/Radall (Google Sheets). Uploads: Settings → Site pictures (`lib/siteIcons.ts`, 128px PNG data URLs, synced as `icons`). `SiteIcon` component everywhere a site is shown.
 - **Layout:** Why is its own page (header ✦ Why, `SpaceId 'why'`). The Self tool (CapturesPanel) is the Self card's body in Daily ops; the separate Self section is gone. Daily ops = TickTick (full list, scrolls) | Self over Outlook | Gmail over Repair.
 - **Doing now** (`PriorityBoard`): pinned + critical items grouped into one container per site (lanes data kept but unused).
+
+## UX audit pass (2026-10-05)
+Design critique + WCAG 2.1 AA + copy + design-system audit, then fixes (last block of `app/globals.css`):
+- Phones/tablets: Daily ops and every card row stack (a later unconditioned 3-column rule had been overriding the breakpoints, so phones got three ~110px columns).
+- Text floor 12px (was 9–11px for ~40% of text); row buttons 26px tall (36px on touch); priority dot / critical flag get a 7px invisible hit margin.
+- One focus ring everywhere (`:focus-visible`, accent; cream on the brown page).
+- Today drawer: role=dialog, focus moves to Close, Escape closes, cream surface, site names instead of ids.
+- Contrast: `--accent-ink` (#9a3b14 day / #f0a174 night) for accent-coloured text; deeper Move/Resale tokens and Gmail/Radall pills; night filled buttons #b04e1e. Automated check passes on home, all 11 site pages, Why, Settings, drawer — day and night.
+- Off-palette blues/purples (Balance badges, "needs action") moved into the fall palette.
+- Cards hide stats that have no value yet ("— applied today"); secondary row detail (sender / due date) shrinks first and hides in cards under 400px; "today" hides in narrow TickTick columns but "overdue" stays (red).
+- Copy: no file paths / "bridge stub" in site descriptions; "Pin" everywhere (site pages said "Priority"); Refresh tooltip in plain words.

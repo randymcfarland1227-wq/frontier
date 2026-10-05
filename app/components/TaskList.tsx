@@ -85,7 +85,7 @@ export function TaskList({
                 <article
                   className={`task-row one-line ${task.status === 'done' ? 'done' : ''} ${isHabit(task) ? 'habit' : ''}`}
                   key={task.id}
-                  title={[task.title, task.detail].filter(Boolean).join(' — ')}
+                  title={[task.title, whenLabel(task), task.detail].filter(Boolean).join(' — ')}
                 >
                   <div className="task-main">
                     {isHabit(task) ? <span className="task-badge">Habit</span> : null}
@@ -97,7 +97,7 @@ export function TaskList({
                     ) : (
                       <strong>{task.title}</strong>
                     )}
-                    <span className="task-when">{whenLabel(task)}</span>
+                    <span className={`task-when${whenLabel(task) === 'overdue' ? ' is-overdue' : ''}`}>{whenLabel(task)}</span>
                   </div>
                   <div className="task-actions">
                     {onStar ? (
