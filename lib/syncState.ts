@@ -7,6 +7,7 @@ import type { CompletionEntry, CompletionLedger } from './completions';
 import type { Capture } from './captures';
 import type { SelfItem } from './adapters/self';
 import type { GoalLink } from './goals';
+import type { Plan } from './plans';
 
 export type LocalGoalLinks = { added: GoalLink[]; removed: string[] };
 
@@ -31,6 +32,8 @@ export type SyncedState = {
   priority: Record<string, { lane: string | null; order: number; at: string }>;
   /** Uploaded site pictures: source → small data-URL image; newest change wins */
   icons: Record<string, { src: string | null; at: string }>;
+  /** Maybe-plans (Schedule): union by id, newest edit wins; never deleted, only answered/dropped */
+  plans: Plan[];
 };
 
 /**
@@ -89,6 +92,7 @@ export function emptyState(): SyncedState {
     rules: {},
     priority: {},
     icons: {},
+    plans: [],
   };
 }
 
@@ -119,6 +123,7 @@ export function normalizeState(raw: unknown): SyncedState {
     rules: s.rules && typeof s.rules === 'object' ? s.rules : {},
     priority: s.priority && typeof s.priority === 'object' ? s.priority : {},
     icons: s.icons && typeof s.icons === 'object' ? s.icons : {},
+    plans: Array.isArray(s.plans) ? s.plans.filter(p => p && typeof p.id === 'string') : [],
   };
 }
 
@@ -197,6 +202,7 @@ export function mergeState(aRaw: unknown, bRaw: unknown): SyncedState {
     rules: mergeLevels(a.rules, b.rules),
     priority: mergeLevels(a.priority, b.priority),
     icons: mergeLevels(a.icons, b.icons),
+    plans: mergeById(a.plans, b.plans),
   };
 }
 

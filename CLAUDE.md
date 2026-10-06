@@ -17,6 +17,7 @@ panel of tasks/thoughts/ideas. When Randy says "the Life Hub", he means this rep
 | Worker `frontier-work-room` | `worker/index.ts`, `wrangler.jsonc` | TickTick complete, TickTick done feed, habit check-in, cloud backup (`/api/state`, KV `LIFEHUB_STATE`). Other page loads = handoff page for the retired old copy |
 | Focus areas | `public/data/focus-areas.json` | Area **ids never change** (history keys on them); names can. Bump `rulesVersion` to re-sort history |
 | Balance | `lib/energy.ts` | Two badges per bucket: progress (Charge / In-Line / On-Fire) and focus (Underfocused / Balanced / Overfocused). Randy chose these words — keep them. Paces live in the ⚙ panel |
+| Schedule (calendar + bills) | `app/components/ScheduleSection.tsx`, `lib/schedule.ts`, `apps-script/LifeHubSchedule.gs` | Apps Script → Worker `/api/schedule/snapshot` → Life Hub (backup key). Private: never in `public/data`. Setup: `docs/SCHEDULE_SETUP.md` |
 | Connector snapshots | `public/data/{gmail,outlook,radall,ticktick,role}.json` | Written by an external morning sync (not in this repo) |
 | Goals (Why panel) | Goals hub Apps Script `?action=efforts/reviews` | Live read; fallback `public/data/goals.json`. Never write goals here |
 | TickTick areas | Routine Hub Apps Script `?action=routines` | Live read; fallback `public/data/routines.json` |

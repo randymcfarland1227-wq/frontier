@@ -605,6 +605,45 @@ async function handleRadall(request: Request, env: Env): Promise<Response> {
   return jsonResponse({ ok: false, error: "method_not_allowed" }, 405, origin);
 }
 
+// ---------------------------------------------------------------------------
+// Schedule: the "Life Hub Schedule" Apps Script reads Google Calendar (next ~6 weeks) and the
+// Finances sheet's "Bills" tab every 10 min and POSTs one snapshot (X-Mail-Key). Life Hub GETs it
+// with the backup key, so calendar and bill details never sit in the public Pages files.
+// ---------------------------------------------------------------------------
+
+const SCHEDULE_KEY = "schedule-snapshot";
+
+async function handleSchedule(request: Request, env: Env): Promise<Response> {
+  const origin = request.headers.get("Origin");
+  if (request.method === "OPTIONS") return new Response(null, { status: 204, headers: corsHeaders(origin) });
+
+  if (request.method === "POST") {
+    if (!env.MAIL_PUSH_KEY || request.headers.get("X-Mail-Key") !== env.MAIL_PUSH_KEY) {
+      return jsonResponse({ ok: false, error: "wrong_key" }, 401, origin);
+    }
+    const text = await request.text();
+    if (text.length > 500_000) return jsonResponse({ ok: false, error: "too_large" }, 413, origin);
+    let snap: { source?: unknown; refreshedAt?: unknown; events?: unknown; bills?: unknown };
+    try {
+      snap = JSON.parse(text);
+    } catch {
+      return jsonResponse({ ok: false, error: "invalid_json" }, 400, origin);
+    }
+    if (snap.source !== "schedule" || typeof snap.refreshedAt !== "string" || !Array.isArray(snap.events) || !Array.isArray(snap.bills)) {
+      return jsonResponse({ ok: false, error: "bad_snapshot" }, 400, origin);
+    }
+    await env.LIFEHUB_STATE.put(SCHEDULE_KEY, text);
+    return jsonResponse({ ok: true, events: snap.events.length, bills: snap.bills.length }, 200, origin);
+  }
+
+  if (origin && !CORS_ALLOW_ORIGINS.has(origin)) return jsonResponse({ ok: false, error: "cors_denied" }, 403, origin);
+  if (!(await syncKeyAllowed(request, env))) return jsonResponse({ ok: false, error: "wrong_key" }, 401, origin);
+  if (request.method === "GET") {
+    return jsonResponse({ ok: true, snapshot: await env.LIFEHUB_STATE.get(SCHEDULE_KEY, "json") }, 200, origin);
+  }
+  return jsonResponse({ ok: false, error: "method_not_allowed" }, 405, origin);
+}
+
 export default {
   async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
     const { pathname } = new URL(request.url);
@@ -631,6 +670,10 @@ export default {
 
     if (pathname === "/api/radall/snapshot") {
       return handleRadall(request, env);
+    }
+
+    if (pathname === "/api/schedule/snapshot") {
+      return handleSchedule(request, env);
     }
 
     if (pathname === "/api/role/complete") {

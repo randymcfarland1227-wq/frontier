@@ -91,6 +91,7 @@ import { TaskSorting } from './components/TaskSorting';
 import { SiteIconSettings } from './components/SiteIconSettings';
 import { NeedsSorting } from './components/NeedsSorting';
 import { backfillFocusAreas, loadFocusAreas, type FocusAreaConfig } from '../lib/focusAreas';
+import { loadCachedSchedule, pullScheduleSnapshot, type BillDue, type ScheduleSnapshot } from '../lib/schedule';
 
 const starterFocus: FocusItem[] = [
   { id: 1, text: 'Move one strong application forward', space: 'role', done: false },
@@ -199,6 +200,8 @@ export function LifeHub() {
   const [connectorSyncing, setConnectorSyncing] = useState(false);
   const [theme, setTheme] = useState<'light' | 'dark'>('dark');
   const [ledger, setLedger] = useState<CompletionLedger>({ entries: {} });
+  // Google Calendar + Finances bills (private, via the Worker); last good copy kept offline.
+  const [schedule, setSchedule] = useState<ScheduleSnapshot | null>(() => loadCachedSchedule());
   const [completionStats, setCompletionStats] = useState<CompletionStats>(emptyStats());
   const [focusConfig, setFocusConfig] = useState<FocusAreaConfig | null>(null);
   const [habitSchedule, setHabitSchedule] = useState<HabitSchedule[] | null>(null);
@@ -307,10 +310,15 @@ export function LifeHub() {
             : hideLedgerDone({ ...current, radall: snap }, loadLedger()),
         );
       });
+    const pullSchedule = () =>
+      void pullScheduleSnapshot().then(snap => {
+        if (snap) setSchedule(current => (current && current.refreshedAt >= snap.refreshedAt ? current : snap));
+      });
     const pull = () => {
       pullRole();
       pullGmail();
       pullRadall();
+      pullSchedule();
     };
     pull();
     const onVisible = () => document.visibilityState === 'visible' && pull();
@@ -795,6 +803,10 @@ goalsData ? (
           onStarTask={(source, task) => starOnHub(source, task)}
           completionStats={completionStats}
           ledger={visibleLedger}
+          schedule={schedule}
+          onBillPaid={(due: BillDue) =>
+            setLedger(recordCompletion('radall', due.key, { title: `Paid ${due.bill.name}`, via: 'hub' }))
+          }
           focusConfig={focusConfig}
           renderSorting={entries =>
             focusConfig ? (
