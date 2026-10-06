@@ -59,6 +59,12 @@ export function TaskList({
   const openTasks = snapshot.tasks.filter(t => t.status !== 'done' && !exclude?.has(t.id));
   const habits = openTasks.filter(isHabit);
   const tasks = openTasks.filter(t => !isHabit(t));
+  // Starred items show in the list above, not in these columns — but the column totals still
+  // count them, so "Tasks · 16" matches the card's "16 to do".
+  const allOpen = snapshot.tasks.filter(t => t.status !== 'done');
+  const taskTotal = allOpen.filter(t => !isHabit(t)).length;
+  const habitTotal = allOpen.filter(isHabit).length;
+  const starredNote = (shown: number, total: number) => (total > shown ? ` · ${total - shown} in Starred above` : '');
   const done = snapshot.tasks.filter(t => t.status === 'done');
 
   const visibleTasks = useMemo(() => {
@@ -154,15 +160,29 @@ export function TaskList({
           {split ? (
             <div className="task-split">
               <div>
-                <p className="task-split-label">Tasks · {tasks.length}</p>
+                <p className="task-split-label">
+                  Tasks · {taskTotal}
+                  <span className="task-split-note">{starredNote(tasks.length, taskTotal)}</span>
+                </p>
                 <div className="task-board">
-                  {tasks.length ? (showAll ? tasks : tasks.slice(0, SPLIT_PREVIEW)).map(renderRow) : <p className="featured-empty">No tasks due.</p>}
+                  {tasks.length ? (
+                    (showAll ? tasks : tasks.slice(0, SPLIT_PREVIEW)).map(renderRow)
+                  ) : (
+                    <p className="featured-empty">{taskTotal ? 'All in Starred above.' : 'No tasks due.'}</p>
+                  )}
                 </div>
               </div>
               <div>
-                <p className="task-split-label">Habits · {habits.length}</p>
+                <p className="task-split-label">
+                  Habits · {habitTotal}
+                  <span className="task-split-note">{starredNote(habits.length, habitTotal)}</span>
+                </p>
                 <div className="task-board">
-                  {habits.length ? (showAll ? habits : habits.slice(0, SPLIT_PREVIEW)).map(renderRow) : <p className="featured-empty">No habits left today.</p>}
+                  {habits.length ? (
+                    (showAll ? habits : habits.slice(0, SPLIT_PREVIEW)).map(renderRow)
+                  ) : (
+                    <p className="featured-empty">{habitTotal ? 'All in Starred above.' : 'No habits left today.'}</p>
+                  )}
                 </div>
               </div>
             </div>

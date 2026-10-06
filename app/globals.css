@@ -2079,3 +2079,133 @@ button.featured-more { color: var(--accent-ink); }
 }
 /* "1fr" lets a long task title stretch the column; minmax(0, 1fr) makes it truncate instead. */
 .task-board { grid-template-columns: minmax(0, 1fr); }
+
+/* ===== Hero, TickTick box, Priority two-stage (2026-10-06) ===== */
+
+/* Title strip is smaller so the page starts sooner. */
+.hero.hero-flush { padding-top: 18px; padding-bottom: 10px; }
+.hero.hero-flush h1 { font-size: clamp(28px, 3.2vw, 42px); }
+.hero-stat strong { font-size: clamp(22px, 2.4vw, 30px); }
+.hero-stat { padding: 6px 12px 5px; }
+
+/* TickTick box: same height as its neighbours; tasks on the top half, habits on the bottom. */
+.hero-stats { align-items: stretch; }
+button.hero-stat.stat-ticktick {
+  display: grid; grid-template-rows: 1fr 1fr; align-content: stretch; gap: 0; padding: 3px 12px;
+  border: 1px solid color-mix(in srgb, var(--c-ticktick) 70%, var(--page-line)); color: var(--page-ink);
+  font: inherit; text-align: left; cursor: pointer; min-width: 128px;
+}
+.stat-ticktick .stat-half { display: flex; align-items: baseline; gap: 6px; margin: 0; }
+.stat-ticktick .stat-half + .stat-half { border-top: 1px solid var(--page-line); }
+.stat-ticktick .stat-half strong { min-width: 1.5em; font-size: clamp(17px, 1.6vw, 20px); line-height: 1.3; color: #f0a174; }
+.stat-ticktick .stat-half > span { margin: 0; font-size: 12px; color: var(--page-muted); }
+button.hero-stat.stat-ticktick:hover { border-color: #f0a174; }
+
+/* TickTick columns: "· 2 in Starred above" explains why fewer rows than the total. */
+.task-split-note { text-transform: none; letter-spacing: 0; font-weight: 400; }
+
+/* Priority: compact header, then On deck (by site) beside the Action list. */
+.priority-board.pb-v2 { padding: 14px 16px 16px; }
+.pb-v2 .priority-head { align-items: center; padding-right: 44px; }
+.pb-v2 .pb-title { display: flex; align-items: baseline; flex-wrap: wrap; gap: 4px 10px; min-width: 0; }
+.pb-v2 .pb-title .section-label { margin: 0; }
+.pb-v2 .priority-head h2 { margin: 0; font-size: 19px; }
+.pb-v2 .priority-head .pb-summary { flex-basis: 100%; margin: 0; font-size: 13px; }
+.pb-v2 .ws-add { flex: 0 1 340px; }
+.pb-stages { margin-top: 12px; display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; align-items: start; }
+@media (min-width: 1000px) { .pb-stages { grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); } }
+.pb-stage { min-width: 0; }
+.pb-stage-label { margin: 0 0 8px; color: var(--ink); font-size: 14px; font-weight: 500; }
+.pb-stage-label span { color: var(--muted); font-weight: 400; }
+.pb-empty { margin: 0; padding: 12px; border: 1px dashed var(--row-line); border-radius: 8px; color: var(--muted); font-size: 13px; }
+.pb-v2 .plan-groups { margin-top: 0; grid-template-columns: repeat(auto-fill, minmax(min(100%, 420px), 1fr)); gap: 10px; }
+.pb-v2 .plan-group { border-top-width: 3px; }
+.pb-v2 .plan-group-head { gap: 8px; padding: 6px 10px; }
+.pb-v2 .plan-group-icon { width: 22px; height: 22px; border-radius: 6px; }
+.pb-v2 .plan-group-name { font-size: 15px; }
+.pb-v2 .plan-group-count { min-width: 22px; padding: 0 7px; font-size: 13px; line-height: 20px; }
+.pb-v2 .plan-group-list { gap: 5px; padding: 7px 8px 8px; }
+.pb-v2 .plan-item { gap: 6px; padding: 5px 6px 5px 8px; }
+.pb-v2 .plan-item .row-action { flex-shrink: 0; }
+
+/* Click the title area to open the side panel; subtext (the site's note) sits under the title. */
+.plan-open {
+  flex: 1 1 auto; min-width: 0; display: grid; gap: 1px; padding: 2px 4px; margin: 0;
+  border: 0; border-radius: 6px; background: none; color: var(--ink); font: inherit; text-align: left; cursor: pointer;
+}
+.plan-open:hover { background: color-mix(in srgb, var(--card-accent, var(--accent)) 8%, transparent); }
+.plan-open-title { display: flex; align-items: center; gap: 6px; min-width: 0; }
+.plan-open-title strong { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 14px; font-weight: 500; }
+.plan-open-sub { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--muted); font-size: 12px; }
+.plan-blocked { justify-self: start; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding: 0 6px; border-radius: 4px; background: #f6dcd3; color: #8a2a17; font-size: 12px; }
+.frontier-shell[data-color-mode="dark"] .plan-blocked { background: #4a2216; color: #f6c3b0; }
+
+/* Action list: numbered, in your order. */
+.pb-plan { padding: 10px; border: 1px solid var(--row-line); border-radius: 10px; background: color-mix(in srgb, var(--c-priority, #7a2a22) 5%, var(--surface)); }
+.pb-plan.is-target { border-style: dashed; border-color: var(--accent); }
+.pb-plan .pb-empty { border: 0; padding: 4px 2px; }
+.pb-plan-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 5px; }
+.plan-step { --card-accent: var(--src, var(--accent)); }
+.plan-num {
+  flex: 0 0 22px; height: 22px; display: grid; place-items: center; border-radius: 50%;
+  background: #7a2a22; color: #fff; font-size: 12px; font-variant-numeric: tabular-nums;
+}
+.plan-step-icon { flex: 0 0 20px; width: 20px; height: 20px; border-radius: 5px; overflow: hidden; }
+.plan-order { display: flex; gap: 2px; flex-shrink: 0; }
+.plan-order .row-action { padding-inline: 6px; font-size: 12px; }
+.plan-order .row-action:disabled { opacity: .3; cursor: default; }
+.plan-step.src-ticktick { --src: var(--c-ticktick); } .plan-step.src-self { --src: var(--c-self); }
+.plan-step.src-gmail { --src: var(--c-gmail); } .plan-step.src-outlook { --src: var(--c-outlook); }
+.plan-step.src-repair { --src: var(--c-repair); } .plan-step.src-radall { --src: var(--c-radall); }
+.plan-step.src-role { --src: var(--c-role); } .plan-step.src-move { --src: var(--c-move); }
+.plan-step.src-income { --src: var(--c-income); } .plan-step.src-resale { --src: var(--c-resale); }
+.plan-step.src-candle { --src: var(--c-candle); }
+
+/* Side panel for one item. */
+.plan-panel {
+  position: absolute; top: 0; right: 0; width: min(460px, 100%); height: 100%; overflow-y: auto;
+  padding: 20px 22px 28px; background: var(--surface); color: var(--ink);
+  border-left: 4px solid var(--card-accent, var(--accent)); box-shadow: -20px 0 60px rgba(10, 6, 2, .3);
+  animation: plan-panel-in .22s ease-out;
+}
+@keyframes plan-panel-in { from { transform: translateX(40px); opacity: 0; } to { transform: none; opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .plan-panel { animation: none; } }
+.plan-panel-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.plan-panel-site { display: inline-flex; align-items: center; gap: 8px; padding: 4px 8px 4px 4px; border: 1px solid var(--row-line); border-radius: 8px; background: var(--row); color: var(--ink); font: inherit; font-size: 13px; cursor: pointer; }
+.plan-panel-icon { width: 24px; height: 24px; border-radius: 6px; overflow: hidden; }
+.plan-panel-close { width: 36px; height: 36px; border: 0; border-radius: 8px; background: transparent; color: var(--ink); font-size: 26px; line-height: 1; cursor: pointer; }
+.plan-panel h2 { margin: 14px 0 6px; font-size: 22px; line-height: 1.2; overflow-wrap: anywhere; }
+.plan-panel-marks { display: flex; align-items: center; gap: 8px; }
+.plan-panel-where { color: var(--muted); font-size: 12px; }
+.plan-panel-detail { margin: 10px 0 0; padding: 10px 12px; border-radius: 8px; background: var(--row); font-size: 14px; line-height: 1.5; white-space: pre-wrap; overflow-wrap: anywhere; }
+.plan-panel-link { display: inline-block; margin-top: 10px; color: var(--accent-ink); font-size: 14px; }
+.plan-panel-sec { margin-top: 20px; padding-top: 14px; border-top: 1px solid var(--row-line); }
+.plan-panel-sec h3 { margin: 0; font-size: 16px; font-weight: 500; }
+.plan-panel-hint { margin: 2px 0 8px; color: var(--muted); font-size: 13px; }
+.plan-before-list { list-style: none; margin: 0 0 8px; padding: 0; display: grid; gap: 4px; }
+.plan-before-list li { display: flex; align-items: center; gap: 6px; padding: 4px 4px 4px 8px; border-radius: 6px; background: var(--row); }
+.plan-before-list label { flex: 1; min-width: 0; display: flex; align-items: center; gap: 8px; font-size: 14px; cursor: pointer; }
+.plan-before-list input { width: 18px; height: 18px; flex-shrink: 0; accent-color: var(--accent); }
+.plan-before-list li.is-done span { color: var(--muted); text-decoration: line-through; }
+.plan-before-add { display: flex; gap: 6px; }
+.plan-before-add input, .plan-panel textarea {
+  flex: 1; min-width: 0; width: 100%; padding: 8px 10px; border: 1px solid var(--row-line); border-radius: 8px;
+  background: var(--glass); color: var(--ink); font: inherit; font-size: 14px;
+}
+.plan-panel textarea { margin-top: 8px; resize: vertical; line-height: 1.45; }
+.plan-panel-actions { margin-top: 22px; display: flex; flex-wrap: wrap; gap: 8px; }
+.plan-panel-actions .row-action { min-height: 34px !important; padding-inline: 14px; font-size: 14px; }
+.plan-panel-remove { margin-left: auto; }
+
+@media (max-width: 720px) {
+  .pb-v2 .priority-head { padding-right: 40px; }
+  .pb-v2 .ws-add { flex: 1 1 100%; }
+}
+@media (max-width: 520px) {
+  /* Phones: colour dot and Critical live in the side panel; rows keep title + Add / Done. */
+  .pb-v2 .plan-item > :is(.level-dot, .critical-flag) { display: none; }
+  .plan-order { flex-direction: column; }
+  .plan-order .row-action { min-height: 22px !important; }
+}
+/* The hero sits on the dark page in both modes; the brighter green keeps "done today" readable now it's smaller. */
+.hero-stat.stat-done strong { color: #34d399; }
