@@ -1,10 +1,14 @@
 'use client';
 
 /**
- * Priority workstation: pinned tasks laid out in lanes (Now / Next / Later) with an order inside
- * each lane. Stored as one map — `source:id` → { lane, order, at } — so it cloud-syncs like
- * levels (newest change per task wins). `lane: null` = unpinned. The old flat pin list
- * (`lifehub-priority-pins`) is folded into the Now lane once.
+ * Priority workstation. Stored as one map — `source:id` → { lane, order, at, note?, before? } — so
+ * it cloud-syncs like levels (newest change per task wins). `lane: null` = unpinned.
+ *
+ * Two stages (2026-10-06): everything pinned lands **On deck** (grouped by site), then Randy moves
+ * what he's decided to do into the ordered **Action list**. The lane values are the older
+ * Now/Next/Later ones so nothing synced needs migrating: 'now' = On deck, 'next' = Action list.
+ * Each item can carry a plan note and a "Before this" list (blockers / things that come first).
+ * The old flat pin list (`lifehub-priority-pins`) is folded into On deck once.
  */
 
 import { useCallback, useEffect, useState } from 'react';
@@ -20,7 +24,23 @@ export const LANES: Array<{ id: Lane; name: string; hint: string }> = [
   { id: 'later', name: 'Later', hint: 'Parked, not forgotten' },
 ];
 
-export type LaneEntry = { lane: Lane | null; order: number; at: string };
+/** Pinned items land here, grouped by site. */
+export const DECK: Lane = 'now';
+/** The decided, ordered action list. */
+export const PLAN: Lane = 'next';
+
+/** Something that's in the way, or has to happen first. */
+export type BeforeStep = { id: string; text: string; done: boolean };
+
+export type LaneEntry = {
+  lane: Lane | null;
+  order: number;
+  at: string;
+  /** How Randy plans to go about it */
+  note?: string;
+  /** Blockers / things that need to happen first */
+  before?: BeforeStep[];
+};
 export type LaneMap = Record<string, LaneEntry>;
 
 export function pinKey(source: SourceId, id: string): string {
@@ -85,7 +105,7 @@ export function placePin(key: string, lane: Lane, before?: string) {
   inLane.forEach((k, i) => {
     const prev = map[k];
     // Bump the stamp on everything that moved, so the new order wins when devices sync.
-    if (k === key || !prev || prev.order !== i || prev.lane !== lane) map[k] = { lane, order: i, at };
+    if (k === key || !prev || prev.order !== i || prev.lane !== lane) map[k] = { ...prev, lane, order: i, at };
   });
   saveLanes(map);
 }
@@ -95,6 +115,19 @@ export function unpin(key: string) {
   if (!map[key]?.lane) return;
   map[key] = { ...map[key], lane: null, at: new Date().toISOString() };
   saveLanes(map);
+}
+
+/** Change an item's note / "Before this" list (kept even if it's taken off the plan). */
+export function updatePinDetails(key: string, patch: Pick<LaneEntry, 'note' | 'before'>) {
+  const map = loadLanes();
+  const prev = map[key] || { lane: null, order: 0, at: '' };
+  map[key] = { ...prev, ...patch, at: new Date().toISOString() };
+  saveLanes(map);
+}
+
+/** Open "Before this" steps — anything left means the item is waiting on something. */
+export function openBefore(entry?: LaneEntry): number {
+  return (entry?.before || []).filter(b => !b.done).length;
 }
 
 export function usePriorityPins() {
@@ -111,7 +144,7 @@ export function usePriorityPins() {
   }, []);
 
   const pins = pinsInOrder(lanes);
-  const addPin = useCallback((source: SourceId, id: string, lane: Lane = 'now') => placePin(pinKey(source, id), lane), []);
+  const addPin = useCallback((source: SourceId, id: string, lane: Lane = DECK) => placePin(pinKey(source, id), lane), []);
   const removePin = useCallback((source: SourceId, id: string) => unpin(pinKey(source, id)), []);
   const isPinned = useCallback((source: SourceId, id: string) => Boolean(lanes[pinKey(source, id)]?.lane), [lanes]);
   const laneOf = useCallback((key: string): Lane | null => lanes[key]?.lane ?? null, [lanes]);

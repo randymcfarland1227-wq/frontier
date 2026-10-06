@@ -350,3 +350,11 @@ Design critique + WCAG 2.1 AA + copy + design-system audit, then fixes (last blo
 - Gmail keeps the sender visible in its card (34% max, "From " dropped in compact rows).
 - Site page header is compact: logo tile + eyebrow + name + one-line intro (no "03" index, no decorative circle, no big symbol).
 - Phone fixes on site pages: `.room-body` and `.task-board` use `minmax(0, 1fr)` so long titles truncate instead of clipping the page.
+
+## Priority rework, TickTick box, smaller title (2026-10-06)
+- **Title strip** is smaller (title ~42px max, tighter padding). "Done today" green brightened to stay readable at the smaller size.
+- **TickTick box** next to "done today" / "open": same height; top half = TickTick tasks (the card's "to do"), bottom half = habits left today. Click opens TickTick's page.
+- **TickTick column counts** now include starred items ("Tasks · 16 · 2 in Starred above"), so they match the card's "to do". Before, starred tasks/habits were left out of the column totals, which is why "14 tasks" sat next to "16 to do".
+- **Priority = two stages** (`PriorityBoard.tsx`): **On deck** (everything pinned/critical, grouped by site, compact) → **Action list** (what Randy decided to do, numbered, in order; ▲▼ or drag). Rows show the site's subtext (task note / Self detail) under the title.
+- **Side panel** (`PriorityPanel.tsx`): click any item → full note, "Open in <site> ↗", color/Critical, **Before this** (blockers / things that must happen first, tick-off list; open ones show "Waiting on N things first" on the row), and a **Plan** note. Rendered into `.frontier-shell` via a portal (the board's blur effect traps fixed elements). Escape / scrim / × close it.
+- **Data** (`lib/priorityPins.ts`): no new synced field. Lane values reused so nothing migrates: `'now'` = On deck (`DECK`), `'next'` = Action list (`PLAN`). `note` and `before` ride on the same `priority` entry (the merge passes entries through whole; newest `at` wins), so no Worker deploy is needed.

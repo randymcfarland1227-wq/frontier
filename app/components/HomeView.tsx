@@ -188,6 +188,10 @@ export function HomeView({
     .filter(site => site.count > 0)
     .sort((a, b) => b.count - a.count);
   const openTotal = openBySite.reduce((sum, site) => sum + site.count, 0);
+  // TickTick split: tasks (the card's "to do") over habits still to check in today.
+  const tt = snapshots.ticktick;
+  const ticktickTasks = getActionableMetric('ticktick', tt).value || 0;
+  const ticktickHabits = Number(tt?.metrics?.habits) || 0;
 
   return (
     <>
@@ -208,6 +212,21 @@ export function HomeView({
                   open · {openBySite.length} {openBySite.length === 1 ? 'site' : 'sites'}
                 </span>
               </div>
+              <button
+                type="button"
+                className="hero-stat stat-ticktick"
+                onClick={() => enter('ticktick')}
+                title="TickTick today: tasks due or overdue, and habits not checked in yet — opens TickTick's page"
+              >
+                <span className="stat-half">
+                  <strong>{ticktickTasks}</strong>
+                  <span>TickTick {ticktickTasks === 1 ? 'task' : 'tasks'}</span>
+                </span>
+                <span className="stat-half">
+                  <strong>{ticktickHabits}</strong>
+                  <span>{ticktickHabits === 1 ? 'habit' : 'habits'} left</span>
+                </span>
+              </button>
             </div>
             {openBySite.length ? (
               <div className="hero-count-sites">
