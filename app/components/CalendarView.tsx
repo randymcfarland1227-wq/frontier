@@ -1,5 +1,8 @@
 'use client';
 
+/** Month → light seasonal accent for the calendar only (see globals.css .cal[data-season]). */
+const SEASON = ['winter','valentine','spring','spring','bloom','summer','summer','summer','harvest','halloween','harvest','holiday'];
+
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   addDays,
@@ -190,7 +193,7 @@ export function CalendarView({
   const today = dayKey(now);
 
   return (
-    <div className="cal">
+    <div className={`cal cal-month-${new Date().getMonth() + 1}`} data-season={SEASON[new Date().getMonth()]}>
       <div className="cal-bar">
         <div className="cal-nav">
           <button type="button" className="row-action ghost" onClick={() => step(-1)} aria-label={view === 'month' ? 'Previous month' : 'Earlier days'}>
