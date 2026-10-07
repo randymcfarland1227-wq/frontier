@@ -14,6 +14,10 @@ export type SelfItem = {
   fromCaptureId?: string;
   /** Last change — lets cloud backup pick the newest copy */
   updatedAt?: string;
+  /** Optional day it's for (YYYY-MM-DD) — shows on the calendar */
+  due?: string;
+  /** Prep task for a calendar event / maybe-plan (e.g. "Change oil" before the game) */
+  forEvent?: { id: string; title: string; date: string };
 };
 
 export function loadSelfItems(): SelfItem[] {
@@ -58,7 +62,7 @@ export function selfSnapshotFrom(items: SelfItem[]): SourceSnapshot {
 export function addSelfItem(
   title: string,
   detail = '',
-  extra?: Pick<SelfItem, 'focusAreaId' | 'fromCaptureId'>,
+  extra?: Pick<SelfItem, 'focusAreaId' | 'fromCaptureId' | 'due' | 'forEvent'>,
 ): SelfItem[] {
   const items = loadSelfItems();
   const next: SelfItem = {
@@ -96,6 +100,14 @@ export function logSelfItem(title: string, detail: string, focusAreaId: string |
 export function toggleSelfComplete(id: string): SelfItem[] {
   const at = new Date().toISOString();
   const updated = loadSelfItems().map(i => (i.id === id ? { ...i, done: !i.done, updatedAt: at } : i));
+  saveSelfItems(updated);
+  return updated;
+}
+
+/** Set or clear a Self task's day. */
+export function setSelfDue(id: string, due?: string): SelfItem[] {
+  const at = new Date().toISOString();
+  const updated = loadSelfItems().map(i => (i.id === id ? { ...i, due: due || undefined, updatedAt: at } : i));
   saveSelfItems(updated);
   return updated;
 }

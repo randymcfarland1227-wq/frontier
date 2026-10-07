@@ -14,8 +14,7 @@ import { Collapsible } from './Collapsible';
 import { getActionableMetric } from '../../lib/actionable';
 import { usePriorityPins } from '../../lib/priorityPins';
 import { criticalKeys, useFeaturedLevels } from '../../lib/featuredLevels';
-import { addDays, eventStart, onDay, paidBillKeys, upcomingBills, type BillDue, type ScheduleSnapshot } from '../../lib/schedule';
-import { moneyBillDues, type MoneyModel } from '../../lib/money';
+import { addDays, eventStart, onDay, paidBillKeys, upcomingBills, type BillDue, type CalTask, type ScheduleSnapshot } from '../../lib/schedule';
 import { usePlans } from '../../lib/plans';
 import { ScheduleSection } from './ScheduleSection';
 import { BillsList } from './BillsList';
@@ -196,8 +195,11 @@ export function HomeView({
   renderSorting,
   capturesPanel,
   schedule,
-  money,
+  moneyDues,
   onBillPaid,
+  calTasks,
+  onTaskDone,
+  onAddPrep,
 }: {
   snapshots: Record<SourceId, SourceSnapshot>;
   enter: (id: SpaceId) => void;
@@ -212,8 +214,12 @@ export function HomeView({
   renderSorting?: (entries: CompletionEntry[]) => ReactNode;
   capturesPanel: ReactNode;
   schedule: ScheduleSnapshot | null;
-  money: MoneyModel | null;
+  /** Money from the Radall sheet + planned payments (already minus what's marked paid) */
+  moneyDues: BillDue[];
   onBillPaid: (due: BillDue) => void;
+  calTasks: CalTask[];
+  onTaskDone: (t: CalTask) => void;
+  onAddPrep: (target: { id: string; title: string; date: string }, title: string, due?: string) => void;
 }) {
   const latest =
     Object.values(snapshots)
@@ -231,7 +237,7 @@ export function HomeView({
   // Bills: next unpaid due date per bill (paid on Life Hub = a Radall completion in the ledger).
   // Plus the Radall sheet's money items (bills, card mins, subscriptions, pay later) — calendar only, never tasks.
   const paidKeys = paidBillKeys(ledger);
-  const bills = [...upcomingBills(schedule?.bills || [], paidKeys), ...moneyBillDues(money, paidKeys)].sort((a, b) => a.due.localeCompare(b.due));
+  const bills = [...upcomingBills(schedule?.bills || [], paidKeys), ...moneyDues].sort((a, b) => a.due.localeCompare(b.due));
   const financeBills = (
     <div className="card-bills">
       <p className="card-bills-label">
@@ -302,7 +308,7 @@ export function HomeView({
 
       <section className="source-row" aria-label="Schedule">
         <Collapsible id="schedule" label="Schedule" title="Calendar" tone="schedule" icon="▦" summary={<ScheduleSummary schedule={schedule} bills={bills} />}>
-          <ScheduleSection schedule={schedule} bills={bills} onBillPaid={onBillPaid} />
+          <ScheduleSection schedule={schedule} bills={bills} onBillPaid={onBillPaid} tasks={calTasks} onTaskDone={onTaskDone} onAddPrep={onAddPrep} />
         </Collapsible>
       </section>
 

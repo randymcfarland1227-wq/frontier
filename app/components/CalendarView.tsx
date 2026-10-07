@@ -13,12 +13,13 @@ import {
   startOfWeek,
   timeLabel,
   type BillDue,
+  type CalTask,
 } from '../../lib/schedule';
 
 /** One thing on the calendar: a Google event, a maybe-plan, or a bill's due date. */
 export type CalItem = {
   id: string;
-  kind: 'event' | 'invite' | 'plan' | 'bill';
+  kind: 'event' | 'invite' | 'plan' | 'bill' | 'task';
   title: string;
   start: string;
   end: string;
@@ -27,6 +28,7 @@ export type CalItem = {
   sub?: string;
   url?: string;
   bill?: BillDue;
+  task?: CalTask;
 };
 
 const HOUR_PX = 44;
@@ -179,6 +181,7 @@ export function CalendarView({
       title={[it.title, it.allDay ? 'All day' : rangeLabel(it), it.sub].filter(Boolean).join(' · ')}
     >
       {it.kind === 'bill' ? <span aria-hidden="true">$ </span> : null}
+      {it.kind === 'task' ? <span aria-hidden="true">{it.task?.done ? '✓ ' : '☐ '}</span> : null}
       {!it.allDay && view === 'month' ? <span className="cal-chip-time">{timeLabel(eventStart(it))}</span> : null}
       <span className="cal-chip-title">{it.title}</span>
     </button>

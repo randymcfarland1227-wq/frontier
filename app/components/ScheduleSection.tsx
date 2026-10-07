@@ -20,6 +20,7 @@ import {
   timeLabel,
   type BillDue,
   type CalEvent,
+  type CalTask,
   type ScheduleSnapshot,
 } from '../../lib/schedule';
 import { MONEY_KINDS } from '../../lib/money';
@@ -37,11 +38,81 @@ const LAYERS_KEY = 'lifehub-schedule-layers';
 function moneyTag(due: BillDue) {
   const k = due.bill.kind;
   if (k === 'paylater') return due.bill.notes?.split(' · ')[1] || 'Pay later';
+  if (k === 'plan') return 'Planned';
   if (k === 'card') return 'Card';
   if (k === 'sub') return 'Sub';
   return 'Bill';
 }
 const billColor = (due: BillDue) => (due.bill.kind ? MONEY_KINDS[due.bill.kind].color : BILL_COLOR);
+const TASK_COLOR = '#2f6f6a';
+
+/** Default day for a prep task: the day before the event (or the event day if that's already past). */
+function prepDefault(eventDay: string) {
+  const before = dayKey(addDays(fromDayKey(eventDay), -1));
+  return before >= dayKey(new Date()) ? before : eventDay;
+}
+
+/** Prep tasks under an event / maybe-plan ("Change oil" before the game), with a quick add. */
+function PrepList({
+  target,
+  tasks,
+  onAdd,
+  onDone,
+}: {
+  target: { id: string; title: string; date: string };
+  tasks: CalTask[];
+  onAdd?: (target: { id: string; title: string; date: string }, title: string, due?: string) => void;
+  onDone?: (t: CalTask) => void;
+}) {
+  const [adding, setAdding] = useState(false);
+  const [title, setTitle] = useState('');
+  const [due, setDue] = useState(() => prepDefault(target.date));
+  if (!onAdd && !tasks.length) return null;
+  return (
+    <div className="prep">
+      {tasks.length ? (
+        <ul className="prep-list">
+          {tasks.map(t => (
+            <li key={t.id} className={t.done ? 'is-done' : ''}>
+              <label>
+                <input type="checkbox" checked={t.done} disabled={!onDone || !t.selfId} onChange={() => onDone?.(t)} />
+                <span>{t.title}</span>
+              </label>
+              <small>{t.date === target.date ? 'same day' : dayName(fromDayKey(t.date))}</small>
+            </li>
+          ))}
+        </ul>
+      ) : null}
+      {onAdd ? (
+        adding ? (
+          <form
+            className="prep-add"
+            onSubmit={e => {
+              e.preventDefault();
+              if (!title.trim()) return;
+              onAdd(target, title.trim(), due || undefined);
+              setTitle('');
+              setAdding(false);
+            }}
+          >
+            <input autoFocus value={title} onChange={e => setTitle(e.target.value)} placeholder="What needs doing first? e.g. Change oil" aria-label="Prep task" />
+            <input type="date" value={due} max={target.date} onChange={e => setDue(e.target.value)} aria-label="Do it by" title="Do it by" />
+            <button type="submit" className="row-action" disabled={!title.trim()}>
+              Add
+            </button>
+            <button type="button" className="row-action ghost" onClick={() => setAdding(false)}>
+              Cancel
+            </button>
+          </form>
+        ) : (
+          <button type="button" className="prep-open" onClick={() => setAdding(true)}>
+            + Prep task{tasks.length ? '' : ' (something to do before this)'}
+          </button>
+        )
+      ) : null}
+    </div>
+  );
+}
 
 type Slot = { start: string; end: string; allDay?: boolean };
 
@@ -130,12 +201,14 @@ function PlanForm({ onDone, date: initialDate }: { onDone: () => void; date?: st
 function Agenda({
   events,
   bills,
+  tasks,
   schedule,
   onShow,
   limit = 8,
 }: {
   events: CalEvent[];
   bills?: BillDue[];
+  tasks?: CalTask[];
   schedule: ScheduleSnapshot | null;
   onShow: (date: string, id?: string) => void;
   limit?: number;
@@ -143,7 +216,7 @@ function Agenda({
   const today = startOfDay(new Date());
   const now = new Date();
   const weekOut = addDays(today, 8);
-  type Row = { key: string; day: string; sort: number; event?: CalEvent; bill?: BillDue };
+  type Row = { key: string; day: string; sort: number; event?: CalEvent; bill?: BillDue; task?: CalTask };
   const rows: Row[] = events
     .filter(e => isConfirmed(e) && eventEnd(e) > now && eventStart(e) < weekOut)
     .map(e => {
@@ -156,6 +229,12 @@ function Agenda({
     // Money from the sheet is never "overdue" — past ones stay on their day in the calendar.
     if (b.bill.kind && b.days < 0) continue;
     rows.push({ key: b.key, day: b.days < 0 ? dayKey(today) : b.due, sort: -1, bill: b });
+  }
+  for (const t of tasks || []) {
+    if (t.done) continue;
+    const d = fromDayKey(t.date);
+    if (d < today || d >= weekOut) continue;
+    rows.push({ key: `task:${t.id}`, day: t.date, sort: -2, task: t });
   }
   rows.sort((a, b) => a.day.localeCompare(b.day) || a.sort - b.sort);
   const shown = rows.slice(0, limit);
@@ -174,7 +253,17 @@ function Agenda({
           </button>
           <ul>
             {list.map(r =>
-              r.event ? (
+              r.task ? (
+                <li key={r.key}>
+                  <button type="button" className="agenda-item agenda-task" style={{ '--ev': TASK_COLOR } as React.CSSProperties} onClick={() => onShow(r.day)}>
+                    <span className="agenda-time">Task</span>
+                    <span className="agenda-title">
+                      {r.task.title}
+                      {r.task.forEvent ? <span className="agenda-sub"> · for {r.task.forEvent.title}</span> : null}
+                    </span>
+                  </button>
+                </li>
+              ) : r.event ? (
                 <li key={r.key}>
                   <button
                     type="button"
@@ -367,7 +456,7 @@ function MonthMini({ month, items, picked, onPick }: { month: Date; items: CalIt
                   className={`mini-item kind-${it.kind}`}
                   style={it.color ? ({ '--ev': it.color } as React.CSSProperties) : undefined}
                 >
-                  {it.kind === 'bill' ? '$ ' : ''}
+                  {it.kind === 'bill' ? '$ ' : it.kind === 'task' ? (it.task?.done ? '✓ ' : '☐ ') : ''}
                   {it.title}
                 </span>
               ))}
@@ -394,6 +483,9 @@ function DayPopover({
   plans,
   onAnswer,
   onBillPaid,
+  tasks,
+  onTaskDone,
+  onAddPrep,
   onWeek,
   onClose,
 }: {
@@ -404,6 +496,9 @@ function DayPopover({
   plans: Plan[];
   onAnswer: (p: Plan, yes: boolean) => void;
   onBillPaid: (due: BillDue) => void;
+  tasks: CalTask[];
+  onTaskDone?: (t: CalTask) => void;
+  onAddPrep?: (target: { id: string; title: string; date: string }, title: string, due?: string) => void;
   onWeek: (day: string) => void;
   onClose: () => void;
 }) {
@@ -461,7 +556,7 @@ function DayPopover({
             const fit = it.kind === 'plan' || it.kind === 'invite' ? fitText(it, events, it.id) : null;
             return (
               <li key={it.id} className={`day-pop-row kind-${it.kind}`} style={it.color ? ({ '--ev': it.color } as React.CSSProperties) : undefined}>
-                <span className="day-pop-time">{it.kind === 'bill' ? 'Bill' : it.allDay ? 'All day' : timeLabel(eventStart(it))}</span>
+                <span className="day-pop-time">{it.kind === 'bill' ? 'Bill' : it.kind === 'task' ? 'Task' : it.allDay ? 'All day' : timeLabel(eventStart(it))}</span>
                 <span className="day-pop-main">
                   <strong>{it.title}</strong>
                   <span className="day-pop-sub">
@@ -477,6 +572,14 @@ function DayPopover({
                       : [it.allDay ? '' : rangeLabel(it), it.sub].filter(Boolean).join(' · ')}
                   </span>
                   {fit ? <span className={`maybe-fit ${fit.tone}`}>{fit.text}</span> : null}
+                  {it.kind === 'event' || it.kind === 'invite' || it.kind === 'plan' ? (
+                    <PrepList
+                      target={{ id: it.id, title: it.title, date: dayKey(eventStart(it)) }}
+                      tasks={tasks.filter(t => t.forEvent?.id === it.id)}
+                      onAdd={onAddPrep}
+                      onDone={onTaskDone}
+                    />
+                  ) : null}
                 </span>
                 <span className="day-pop-actions">
                   {plan ? (
@@ -500,6 +603,11 @@ function DayPopover({
                         Paid
                       </button>
                     </>
+                  ) : null}
+                  {it.kind === 'task' && it.task?.selfId && onTaskDone ? (
+                    <button type="button" className={it.task.done ? 'row-action ghost' : 'row-action'} onClick={() => onTaskDone(it.task!)}>
+                      {it.task.done ? 'Undo' : 'Done'}
+                    </button>
                   ) : null}
                   {(it.kind === 'event' || it.kind === 'invite') && it.url ? (
                     <a className="row-action ghost" href={it.url} target="_blank" rel="noopener noreferrer" aria-label={`${it.kind === 'invite' ? 'Reply to' : 'Open'} ${it.title} in Google Calendar`}>
@@ -539,10 +647,17 @@ export function ScheduleSection({
   schedule,
   bills,
   onBillPaid,
+  tasks = [],
+  onTaskDone,
+  onAddPrep,
 }: {
   schedule: ScheduleSnapshot | null;
   bills: BillDue[];
   onBillPaid: (due: BillDue) => void;
+  /** Dated Self tasks and Priority items (calendar only) */
+  tasks?: CalTask[];
+  onTaskDone?: (t: CalTask) => void;
+  onAddPrep?: (target: { id: string; title: string; date: string }, title: string, due?: string) => void;
 }) {
   const { plans, update } = usePlans();
   const [expanded, setExpanded] = useState(() => readSaved<string>(VIEW_KEY, 'compact') === 'expanded');
@@ -550,8 +665,8 @@ export function ScheduleSection({
   const [focus, setFocus] = useState<{ date: string; nonce: number } | undefined>();
   const [pop, setPop] = useState<{ day: string; top: number; left: number; above: boolean; maxHeight?: number } | null>(null);
   const [month, setMonth] = useState(thisMonth);
-  const [layers, setLayers] = useState(() => readSaved<{ google: boolean; money: boolean }>(LAYERS_KEY, { google: true, money: true }));
-  const toggleLayer = (k: 'google' | 'money') =>
+  const [layers, setLayers] = useState(() => ({ tasks: true, ...readSaved<{ google: boolean; money: boolean; tasks?: boolean }>(LAYERS_KEY, { google: true, money: true }) }));
+  const toggleLayer = (k: 'google' | 'money' | 'tasks') =>
     setLayers(l => {
       const next = { ...l, [k]: !l[k] };
       writeSaved(LAYERS_KEY, next);
@@ -560,6 +675,7 @@ export function ScheduleSection({
   const monthBox = useRef<HTMLDivElement>(null);
   const events = useMemo(() => (layers.google ? schedule?.events || [] : []), [schedule, layers.google]);
   const shownBills = useMemo(() => (layers.money ? bills : []), [bills, layers.money]);
+  const shownTasks = useMemo(() => (layers.tasks ? tasks : []), [tasks, layers.tasks]);
   const today = startOfDay(new Date());
 
   const openPlans = plans.filter(p => p.status === 'open').sort((a, b) => a.date.localeCompare(b.date) || (a.from || '').localeCompare(b.from || ''));
@@ -596,8 +712,23 @@ export function ScheduleSection({
         bill: b,
       });
     }
+    for (const t of shownTasks) {
+      out.push({
+        id: `task:${t.id}`,
+        kind: 'task',
+        title: t.title,
+        start: t.date,
+        end: dayKey(addDays(fromDayKey(t.date), 1)),
+        allDay: true,
+        color: TASK_COLOR,
+        sub: [t.kind === 'priority' ? `Priority${t.sourceName ? ` · ${t.sourceName}` : ''}` : 'Self task', t.forEvent ? `for ${t.forEvent.title}` : '']
+          .filter(Boolean)
+          .join(' · '),
+        task: t,
+      });
+    }
     return out;
-  }, [events, plans, shownBills]);
+  }, [events, plans, shownBills, shownTasks]);
 
   const setView = (next: boolean) => {
     setExpanded(next);
@@ -664,6 +795,9 @@ export function ScheduleSection({
           <button type="button" className={`layer-chip is-money${layers.money ? ' on' : ''}`} aria-pressed={layers.money} onClick={() => toggleLayer('money')} title="Bills, card minimums, subscriptions and pay-later from the Radall sheet">
             $ Money
           </button>
+          <button type="button" className={`layer-chip is-tasks${layers.tasks ? ' on' : ''}`} aria-pressed={layers.tasks} onClick={() => toggleLayer('tasks')} title="Self tasks with a day, and Priority items you gave a day">
+            ☐ Tasks
+          </button>
         </div>
         {!expanded ? (
           <MonthNav
@@ -685,7 +819,7 @@ export function ScheduleSection({
             <h3 id="sc-up">
               Upcoming <span>· next 7 days</span>
             </h3>
-            <Agenda events={events} bills={shownBills} schedule={schedule} onShow={show} limit={14} />
+            <Agenda events={events} bills={shownBills} tasks={shownTasks} schedule={schedule} onShow={show} limit={16} />
           </section>
           <section className="sched-block sc-confirm" aria-labelledby="sc-confirm">
             <h3 id="sc-confirm">
@@ -706,6 +840,9 @@ export function ScheduleSection({
                 plans={plans}
                 onAnswer={answer}
                 onBillPaid={onBillPaid}
+                tasks={tasks}
+                onTaskDone={onTaskDone}
+                onAddPrep={onAddPrep}
                 onWeek={day => {
                   setView(true);
                   setFocus(f => ({ date: day, nonce: (f?.nonce || 0) + 1 }));
@@ -761,6 +898,15 @@ export function ScheduleSection({
                   {selected.bill ? (
                     <span>{[countdown(selected.bill.days), money(selected.bill.bill.amount)].filter(Boolean).join(' · ')}</span>
                   ) : null}
+                  {selected.kind === 'event' || selected.kind === 'invite' || selected.kind === 'plan' ? (
+                    <PrepList
+                      key={selected.id}
+                      target={{ id: selected.id, title: selected.title, date: dayKey(eventStart(selected)) }}
+                      tasks={tasks.filter(t => t.forEvent?.id === selected.id)}
+                      onAdd={onAddPrep}
+                      onDone={onTaskDone}
+                    />
+                  ) : null}
                 </div>
                 <div className="cal-detail-actions">
                   {selPlan ? (
@@ -772,6 +918,11 @@ export function ScheduleSection({
                         No
                       </button>
                     </>
+                  ) : null}
+                  {selected.kind === 'task' && selected.task?.selfId && onTaskDone ? (
+                    <button type="button" className="row-action" onClick={() => onTaskDone(selected.task!)}>
+                      {selected.task.done ? 'Undo' : 'Done'}
+                    </button>
                   ) : null}
                   {selEvent?.url ? (
                     <a className="row-action ghost" href={selEvent.url} target="_blank" rel="noopener noreferrer">

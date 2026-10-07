@@ -2658,3 +2658,123 @@ td.is-num .mcell-input { text-align: right; }
 @media (min-width: 700px) { .mcols-wide2 { grid-template-columns: minmax(0, .75fr) minmax(0, 1.6fr); } }
 @media (min-width: 1300px) { .mcols-3 > .msub.is-wide { grid-column: span 2; } }
 @media (min-width: 700px) { .mcols-wide2 { grid-template-columns: minmax(230px, .75fr) minmax(0, 1.6fr); } }
+
+/* ===== Money v2 + dated tasks (2026-10-07) ===== */
+/* Top row: Cash | Credit cards | Outstanding */
+.money-top { display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; align-items: start; }
+@media (min-width: 900px) { .money-top { grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr) minmax(0, 1fr); } }
+.mtop { min-width: 0; padding: 12px 14px; border-top: 5px solid var(--c-money); }
+.mtop-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; margin-bottom: 6px; }
+.mtop-head h2 { margin: 0; font-size: 16px; font-weight: 500; }
+.mtop-big { display: flex; gap: 18px; margin-bottom: 6px; }
+.mtop-big span { display: grid; }
+.mtop-big small { color: var(--muted); font-size: 12px; }
+.mtop-big b { font-size: 24px; font-weight: 500; font-variant-numeric: tabular-nums; }
+.mtop-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 1px; font-size: 13px; }
+.mtop-list li { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr) minmax(0, 1fr); align-items: center; gap: 4px; border-bottom: 1px solid color-mix(in srgb, var(--row-line) 60%, transparent); }
+.mtop-list.is-two li { grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr); }
+.mtop-list li:last-child { border-bottom: 0; }
+.mtop-list-head { color: var(--muted); font-size: 12px; }
+.mtop-list-head span:not(:first-child) { text-align: right; padding-right: 4px; }
+.mtop-total { font-weight: 500; background: var(--row); border-radius: 5px; }
+.mtop-total > span { padding: 3px 4px; }
+.mtop-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+span.mtop-name { padding: 3px 4px; }
+.mcell.is-num { text-align: right; font-variant-numeric: tabular-nums; }
+/* Cards, condensed: name · balance · usage bar · min — click for details */
+.mcards { list-style: none; margin: 0; padding: 0; display: grid; gap: 3px; }
+.mcard { border: 1px solid var(--row-line); border-radius: 7px; background: var(--row); }
+.mcard.is-open { border-color: color-mix(in srgb, var(--c-money) 55%, var(--row-line)); }
+.mcard-row {
+  width: 100%; display: grid; grid-template-columns: minmax(70px, 1fr) 54px minmax(40px, .8fr) minmax(0, 1.2fr); align-items: center; gap: 8px;
+  padding: 4px 8px; border: 0; background: none; color: var(--ink); font: inherit; font-size: 13px; text-align: left; cursor: pointer;
+}
+.mcard-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mcard-bal { text-align: right; font-variant-numeric: tabular-nums; }
+.mcard-bar { height: 6px; border-radius: 3px; background: color-mix(in srgb, var(--muted) 20%, transparent); overflow: hidden; }
+.mcard-bar i { display: block; height: 100%; background: #627332; }
+.mcard-bar i.is-high { background: var(--c-money); }
+.mcard-min { color: var(--muted); font-size: 12px; text-align: right; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mcard-detail { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 2px 10px; padding: 4px 8px 8px; border-top: 1px solid var(--row-line); }
+.mcard-detail label { display: grid; gap: 0; font-size: 12px; color: var(--muted); }
+.mcard-detail label .mcell { color: var(--ink); font-size: 13px; }
+.mcard-used { grid-column: 1 / -1; margin: 2px 0 0; color: var(--muted); font-size: 12px; }
+/* Tables: Bought checkbox + Needed? dropdown */
+.mtable-check { width: 1%; text-align: center; padding: 0 6px !important; }
+.mtable-check input { width: 16px; height: 16px; accent-color: var(--c-money); cursor: pointer; }
+th.mtable-check { font-size: 11.5px; }
+.mtable-act { display: table-cell; }
+.mtable-act .row-action + .row-action { margin-left: 4px; }
+.mselect { min-width: 84px; padding: 2px 4px; border: 1px solid var(--row-line); border-radius: 5px; background: var(--surface); color: var(--ink); font: inherit; font-size: 13px; }
+.mselect.is-yes, .mselect.is-y-low { border-color: var(--c-money); background: color-mix(in srgb, var(--c-money) 14%, var(--surface)); }
+.mselect.is-ordered { border-color: #627332; }
+/* Payment planner */
+.payplan { display: grid; gap: 8px; }
+.payplan-tabs { display: flex; flex-wrap: wrap; gap: 4px; }
+.payplan-new { border-style: dashed; color: var(--accent-ink); }
+.payplan-setup { display: flex; flex-wrap: wrap; align-items: end; gap: 8px; }
+.payplan-setup label { display: grid; gap: 2px; font-size: 12px; color: var(--muted); }
+.payplan-setup input { padding: 4px 6px; border: 1px solid var(--row-line); border-radius: 6px; background: var(--glass); color: var(--ink); font: inherit; font-size: 13.5px; }
+.payplan-setup label:first-child input { width: 180px; }
+.payplan-quick { display: flex; gap: 4px; flex-wrap: wrap; }
+.payplan-cols { display: grid; grid-template-columns: minmax(0, 1fr); gap: 6px 18px; }
+@media (min-width: 900px) { .payplan-cols { grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); } }
+.payplan-cols h3 { display: flex; justify-content: space-between; margin: 6px 0 4px; font-size: 13.5px; font-weight: 500; color: var(--ink); }
+.payplan-cols h3 span { color: var(--muted); font-weight: 400; font-variant-numeric: tabular-nums; }
+.payplan-list { list-style: none; margin: 0 0 4px; padding: 0; display: grid; gap: 2px; }
+.payplan-row { display: flex; align-items: center; gap: 6px; padding: 2px 4px 2px 6px; border-left: 3px solid var(--ev, var(--c-money)); border-radius: 0 6px 6px 0; background: color-mix(in srgb, var(--ev, var(--c-money)) 8%, var(--surface)); font-size: 13px; }
+.payplan-row.is-line { --ev: #3f6e8a; flex-wrap: wrap; }
+.payplan-row.is-skip { opacity: .5; }
+.payplan-row.is-skip .payplan-name { text-decoration: line-through; }
+.payplan-row.is-done .payplan-name, .payplan-row.is-done .payplan-label { color: var(--muted); }
+.payplan-row input[type="checkbox"] { width: 15px; height: 15px; accent-color: var(--c-money); }
+.payplan-day { flex: 0 0 82px; color: var(--muted); font-size: 12px; white-space: nowrap; }
+.payplan-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.payplan-name small { margin-left: 6px; color: var(--muted); font-size: 12px; }
+.payplan-amt, .payplan-label, .payplan-date { padding: 2px 5px; border: 1px solid var(--row-line); border-radius: 5px; background: var(--glass); color: var(--ink); font: inherit; font-size: 13px; }
+.payplan-amt { width: 76px; text-align: right; }
+.payplan-label { flex: 1 1 150px; min-width: 120px; }
+.payplan-date { width: 128px; }
+.payplan-owed { color: var(--muted); font-size: 12px; white-space: nowrap; }
+.payplan-paid.on { background: color-mix(in srgb, #627332 22%, var(--surface)); }
+.payplan-hint { margin: 0; color: var(--muted); font-size: 12px; }
+.payplan-sum { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 14px; padding: 8px 10px; border: 1px solid var(--row-line); border-radius: 8px; background: var(--row); font-size: 13px; color: var(--muted); }
+.payplan-sum b { color: var(--ink); font-weight: 500; font-variant-numeric: tabular-nums; }
+.payplan-left b { font-size: 17px; }
+.payplan-sum.is-short .payplan-left b { color: #b03a1e; }
+.frontier-shell[data-color-mode="dark"] .payplan-sum.is-short .payplan-left b { color: #f6a58a; }
+.payplan-paidsum { color: #627332; }
+.payplan-archive { margin-left: auto; }
+/* Dated tasks on the calendar */
+.layer-chip.is-tasks.on { background: color-mix(in srgb, #2f6f6a 18%, var(--surface)); border-color: color-mix(in srgb, #2f6f6a 60%, var(--row-line)); }
+.agenda-task { border-left-color: #2f6f6a; background: color-mix(in srgb, #2f6f6a 9%, var(--surface)); }
+.agenda-task .agenda-time { color: color-mix(in srgb, #2f6f6a 75%, var(--ink)); }
+.mini-item.kind-task { border-left-color: #2f6f6a; background: color-mix(in srgb, #2f6f6a 14%, var(--surface)); }
+.cal-chip.kind-task { border-left-color: #2f6f6a; }
+.day-pop-row.kind-task { border-left-color: #2f6f6a; }
+/* Prep tasks under an event */
+.prep { display: grid; gap: 3px; margin-top: 4px; }
+.prep-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
+.prep-list li { display: flex; align-items: center; justify-content: space-between; gap: 6px; font-size: 13px; }
+.prep-list label { display: flex; align-items: center; gap: 6px; min-width: 0; color: var(--ink); }
+.prep-list input { accent-color: #2f6f6a; }
+.prep-list li.is-done span { text-decoration: line-through; color: var(--muted); }
+.prep-list small { color: var(--muted); font-size: 12px; white-space: nowrap; }
+.prep-open { justify-self: start; padding: 0; border: 0; background: none; color: var(--accent-ink); font: inherit; font-size: 12.5px; cursor: pointer; }
+.prep-add { display: flex; flex-wrap: wrap; gap: 4px; }
+.prep-add input { flex: 1 1 140px; min-width: 0; padding: 4px 6px; border: 1px solid var(--row-line); border-radius: 6px; background: var(--glass); color: var(--ink); font: inherit; font-size: 13px; }
+.prep-add input[type="date"] { flex: 0 0 132px; }
+.cal-detail-main .prep { max-width: 520px; }
+/* Self task day */
+.capture-due { display: inline-flex; align-items: center; gap: 2px; padding: 0 2px 0 6px; border: 1px solid color-mix(in srgb, #2f6f6a 50%, var(--row-line)); border-radius: 999px; background: color-mix(in srgb, #2f6f6a 12%, var(--surface)); font-size: 12px; }
+.capture-due button { padding: 0 2px; border: 0; background: none; color: var(--ink); font: inherit; font-size: 12px; cursor: pointer; }
+.capture-due.is-empty { padding: 0 8px; border-style: dashed; background: none; color: var(--muted); cursor: pointer; }
+.capture-due.is-late { border-color: var(--c-money); background: color-mix(in srgb, var(--c-money) 14%, var(--surface)); }
+.capture-due-clear { color: var(--muted) !important; }
+.capture-due-input { padding: 1px 4px; border: 1px solid var(--row-line); border-radius: 6px; background: var(--glass); color: var(--ink); font: inherit; font-size: 12px; }
+.capture-for { color: #2f6f6a; }
+.frontier-shell[data-color-mode="dark"] .capture-for { color: #8fc7c0; }
+/* Priority day */
+.plan-due-chip { margin-left: 6px; padding: 0 6px; border-radius: 999px; background: color-mix(in srgb, #2f6f6a 16%, var(--surface)); color: var(--ink); font-size: 12px; font-weight: 400; white-space: nowrap; }
+.plan-due-row { display: flex; gap: 6px; align-items: center; }
+.plan-due-row input { padding: 4px 6px; border: 1px solid var(--row-line); border-radius: 6px; background: var(--glass); color: var(--ink); font: inherit; font-size: 13.5px; }

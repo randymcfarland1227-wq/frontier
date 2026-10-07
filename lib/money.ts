@@ -68,7 +68,9 @@ export async function pullMoneySnapshot(): Promise<MoneySnapshot | null> {
 
 export type CellEdit =
   | { tab: string; r: number; c: number; expect: string; value: string }
-  | { tab: string; r: number; c1: number; c2: number; expect: string; strike: boolean };
+  | { tab: string; r: number; c1: number; c2: number; expect: string; strike: boolean }
+  /** Move a row segment to a new row inserted under row `moveAfter` (e.g. Needed → Wants) */
+  | { tab: string; r: number; c: number; c1: number; c2: number; expect: string; moveAfter: number };
 
 export type EditResult = { ok: boolean; error?: string; now?: string };
 
@@ -292,13 +294,14 @@ const slug = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(
 // The model
 // ---------------------------------------------------------------------------
 
-export type MoneyKind = 'bill' | 'card' | 'sub' | 'paylater';
+export type MoneyKind = 'bill' | 'card' | 'sub' | 'paylater' | 'plan';
 
 export const MONEY_KINDS: Record<MoneyKind, { label: string; plural: string; color: string }> = {
   bill: { label: 'Bill', plural: 'Bills', color: '#a8632a' },
   card: { label: 'Card min', plural: 'Card minimums', color: '#b4881f' },
   sub: { label: 'Subscription', plural: 'Subscriptions', color: '#7b4a68' },
   paylater: { label: 'Pay later', plural: 'Pay later', color: '#627332' },
+  plan: { label: 'Planned', plural: 'Planned payments', color: '#3f6e8a' },
 };
 
 export type MoneyItem = {
@@ -670,6 +673,92 @@ export function moneyBillDues(model: MoneyModel | null, paid: Set<string>, today
 
 export function sumAmounts(dues: Array<{ item: { amount?: number } }>): number {
   return dues.reduce((s, d) => s + (d.item.amount || 0), 0);
+}
+
+// ---------------------------------------------------------------------------
+// Cards: one condensed row per card, joined across the Randy tab (balance / available), the card
+// minimums, and the Credit Matrix (use, monthly, limit). Names differ a little between tabs
+// ("Cap 1 Sec" / "Cap 1 S" / "Cap 1S"), so they're matched loosely.
+// ---------------------------------------------------------------------------
+
+const cardKey = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, '');
+
+/** Row whose name matches this card — exactly, or loosely when no other card is a closer fit. */
+function matchRow(name: string, rows: Cell[][] | undefined, col: number, allNames: string[]): Cell[] | undefined {
+  if (!rows) return undefined;
+  const k = cardKey(name);
+  const exact = rows.find(r => cardKey(r[col]?.text || '') === k);
+  if (exact) return exact;
+  const keys = allNames.map(cardKey);
+  const near = (a: string, b: string) => a.startsWith(b) || b.startsWith(a);
+  return rows.find(r => {
+    const n = cardKey(r[col]?.text || '');
+    if (!n || !near(n, k) || keys.includes(n)) return false;
+    // The closest card name (by length) owns a loose match.
+    const best = keys.filter(x => near(n, x)).sort((a, b) => Math.abs(a.length - n.length) - Math.abs(b.length - n.length))[0];
+    return best === k;
+  });
+}
+
+export type CardSummary = {
+  name: string;
+  balance?: Cell;
+  available?: Cell;
+  pctAvailable?: Cell;
+  min?: Cell;
+  minDate?: Cell;
+  /** Credit Matrix "Current Accounts - Credit Cards" row, with its header */
+  matrix?: { header: string[]; row: Cell[] };
+  limit?: Cell;
+};
+
+export function cardSummaries(model: MoneyModel | null): CardSummary[] {
+  if (!model?.cards) return [];
+  const rows = model.cards.rows.filter(r => r[0]?.text);
+  const names = rows.map(r => r[0].text);
+  return rows.map(r => {
+      const name = r[0].text;
+      const min = matchRow(name, model.cardMins?.rows, 1, names);
+      const matrix = matchRow(name, model.creditCards?.rows, 0, names);
+      const util = matchRow(name, model.utilEst?.rows, 0, names);
+      return {
+        name,
+        balance: r[1],
+        available: r[2],
+        pctAvailable: r[3],
+        min: min?.[2],
+        minDate: min?.[0],
+        matrix: matrix && model.creditCards ? { header: model.creditCards.header, row: matrix } : undefined,
+        limit: util?.[2],
+      };
+    });
+}
+
+/** Everything that can take an extra payment in the planner: cards, outstanding, debts. */
+export function debtOptions(model: MoneyModel | null): Array<{ name: string; owed?: string }> {
+  if (!model) return [];
+  const out = new Map<string, string | undefined>();
+  const add = (name?: string, owed?: string) => {
+    const n = (name || '').trim();
+    if (n && !out.has(n)) out.set(n, owed || undefined);
+  };
+  for (const c of cardSummaries(model)) add(c.name, c.balance?.text);
+  for (const r of model.outstanding?.rows || []) add(r[0].text, r[1]?.text);
+  for (const r of model.payoff?.rows || []) if (!r[0].struck) add(r[0].text, r[3]?.text);
+  for (const t of model.nonCredit) {
+    // Ticket lists (Date | Tag | Ticket #) count as one debt each: the table and its total.
+    if (/^date$/i.test(t.header[0] || '')) {
+      add(t.title, t.total?.[t.total.length - 1]?.text);
+      continue;
+    }
+    for (const r of t.rows) {
+      if (r.some(c => c.struck)) continue;
+      const dated = parseSheetDate(r[0].text) !== undefined;
+      add(dated ? r[1]?.text : r[0].text, r.slice(1).reverse().find(c => amountOf(c.text) !== undefined)?.text);
+    }
+  }
+  for (const r of model.collections?.rows || []) add(r[0].text, r[1]?.text);
+  return [...out.entries()].map(([name, owed]) => ({ name, owed }));
 }
 
 /** Link to a tab (and cell) in the sheet. */

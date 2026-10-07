@@ -8,6 +8,7 @@ import type { Capture } from './captures';
 import type { SelfItem } from './adapters/self';
 import type { GoalLink } from './goals';
 import type { Plan } from './plans';
+import type { PayPlan } from './payPlans';
 
 export type LocalGoalLinks = { added: GoalLink[]; removed: string[] };
 
@@ -34,6 +35,8 @@ export type SyncedState = {
   icons: Record<string, { src: string | null; at: string }>;
   /** Maybe-plans (Schedule): union by id, newest edit wins; never deleted, only answered/dropped */
   plans: Plan[];
+  /** Money page payment plans: union by id, newest edit wins */
+  payPlans: PayPlan[];
 };
 
 /**
@@ -93,6 +96,7 @@ export function emptyState(): SyncedState {
     priority: {},
     icons: {},
     plans: [],
+    payPlans: [],
   };
 }
 
@@ -124,6 +128,7 @@ export function normalizeState(raw: unknown): SyncedState {
     priority: s.priority && typeof s.priority === 'object' ? s.priority : {},
     icons: s.icons && typeof s.icons === 'object' ? s.icons : {},
     plans: Array.isArray(s.plans) ? s.plans.filter(p => p && typeof p.id === 'string') : [],
+    payPlans: Array.isArray(s.payPlans) ? s.payPlans.filter(p => p && typeof p.id === 'string') : [],
   };
 }
 
@@ -203,6 +208,7 @@ export function mergeState(aRaw: unknown, bRaw: unknown): SyncedState {
     priority: mergeLevels(a.priority, b.priority),
     icons: mergeLevels(a.icons, b.icons),
     plans: mergeById(a.plans, b.plans),
+    payPlans: mergeById(a.payPlans, b.payPlans),
   };
 }
 

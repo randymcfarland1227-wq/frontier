@@ -34,6 +34,58 @@ function shortDay(iso: string) {
   return new Date(iso).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
 }
 
+/** "Sat, Oct 10" for a YYYY-MM-DD day */
+function dueLabel(day: string) {
+  const [y, m, d] = day.split('-').map(Number);
+  const date = new Date(y, m - 1, d);
+  const diff = Math.round((date.getTime() - new Date(new Date().toDateString()).getTime()) / 86400000);
+  if (diff === 0) return 'Today';
+  if (diff === 1) return 'Tomorrow';
+  return date.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
+}
+
+/** Optional day on a Self task: "+ Day" until set, then a chip (click to change, × to clear). */
+function DueChip({ due, onChange }: { due?: string; onChange: (due?: string) => void }) {
+  const [editing, setEditing] = useState(false);
+  if (editing) {
+    return (
+      <input
+        type="date"
+        className="capture-due-input"
+        autoFocus
+        defaultValue={due || localDay()}
+        aria-label="Day for this task"
+        onBlur={e => {
+          setEditing(false);
+          if (e.target.value && e.target.value !== due) onChange(e.target.value);
+        }}
+        onKeyDown={e => {
+          if (e.key === 'Enter') (e.target as HTMLInputElement).blur();
+          if (e.key === 'Escape') setEditing(false);
+        }}
+      />
+    );
+  }
+  if (!due) {
+    return (
+      <button type="button" className="capture-due is-empty" onClick={() => setEditing(true)} title="Give it a day (optional) — it shows on the calendar">
+        + Day
+      </button>
+    );
+  }
+  const late = due < localDay();
+  return (
+    <span className={`capture-due${late ? ' is-late' : ''}`}>
+      <button type="button" onClick={() => setEditing(true)} title="Change the day">
+        {dueLabel(due)}
+      </button>
+      <button type="button" className="capture-due-clear" onClick={() => onChange(undefined)} aria-label="Remove the day" title="Remove the day">
+        ×
+      </button>
+    </span>
+  );
+}
+
 const TABS: Array<{ id: Tab; label: string }> = [
   { id: 'inbox', label: 'Inbox' },
   { id: 'tasks', label: 'Tasks' },
@@ -64,6 +116,7 @@ export function CapturesPanel({
   onTaskDone,
   onTaskUndo,
   onTaskStar,
+  onTaskDue,
 }: {
   captures: Capture[];
   areas: FocusArea[];
@@ -71,12 +124,14 @@ export function CapturesPanel({
   onAdd: (input: { kind: CaptureKind; title: string; notes: string; url: string; focusAreaId: string }) => void;
   onStatus: (id: string, status: Exclude<CaptureStatus, 'promoted'>) => void;
   onPromote: (capture: Capture) => void;
-  onAddTask: (title: string, detail: string, focusAreaId: string) => void;
+  onAddTask: (title: string, detail: string, focusAreaId: string, due?: string) => void;
   /** Record something already done (off-site) so it counts */
   onLogTask: (title: string, detail: string, focusAreaId: string, at: string) => void;
   onTaskDone: (id: string) => void;
   onTaskUndo: (id: string) => void;
   onTaskStar: (id: string) => void;
+  /** Set or clear a task's optional day */
+  onTaskDue: (id: string, due?: string) => void;
 }) {
   const [kind, setKind] = useState<Kind>('task');
   const [title, setTitle] = useState('');
@@ -85,6 +140,7 @@ export function CapturesPanel({
   const [area, setArea] = useState('');
   const [tab, setTab] = useState<Tab>('inbox');
   const [doneDay, setDoneDay] = useState(() => localDay());
+  const [taskDay, setTaskDay] = useState('');
   const [logged, setLogged] = useState('');
   // The form starts as one line; the kind buttons, link, area and notes open when you click in.
   const [expanded, setExpanded] = useState(false);
@@ -109,7 +165,12 @@ export function CapturesPanel({
   }, [expanded, title, url, notes]);
 
   const areaName = (id?: string) => areas.find(a => a.id === id)?.name;
-  const openTasks = selfItems.filter(i => !i.done);
+  // Dated tasks first (soonest first), then the rest in the order they were added.
+  const openTasks = selfItems
+    .filter(i => !i.done)
+    .map((t, i) => ({ t, i }))
+    .sort((a, b) => (a.t.due && b.t.due ? a.t.due.localeCompare(b.t.due) : a.t.due ? -1 : b.t.due ? 1 : a.i - b.i))
+    .map(x => x.t);
   const doneTasks = selfItems.filter(i => i.done).slice(0, 15);
   const counts: Record<Tab, number> = Object.fromEntries(
     TABS.map(t => [t.id, t.id === 'tasks' ? openTasks.length : captures.filter(c => c.status === t.id).length]),
@@ -126,7 +187,8 @@ export function CapturesPanel({
       setDoneDay(localDay());
       setTab('tasks');
     } else if (kind === 'task') {
-      onAddTask(title, [notes, url].filter(Boolean).join('\n'), area);
+      onAddTask(title, [notes, url].filter(Boolean).join('\n'), area, taskDay || undefined);
+      setTaskDay('');
       setTab('tasks');
     } else {
       onAdd({ kind, title, notes, url, focusAreaId: area });
@@ -189,7 +251,7 @@ export function CapturesPanel({
                 </button>
               ))}
             </div>
-            <div className={`capture-form-row${kind === 'log' ? ' has-date' : ''}`}>
+            <div className={`capture-form-row${kind === 'log' || kind === 'task' ? ' has-date' : ''}`}>
               <input value={url} onChange={e => setUrl(e.target.value)} placeholder="Link (optional)" aria-label="Link" inputMode="url" />
               {kind === 'log' ? (
                 <input
@@ -199,6 +261,15 @@ export function CapturesPanel({
                   onChange={e => setDoneDay(e.target.value)}
                   aria-label="Day it was done"
                   title="Day it was done"
+                />
+              ) : null}
+              {kind === 'task' ? (
+                <input
+                  type="date"
+                  value={taskDay}
+                  onChange={e => setTaskDay(e.target.value)}
+                  aria-label="Day for it (optional)"
+                  title="Day for it (optional) — shows on the calendar"
                 />
               ) : null}
               <select value={area} onChange={e => setArea(e.target.value)} aria-label="Focus area" required={kind === 'log'}>
@@ -246,6 +317,8 @@ export function CapturesPanel({
                   <span className="capture-kind kind-task">Task</span>
                   {areaName(t.focusAreaId) ? <span className="capture-area">{areaName(t.focusAreaId)}</span> : null}
                   {t.done ? <span>done · {shortDay(t.createdAt)}</span> : <span>{ago(t.createdAt)}</span>}
+                  {!t.done ? <DueChip due={t.due} onChange={due => onTaskDue(t.id, due)} /> : t.due ? <span>{dueLabel(t.due)}</span> : null}
+                  {t.forEvent ? <span className="capture-for">for {t.forEvent.title}</span> : null}
                 </div>
                 <h3>{t.title}</h3>
                 {t.detail ? <p>{t.detail}</p> : null}

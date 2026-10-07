@@ -18,6 +18,7 @@ import {
   loadSelfItems,
   logSelfItem,
   selfSnapshotFrom,
+  setSelfDue,
   toggleSelfComplete,
   toggleSelfStar,
   type SelfItem,
@@ -92,7 +93,9 @@ import { TaskSorting } from './components/TaskSorting';
 import { SiteIconSettings } from './components/SiteIconSettings';
 import { NeedsSorting } from './components/NeedsSorting';
 import { backfillFocusAreas, loadFocusAreas, type FocusAreaConfig } from '../lib/focusAreas';
-import { loadCachedSchedule, paidBillKeys, pullScheduleSnapshot, type BillDue, type ScheduleSnapshot } from '../lib/schedule';
+import { loadCachedSchedule, paidBillKeys, pullScheduleSnapshot, type BillDue, type CalTask, type ScheduleSnapshot } from '../lib/schedule';
+import { payPlanDues, usePayPlans } from '../lib/payPlans';
+import { usePriorityPins } from '../lib/priorityPins';
 import { loadCachedMoney, moneyBillDues, parseMoney, pullMoneySnapshot, saveMoneyEdits, type CellEdit, type MoneySnapshot } from '../lib/money';
 import { MoneyPage } from './components/MoneyPage';
 
@@ -618,6 +621,34 @@ export function LifeHub() {
   }, []);
 
   const unfinished = focus.filter(item => !item.done).length;
+  // Money on the calendar: the sheet's items + planned payments, minus what's marked paid.
+  const payPlans = usePayPlans();
+  const paidKeys = useMemo(() => paidBillKeys(visibleLedger), [visibleLedger]);
+  const moneyDues = useMemo(
+    () => [...moneyBillDues(moneyModel, paidKeys), ...payPlanDues(payPlans, paidKeys)].sort((a, b) => a.due.localeCompare(b.due)),
+    [moneyModel, payPlans, paidKeys],
+  );
+
+  // Dated tasks for the calendar: Self tasks with a day, and Priority items given a day there
+  // (that day stays in Priority — it never goes back to the task's own site).
+  const { lanes: priorityLanes } = usePriorityPins();
+  const calTasks = useMemo(() => {
+    const out: CalTask[] = selfItems
+      .filter(i => i.due)
+      .map(i => ({ id: `self:${i.id}`, title: i.title, date: i.due!, done: i.done, kind: 'self' as const, selfId: i.id, forEvent: i.forEvent }));
+    for (const [key, entry] of Object.entries(priorityLanes)) {
+      if (!entry?.lane || !entry.due) continue;
+      const cut = key.indexOf(':');
+      const source = key.slice(0, cut) as SourceId;
+      const id = key.slice(cut + 1);
+      const snap = visibleSnapshots[source];
+      const item = snap?.tasks?.find(t => t.id === id) || snap?.featured?.find(f => f.id === id);
+      if (!item || (source === 'self' && selfItems.some(i => i.id === id && i.due === entry.due))) continue;
+      out.push({ id: `pri:${key}`, title: item.title, date: entry.due, done: false, kind: 'priority', sourceName: sourceById[source]?.shortName });
+    }
+    return out;
+  }, [selfItems, priorityLanes, visibleSnapshots]);
+
   const enter = (id: SpaceId) => {
     setActive(id);
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -831,7 +862,14 @@ goalsData ? (
           completionStats={completionStats}
           ledger={visibleLedger}
           schedule={schedule}
-          money={moneyModel}
+          moneyDues={moneyDues}
+          calTasks={calTasks}
+          onTaskDone={(t: CalTask) => {
+            if (!t.selfId) return;
+            if (t.done) syncSelf(toggleSelfComplete(t.selfId));
+            else completeOnHub('self', t.selfId);
+          }}
+          onAddPrep={(target, title, due) => syncSelf(addSelfItem(title, '', { due, forEvent: target }))}
           onBillPaid={(due: BillDue) =>
             setLedger(recordCompletion('radall', due.key, { title: `Paid ${due.bill.name}`, via: 'hub' }))
           }
@@ -867,9 +905,10 @@ goalsData ? (
               areas={focusConfig?.areas || []}
               selfItems={selfItems}
               onAdd={input => setCaptures(addCapture(input))}
-              onAddTask={(title, detail, focusAreaId) =>
-                syncSelf(addSelfItem(title, detail, focusAreaId ? { focusAreaId } : undefined))
+              onAddTask={(title, detail, focusAreaId, due) =>
+                syncSelf(addSelfItem(title, detail, { ...(focusAreaId ? { focusAreaId } : {}), ...(due ? { due } : {}) }))
               }
+              onTaskDue={(id, due) => syncSelf(setSelfDue(id, due))}
               onLogTask={(title, detail, focusAreaId, at) => {
                 const items = logSelfItem(title, detail, focusAreaId || undefined, at);
                 setLedger(
@@ -895,7 +934,7 @@ goalsData ? (
       ) : active === 'money' ? (
         <MoneyPage
           model={moneyModel}
-          dues={moneyBillDues(moneyModel, paidBillKeys(visibleLedger))}
+          dues={moneyDues}
           onPaid={(due: BillDue) => setLedger(recordCompletion('radall', due.key, { title: `Paid ${due.bill.name}`, via: 'hub' }))}
           onSave={async (edits: CellEdit[]) => {
             const res = await saveMoneyEdits(edits);

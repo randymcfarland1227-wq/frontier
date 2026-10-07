@@ -1,8 +1,11 @@
 'use client';
 
 import { Fragment, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { PayPlanner } from './PayPlanner';
 import {
   amountOf,
+  cardSummaries,
+  debtOptions,
   MONEY_KINDS,
   parseSheetDate,
   sheetLink,
@@ -90,15 +93,55 @@ function EditCell({ cell, onSave, className = '', placeholder = '—' }: { cell?
 // ---------------------------------------------------------------------------
 
 type TableOpts = {
-  /** Row toggle that crosses the row out in the sheet (Skip / Bought) */
+  /** Trailing button that crosses the row out in the sheet (Skip / Unskip) */
   strike?: { on: string; off: string };
-  /** Hide columns whose header and cells are all empty */
+  /** Leading checkbox that crosses the row out (e.g. "Bought") */
+  check?: string;
+  /** Extra trailing buttons per row (e.g. "→ Wants") */
+  actions?: (row: Cell[]) => ReactNode;
+  /** A column shown as a dropdown that writes the chosen value */
+  select?: { col: number; options: string[] };
   limit?: number;
   rowClass?: (row: Cell[]) => string;
   /** Columns to leave out (indexes) */
   hide?: number[];
   numeric?: number[];
 };
+
+const strikeEdit = (row: Cell[], strike: boolean): CellEdit => ({
+  tab: row[0].tab,
+  r: row[0].r,
+  c1: row[0].c,
+  c2: row[row.length - 1].c,
+  expect: row[0].text,
+  strike,
+});
+
+/** Dropdown for a cell (Needed? = Yes / Y Low / No / Ordered); keeps any value already there. */
+function SelectCell({ cell, options, onSave }: { cell: Cell; options: string[]; onSave: Save }) {
+  const [busy, setBusy] = useState(false);
+  const opts = options.includes(cell.text) || !cell.text ? options : [cell.text, ...options];
+  return (
+    <select
+      className={`mselect is-${(cell.text || 'none').toLowerCase().replace(/\s+/g, '-')}`}
+      value={cell.text}
+      disabled={busy || cell.formula}
+      aria-label="Needed?"
+      onChange={async e => {
+        setBusy(true);
+        await onSave([{ tab: cell.tab, r: cell.r, c: cell.c, expect: cell.text, value: e.target.value }]);
+        setBusy(false);
+      }}
+    >
+      {!cell.text ? <option value="">—</option> : null}
+      {opts.map(o => (
+        <option key={o} value={o}>
+          {o}
+        </option>
+      ))}
+    </select>
+  );
+}
 
 function SheetTable({ table, onSave, opts = {} }: { table: Table; onSave: Save; opts?: TableOpts }) {
   const width = table.header.length;
@@ -110,17 +153,20 @@ function SheetTable({ table, onSave, opts = {} }: { table: Table; onSave: Save; 
   const numeric = new Set(
     opts.numeric ?? cols.filter(i => table.rows.filter(r => r[i]?.text).every(r => amountOf(r[i].text) !== undefined || /%$/.test(r[i].text))),
   );
+  const trailing = Boolean(opts.strike || opts.actions);
+  const span = cols.length + (trailing ? 1 : 0) + (opts.check ? 1 : 0);
   return (
     <div className="mtable-wrap">
       <table className="mtable">
         <thead>
           <tr>
+            {opts.check ? <th className="mtable-check">{opts.check}</th> : null}
             {cols.map(i => (
               <th key={i} className={numeric.has(i) ? 'is-num' : ''}>
                 {table.header[i]}
               </th>
             ))}
-            {opts.strike ? <th aria-label="Actions" /> : null}
+            {trailing ? <th aria-label="Actions" /> : null}
           </tr>
         </thead>
         <tbody>
@@ -128,31 +174,48 @@ function SheetTable({ table, onSave, opts = {} }: { table: Table; onSave: Save; 
             const group = table.groups?.[ri] || '';
             const showGroup = group && group !== (table.groups?.[ri - 1] || '');
             const struck = row.some(c => c.struck);
+            const name = row.find(c => c.text && amountOf(c.text) === undefined)?.text || 'this row';
             return (
               <Fragment key={`${row[0].r}`}>
                 {showGroup ? (
                   <tr className="mtable-group">
-                    <td colSpan={cols.length + (opts.strike ? 1 : 0)}>{group}</td>
+                    <td colSpan={span}>{group}</td>
                   </tr>
                 ) : null}
                 <tr className={`${struck ? 'is-struck' : ''} ${opts.rowClass?.(row) || ''}`}>
+                  {opts.check ? (
+                    <td className="mtable-check">
+                      <input
+                        type="checkbox"
+                        checked={struck}
+                        onChange={() => void onSave([strikeEdit(row, !struck)])}
+                        aria-label={`${opts.check}: ${name}`}
+                        title={struck ? 'Un-cross it in the sheet' : `${opts.check} — crosses it out in the sheet`}
+                      />
+                    </td>
+                  ) : null}
                   {cols.map(i => (
                     <td key={i} className={numeric.has(i) ? 'is-num' : ''}>
-                      <EditCell cell={row[i]} onSave={onSave} placeholder="" />
+                      {opts.select?.col === i && row[i] ? (
+                        <SelectCell cell={row[i]} options={opts.select.options} onSave={onSave} />
+                      ) : (
+                        <EditCell cell={row[i]} onSave={onSave} placeholder="" />
+                      )}
                     </td>
                   ))}
-                  {opts.strike ? (
+                  {trailing ? (
                     <td className="mtable-act">
-                      <button
-                        type="button"
-                        className="row-action ghost"
-                        onClick={() =>
-                          void onSave([{ tab: row[0].tab, r: row[0].r, c1: row[0].c, c2: row[row.length - 1].c, expect: row[0].text, strike: !struck }])
-                        }
-                        title={struck ? 'Un-cross it in the sheet' : 'Cross it out in the sheet'}
-                      >
-                        {struck ? opts.strike.off : opts.strike.on}
-                      </button>
+                      {opts.actions?.(row)}
+                      {opts.strike ? (
+                        <button
+                          type="button"
+                          className="row-action ghost"
+                          onClick={() => void onSave([strikeEdit(row, !struck)])}
+                          title={struck ? 'Un-cross it in the sheet' : 'Cross it out in the sheet'}
+                        >
+                          {struck ? opts.strike.off : opts.strike.on}
+                        </button>
+                      ) : null}
                     </td>
                   ) : null}
                 </tr>
@@ -161,19 +224,20 @@ function SheetTable({ table, onSave, opts = {} }: { table: Table; onSave: Save; 
           })}
           {opts.limit && table.rows.length > opts.limit ? (
             <tr className="mtable-more">
-              <td colSpan={cols.length + (opts.strike ? 1 : 0)}>+{table.rows.length - opts.limit} more in the sheet</td>
+              <td colSpan={span}>+{table.rows.length - opts.limit} more in the sheet</td>
             </tr>
           ) : null}
         </tbody>
         {table.total && table.total.some(c => c.text) ? (
           <tfoot>
             <tr>
+              {opts.check ? <td /> : null}
               {cols.map(i => (
                 <td key={i} className={numeric.has(i) ? 'is-num' : ''}>
                   <EditCell cell={table.total![i]} onSave={onSave} placeholder="" />
                 </td>
               ))}
-              {opts.strike ? <td /> : null}
+              {trailing ? <td /> : null}
             </tr>
           </tfoot>
         ) : null}
@@ -279,8 +343,157 @@ function ComingUp({ dues, onPaid }: { dues: BillDue[]; onPaid: (d: BillDue) => v
 }
 
 // ---------------------------------------------------------------------------
+// Top row: Cash | Cards | Outstanding — what you have and what you owe, at a glance
+// ---------------------------------------------------------------------------
+
+function CashCard({ model, onSave }: { model: MoneyModel; onSave: Save }) {
+  const accts = model.accounts;
+  return (
+    <section className="mtop glass-panel" aria-label="Cash">
+      <header className="mtop-head">
+        <h2>Cash</h2>
+      </header>
+      <div className="mtop-big">
+        <span>
+          <small>On hand</small>
+          <b>{model.cashOnHand?.text || '—'}</b>
+        </span>
+        <span>
+          <small>Balanced</small>
+          <b>{model.balancedCash?.text || '—'}</b>
+        </span>
+      </div>
+      {accts ? (
+        <ul className="mtop-list">
+          <li className="mtop-list-head">
+            <span>Account</span>
+            <span>Checking</span>
+            <span>Savings</span>
+          </li>
+          {accts.rows.map(r => (
+            <li key={r[0].r}>
+              <span className="mtop-name">{r[0].text}</span>
+              <EditCell cell={r[1]} onSave={onSave} className="is-num" placeholder="—" />
+              <EditCell cell={r[2]} onSave={onSave} className="is-num" placeholder="—" />
+            </li>
+          ))}
+          {accts.total ? (
+            <li className="mtop-total">
+              <span>Total</span>
+              <EditCell cell={accts.total[1]} onSave={onSave} className="is-num" placeholder="" />
+              <EditCell cell={accts.total[2]} onSave={onSave} className="is-num" placeholder="" />
+            </li>
+          ) : null}
+        </ul>
+      ) : null}
+    </section>
+  );
+}
+
+function CardsCard({ model, onSave }: { model: MoneyModel; onSave: Save }) {
+  const cards = cardSummaries(model);
+  const [open, setOpen] = useState<string | null>(null);
+  const total = model.cards?.total;
+  return (
+    <section className="mtop glass-panel" aria-label="Credit cards">
+      <header className="mtop-head">
+        <h2>Credit cards</h2>
+        {total ? (
+          <span className="mpanel-sub">
+            {total[1]?.text} owed · {total[2]?.text} available
+          </span>
+        ) : null}
+      </header>
+      <ul className="mcards">
+        {cards.map(c => {
+          const isOpen = open === c.name;
+          const bal = amountOf(c.balance?.text || '') || 0;
+          const avail = amountOf(c.available?.text || '');
+          const limit = amountOf(c.limit?.text || '') ?? (avail !== undefined ? bal + avail : undefined);
+          const used = limit ? Math.min(100, Math.round((bal / limit) * 100)) : undefined;
+          return (
+            <li key={c.name} className={`mcard${isOpen ? ' is-open' : ''}`}>
+              <button type="button" className="mcard-row" onClick={() => setOpen(isOpen ? null : c.name)} aria-expanded={isOpen}>
+                <span className="mcard-name">{c.name}</span>
+                <span className="mcard-bal">{c.balance?.text || '—'}</span>
+                <span className="mcard-bar" aria-hidden="true">
+                  <i style={{ width: `${used ?? 0}%` }} className={used !== undefined && used > 30 ? 'is-high' : ''} />
+                </span>
+                <span className="mcard-min">{c.min?.text && c.min.text !== '$0.00' ? `${c.min.text} min${c.minDate?.text && c.minDate.text !== 'N/a' ? ` · ${c.minDate.text}` : ''}` : ''}</span>
+              </button>
+              {isOpen ? (
+                <div className="mcard-detail">
+                  <label>
+                    <span>Balance</span>
+                    <EditCell cell={c.balance} onSave={onSave} />
+                  </label>
+                  <label>
+                    <span>Available</span>
+                    <EditCell cell={c.available} onSave={onSave} />
+                  </label>
+                  {c.min ? (
+                    <label>
+                      <span>Minimum</span>
+                      <EditCell cell={c.min} onSave={onSave} />
+                    </label>
+                  ) : null}
+                  {c.minDate ? (
+                    <label>
+                      <span>Min due</span>
+                      <EditCell cell={c.minDate} onSave={onSave} />
+                    </label>
+                  ) : null}
+                  {c.matrix
+                    ? c.matrix.header.map((h, i) =>
+                        i > 0 && h && c.matrix!.row[i]?.text !== undefined && !/^bal$/i.test(h) ? (
+                          <label key={h}>
+                            <span>{h === 'Avi Cred' ? 'Balance (matrix)' : h}</span>
+                            <EditCell cell={c.matrix!.row[i]} onSave={onSave} />
+                          </label>
+                        ) : null,
+                      )
+                    : null}
+                  {used !== undefined ? <p className="mcard-used">{used}% used{limit ? ` of ${money(limit)}` : ''}</p> : null}
+                </div>
+              ) : null}
+            </li>
+          );
+        })}
+      </ul>
+    </section>
+  );
+}
+
+function OutstandingCard({ model, onSave }: { model: MoneyModel; onSave: Save }) {
+  const t = model.outstanding;
+  const total = (t?.rows || []).reduce((s, r) => s + (amountOf(r[1]?.text || '') || 0), 0);
+  return (
+    <section className="mtop glass-panel" aria-label="Outstanding">
+      <header className="mtop-head">
+        <h2>Outstanding</h2>
+        <span className="mpanel-sub">{money(total)} known</span>
+      </header>
+      {t ? (
+        <ul className="mtop-list is-two">
+          {t.rows.map(r => (
+            <li key={r[0].r}>
+              <EditCell cell={r[0]} onSave={onSave} className="mtop-name" />
+              <EditCell cell={r[1]} onSave={onSave} className="is-num" placeholder="?" />
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p className="sched-empty">No Outstanding block found on the Randy tab.</p>
+      )}
+    </section>
+  );
+}
+
+// ---------------------------------------------------------------------------
 // The page
 // ---------------------------------------------------------------------------
+
+const NEEDED_OPTIONS = ['Yes', 'Y Low', 'No', 'Ordered'];
 
 export function MoneyPage({
   model,
@@ -314,13 +527,13 @@ export function MoneyPage({
     return res;
   };
 
-  const moneyDues = useMemo(() => dues.filter(d => d.bill.kind || d.days >= 0), [dues]);
-  const next7 = moneyDues.filter(d => d.days >= 0 && d.days <= 7);
+  const sheetDues = useMemo(() => dues.filter(d => d.bill.kind !== 'plan'), [dues]);
+  const next7 = dues.filter(d => d.days >= 0 && d.days <= 7);
   const monthEnd = useMemo(() => {
     const t = new Date();
     return new Date(t.getFullYear(), t.getMonth() + 1, 0);
   }, []);
-  const restOfMonth = moneyDues.filter(d => d.days >= 0 && fromDayKey(d.due) <= monthEnd);
+  const restOfMonth = dues.filter(d => d.days >= 0 && fromDayKey(d.due) <= monthEnd);
   const sum = (list: BillDue[]) => list.reduce((s, d) => s + (d.bill.amount || 0), 0);
 
   if (!model) {
@@ -353,8 +566,28 @@ export function MoneyPage({
   const neededNow = model.recurring
     ? { ...model.recurring, rows: model.recurring.rows.filter(r => /^(yes|y\s*low)$/i.test(r[0].text)) }
     : null;
-  const openWants = model.wants ? { ...model.wants, rows: model.wants.rows.filter(r => !r.some(c => c.struck)) } : null;
-  const openNeeded = model.restockNeeded ? { ...model.restockNeeded, rows: model.restockNeeded.rows.filter(r => !r.some(c => c.struck)) } : null;
+  const struckOf = (t: Table | null, bought: boolean) => (t ? { ...t, rows: t.rows.filter(r => r.some(c => c.struck) === bought) } : null);
+  const openNeeded = struckOf(model.restockNeeded, false);
+  const openWants = struckOf(model.wants, false);
+  const boughtRows = [...(struckOf(model.restockNeeded, true)?.rows || []), ...(struckOf(model.wants, true)?.rows || [])];
+  const bought = model.wants && boughtRows.length ? { ...model.wants, key: 'bought', groups: undefined, rows: boughtRows } : null;
+  const lastRow = (t: Table | null) => (t && t.rows.length ? t.rows[t.rows.length - 1][0].r : t ? undefined : undefined);
+  const moveTo = (row: Cell[], target: Table | null, label: string) => {
+    const after = lastRow(target);
+    if (after === undefined) return null;
+    return (
+      <button
+        type="button"
+        className="row-action ghost"
+        title={`Move it to ${label} in the sheet`}
+        onClick={() =>
+          void save([{ tab: row[0].tab, r: row[0].r, c: row[0].c, c1: row[0].c, c2: row[row.length - 1].c, expect: row[0].text, moveAfter: after }])
+        }
+      >
+        → {label}
+      </button>
+    );
+  };
   const monthRe = new RegExp(`^(${today.toLocaleDateString('en-US', { month: 'long' })}|${today.toLocaleDateString('en-US', { month: 'short' })})[- ]?(${today.getFullYear()})?$`, 'i');
   const isNow = (row: Cell[]) => (row.slice(0, 2).some(c => monthRe.test(c.text)) ? 'is-now' : '');
 
@@ -365,8 +598,8 @@ export function MoneyPage({
           <p className="section-label">Money</p>
           <h1>Radall</h1>
           <span className="mpanel-sub">
-            Sheet as of {new Date(model.refreshedAt).toLocaleString([], { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })} · edits save
-            straight to the sheet
+            Sheet as of {new Date(model.refreshedAt).toLocaleString([], { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })} · click any
+            value to change it in the sheet
           </span>
           <span className="money-hero-actions">
             <button type="button" className="row-action ghost" onClick={onRefresh} disabled={syncing}>
@@ -380,27 +613,34 @@ export function MoneyPage({
           </span>
         </div>
         <div className="money-stats">
-          <Stat label="Cash on hand" value={model.cashOnHand?.text} />
-          <Stat label="Balanced cash" value={model.balancedCash?.text} />
           <Stat label="Due next 7 days" value={money(sum(next7))} sub={`${next7.length} payments`} tone="warn" />
           <Stat label={`Left in ${today.toLocaleDateString([], { month: 'long' })}`} value={money(sum(restOfMonth))} sub={`${restOfMonth.length} payments`} />
           <Stat label="Pay later owed" value={pay?.total?.[1]?.text} sub={pay?.total?.[3]?.text ? `${pay.total[3].text} available` : undefined} />
-          <Stat
-            label="Cards"
-            value={model.cards?.total?.[1]?.text}
-            sub={model.cards?.total?.[2]?.text ? `${model.cards.total[2].text} available` : undefined}
-          />
           {fico ? <Stat label="Credit score" value={String(Math.round(Number(fico)) || fico)} sub="FICO" /> : null}
         </div>
-        {note ? <p className={`money-note is-${note.tone}`} role="status">{note.text}</p> : null}
+        {note ? (
+          <p className={`money-note is-${note.tone}`} role="status">
+            {note.text}
+          </p>
+        ) : null}
       </section>
 
+      <div className="money-top">
+        <CashCard model={model} onSave={save} />
+        <CardsCard model={model} onSave={save} />
+        <OutstandingCard model={model} onSave={save} />
+      </div>
+
       <div className="money-grid">
-        <Panel title="Coming up" sub="Bills, card mins, subscriptions, pay later" className="span-4">
-          <ComingUp dues={moneyDues} onPaid={onPaid} />
+        <Panel title="Plan payments" sub="Pick the days, see what’s due, add extra payments — saved in Life Hub, not the sheet" className="span-12">
+          <PayPlanner dues={sheetDues} debts={debtOptions(model)} cashOnHand={model.cashOnHand?.text} balancedCash={model.balancedCash?.text} />
         </Panel>
 
-        <Panel title="This month" sub="Edit any amount or date — it saves to the sheet" href={link('Randy')} className="span-4">
+        <Panel title="Coming up" sub="Bills, card mins, subscriptions, pay later, planned" className="span-4">
+          <ComingUp dues={dues} onPaid={onPaid} />
+        </Panel>
+
+        <Panel title="This month" sub="Click to edit — saves to the sheet" href={link('Randy')} className="span-4">
           {model.bills ? (
             <Sub title={<>Bills <span>{model.bills.total?.[2]?.text}</span></>}>
               <SheetTable table={model.bills} onSave={save} />
@@ -424,26 +664,9 @@ export function MoneyPage({
           ) : null}
         </Panel>
 
-        <Panel title="Cash" sub="Accounts, pending money, cards" href={link('Randy')} className="span-4">
+        <Panel title="Balancing" sub="Accounts plus pending money → cash on hand" href={link('Randy')} className="span-4">
           {model.balancing ? (
-            <Sub title={<>Balancing <span>{model.cashOnHand?.text} on hand · {model.balancedCash?.text} balanced</span></>}>
-              <SheetTable table={{ ...model.balancing, header: ['Account', ...model.balancing.header.slice(1)] }} onSave={save} />
-            </Sub>
-          ) : null}
-          {model.accounts ? (
-            <Sub title="Debit accounts">
-              <SheetTable table={model.accounts} onSave={save} />
-            </Sub>
-          ) : null}
-          {model.cards ? (
-            <Sub title="Credit cards">
-              <SheetTable table={model.cards} onSave={save} />
-            </Sub>
-          ) : null}
-          {model.outstanding ? (
-            <Sub title="Outstanding">
-              <SheetTable table={model.outstanding} onSave={save} />
-            </Sub>
+            <SheetTable table={{ ...model.balancing, header: ['Account', ...model.balancing.header.slice(1)] }} onSave={save} />
           ) : null}
         </Panel>
 
@@ -484,50 +707,40 @@ export function MoneyPage({
           </div>
         </Panel>
 
-        <Panel title="Upcoming spend" sub="Restock and purchases" href={link('Restock/Purchases')} className="span-6">
-          <div className="mcols">
-            <div>
-              {model.upcomingSpend.rows.length ? (
-                <div className="mspend-tiles">
-                  {model.upcomingSpend.rows.map(([l, v]) => (
-                    <span key={l.r} className="mspend-tile">
-                      {l.text} <b>{v.text}</b>
-                    </span>
-                  ))}
-                </div>
-              ) : null}
-              {neededNow ? (
-                <Sub title={<>Restock now <span>Yes / Y Low</span></>}>
-                  {neededNow.rows.length ? (
-                    <SheetTable table={neededNow} onSave={save} opts={{ hide: [2, 3, 6] }} />
-                  ) : (
-                    <p className="sched-empty">Nothing marked Yes or Y Low.</p>
-                  )}
-                </Sub>
-              ) : null}
-              {model.recurring ? (
-                <Sub title={<>All re-occurring <span>{model.recurring.rows.length} items · set Needed? to Yes / Y Low / No</span></>} open={false}>
-                  <SheetTable table={model.recurring} onSave={save} opts={{ hide: [3] }} />
-                </Sub>
-              ) : null}
+        <Panel title="Restock & purchases" sub="Tick to cross off what you bought · move between lists" href={link('Restock/Purchases')} className="span-6">
+          {model.upcomingSpend.rows.length ? (
+            <div className="mspend-tiles">
+              {model.upcomingSpend.rows.map(([l, v]) => (
+                <span key={l.r} className="mspend-tile">
+                  {l.text} <b>{v.text}</b>
+                </span>
+              ))}
             </div>
-            <div>
-              {openNeeded ? (
-                <Sub title={<>Needed purchases <span>{openNeeded.rows.length} open</span></>}>
-                  {openNeeded.rows.length ? (
-                    <SheetTable table={openNeeded} onSave={save} opts={{ strike: { on: 'Bought', off: 'Undo' }, hide: [0, 3] }} />
-                  ) : (
-                    <p className="sched-empty">All bought.</p>
-                  )}
-                </Sub>
-              ) : null}
-              {openWants ? (
-                <Sub title={<>Wants <span>{openWants.rows.length} open</span></>}>
-                  <SheetTable table={openWants} onSave={save} opts={{ strike: { on: 'Bought', off: 'Undo' }, hide: [0, 3] }} />
-                </Sub>
-              ) : null}
-            </div>
-          </div>
+          ) : null}
+          {openNeeded ? (
+            <Sub title={<>Needed purchases <span>{openNeeded.rows.length} open</span></>}>
+              {openNeeded.rows.length ? (
+                <SheetTable table={openNeeded} onSave={save} opts={{ check: 'Bought', hide: [0, 3, 6], actions: row => moveTo(row, model.wants, 'Wants') }} />
+              ) : (
+                <p className="sched-empty">Nothing open — everything here is bought.</p>
+              )}
+            </Sub>
+          ) : null}
+          {openWants ? (
+            <Sub title={<>Wants <span>{openWants.rows.length} open</span></>}>
+              <SheetTable table={openWants} onSave={save} opts={{ check: 'Bought', hide: [0, 3, 6], actions: row => moveTo(row, model.restockNeeded, 'Needed') }} />
+            </Sub>
+          ) : null}
+          {model.recurring ? (
+            <Sub title={<>Re-occurring restock <span>{neededNow?.rows.length || 0} needed now · set Needed? from the dropdown</span></>}>
+              <SheetTable table={model.recurring} onSave={save} opts={{ hide: [3, 6], select: { col: 0, options: NEEDED_OPTIONS }, rowClass: r => (/^(yes|y\s*low)$/i.test(r[0].text) ? 'is-now' : '') }} />
+            </Sub>
+          ) : null}
+          {bought ? (
+            <Sub title={<>Bought <span>{bought.rows.length} crossed off</span></>} open={false}>
+              <SheetTable table={bought} onSave={save} opts={{ check: 'Bought', hide: [0, 3, 6] }} />
+            </Sub>
+          ) : null}
         </Panel>
 
         <Panel title="What’s owed" sub="Non-credit, collections, payoff plans" href={link('Non-Credit')} className="span-12">
@@ -569,11 +782,6 @@ export function MoneyPage({
             {model.creditAccounts ? (
               <Sub title="Current accounts">
                 <SheetTable table={model.creditAccounts} onSave={save} />
-              </Sub>
-            ) : null}
-            {model.creditCards ? (
-              <Sub title="Credit cards">
-                <SheetTable table={model.creditCards} onSave={save} />
               </Sub>
             ) : null}
             {model.utilEst ? (

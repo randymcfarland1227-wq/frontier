@@ -125,6 +125,26 @@ export function PriorityPanel({
           </a>
         ) : null}
 
+        <section className="plan-panel-sec">
+          <h3>
+            <label htmlFor="plan-due">Day</label>
+          </h3>
+          <p className="plan-panel-hint">Puts it on the calendar. It stays in Priority only — {def.shortName} keeps its own date.</p>
+          <div className="plan-due-row">
+            <input
+              id="plan-due"
+              type="date"
+              value={entry?.due || ''}
+              onChange={e => updatePinDetails(item.key, { due: e.target.value || undefined })}
+            />
+            {entry?.due ? (
+              <button type="button" className="row-action ghost" onClick={() => updatePinDetails(item.key, { due: undefined })}>
+                Clear
+              </button>
+            ) : null}
+          </div>
+        </section>
+
         <section className="plan-panel-sec" aria-labelledby="plan-before">
           <h3 id="plan-before">Before this</h3>
           <p className="plan-panel-hint">Anything in the way, or that has to happen first.</p>
