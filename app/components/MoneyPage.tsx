@@ -103,7 +103,8 @@ type TableOpts = {
 function SheetTable({ table, onSave, opts = {} }: { table: Table; onSave: Save; opts?: TableOpts }) {
   const width = table.header.length;
   const cols = Array.from({ length: width }, (_, i) => i).filter(
-    i => !opts.hide?.includes(i) && (table.header[i] || table.rows.some(r => r[i]?.text) || table.total?.[i]?.text),
+    // Columns empty in every row are left out (the header alone doesn't keep one).
+    i => !opts.hide?.includes(i) && (!table.rows.length ? Boolean(table.header[i]) : table.rows.some(r => r[i]?.text) || Boolean(table.total?.[i]?.text)),
   );
   const rows = opts.limit ? table.rows.slice(0, opts.limit) : table.rows;
   const numeric = new Set(
@@ -210,9 +211,9 @@ function Panel({
   );
 }
 
-function Sub({ title, children, open = true }: { title: ReactNode; children: ReactNode; open?: boolean }) {
+function Sub({ title, children, open = true, wide = false }: { title: ReactNode; children: ReactNode; open?: boolean; wide?: boolean }) {
   return (
-    <details className="msub" open={open}>
+    <details className={`msub${wide ? ' is-wide' : ''}`} open={open}>
       <summary>{title}</summary>
       {children}
     </details>
@@ -462,7 +463,7 @@ export function MoneyPage({
               ))}
             </div>
           ) : null}
-          <div className="mcols">
+          <div className="mcols mcols-wide2">
             {model.buckets ? (
               <Sub title={<>By week <span>{model.monthTotal ? `${model.monthTotal.label} ${model.monthTotal.cell.text}` : ''}</span></>}>
                 <SheetTable table={model.buckets} onSave={save} />
@@ -498,7 +499,7 @@ export function MoneyPage({
               {neededNow ? (
                 <Sub title={<>Restock now <span>Yes / Y Low</span></>}>
                   {neededNow.rows.length ? (
-                    <SheetTable table={neededNow} onSave={save} opts={{ hide: [2, 3] }} />
+                    <SheetTable table={neededNow} onSave={save} opts={{ hide: [2, 3, 6] }} />
                   ) : (
                     <p className="sched-empty">Nothing marked Yes or Y Low.</p>
                   )}
@@ -514,7 +515,7 @@ export function MoneyPage({
               {openNeeded ? (
                 <Sub title={<>Needed purchases <span>{openNeeded.rows.length} open</span></>}>
                   {openNeeded.rows.length ? (
-                    <SheetTable table={openNeeded} onSave={save} opts={{ strike: { on: 'Bought', off: 'Undo' }, hide: [3] }} />
+                    <SheetTable table={openNeeded} onSave={save} opts={{ strike: { on: 'Bought', off: 'Undo' }, hide: [0, 3] }} />
                   ) : (
                     <p className="sched-empty">All bought.</p>
                   )}
@@ -522,7 +523,7 @@ export function MoneyPage({
               ) : null}
               {openWants ? (
                 <Sub title={<>Wants <span>{openWants.rows.length} open</span></>}>
-                  <SheetTable table={openWants} onSave={save} opts={{ strike: { on: 'Bought', off: 'Undo' }, hide: [3] }} />
+                  <SheetTable table={openWants} onSave={save} opts={{ strike: { on: 'Bought', off: 'Undo' }, hide: [0, 3] }} />
                 </Sub>
               ) : null}
             </div>
@@ -537,12 +538,12 @@ export function MoneyPage({
               </Sub>
             ))}
             {model.collections ? (
-              <Sub title="Collections / past due">
+              <Sub title="Collections / past due" wide>
                 <SheetTable table={model.collections} onSave={save} />
               </Sub>
             ) : null}
             {model.payoff ? (
-              <Sub title={<>Payoff priorities <span>from the CC/Savings Planner</span></>}>
+              <Sub title={<>Payoff priorities <span>from the CC/Savings Planner</span></>} wide>
                 <SheetTable table={model.payoff} onSave={save} />
               </Sub>
             ) : null}

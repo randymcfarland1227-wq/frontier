@@ -2652,3 +2652,9 @@ td.is-num .mcell-input { text-align: right; }
 .mspend-tile b { margin-left: 4px; color: var(--ink); font-weight: 500; }
 .money-missing { margin: 0; padding: 8px 12px; border-radius: 8px; background: #f6e3bf; color: #5f3f05; font-size: 13px; }
 .money-foot { margin: 0; color: var(--page-muted, var(--muted)); font-size: 12.5px; }
+/* Money tables: break between words only; dates and amounts never wrap. */
+.mcell { overflow-wrap: break-word; word-break: normal; hyphens: none; }
+.mtable td.is-num .mcell, .mtable td:first-child .mcell, .mtable th { white-space: nowrap; }
+@media (min-width: 700px) { .mcols-wide2 { grid-template-columns: minmax(0, .75fr) minmax(0, 1.6fr); } }
+@media (min-width: 1300px) { .mcols-3 > .msub.is-wide { grid-column: span 2; } }
+@media (min-width: 700px) { .mcols-wide2 { grid-template-columns: minmax(230px, .75fr) minmax(0, 1.6fr); } }
