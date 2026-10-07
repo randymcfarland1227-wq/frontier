@@ -41,6 +41,14 @@ export function Header({
         >
           <span aria-hidden="true">✦</span> Why
         </button>
+        <button
+          type="button"
+          className={`nav-pill nav-money${active === 'money' ? ' active' : ''}`}
+          onClick={() => enter(active === 'money' ? 'home' : 'money')}
+          title="Money: bills, cards, pay later and plans from the Radall sheet"
+        >
+          <span aria-hidden="true">$</span> Money
+        </button>
       </div>
       <div className="topbar-actions">
         <ZoomControl />

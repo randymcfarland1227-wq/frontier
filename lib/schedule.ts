@@ -51,6 +51,8 @@ export type Bill = {
   payUrl?: string;
   autopay?: boolean;
   notes?: string;
+  /** Set for items from the Radall money tabs (bill, card min, subscription, pay later) */
+  kind?: 'bill' | 'card' | 'sub' | 'paylater';
 };
 
 export type ScheduleSnapshot = {
@@ -250,7 +252,7 @@ export function billDues(bill: Bill, paidOnHub: Set<string>, today = new Date(),
 /** Bill ids marked paid on Life Hub (they're real completions in the ledger, so they sync). */
 export function paidBillKeys(ledger: CompletionLedger): Set<string> {
   const out = new Set<string>();
-  for (const e of Object.values(ledger.entries)) if (e.source === 'radall' && e.taskId.startsWith('bill:')) out.add(e.taskId);
+  for (const e of Object.values(ledger.entries)) if (e.source === 'radall' && (e.taskId.startsWith('bill:') || e.taskId.startsWith('money:'))) out.add(e.taskId);
   return out;
 }
 
