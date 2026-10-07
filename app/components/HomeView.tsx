@@ -14,6 +14,10 @@ import { Collapsible } from './Collapsible';
 import { getActionableMetric } from '../../lib/actionable';
 import { usePriorityPins } from '../../lib/priorityPins';
 import { criticalKeys, useFeaturedLevels } from '../../lib/featuredLevels';
+import { addDays, eventStart, onDay, paidBillKeys, upcomingBills, type BillDue, type ScheduleSnapshot } from '../../lib/schedule';
+import { usePlans } from '../../lib/plans';
+import { ScheduleSection } from './ScheduleSection';
+import { BillsList } from './BillsList';
 
 const ROW_1: SourceId[] = ['ticktick', 'radall', 'self', 'gmail', 'outlook', 'repair'];
 const ROW_2: SourceId[] = ['role', 'move'];
@@ -56,6 +60,35 @@ function PrioritySummary() {
       {critical ? (
         <span className="sum-chip is-critical">
           <b>{critical}</b> critical
+        </span>
+      ) : null}
+    </>
+  );
+}
+
+/** Collapsed Schedule bar: today's events, maybes waiting on an answer, bills due within 3 days. */
+function ScheduleSummary({ schedule, bills }: { schedule: ScheduleSnapshot | null; bills: BillDue[] }) {
+  const { plans } = usePlans();
+  const today = new Date();
+  const events = schedule?.events || [];
+  const todayCount = events.filter(e => (e.myStatus === 'owner' || e.myStatus === 'yes') && onDay(e, today)).length;
+  const maybes =
+    plans.filter(p => p.status === 'open').length +
+    events.filter(e => (e.myStatus === 'invited' || e.myStatus === 'maybe') && eventStart(e) >= addDays(today, -1)).length;
+  const soon = bills.filter(b => b.days <= 3).length;
+  return (
+    <>
+      <span className="sum-chip">
+        <b>{todayCount}</b> today
+      </span>
+      {maybes ? (
+        <span className="sum-chip">
+          <b>{maybes}</b> not confirmed
+        </span>
+      ) : null}
+      {soon ? (
+        <span className="sum-chip is-critical">
+          <b>{soon}</b> {soon === 1 ? 'bill' : 'bills'} due soon
         </span>
       ) : null}
     </>
@@ -161,6 +194,8 @@ export function HomeView({
   renderBalance,
   renderSorting,
   capturesPanel,
+  schedule,
+  onBillPaid,
 }: {
   snapshots: Record<SourceId, SourceSnapshot>;
   enter: (id: SpaceId) => void;
@@ -174,6 +209,8 @@ export function HomeView({
   renderBalance?: (period: EnergyWindow) => ReactNode;
   renderSorting?: (entries: CompletionEntry[]) => ReactNode;
   capturesPanel: ReactNode;
+  schedule: ScheduleSnapshot | null;
+  onBillPaid: (due: BillDue) => void;
 }) {
   const latest =
     Object.values(snapshots)
@@ -188,6 +225,14 @@ export function HomeView({
     .filter(site => site.count > 0)
     .sort((a, b) => b.count - a.count);
   const openTotal = openBySite.reduce((sum, site) => sum + site.count, 0);
+  // Bills: next unpaid due date per bill (paid on Life Hub = a Radall completion in the ledger).
+  const bills = upcomingBills(schedule?.bills || [], paidBillKeys(ledger));
+  const financeBills = (
+    <div className="card-bills">
+      <p className="card-bills-label">Bills due</p>
+      <BillsList dues={bills.filter(b => b.days <= 21)} onPaid={onBillPaid} limit={4} empty="No bills due in the next 3 weeks." />
+    </div>
+  );
   // TickTick split: tasks (the card's "to do") over habits still to check in today.
   const tt = snapshots.ticktick;
   const ticktickTasks = getActionableMetric('ticktick', tt).value || 0;
@@ -245,6 +290,12 @@ export function HomeView({
       </section>
 
 
+      <section className="source-row" aria-label="Schedule">
+        <Collapsible id="schedule" label="Schedule" title="Calendar" tone="schedule" icon="▦" summary={<ScheduleSummary schedule={schedule} bills={bills} />}>
+          <ScheduleSection schedule={schedule} bills={bills} onBillPaid={onBillPaid} />
+        </Collapsible>
+      </section>
+
       <section className="source-row" aria-label="Priority">
         <Collapsible id="priority" label="Priority" title="Doing now" tone="priority" icon="◎" summary={<PrioritySummary />}>
           <PriorityBoard
@@ -257,7 +308,7 @@ export function HomeView({
 
       <SourceRow
         ids={ROW_1}
-        extra={{ self: capturesPanel }}
+        extra={{ self: capturesPanel, radall: schedule?.bills.length ? financeBills : undefined }}
         label="Daily ops"
         tone="ops"
         icon="◐"
