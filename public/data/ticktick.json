@@ -1,16 +1,24 @@
 {
   "source": "ticktick",
   "metrics": {
-    "dueToday": 14,
-    "overdue": 0,
+    "dueToday": 3,
+    "overdue": 19,
     "habits": 36
   },
   "featured": [
     {
+      "id": "6a93a4ba8f087e0df42e265c",
+      "title": "Nutrition Flow — Use Macro Tracker",
+      "detail": "The macro tracker remains authoritative for detailed nutrition. Keep visible: • Protein intake • Antioxidant-rich fruit or vegetable • Daily fluids • Energy snack available before ",
+      "meta": "Overdue · Medical",
+      "originUrl": "https://ticktick.com/webapp/#p/69dd6ff6d3e8d1a95e9a96ca/tasks/6a93a4ba8f087e0df42e265c",
+      "completable": false
+    },
+    {
       "id": "6a7f89246b0ed10273275b21",
       "title": "Reset Medicine and Vitamin Holder",
       "detail": "Medical",
-      "meta": "Due today · Medical",
+      "meta": "Overdue · Medical",
       "originUrl": "https://ticktick.com/webapp/#p/69dd6ff6d3e8d1a95e9a96ca/tasks/6a7f89246b0ed10273275b21",
       "completable": false
     },
@@ -18,7 +26,7 @@
       "id": "6a93a4ba8f08defd9591a81c",
       "title": "Life Path & Active Project Direction",
       "detail": "SHORT TERM • What do I want? • What immediate problem does it solve? • What method or milestone gets me there? • Why am I doing it? GROWTH STRATEGY • Choose one pattern or habit to",
-      "meta": "Due today · Life Planning",
+      "meta": "Overdue · Life Planning",
       "originUrl": "https://ticktick.com/webapp/#p/69dd701e1ca911a95e9a97c7/tasks/6a93a4ba8f08defd9591a81c",
       "completable": false
     },
@@ -26,7 +34,7 @@
       "id": "6a93a4ba8f0861e0f0e2ae3b",
       "title": "Next Step Awareness Review",
       "detail": "Open the next-step guide, choose one active outcome, and identify one concrete physical move. Put only that move in Next Step Actions. * Sep 6- Yeah idk to much going on- maybe nex",
-      "meta": "Due today · Life Planning",
+      "meta": "Overdue · Life Planning",
       "originUrl": "https://ticktick.com/webapp/#p/69dd701e1ca911a95e9a97c7/tasks/6a93a4ba8f0861e0f0e2ae3b",
       "completable": false
     },
@@ -34,7 +42,7 @@
       "id": "6a9fb6d68f08ecb120d1a125",
       "title": "Daily Work & Income Flow",
       "detail": "Complete the active Job, Resale, and Candle actions. Items marked “when needed” may be skipped when they do not apply.",
-      "meta": "Due today · Life Planning",
+      "meta": "Overdue · Life Planning",
       "originUrl": "https://ticktick.com/webapp/#p/69dd701e1ca911a95e9a97c7/tasks/6a9fb6d68f08ecb120d1a125",
       "completable": false
     },
@@ -42,32 +50,24 @@
       "id": "6a7e9be5f535d1ef72a47920",
       "title": "Marvel Review",
       "detail": "[Marvel-August 2026 Review](https://ticktick.com/webapp/#p/69dd705c1bd491a95e9a99ca/tasks/6a97ae00443fc5b861dea735)",
-      "meta": "Due today · Marvel",
+      "meta": "Overdue · Marvel",
       "originUrl": "https://ticktick.com/webapp/#p/69dd705c1bd491a95e9a99ca/tasks/6a7e9be5f535d1ef72a47920",
       "completable": false
     },
     {
-      "id": "69cef56677461102bc8969e4",
-      "title": "Music Month Review",
-      "detail": "[Monthly Music Review](https://docs.google.com/document/d/1nxgWIYZ-1jaaYeraiSaXYPbr-58amkJT5ZbuWHTCwgQ/edit?tab=t.0#heading=h.nqhdk9kcwqzo)",
-      "meta": "Due today · Creativity",
-      "originUrl": "https://ticktick.com/webapp/#p/69def09b442591a95e9af9db/tasks/69cef56677461102bc8969e4",
+      "id": "6a124c4c639b9152c7faa9b4",
+      "title": "Music Session- Main",
+      "detail": "May 19- Short production was done --- May 26-Small production session done using train horn- good stuff tbh --- June 2- No session Done --- June 9- Bonaroo ( No Session Done) --- J",
+      "meta": "Overdue · Creativity",
+      "originUrl": "https://ticktick.com/webapp/#p/69def09b442591a95e9af9db/tasks/6a124c4c639b9152c7faa9b4",
       "completable": false
     },
     {
-      "id": "69eef692d247911952f511ef",
-      "title": "Monthly Closet Audit",
-      "detail": "May 25- removed hoodies but did not audit other clothes --- June 6-Had to Skip with how much i have going on --- July 4- Sorted by type and organized shoes, need to find something ",
-      "meta": "Due today · Maintenance Organization",
-      "originUrl": "https://ticktick.com/webapp/#p/69eef620b4b19119328b4dff/tasks/69eef692d247911952f511ef",
-      "completable": false
-    },
-    {
-      "id": "69ffbe88cd20d11954046851",
-      "title": "Digital Declutter",
-      "detail": "- [ ] Emails - [ ] Phone Numbers - [ ] Chrome/Safari History - [ ] Saved Payment Methods/Emails - [ ] Old Pictures",
-      "meta": "Due today · Maintenance Organization",
-      "originUrl": "https://ticktick.com/webapp/#p/69eef620b4b19119328b4dff/tasks/69ffbe88cd20d11954046851",
+      "id": "6a93a4ba8f0861e0f0e2ae3a",
+      "title": "Creative / Tinkering & Project Menu",
+      "detail": "SESSION OPTIONS • Music and singing • Curiosity “recess” exploration • Intentional learning • Unrestricted, non-guided making ACTIVE PROJECT MENUS • Deep dives / larger projects • ",
+      "meta": "Overdue · Creativity",
+      "originUrl": "https://ticktick.com/webapp/#p/69def09b442591a95e9af9db/tasks/6a93a4ba8f0861e0f0e2ae3a",
       "completable": false
     },
     {
@@ -104,6 +104,17 @@
     }
   ],
   "tasks": [
+    {
+      "id": "6a93a4ba8f087e0df42e265c",
+      "title": "Nutrition Flow — Use Macro Tracker",
+      "detail": "The macro tracker remains authoritative for detailed nutrition. Keep visible: • Protein intake • Antioxidant-rich fruit or vegetable • Daily fluids • Energy snack available before ",
+      "status": "open",
+      "due": "2026-10-06",
+      "starred": false,
+      "originUrl": "https://ticktick.com/webapp/#p/69dd6ff6d3e8d1a95e9a96ca/tasks/6a93a4ba8f087e0df42e265c",
+      "kind": "task",
+      "projectId": "69dd6ff6d3e8d1a95e9a96ca"
+    },
     {
       "id": "6a7f89246b0ed10273275b21",
       "title": "Reset Medicine and Vitamin Holder",
@@ -158,6 +169,28 @@
       "originUrl": "https://ticktick.com/webapp/#p/69dd705c1bd491a95e9a99ca/tasks/6a7e9be5f535d1ef72a47920",
       "kind": "task",
       "projectId": "69dd705c1bd491a95e9a99ca"
+    },
+    {
+      "id": "6a124c4c639b9152c7faa9b4",
+      "title": "Music Session- Main",
+      "detail": "May 19- Short production was done --- May 26-Small production session done using train horn- good stuff tbh --- June 2- No session Done --- June 9- Bonaroo ( No Session Done) --- J",
+      "status": "open",
+      "due": "2026-10-06",
+      "starred": false,
+      "originUrl": "https://ticktick.com/webapp/#p/69def09b442591a95e9af9db/tasks/6a124c4c639b9152c7faa9b4",
+      "kind": "task",
+      "projectId": "69def09b442591a95e9af9db"
+    },
+    {
+      "id": "6a93a4ba8f0861e0f0e2ae3a",
+      "title": "Creative / Tinkering & Project Menu",
+      "detail": "SESSION OPTIONS • Music and singing • Curiosity “recess” exploration • Intentional learning • Unrestricted, non-guided making ACTIVE PROJECT MENUS • Deep dives / larger projects • ",
+      "status": "open",
+      "due": "2026-10-06",
+      "starred": false,
+      "originUrl": "https://ticktick.com/webapp/#p/69def09b442591a95e9af9db/tasks/6a93a4ba8f0861e0f0e2ae3a",
+      "kind": "task",
+      "projectId": "69def09b442591a95e9af9db"
     },
     {
       "id": "69cef56677461102bc8969e4",
@@ -255,6 +288,61 @@
       "due": "2026-10-05",
       "starred": false,
       "originUrl": "https://ticktick.com/webapp/#p/69eef620b4b19119328b4dff/tasks/6a93a4ba8f080f71bbb4017b",
+      "kind": "task",
+      "projectId": "69eef620b4b19119328b4dff"
+    },
+    {
+      "id": "6a39ed1a55fe118362fb8887",
+      "title": "Open Grounding (Reminders)",
+      "detail": "# First: Protect Sleep and Rest - Sleep is a priority because it protects healing, regulation, and the ability to act. - Rest during the day when recovery is the real need; do not ",
+      "status": "open",
+      "due": "2026-10-06",
+      "starred": false,
+      "originUrl": "https://ticktick.com/webapp/#p/69f65a3753619118d36dd220/tasks/6a39ed1a55fe118362fb8887",
+      "kind": "task",
+      "projectId": "69f65a3753619118d36dd220"
+    },
+    {
+      "id": "6a93a4ba8f080f71bbb40176",
+      "title": "Rest & Sleep Priorities",
+      "detail": "REST WHILE AWAKE Pause before filling every open moment. Choose physical or mental rest when recovery is the real need. SLEEP Protect sleep as a foundation for healing, regulation,",
+      "status": "open",
+      "due": "2026-10-06",
+      "starred": false,
+      "originUrl": "https://ticktick.com/webapp/#p/69f65a3753619118d36dd220/tasks/6a93a4ba8f080f71bbb40176",
+      "kind": "task",
+      "projectId": "69f65a3753619118d36dd220"
+    },
+    {
+      "id": "69cefe89a8a19102bc8976dc",
+      "title": "Weekly Finances Review",
+      "detail": "- [x] **Personal Finance Allocation** ::-Review upcoming bills and needed expenses and allocate:: - [x] **Needed/Reoccurring Purchase Review** ::-Review inventory and sheet to see ",
+      "status": "open",
+      "due": "2026-10-07",
+      "starred": false,
+      "originUrl": "https://ticktick.com/webapp/#p/69dd701e1ca911a95e9a97c7/tasks/69cefe89a8a19102bc8976dc",
+      "kind": "task",
+      "projectId": "69dd701e1ca911a95e9a97c7"
+    },
+    {
+      "id": "69f65956b6485118d36dca31",
+      "title": "Music  Session-Maintenance",
+      "detail": "Wed- May 20- No music Session Done --- Wed May 27- Production/ No session done --- June 3- No Session Done --- June 10- No Music Session Done ( Bonaroo) --- June 17- When it rains,",
+      "status": "open",
+      "due": "2026-10-07",
+      "starred": false,
+      "originUrl": "https://ticktick.com/webapp/#p/69def09b442591a95e9af9db/tasks/69f65956b6485118d36dca31",
+      "kind": "task",
+      "projectId": "69def09b442591a95e9af9db"
+    },
+    {
+      "id": "6a7e9d3c4a4491ef72a47fad",
+      "title": "Nail and Cuticle Care",
+      "detail": "Maintenance Organization",
+      "status": "open",
+      "due": "2026-10-07",
+      "starred": false,
+      "originUrl": "https://ticktick.com/webapp/#p/69eef620b4b19119328b4dff/tasks/6a7e9d3c4a4491ef72a47fad",
       "kind": "task",
       "projectId": "69eef620b4b19119328b4dff"
     },
@@ -583,5 +671,5 @@
       "kind": "habit"
     }
   ],
-  "refreshedAt": "2026-10-05T12:48:34.546Z"
+  "refreshedAt": "2026-10-07T12:49:34.943Z"
 }
