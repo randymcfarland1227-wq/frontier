@@ -250,6 +250,7 @@ export const sources: SourceDefinition[] = [
     empty: 'Star a Self task to feature it here.',
     url: null,
     bridge: 'local',
+    relatedLinks: [{ label: 'Halloween Costume Hub', url: 'https://halloween-costume-hub.vercel.app' }], // seasonal: remove after Halloween
     metrics: [
       { key: 'open', label: 'Open' },
       { key: 'starred', label: 'Starred' },
