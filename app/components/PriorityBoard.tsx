@@ -46,6 +46,17 @@ function buildCatalog(snapshots: Record<SourceId, SourceSnapshot>) {
 
 const DRAG_TYPE = 'text/lifehub-pin';
 
+/** "Sat, Oct 10" / "Today" / "Tomorrow" for a Priority day. */
+function dueChip(day: string) {
+  const [y, m, d] = day.split('-').map(Number);
+  const date = new Date(y, m - 1, d);
+  const diff = Math.round((date.getTime() - new Date(new Date().toDateString()).getTime()) / 86400000);
+  if (diff === 0) return 'Today';
+  if (diff === 1) return 'Tomorrow';
+  if (diff < 0) return `${date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })} (past)`;
+  return date.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
+}
+
 /**
  * "Doing now", in two stages. **On deck**: everything pinned, starred-and-pinned or Critical,
  * grouped by site so you can see what's waiting where. **Action list**: what you've decided to do,
@@ -159,6 +170,7 @@ export function PriorityBoard({
         <span className="plan-open-title">
           {item.tag ? <span className={`task-tag tone-${tagTone(item.tag)}`}>{item.tag}</span> : null}
           <strong>{item.title}</strong>
+          {lanes[item.key]?.due ? <span className="plan-due-chip">{dueChip(lanes[item.key]!.due!)}</span> : null}
         </span>
         {item.detail || note ? <span className="plan-open-sub">{item.detail || note}</span> : null}
         {blocked ? (

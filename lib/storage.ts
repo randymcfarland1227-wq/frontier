@@ -33,6 +33,8 @@ export const STORAGE_KEYS = {
   priorityLanes: 'lifehub-priority-lanes',
   /** Maybe-plans not confirmed yet (Schedule) — cloud-synced */
   plans: 'lifehub-plans',
+  /** Money page payment plans — cloud-synced */
+  payPlans: 'lifehub-pay-plans',
   /** Uploaded site pictures (Self photo, brand logos) — cloud-synced */
   siteIcons: 'lifehub-site-icons',
   captures: 'lifehub-captures',

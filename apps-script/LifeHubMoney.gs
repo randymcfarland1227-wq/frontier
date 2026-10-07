@@ -75,6 +75,8 @@ function lhPushMoney_(key) {
  * Apply edits from Life Hub. Each edit is one of:
  *   { tab, r, c, expect, value }        set a cell (0-based row/col) — typed like you typed it
  *   { tab, r, c1, c2, expect, strike }  cross out / un-cross a row segment (first cell must match expect)
+ *   { tab, r, c1, c2, expect, moveAfter } move a row segment to a new row inserted under row `moveAfter`
+ *                                         (e.g. Needed Purchases → Wants); the old row is removed
  * Returns per-edit results and a fresh snapshot.
  */
 function lhMoneyEdit_(edits) {
@@ -90,6 +92,7 @@ function lhMoneyEdit_(edits) {
       var cell = sh.getRange(r, c);
       var now = cell.getDisplayValue();
       if (String(e.expect === undefined ? '' : e.expect) !== now) return { ok: false, error: 'changed', now: now };
+      if (e.moveAfter !== undefined) return lhMoveRow_(ss, sh, e, r, c, now);
       if (e.strike !== undefined) {
         var c2 = Number(e.c2) + 1;
         if (!(c2 >= c && c2 - c < 12)) return { ok: false, error: 'bad range' };
@@ -121,4 +124,28 @@ function lhMoneyLog_(ss, tab, a1, before, after) {
     log.setFrozenRows(1);
   }
   log.appendRow([new Date(), tab, a1, "'" + before, "'" + after]);
+}
+
+/**
+ * Move one item (row segment c1..c2) to a fresh row inserted right under `moveAfter` — the last row
+ * of the list it's going to — so both lists stay together with their blank separators. The old row
+ * is deleted when nothing else sits on it; otherwise only its segment is cleared.
+ */
+function lhMoveRow_(ss, sh, e, r, c, now) {
+  var c2 = Number(e.c2) + 1;
+  var after = Number(e.moveAfter) + 1;
+  if (!(c2 >= c && c2 - c < 12 && after >= 1 && after <= sh.getMaxRows())) return { ok: false, error: 'bad range' };
+  if (after === r) return { ok: false, error: 'same place' };
+  var width = c2 - c + 1;
+  sh.insertRowAfter(after);
+  var target = after + 1;
+  var from = r > after ? r + 1 : r; // the insert pushed the source down if it was below
+  sh.getRange(from, c, 1, width).copyTo(sh.getRange(target, c, 1, width));
+  var lastCol = sh.getLastColumn();
+  var row = sh.getRange(from, 1, 1, lastCol).getValues()[0];
+  var elsewhere = row.some(function (v, i) { return (i + 1 < c || i + 1 > c2) && v !== '' && v !== null; });
+  if (elsewhere) sh.getRange(from, c, 1, width).clear();
+  else sh.deleteRow(from);
+  lhMoneyLog_(ss, e.tab, 'row ' + r + ' → under row ' + after, now, 'moved');
+  return { ok: true };
 }

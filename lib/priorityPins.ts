@@ -40,6 +40,8 @@ export type LaneEntry = {
   note?: string;
   /** Blockers / things that need to happen first */
   before?: BeforeStep[];
+  /** A day for it (YYYY-MM-DD) — Priority + calendar only, never sent back to its site */
+  due?: string;
 };
 export type LaneMap = Record<string, LaneEntry>;
 
@@ -118,7 +120,7 @@ export function unpin(key: string) {
 }
 
 /** Change an item's note / "Before this" list (kept even if it's taken off the plan). */
-export function updatePinDetails(key: string, patch: Pick<LaneEntry, 'note' | 'before'>) {
+export function updatePinDetails(key: string, patch: Partial<Pick<LaneEntry, 'note' | 'before' | 'due'>>) {
   const map = loadLanes();
   const prev = map[key] || { lane: null, order: 0, at: '' };
   map[key] = { ...prev, ...patch, at: new Date().toISOString() };

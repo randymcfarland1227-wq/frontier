@@ -52,7 +52,23 @@ export type Bill = {
   autopay?: boolean;
   notes?: string;
   /** Set for items from the Radall money tabs (bill, card min, subscription, pay later) */
-  kind?: 'bill' | 'card' | 'sub' | 'paylater';
+  kind?: 'bill' | 'card' | 'sub' | 'paylater' | 'plan';
+};
+
+/** A dated task on the calendar: a Self task with a day, or a Priority item given a day. */
+export type CalTask = {
+  id: string;
+  title: string;
+  /** YYYY-MM-DD */
+  date: string;
+  done: boolean;
+  kind: 'self' | 'priority';
+  /** Site it's from (Priority items) */
+  sourceName?: string;
+  /** Self task id, so it can be ticked done from the calendar */
+  selfId?: string;
+  /** Prep task for this event / maybe-plan */
+  forEvent?: { id: string; title: string; date: string };
 };
 
 export type ScheduleSnapshot = {
