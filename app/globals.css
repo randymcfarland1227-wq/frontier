@@ -2975,3 +2975,12 @@ th.mtable-check { font-size: 11.5px; }
   transform: translate(-50%, -50%); width: min(420px, calc(100vw - 24px)) !important; max-width: none; max-height: min(80vh, 640px) !important; overflow-y: auto;
   margin: 0; background: var(--surface, #171b21); color: var(--ink); border: 1px solid var(--line); border-radius: 14px; box-shadow: 0 24px 60px rgba(0,0,0,.5); }
 .sc-month[data-season] { overflow: hidden; height: auto; }
+/* Pass 3b */
+.frontier-shell[data-color-mode="light"] .hero.hero-flush h1 { color: #14171c !important; -webkit-text-fill-color: #14171c; }
+[data-season] .mini-item, [data-season] .mini-item.kind-bill, [data-season] .mini-item:is(.kind-plan, .kind-invite) {
+  white-space: normal !important; display: -webkit-box !important; -webkit-box-orient: vertical; -webkit-line-clamp: 2; text-overflow: clip;
+  border-radius: 6px !important; font-size: 9.5px !important; line-height: 1.25 !important; padding: 1px 4px !important; word-break: break-word;
+}
+[data-season] .mini-cell { min-height: 46px; }
+[data-season] .mini-cell { grid-auto-rows: auto !important; grid-template-rows: none !important; }
+[data-season] .sc-month .mini-item, [data-season] .mini-item { display: block !important; height: auto !important; max-height: 2.6em; overflow: hidden; white-space: normal !important; }

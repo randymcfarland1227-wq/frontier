@@ -351,7 +351,7 @@ export function PriorityBoard({
             </ol>
           ) : (
             <p className="pb-empty">
-              Decide what you&apos;re doing: press <b>Add →</b> on anything on deck (or drag it here), then put them in order.
+              Decide what you&apos;re doing: press <b>+</b> on anything on deck (or drag it here), then put them in order.
             </p>
           )}
         </div>
