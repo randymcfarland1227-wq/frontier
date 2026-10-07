@@ -1,7 +1,7 @@
 'use client';
 
 /** Month → light seasonal accent for the calendar only (see globals.css .cal[data-season]). */
-const SEASON = ['winter','valentine','spring','spring','bloom','summer','summer','summer','harvest','halloween','harvest','holiday'];
+export const SEASON = ['winter','valentine','spring','spring','bloom','summer','summer','summer','harvest','halloween','harvest','holiday'];
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {

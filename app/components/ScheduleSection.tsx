@@ -27,7 +27,7 @@ import { MONEY_KINDS } from '../../lib/money';
 import { planSlot, usePlans, type Plan } from '../../lib/plans';
 import { readSaved, writeSaved } from '../../lib/storage';
 import { BillsList } from './BillsList';
-import { CalendarView, type CalItem } from './CalendarView';
+import { CalendarView, SEASON, type CalItem } from './CalendarView';
 
 const PLAN_COLOR = '#7b4a68';
 const BILL_COLOR = '#a8632a';
@@ -827,7 +827,8 @@ export function ScheduleSection({
             </h3>
             <MaybeList invites={invites} plans={openPlans} events={events} onShow={show} onAnswer={answer} />
           </section>
-          <div className="sc-month" ref={monthBox}>
+          <div className="sc-month cal-themed" ref={monthBox} data-season={SEASON[month.getMonth()]}>
+            <h3 className="cal-title cal-script-title">{month.toLocaleDateString(undefined, { month: 'long' })}</h3>
             {!schedule ? <p className="cal-notice">Google Calendar isn&apos;t connected yet — maybe-plans and bills still show.</p> : null}
             <MonthMini month={month} items={items} picked={pop?.day} onPick={openDay} />
             {pop ? (

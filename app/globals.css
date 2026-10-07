@@ -2900,36 +2900,47 @@ th.mtable-check { font-size: 11.5px; }
 .plan-item .level-dot, .plan-item .critical-flag, .plan-item .plan-num, .plan-item .plan-step-icon { flex: 0 0 auto; }
 
 /* Calendar: playful printable themes (calendar only) */
-.cal[data-season] { --cal-bg: linear-gradient(160deg, #ffe7c2, #ffd08a); --cal-border: #f2b24b; --cal-ink: #3b2414; --cal-head: #7c2d12;
+[data-season] { --cal-bg: linear-gradient(160deg, #ffe7c2, #ffd08a); --cal-border: #f2b24b; --cal-ink: #3b2414; --cal-head: #7c2d12;
   background: var(--cal-bg); border-radius: 16px; padding: 44px 40px 40px; color: var(--cal-ink); overflow: hidden; }
-.cal[data-season]::before, .cal[data-season]::after { position: absolute; pointer-events: none; font-size: 26px; line-height: 1; letter-spacing: 6px; z-index: 0; }
-.cal[data-season]::before { content: var(--deco-top); top: 8px; right: 14px; }
-.cal[data-season]::after { content: var(--deco-bottom); bottom: 8px; left: 14px; }
-.cal[data-season] > * { position: relative; z-index: 1; }
-.cal[data-season] .cal-bar { background: none !important; border: 0 !important; }
-.cal[data-season] .cal-title { font-family: 'Pacifico', 'Caveat', cursive; font-size: 34px; font-weight: 400; color: var(--cal-head) !important; text-shadow: 2px 2px 0 rgba(255,255,255,.6); }
-.cal[data-season] .cal-title::after { content: none !important; }
-.cal[data-season] .cal-month-name, .cal[data-season] .cal-dayname { font-weight: 800; text-transform: uppercase; letter-spacing: .06em; color: var(--cal-head); font-size: 12px; text-align: center; }
-.cal[data-season] .cal-month { gap: 4px; }
-.cal[data-season] .cal-month-cell { background: #fff; border: 2px solid var(--cal-border); border-radius: 6px; color: #2a1a10; position: relative; min-height: 64px; padding: 3px 4px 18px; }
-.cal[data-season] .cal-month-cell.is-other { opacity: .5; }
-.cal[data-season] .cal-month-cell.is-today { box-shadow: 0 0 0 3px var(--cal-head) inset; }
-.cal[data-season] .cal-month-day { position: absolute; right: 4px; bottom: 2px; font-weight: 800; color: var(--cal-head); background: none; border: 0; font-size: 13px; }
-.cal[data-season] .cal-chip { font-size: 10px; }
-.cal[data-season] .cal-notice, .cal[data-season] .cal-key { color: var(--cal-ink); }
-.cal[data-season] .row-action.ghost, .cal[data-season] .seg button { color: var(--cal-head); background: rgba(255,255,255,.7); }
-.cal[data-season] .cal-col, .cal[data-season] .cal-allday-cell { background: #fff; border-color: var(--cal-border); }
-.cal[data-season] .cal-gutter, .cal[data-season] .cal-hours { color: var(--cal-ink); }
+[data-season]::before, [data-season]::after { position: absolute; pointer-events: none; font-size: 26px; line-height: 1; letter-spacing: 6px; z-index: 0; }
+[data-season]::before { content: var(--deco-top); top: 8px; right: 14px; }
+[data-season]::after { content: var(--deco-bottom); bottom: 8px; left: 14px; }
+[data-season] > * { position: relative; z-index: 1; }
+[data-season] .cal-bar { background: none !important; border: 0 !important; }
+[data-season] .cal-title { font-family: 'Pacifico', 'Caveat', cursive; font-size: 34px; font-weight: 400; color: var(--cal-head) !important; text-shadow: 2px 2px 0 rgba(255,255,255,.6); }
+[data-season] .cal-title::after { content: none !important; }
+[data-season] .cal-month-name, [data-season] .cal-dayname { font-weight: 800; text-transform: uppercase; letter-spacing: .06em; color: var(--cal-head); font-size: 12px; text-align: center; }
+[data-season] .cal-month { gap: 4px; }
+[data-season] .cal-month-cell { background: #fff; border: 2px solid var(--cal-border); border-radius: 6px; color: #2a1a10; position: relative; min-height: 64px; padding: 3px 4px 18px; }
+[data-season] .cal-month-cell.is-other { opacity: .5; }
+[data-season] .cal-month-cell.is-today { box-shadow: 0 0 0 3px var(--cal-head) inset; }
+[data-season] .cal-month-day { position: absolute; right: 4px; bottom: 2px; font-weight: 800; color: var(--cal-head); background: none; border: 0; font-size: 13px; }
+[data-season] .cal-chip { font-size: 10px; }
+[data-season] .cal-notice, [data-season] .cal-key { color: var(--cal-ink); }
+[data-season] .row-action.ghost, [data-season] .seg button { color: var(--cal-head); background: rgba(255,255,255,.7); }
+[data-season] .cal-col, [data-season] .cal-allday-cell { background: #fff; border-color: var(--cal-border); }
+[data-season] .cal-gutter, [data-season] .cal-hours { color: var(--cal-ink); }
 
-.cal[data-season="halloween"] { --cal-bg: linear-gradient(160deg, #ffb347, #ff8c1a 55%, #f97316); --cal-border: #f5a524; --cal-head: #4c1d95; --cal-ink: #2e1065;
+[data-season="halloween"] { --cal-bg: linear-gradient(160deg, #ffb347, #ff8c1a 55%, #f97316); --cal-border: #f5a524; --cal-head: #4c1d95; --cal-ink: #2e1065;
   --deco-top: "🦇 🕷️ 👻"; --deco-bottom: "🎃 🍬 💀 🍭"; }
-.cal[data-season="halloween"] .cal-bar::before { content: "🎃"; position: absolute; left: -26px; top: -30px; font-size: 30px; }
-.cal[data-season="halloween"] .cal-bar::after { content: "🍬🌽"; position: absolute; right: -20px; bottom: -6px; font-size: 18px; opacity: .9; display: none; }
-.cal[data-season="harvest"] { --cal-bg: linear-gradient(160deg, #fde2b8, #e9a15b); --cal-border: #c2410c; --cal-head: #7c2d12; --deco-top: "🍂 🍁 🌰"; --deco-bottom: "🦃 🥧 🌽 🍁"; }
-.cal[data-season="holiday"] { --cal-bg: linear-gradient(160deg, #e0f2fe, #bfdbfe); --cal-border: #dc2626; --cal-head: #b91c1c; --deco-top: "❄️ ⛄ ❄️"; --deco-bottom: "🎄 🎁 🔔 ❄️"; }
-.cal[data-season="winter"] { --cal-bg: linear-gradient(160deg, #eff6ff, #c7d2fe); --cal-border: #60a5fa; --cal-head: #1e3a8a; --deco-top: "❄️ 🌨️"; --deco-bottom: "⛄ 🧣 ❄️"; }
-.cal[data-season="valentine"] { --cal-bg: linear-gradient(160deg, #ffe4e6, #fda4af); --cal-border: #e11d48; --cal-head: #9f1239; --deco-top: "💕 💌"; --deco-bottom: "❤️ 🌹 💘"; }
-.cal[data-season="spring"] { --cal-bg: linear-gradient(160deg, #ecfccb, #bbf7d0); --cal-border: #22c55e; --cal-head: #166534; --deco-top: "🌷 🐝"; --deco-bottom: "🌱 🌸 🐣"; }
-.cal[data-season="bloom"] { --cal-bg: linear-gradient(160deg, #fce7f3, #fbcfe8); --cal-border: #ec4899; --cal-head: #9d174d; --deco-top: "🌸 🦋"; --deco-bottom: "🌼 🌺 🌷"; }
-.cal[data-season="summer"] { --cal-bg: linear-gradient(160deg, #fef9c3, #7dd3fc); --cal-border: #f59e0b; --cal-head: #0c4a6e; --deco-top: "☀️ 🌴"; --deco-bottom: "🏖️ 🍉 🌊"; }
-@media (max-width: 720px) { .cal[data-season] { padding: 40px 10px 38px; } .cal[data-season] .cal-title { font-size: 26px; } .cal[data-season] .cal-month-cell { min-height: 44px; } }
+[data-season="halloween"] .cal-bar::before { content: "🎃"; position: absolute; left: -26px; top: -30px; font-size: 30px; }
+[data-season="halloween"] .cal-bar::after { content: "🍬🌽"; position: absolute; right: -20px; bottom: -6px; font-size: 18px; opacity: .9; display: none; }
+[data-season="harvest"] { --cal-bg: linear-gradient(160deg, #fde2b8, #e9a15b); --cal-border: #c2410c; --cal-head: #7c2d12; --deco-top: "🍂 🍁 🌰"; --deco-bottom: "🦃 🥧 🌽 🍁"; }
+[data-season="holiday"] { --cal-bg: linear-gradient(160deg, #e0f2fe, #bfdbfe); --cal-border: #dc2626; --cal-head: #b91c1c; --deco-top: "❄️ ⛄ ❄️"; --deco-bottom: "🎄 🎁 🔔 ❄️"; }
+[data-season="winter"] { --cal-bg: linear-gradient(160deg, #eff6ff, #c7d2fe); --cal-border: #60a5fa; --cal-head: #1e3a8a; --deco-top: "❄️ 🌨️"; --deco-bottom: "⛄ 🧣 ❄️"; }
+[data-season="valentine"] { --cal-bg: linear-gradient(160deg, #ffe4e6, #fda4af); --cal-border: #e11d48; --cal-head: #9f1239; --deco-top: "💕 💌"; --deco-bottom: "❤️ 🌹 💘"; }
+[data-season="spring"] { --cal-bg: linear-gradient(160deg, #ecfccb, #bbf7d0); --cal-border: #22c55e; --cal-head: #166534; --deco-top: "🌷 🐝"; --deco-bottom: "🌱 🌸 🐣"; }
+[data-season="bloom"] { --cal-bg: linear-gradient(160deg, #fce7f3, #fbcfe8); --cal-border: #ec4899; --cal-head: #9d174d; --deco-top: "🌸 🦋"; --deco-bottom: "🌼 🌺 🌷"; }
+[data-season="summer"] { --cal-bg: linear-gradient(160deg, #fef9c3, #7dd3fc); --cal-border: #f59e0b; --cal-head: #0c4a6e; --deco-top: "☀️ 🌴"; --deco-bottom: "🏖️ 🍉 🌊"; }
+@media (max-width: 720px) { [data-season] { padding: 40px 10px 38px; } [data-season] .cal-title { font-size: 26px; } [data-season] .cal-month-cell { min-height: 44px; } }
+/* Home mini month gets the same printable theme */
+.sc-month[data-season] { padding: 34px 26px 34px; position: relative; }
+.sc-month[data-season] .cal-script-title { margin: 0 0 6px; text-align: center; font-size: 30px; }
+[data-season] .mini-name { font-weight: 800; text-transform: uppercase; color: var(--cal-head); font-size: 11px; text-align: center; }
+[data-season] .mini-grid { gap: 3px; }
+[data-season] .mini-cell { background: #fff !important; border: 2px solid var(--cal-border) !important; border-radius: 5px; color: #2a1a10; position: relative; min-height: 40px; padding: 2px 3px 14px; }
+[data-season] .mini-cell.is-other { opacity: .5; }
+[data-season] .mini-cell.is-today { box-shadow: 0 0 0 2px var(--cal-head) inset; }
+[data-season] .mini-day { position: absolute; right: 3px; bottom: 1px; font-weight: 800; color: var(--cal-head); font-size: 11px; }
+[data-season] .mini-item, [data-season] .mini-more { font-size: 9px; color: #2a1a10; }
+[data-season] .cal-notice { font-size: 11px; text-align: center; }
