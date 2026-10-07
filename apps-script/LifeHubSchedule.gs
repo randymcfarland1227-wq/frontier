@@ -21,10 +21,10 @@ var LH_SCHEDULE = {
   DAYS_AHEAD: 42,
   MAX_EVENTS: 800,
   /**
-   * Script property holding the Worker's MAIL_PUSH_KEY secret. If the Mail Sync script keeps it
-   * under a different property name, change this one line to match.
+   * Script property holding the Worker's MAIL_PUSH_KEY secret (Mail Sync stores it as LIFEHUB_MAIL_KEY). If that ever
+   * changes, change this one line to match.
    */
-  KEY_PROPERTY: 'MAIL_PUSH_KEY',
+  KEY_PROPERTY: 'LIFEHUB_MAIL_KEY',
 };
 
 /** Bills tab columns, in order. Life Hub finds them by name, so you can move them around. */

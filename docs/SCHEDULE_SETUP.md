@@ -34,8 +34,10 @@ deployed, maybe-plans stay on the device they were added on.
    key.
 2. Add a new script file named `LifeHubSchedule` and paste in `apps-script/LifeHubSchedule.gs` from
    this repo. With clasp: copy the file into the local clone of that project, then `clasp push`.
-3. Check the key name. The new file reads the Script Property `MAIL_PUSH_KEY`. If Mail Sync stores the
-   Worker key under a different property name, change `KEY_PROPERTY` at the top of the file to match.
+3. Key name: Mail Sync stores the Worker key in the Script Property `LIFEHUB_MAIL_KEY`, and
+   `KEY_PROPERTY` at the top of the file is set to that. The project's `appsscript.json` lists its
+   scopes explicitly, so `https://www.googleapis.com/auth/calendar.readonly` has to be in it.
+   (Done 2026-10-06: file pushed as `LifeHubSchedule`, scope added.)
 4. Run **`setupLifeHubSchedule`** once from the editor and approve the Calendar and Sheets
    permissions. It:
    - creates a **Bills** tab in the Finances sheet (if there isn't one), with headers, notes,
