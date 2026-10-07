@@ -2470,3 +2470,67 @@ a.row-action { display: inline-flex; align-items: center; text-decoration: none;
 .day-pop .plan-form { margin-top: 4px; }
 /* The day pop-out sits above the sections below it. */
 .source-row:has(.schedule) { position: relative; z-index: 6; }
+
+/* ===== Schedule, half height (2026-10-06): same information, tighter rows ===== */
+.schedule.glass-panel { padding: 10px 14px 12px; }
+.sched-compact { margin-top: 8px; gap: 10px; }
+.sched-compact .sched-block { padding: 6px 10px 8px; }
+.sched-compact .sched-block h3 { margin: 0 0 4px; font-size: 13px; }
+/* Upcoming: day name in a left column instead of its own row; one line per item. */
+.sched-compact .agenda { gap: 3px; }
+.sched-compact .agenda > li:not(.sched-more) { display: grid; grid-template-columns: 72px minmax(0, 1fr); align-items: start; gap: 6px; }
+.sched-compact .agenda-day { padding-top: 2px; font-size: 12px; text-align: left; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sched-compact .agenda ul { margin: 0; gap: 2px; grid-template-columns: minmax(0, 1fr); min-width: 0; }
+.sched-compact .agenda-item { padding: 1px 6px; line-height: 18px; }
+.sched-compact .agenda-time { flex-basis: 44px; }
+.sched-compact .agenda-title { font-size: 13px; }
+.sched-compact .agenda-bill .agenda-title { flex: 1; display: flex; gap: 6px; align-items: baseline; }
+.sched-compact .agenda-bill :is(.agenda-name, .agenda-sub) { flex: 0 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sched-compact .agenda-bill .agenda-name { flex-shrink: 2; min-width: 4em; }
+/* Needs to confirm: title + when on one line, fit on the next. */
+.sched-compact .maybe-list { gap: 4px; margin-bottom: 6px; }
+.sched-compact .maybe-row { padding: 3px 4px 3px 8px; }
+.sched-compact .maybe-main { grid-template-columns: auto minmax(0, 1fr); column-gap: 6px; align-items: baseline; }
+.sched-compact .maybe-main strong { font-size: 13px; max-width: 18ch; }
+.sched-compact .maybe-fit { grid-column: 1 / -1; }
+.sched-compact .maybe-actions .row-action { padding: 2px 9px; min-height: 0; font-size: 12px; }
+.sched-compact .sched-add { padding: 3px 10px; font-size: 13px; }
+/* Month: two-line day boxes (date beside the first item). */
+.sched-compact .mini { padding: 6px; }
+/* Month nav lives in the header row now (pushes Expand to the right). */
+.sched-head .mini-bar { margin: 0 0 0 auto; gap: 3px; align-self: center; }
+.sched-head .mini-bar + .sched-toggle { margin-left: 6px; }
+.sched-head .mini-bar .row-action { height: 22px; min-height: 0; padding: 0 8px; font-size: 12px; line-height: 20px; }
+.sched-head .mini-title { flex: 0 0 auto; min-width: 9.5em; margin: 0 4px; font-size: 14px; text-align: center; }
+.sched-compact .mini-grid { gap: 2px; }
+.sched-compact .mini-name { padding: 0; line-height: 14px; }
+.sched-compact .mini-cell {
+  height: 30px; min-height: 0; overflow: hidden; grid-template-columns: auto minmax(0, 1fr); grid-auto-rows: 13px; align-content: start;
+  column-gap: 3px; row-gap: 0; padding: 1px 2px; border-radius: 5px;
+}
+.sched-compact .mini-day { grid-column: 1; grid-row: 1 / span 2; align-self: start; min-width: 18px; height: 18px; padding: 0 3px; font-size: 12px; border-radius: 9px; }
+.sched-compact .mini-item, .sched-compact .mini-more { grid-column: 2; line-height: 13px; }
+.sched-compact .mini-more { padding-left: 2px; }
+@media (max-width: 520px) {
+  .sched-compact .mini-cell { min-height: 30px; }
+  .sched-compact .mini-dots { grid-column: 2; align-self: center; }
+}
+.sched-head .sched-toggle { height: 22px; min-height: 0; padding: 0 9px; font-size: 12px; line-height: 20px; }
+/* Wide screens: the month gets the most room (titles stay readable) and sets the height; the two lists match it and scroll. */
+@media (min-width: 1100px) {
+  .sched-compact { grid-template-columns: minmax(0, 1fr) minmax(0, .9fr) minmax(0, 1.7fr); }
+  .sched-compact .sc-upcoming, .sched-compact .sc-confirm { contain: size; overflow-y: auto; overscroll-behavior: contain; }
+}
+/* Mouse screens: the Schedule's small buttons drop the 26px minimum (touch keeps its larger size). */
+@media (hover: hover) and (pointer: fine) {
+  .sched-compact .maybe-actions .row-action, .sched-head :is(.mini-bar .row-action, .sched-toggle) { min-height: 20px !important; }
+}
+.mini-short { display: none; }
+/* Phones: month nav and Expand share one line under the title. */
+@media (max-width: 600px) {
+  .sched-head .sched-sync { flex-basis: 100%; }
+  .sched-head .mini-long { display: none; }
+  .sched-head .mini-short { display: inline; }
+  .sched-head .mini-bar { flex: 1 1 0; margin-left: 0; min-width: 0; }
+  .sched-head .mini-title { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13px; }
+}
