@@ -177,7 +177,7 @@ function Agenda({
                   <span className={`agenda-item agenda-bill${r.bill!.days < 0 ? ' is-overdue' : r.bill!.days <= 3 ? ' is-soon' : ''}`}>
                     <span className="agenda-time">{r.bill!.days < 0 ? 'Overdue' : 'Bill'}</span>
                     <span className="agenda-title">
-                      {r.bill!.bill.name}
+                      <span className="agenda-name">{r.bill!.bill.name}</span>
                       <span className="agenda-sub">
                         {[money(r.bill!.bill.amount), countdown(r.bill!.days)].filter(Boolean).join(' · ')}
                       </span>
@@ -280,12 +280,36 @@ function MaybeList({
   );
 }
 
-/** Month at a glance: up to two things per day; pick a day to see all of it. */
-function MonthMini({ items, picked, onPick }: { items: CalItem[]; picked?: string; onPick: (day: string, cell: HTMLElement) => void }) {
-  const [month, setMonth] = useState(() => {
-    const d = new Date();
-    return new Date(d.getFullYear(), d.getMonth(), 1);
-  });
+const thisMonth = () => {
+  const d = new Date();
+  return new Date(d.getFullYear(), d.getMonth(), 1);
+};
+
+/** ◀ October 2026 Today ▶ — sits in the Schedule header so the month gets the room. */
+function MonthNav({ month, setMonth }: { month: Date; setMonth: (fn: (m: Date) => Date) => void }) {
+  return (
+    <div className="mini-bar">
+      <button type="button" className="row-action ghost" onClick={() => setMonth(m => new Date(m.getFullYear(), m.getMonth() - 1, 1))} aria-label="Previous month">
+        ◀
+      </button>
+      <h3 className="mini-title" aria-live="polite">
+        <span className="mini-long">{month.toLocaleDateString([], { month: 'long', year: 'numeric' })}</span>
+        <span className="mini-short">
+          {month.toLocaleDateString([], { month: 'short', year: 'numeric' })}
+        </span>
+      </h3>
+      <button type="button" className="row-action ghost" onClick={() => setMonth(() => thisMonth())}>
+        Today
+      </button>
+      <button type="button" className="row-action ghost" onClick={() => setMonth(m => new Date(m.getFullYear(), m.getMonth() + 1, 1))} aria-label="Next month">
+        ▶
+      </button>
+    </div>
+  );
+}
+
+/** Month at a glance: two lines per day; pick a day to see all of it. */
+function MonthMini({ month, items, picked, onPick }: { month: Date; items: CalItem[]; picked?: string; onPick: (day: string, cell: HTMLElement) => void }) {
   const today = dayKey(new Date());
   const start = startOfWeek(month);
   const weeks = Math.ceil((month.getDay() + new Date(month.getFullYear(), month.getMonth() + 1, 0).getDate()) / 7);
@@ -293,27 +317,6 @@ function MonthMini({ items, picked, onPick }: { items: CalItem[]; picked?: strin
   const names = cells.slice(0, 7).map(d => d.toLocaleDateString([], { weekday: 'narrow' }));
   return (
     <div className="mini">
-      <div className="mini-bar">
-        <button type="button" className="row-action ghost" onClick={() => setMonth(m => new Date(m.getFullYear(), m.getMonth() - 1, 1))} aria-label="Previous month">
-          ◀
-        </button>
-        <h3 className="mini-title" aria-live="polite">
-          {month.toLocaleDateString([], { month: 'long', year: 'numeric' })}
-        </h3>
-        <button
-          type="button"
-          className="row-action ghost"
-          onClick={() => {
-            const d = new Date();
-            setMonth(new Date(d.getFullYear(), d.getMonth(), 1));
-          }}
-        >
-          Today
-        </button>
-        <button type="button" className="row-action ghost" onClick={() => setMonth(m => new Date(m.getFullYear(), m.getMonth() + 1, 1))} aria-label="Next month">
-          ▶
-        </button>
-      </div>
       <div className="mini-grid">
         {names.map((n, i) => (
           <span key={i} className="mini-name" aria-hidden="true">
@@ -340,7 +343,8 @@ function MonthMini({ items, picked, onPick }: { items: CalItem[]; picked?: strin
               aria-haspopup="dialog"
             >
               <span className="mini-day">{d.getDate()}</span>
-              {dayItems.slice(0, 2).map(it => (
+              {/* Two lines per day: two titles, or one title and "+N". */}
+              {dayItems.slice(0, dayItems.length > 2 ? 1 : 2).map(it => (
                 <span
                   key={it.id}
                   className={`mini-item kind-${it.kind}`}
@@ -350,7 +354,7 @@ function MonthMini({ items, picked, onPick }: { items: CalItem[]; picked?: strin
                   {it.title}
                 </span>
               ))}
-              {dayItems.length > 2 ? <span className="mini-more">+{dayItems.length - 2}</span> : null}
+              {dayItems.length > 2 ? <span className="mini-more">+{dayItems.length - 1} more</span> : null}
               <span className="mini-dots" aria-hidden="true">
                 {dayItems.slice(0, 4).map(it => (
                   <i key={it.id} className={`kind-${it.kind}`} style={it.color ? ({ '--ev': it.color } as React.CSSProperties) : undefined} />
@@ -521,6 +525,7 @@ export function ScheduleSection({
   const [selected, setSelected] = useState<CalItem | null>(null);
   const [focus, setFocus] = useState<{ date: string; nonce: number } | undefined>();
   const [pop, setPop] = useState<{ day: string; top: number; left: number; above: boolean; maxHeight?: number } | null>(null);
+  const [month, setMonth] = useState(thisMonth);
   const monthBox = useRef<HTMLDivElement>(null);
   const events = useMemo(() => schedule?.events || [], [schedule]);
   const today = startOfDay(new Date());
@@ -609,6 +614,15 @@ export function ScheduleSection({
         <p className="sched-sync">
           {schedule ? `Google Calendar · updated ${new Date(schedule.refreshedAt).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}` : 'Google Calendar not connected yet'}
         </p>
+        {!expanded ? (
+          <MonthNav
+            month={month}
+            setMonth={fn => {
+              setPop(null);
+              setMonth(fn);
+            }}
+          />
+        ) : null}
         <button type="button" className="row-action ghost sched-toggle" onClick={() => setView(!expanded)} aria-pressed={expanded}>
           {expanded ? 'Month view' : 'Expand ⤢'}
         </button>
@@ -630,7 +644,7 @@ export function ScheduleSection({
           </section>
           <div className="sc-month" ref={monthBox}>
             {!schedule ? <p className="cal-notice">Google Calendar isn&apos;t connected yet — maybe-plans and bills still show.</p> : null}
-            <MonthMini items={items} picked={pop?.day} onPick={openDay} />
+            <MonthMini month={month} items={items} picked={pop?.day} onPick={openDay} />
             {pop ? (
               <DayPopover
                 key={pop.day}
