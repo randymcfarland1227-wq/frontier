@@ -11,6 +11,8 @@ interface Env {
   ROLE_PUSH_KEY?: string;
   /** Shared with the "Life Hub Mail Sync" Apps Script (starred Gmail) */
   MAIL_PUSH_KEY?: string;
+  /** Mail Sync's web app URL (/exec) — Refresh asks it to sync Gmail, Radall and Schedule now */
+  SYNC_NOW_URL?: string;
   /** Where the retired Worker copy of the hub sends people (and their saved data) */
   PAGES_URL?: string;
 }
@@ -644,6 +646,35 @@ async function handleSchedule(request: Request, env: Env): Promise<Response> {
   return jsonResponse({ ok: false, error: "method_not_allowed" }, 405, origin);
 }
 
+// ---------------------------------------------------------------------------
+// Sync now: Life Hub's Refresh button asks the Mail Sync Apps Script (web app, runs as Randy)
+// to push Gmail, Radall and Schedule right away instead of waiting for its 10-minute trigger.
+// The script answers POST with a 302 to its output, which is read with a GET.
+// ---------------------------------------------------------------------------
+
+async function handleSyncNow(request: Request, env: Env): Promise<Response> {
+  const origin = request.headers.get("Origin");
+  if (request.method === "OPTIONS") return new Response(null, { status: 204, headers: corsHeaders(origin) });
+  if (origin && !CORS_ALLOW_ORIGINS.has(origin)) return jsonResponse({ ok: false, error: "cors_denied" }, 403, origin);
+  if (request.method !== "POST") return jsonResponse({ ok: false, error: "method_not_allowed" }, 405, origin);
+  if (!(await syncKeyAllowed(request, env))) return jsonResponse({ ok: false, error: "wrong_key" }, 401, origin);
+  if (!env.SYNC_NOW_URL || !env.MAIL_PUSH_KEY) return jsonResponse({ ok: false, error: "not_configured" }, 503, origin);
+  try {
+    let res = await fetch(env.SYNC_NOW_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ key: env.MAIL_PUSH_KEY }),
+      redirect: "manual",
+    });
+    const next = res.headers.get("Location");
+    if (res.status >= 300 && res.status < 400 && next) res = await fetch(next);
+    const reply = (await res.json()) as { ok?: boolean; result?: string; error?: string };
+    return jsonResponse({ ok: reply.ok === true, result: reply.result, error: reply.error }, reply.ok ? 200 : 502, origin);
+  } catch (err) {
+    return jsonResponse({ ok: false, error: `sync_failed: ${String(err).slice(0, 120)}` }, 502, origin);
+  }
+}
+
 export default {
   async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
     const { pathname } = new URL(request.url);
@@ -674,6 +705,10 @@ export default {
 
     if (pathname === "/api/schedule/snapshot") {
       return handleSchedule(request, env);
+    }
+
+    if (pathname === "/api/sync/now") {
+      return handleSyncNow(request, env);
     }
 
     if (pathname === "/api/role/complete") {

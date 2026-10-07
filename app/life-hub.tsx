@@ -51,6 +51,7 @@ import {
 } from '../lib/completions';
 import { addCapture, loadCaptures, markPromoted, setCaptureStatus, type Capture } from '../lib/captures';
 import { CapturesPanel } from './components/CapturesPanel';
+import { REFRESH_EVENT, syncGoogleNow } from '../lib/syncNow';
 import { WhyPanel } from './components/WhyPanel';
 import { AreaPicker } from './components/AreaPicker';
 import { loadPriorityPins, pinKey, savePriorityPins } from '../lib/priorityPins';
@@ -245,6 +246,18 @@ export function LifeHub() {
     }
   }, []);
 
+  // Refresh button: Google syncs Gmail, Radall and Schedule now, then every card pulls again.
+  const refreshEverything = useCallback(async () => {
+    setConnectorSyncing(true);
+    try {
+      await syncGoogleNow();
+      await loadConnectors();
+      window.dispatchEvent(new Event(REFRESH_EVENT));
+    } finally {
+      setConnectorSyncing(false);
+    }
+  }, [loadConnectors]);
+
   useEffect(() => {
     window.name = 'randys-life-hub';
     consumeLocationHash();
@@ -323,9 +336,11 @@ export function LifeHub() {
     pull();
     const onVisible = () => document.visibilityState === 'visible' && pull();
     document.addEventListener('visibilitychange', onVisible);
+    window.addEventListener(REFRESH_EVENT, pull);
     const timer = window.setInterval(pull, 10 * 60 * 1000);
     return () => {
       document.removeEventListener('visibilitychange', onVisible);
+      window.removeEventListener(REFRESH_EVENT, pull);
       window.clearInterval(timer);
     };
   }, [ready]);
@@ -348,9 +363,11 @@ export function LifeHub() {
     pull();
     const onVisible = () => document.visibilityState === 'visible' && pull();
     document.addEventListener('visibilitychange', onVisible);
+    window.addEventListener(REFRESH_EVENT, pull);
     const timer = window.setInterval(pull, 10 * 60 * 1000);
     return () => {
       document.removeEventListener('visibilitychange', onVisible);
+      window.removeEventListener(REFRESH_EVENT, pull);
       window.clearInterval(timer);
     };
   }, [ready]);
@@ -788,7 +805,7 @@ goalsData ? (
         enter={enter}
         unfinished={unfinished}
         openFocus={() => setFocusOpen(true)}
-        onRefreshConnectors={() => void loadConnectors()}
+        onRefreshConnectors={() => void refreshEverything()}
         connectorSyncing={connectorSyncing}
         theme={theme}
         onToggleTheme={() => setTheme(t => (t === 'dark' ? 'light' : 'dark'))}

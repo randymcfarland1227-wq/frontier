@@ -69,7 +69,7 @@ export function Header({
             type="button"
             onClick={onRefreshConnectors}
             disabled={connectorSyncing}
-            title="Pull the latest from every site"
+            title="Sync Gmail, Radall, calendar, bills and TickTick now"
           >
             {connectorSyncing ? 'Syncing…' : 'Refresh'}
           </button>
