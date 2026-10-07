@@ -1,5 +1,7 @@
 'use client';
 
+import { createPortal } from 'react-dom';
+
 import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
 import {
   addDays,
@@ -533,12 +535,17 @@ function DayPopover({
   const rel = dayName(date);
   const heading = ['Today', 'Tomorrow', 'Yesterday'].includes(rel) ? `${rel} · ${title}` : title;
 
-  return (
+  void pos;
+  const host = typeof document !== 'undefined' ? document.querySelector('.frontier-shell') || document.body : null;
+  if (!host) return null;
+  return createPortal(
+    <>
+    <div className="day-pop-backdrop" aria-hidden="true" />
     <div
       ref={ref}
-      className={`day-pop${pos.above ? ' is-above' : ''}`}
-      style={{ top: pos.top, left: pos.left, maxHeight: pos.maxHeight }}
+      className="day-pop is-modal"
       role="dialog"
+      aria-modal="true"
       aria-label={heading}
     >
       <div className="day-pop-head">
@@ -635,6 +642,8 @@ function DayPopover({
         </div>
       )}
     </div>
+    </>,
+    host,
   );
 }
 
