@@ -647,6 +647,83 @@ async function handleSchedule(request: Request, env: Env): Promise<Response> {
 }
 
 // ---------------------------------------------------------------------------
+// Money: the Mail Sync Apps Script (LifeHubMoney.gs) pushes the Radall sheet's money tabs as shown
+// (values, crossed-out cells, formulas, merges) every 10 min. Life Hub reads them with the backup
+// key and parses them itself. Edits from the Money page go back through the script (same key
+// check), which writes the sheet and returns a fresh snapshot.
+// ---------------------------------------------------------------------------
+
+const MONEY_KEY = "money-snapshot";
+
+async function handleMoney(request: Request, env: Env): Promise<Response> {
+  const origin = request.headers.get("Origin");
+  if (request.method === "OPTIONS") return new Response(null, { status: 204, headers: corsHeaders(origin) });
+
+  if (request.method === "POST" && request.headers.get("X-Mail-Key") !== null) {
+    if (!env.MAIL_PUSH_KEY || request.headers.get("X-Mail-Key") !== env.MAIL_PUSH_KEY) {
+      return jsonResponse({ ok: false, error: "wrong_key" }, 401, origin);
+    }
+    const text = await request.text();
+    if (text.length > 2_000_000) return jsonResponse({ ok: false, error: "too_large" }, 413, origin);
+    let snap: { source?: unknown; refreshedAt?: unknown; tabs?: unknown };
+    try {
+      snap = JSON.parse(text);
+    } catch {
+      return jsonResponse({ ok: false, error: "invalid_json" }, 400, origin);
+    }
+    if (snap.source !== "money" || typeof snap.refreshedAt !== "string" || !snap.tabs || typeof snap.tabs !== "object") {
+      return jsonResponse({ ok: false, error: "bad_snapshot" }, 400, origin);
+    }
+    await env.LIFEHUB_STATE.put(MONEY_KEY, text);
+    return jsonResponse({ ok: true }, 200, origin);
+  }
+
+  if (origin && !CORS_ALLOW_ORIGINS.has(origin)) return jsonResponse({ ok: false, error: "cors_denied" }, 403, origin);
+  if (!(await syncKeyAllowed(request, env))) return jsonResponse({ ok: false, error: "wrong_key" }, 401, origin);
+  if (request.method === "GET") {
+    return jsonResponse({ ok: true, snapshot: await env.LIFEHUB_STATE.get(MONEY_KEY, "json") }, 200, origin);
+  }
+  return jsonResponse({ ok: false, error: "method_not_allowed" }, 405, origin);
+}
+
+async function handleMoneyEdit(request: Request, env: Env): Promise<Response> {
+  const origin = request.headers.get("Origin");
+  if (request.method === "OPTIONS") return new Response(null, { status: 204, headers: corsHeaders(origin) });
+  if (origin && !CORS_ALLOW_ORIGINS.has(origin)) return jsonResponse({ ok: false, error: "cors_denied" }, 403, origin);
+  if (request.method !== "POST") return jsonResponse({ ok: false, error: "method_not_allowed" }, 405, origin);
+  if (!(await syncKeyAllowed(request, env))) return jsonResponse({ ok: false, error: "wrong_key" }, 401, origin);
+  if (!env.SYNC_NOW_URL || !env.MAIL_PUSH_KEY) return jsonResponse({ ok: false, error: "not_configured" }, 503, origin);
+  let edits: unknown;
+  try {
+    edits = ((await request.json()) as { edits?: unknown }).edits;
+  } catch {
+    return jsonResponse({ ok: false, error: "invalid_json" }, 400, origin);
+  }
+  if (!Array.isArray(edits) || !edits.length || edits.length > 20) return jsonResponse({ ok: false, error: "bad_edits" }, 400, origin);
+  try {
+    const reply = await callMailSync(env, { action: "moneyEdit", edits });
+    const snapshot = reply.snapshot as { source?: string } | undefined;
+    if (snapshot && snapshot.source === "money") await env.LIFEHUB_STATE.put(MONEY_KEY, JSON.stringify(snapshot));
+    return jsonResponse({ ok: reply.ok === true, results: reply.results, error: reply.error, snapshot }, reply.ok ? 200 : 502, origin);
+  } catch (err) {
+    return jsonResponse({ ok: false, error: `edit_failed: ${String(err).slice(0, 120)}` }, 502, origin);
+  }
+}
+
+/** POST to the Mail Sync web app (key in the body) and read its 302'd reply. */
+async function callMailSync(env: Env, body: Record<string, unknown>): Promise<Record<string, unknown>> {
+  let res = await fetch(env.SYNC_NOW_URL as string, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ key: env.MAIL_PUSH_KEY, ...body }),
+    redirect: "manual",
+  });
+  const next = res.headers.get("Location");
+  if (res.status >= 300 && res.status < 400 && next) res = await fetch(next);
+  return (await res.json()) as Record<string, unknown>;
+}
+
+// ---------------------------------------------------------------------------
 // Sync now: Life Hub's Refresh button asks the Mail Sync Apps Script (web app, runs as Randy)
 // to push Gmail, Radall and Schedule right away instead of waiting for its 10-minute trigger.
 // The script answers POST with a 302 to its output, which is read with a GET.
@@ -660,15 +737,7 @@ async function handleSyncNow(request: Request, env: Env): Promise<Response> {
   if (!(await syncKeyAllowed(request, env))) return jsonResponse({ ok: false, error: "wrong_key" }, 401, origin);
   if (!env.SYNC_NOW_URL || !env.MAIL_PUSH_KEY) return jsonResponse({ ok: false, error: "not_configured" }, 503, origin);
   try {
-    let res = await fetch(env.SYNC_NOW_URL, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ key: env.MAIL_PUSH_KEY }),
-      redirect: "manual",
-    });
-    const next = res.headers.get("Location");
-    if (res.status >= 300 && res.status < 400 && next) res = await fetch(next);
-    const reply = (await res.json()) as { ok?: boolean; result?: string; error?: string };
+    const reply = (await callMailSync(env, {})) as { ok?: boolean; result?: string; error?: string };
     return jsonResponse({ ok: reply.ok === true, result: reply.result, error: reply.error }, reply.ok ? 200 : 502, origin);
   } catch (err) {
     return jsonResponse({ ok: false, error: `sync_failed: ${String(err).slice(0, 120)}` }, 502, origin);
@@ -705,6 +774,14 @@ export default {
 
     if (pathname === "/api/schedule/snapshot") {
       return handleSchedule(request, env);
+    }
+
+    if (pathname === "/api/money/snapshot") {
+      return handleMoney(request, env);
+    }
+
+    if (pathname === "/api/money/edit") {
+      return handleMoneyEdit(request, env);
     }
 
     if (pathname === "/api/sync/now") {

@@ -17,7 +17,7 @@ export type SourceId =
 export type LegacySourceId = 'search';
 
 /** 'settings' = Task sorting page · 'why' = goals page */
-export type SpaceId = 'home' | 'settings' | 'why' | SourceId;
+export type SpaceId = 'home' | 'settings' | 'why' | 'money' | SourceId;
 
 export type FeaturedItem = {
   id: string;

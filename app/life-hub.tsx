@@ -92,7 +92,9 @@ import { TaskSorting } from './components/TaskSorting';
 import { SiteIconSettings } from './components/SiteIconSettings';
 import { NeedsSorting } from './components/NeedsSorting';
 import { backfillFocusAreas, loadFocusAreas, type FocusAreaConfig } from '../lib/focusAreas';
-import { loadCachedSchedule, pullScheduleSnapshot, type BillDue, type ScheduleSnapshot } from '../lib/schedule';
+import { loadCachedSchedule, paidBillKeys, pullScheduleSnapshot, type BillDue, type ScheduleSnapshot } from '../lib/schedule';
+import { loadCachedMoney, moneyBillDues, parseMoney, pullMoneySnapshot, saveMoneyEdits, type CellEdit, type MoneySnapshot } from '../lib/money';
+import { MoneyPage } from './components/MoneyPage';
 
 const starterFocus: FocusItem[] = [
   { id: 1, text: 'Move one strong application forward', space: 'role', done: false },
@@ -203,6 +205,9 @@ export function LifeHub() {
   const [ledger, setLedger] = useState<CompletionLedger>({ entries: {} });
   // Google Calendar + Finances bills (private, via the Worker); last good copy kept offline.
   const [schedule, setSchedule] = useState<ScheduleSnapshot | null>(() => loadCachedSchedule());
+  // Radall sheet money tabs (private, via the Worker) — Money page + money on the calendar.
+  const [moneySnap, setMoneySnap] = useState<MoneySnapshot | null>(() => loadCachedMoney());
+  const moneyModel = useMemo(() => (moneySnap ? parseMoney(moneySnap) : null), [moneySnap]);
   const [completionStats, setCompletionStats] = useState<CompletionStats>(emptyStats());
   const [focusConfig, setFocusConfig] = useState<FocusAreaConfig | null>(null);
   const [habitSchedule, setHabitSchedule] = useState<HabitSchedule[] | null>(null);
@@ -327,11 +332,16 @@ export function LifeHub() {
       void pullScheduleSnapshot().then(snap => {
         if (snap) setSchedule(current => (current && current.refreshedAt >= snap.refreshedAt ? current : snap));
       });
+    const pullMoney = () =>
+      void pullMoneySnapshot().then(snap => {
+        if (snap) setMoneySnap(current => (current && current.refreshedAt >= snap.refreshedAt ? current : snap));
+      });
     const pull = () => {
       pullRole();
       pullGmail();
       pullRadall();
       pullSchedule();
+      pullMoney();
     };
     pull();
     const onVisible = () => document.visibilityState === 'visible' && pull();
@@ -799,7 +809,7 @@ goalsData ? (
   );
 
   return (
-    <main className={`frontier-shell theme-${active === 'home' || active === 'settings' || active === 'why' ? 'home' : active}`} data-color-mode={theme}>
+    <main className={`frontier-shell theme-${active === 'home' || active === 'settings' || active === 'why' || active === 'money' ? 'home' : active}`} data-color-mode={theme}>
       <Header
         active={active}
         enter={enter}
@@ -821,6 +831,7 @@ goalsData ? (
           completionStats={completionStats}
           ledger={visibleLedger}
           schedule={schedule}
+          money={moneyModel}
           onBillPaid={(due: BillDue) =>
             setLedger(recordCompletion('radall', due.key, { title: `Paid ${due.bill.name}`, via: 'hub' }))
           }
@@ -880,6 +891,19 @@ goalsData ? (
               onPromote={promoteCapture}
             />
           }
+        />
+      ) : active === 'money' ? (
+        <MoneyPage
+          model={moneyModel}
+          dues={moneyBillDues(moneyModel, paidBillKeys(visibleLedger))}
+          onPaid={(due: BillDue) => setLedger(recordCompletion('radall', due.key, { title: `Paid ${due.bill.name}`, via: 'hub' }))}
+          onSave={async (edits: CellEdit[]) => {
+            const res = await saveMoneyEdits(edits);
+            if (res.snapshot) setMoneySnap(res.snapshot);
+            return res;
+          }}
+          onRefresh={() => void refreshEverything()}
+          syncing={connectorSyncing}
         />
       ) : active === 'why' ? (
         <div className="settings-view why-view">{whyPanel || <p className="review-empty">Loading goals…</p>}</div>

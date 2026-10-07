@@ -22,6 +22,7 @@ import {
   type CalEvent,
   type ScheduleSnapshot,
 } from '../../lib/schedule';
+import { MONEY_KINDS } from '../../lib/money';
 import { planSlot, usePlans, type Plan } from '../../lib/plans';
 import { readSaved, writeSaved } from '../../lib/storage';
 import { BillsList } from './BillsList';
@@ -30,6 +31,17 @@ import { CalendarView, type CalItem } from './CalendarView';
 const PLAN_COLOR = '#7b4a68';
 const BILL_COLOR = '#a8632a';
 const VIEW_KEY = 'lifehub-schedule-view';
+const LAYERS_KEY = 'lifehub-schedule-layers';
+
+/** Short tag for a money row: the pay-later provider, or Card / Sub / Bill. */
+function moneyTag(due: BillDue) {
+  const k = due.bill.kind;
+  if (k === 'paylater') return due.bill.notes?.split(' · ')[1] || 'Pay later';
+  if (k === 'card') return 'Card';
+  if (k === 'sub') return 'Sub';
+  return 'Bill';
+}
+const billColor = (due: BillDue) => (due.bill.kind ? MONEY_KINDS[due.bill.kind].color : BILL_COLOR);
 
 type Slot = { start: string; end: string; allDay?: boolean };
 
@@ -141,6 +153,8 @@ function Agenda({
   // Bills due this week (overdue ones sit on today).
   for (const b of bills || []) {
     if (b.days > 7) continue;
+    // Money from the sheet is never "overdue" — past ones stay on their day in the calendar.
+    if (b.bill.kind && b.days < 0) continue;
     rows.push({ key: b.key, day: b.days < 0 ? dayKey(today) : b.due, sort: -1, bill: b });
   }
   rows.sort((a, b) => a.day.localeCompare(b.day) || a.sort - b.sort);
@@ -174,12 +188,15 @@ function Agenda({
                 </li>
               ) : (
                 <li key={r.key}>
-                  <span className={`agenda-item agenda-bill${r.bill!.days < 0 ? ' is-overdue' : r.bill!.days <= 3 ? ' is-soon' : ''}`}>
-                    <span className="agenda-time">{r.bill!.days < 0 ? 'Overdue' : 'Bill'}</span>
+                  <span
+                    className={`agenda-item agenda-bill${r.bill!.bill.kind ? ` is-money kind-${r.bill!.bill.kind}` : ''}${r.bill!.days < 0 ? ' is-overdue' : r.bill!.days <= 3 && !r.bill!.bill.kind ? ' is-soon' : ''}`}
+                    style={{ '--ev': billColor(r.bill!) } as React.CSSProperties}
+                  >
+                    <span className="agenda-time">{r.bill!.days < 0 ? 'Overdue' : moneyTag(r.bill!)}</span>
                     <span className="agenda-title">
                       <span className="agenda-name">{r.bill!.bill.name}</span>
                       <span className="agenda-sub">
-                        {[money(r.bill!.bill.amount), countdown(r.bill!.days)].filter(Boolean).join(' · ')}
+                        {[money(r.bill!.bill.amount), r.bill!.bill.kind === 'paylater' ? r.bill!.bill.notes?.split(' · ')[2] : '', countdown(r.bill!.days)].filter(Boolean).join(' · ')}
                       </span>
                     </span>
                     {r.bill!.bill.payUrl ? (
@@ -449,7 +466,14 @@ function DayPopover({
                   <strong>{it.title}</strong>
                   <span className="day-pop-sub">
                     {it.kind === 'bill' && it.bill
-                      ? [money(it.bill.bill.amount), countdown(it.bill.days), it.bill.bill.autopay ? 'Autopay' : ''].filter(Boolean).join(' · ')
+                      ? [
+                          money(it.bill.bill.amount),
+                          it.bill.bill.notes,
+                          it.bill.bill.kind && it.bill.days < 0 ? 'Earlier' : countdown(it.bill.days),
+                          it.bill.bill.autopay ? 'Autopay' : '',
+                        ]
+                          .filter(Boolean)
+                          .join(' · ')
                       : [it.allDay ? '' : rangeLabel(it), it.sub].filter(Boolean).join(' · ')}
                   </span>
                   {fit ? <span className={`maybe-fit ${fit.tone}`}>{fit.text}</span> : null}
@@ -526,8 +550,16 @@ export function ScheduleSection({
   const [focus, setFocus] = useState<{ date: string; nonce: number } | undefined>();
   const [pop, setPop] = useState<{ day: string; top: number; left: number; above: boolean; maxHeight?: number } | null>(null);
   const [month, setMonth] = useState(thisMonth);
+  const [layers, setLayers] = useState(() => readSaved<{ google: boolean; money: boolean }>(LAYERS_KEY, { google: true, money: true }));
+  const toggleLayer = (k: 'google' | 'money') =>
+    setLayers(l => {
+      const next = { ...l, [k]: !l[k] };
+      writeSaved(LAYERS_KEY, next);
+      return next;
+    });
   const monthBox = useRef<HTMLDivElement>(null);
-  const events = useMemo(() => schedule?.events || [], [schedule]);
+  const events = useMemo(() => (layers.google ? schedule?.events || [] : []), [schedule, layers.google]);
+  const shownBills = useMemo(() => (layers.money ? bills : []), [bills, layers.money]);
   const today = startOfDay(new Date());
 
   const openPlans = plans.filter(p => p.status === 'open').sort((a, b) => a.date.localeCompare(b.date) || (a.from || '').localeCompare(b.from || ''));
@@ -550,11 +582,22 @@ export function ScheduleSection({
     for (const p of plans.filter(p => p.status === 'open')) {
       out.push({ id: p.id, kind: 'plan', title: p.title, ...planSlot(p), color: PLAN_COLOR, sub: p.note });
     }
-    for (const b of bills) {
-      out.push({ id: b.key, kind: 'bill', title: b.bill.name, start: b.due, end: dayKey(addDays(fromDayKey(b.due), 1)), allDay: true, color: BILL_COLOR, url: b.bill.payUrl, bill: b });
+    for (const b of shownBills) {
+      out.push({
+        id: b.key,
+        kind: 'bill',
+        title: b.bill.name,
+        start: b.due,
+        end: dayKey(addDays(fromDayKey(b.due), 1)),
+        allDay: true,
+        color: billColor(b),
+        url: b.bill.payUrl,
+        sub: b.bill.notes,
+        bill: b,
+      });
     }
     return out;
-  }, [events, plans, bills]);
+  }, [events, plans, shownBills]);
 
   const setView = (next: boolean) => {
     setExpanded(next);
@@ -614,6 +657,14 @@ export function ScheduleSection({
         <p className="sched-sync">
           {schedule ? `Google Calendar · updated ${new Date(schedule.refreshedAt).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}` : 'Google Calendar not connected yet'}
         </p>
+        <div className="layer-chips" role="group" aria-label="Show on the calendar">
+          <button type="button" className={`layer-chip is-google${layers.google ? ' on' : ''}`} aria-pressed={layers.google} onClick={() => toggleLayer('google')} title="Google Calendar events">
+            Google
+          </button>
+          <button type="button" className={`layer-chip is-money${layers.money ? ' on' : ''}`} aria-pressed={layers.money} onClick={() => toggleLayer('money')} title="Bills, card minimums, subscriptions and pay-later from the Radall sheet">
+            $ Money
+          </button>
+        </div>
         {!expanded ? (
           <MonthNav
             month={month}
@@ -634,7 +685,7 @@ export function ScheduleSection({
             <h3 id="sc-up">
               Upcoming <span>· next 7 days</span>
             </h3>
-            <Agenda events={events} bills={bills} schedule={schedule} onShow={show} limit={9} />
+            <Agenda events={events} bills={shownBills} schedule={schedule} onShow={show} limit={14} />
           </section>
           <section className="sched-block sc-confirm" aria-labelledby="sc-confirm">
             <h3 id="sc-confirm">
@@ -683,10 +734,10 @@ export function ScheduleSection({
 
             <section className="sched-block">
               <h3>
-                Bills due <span>· from Finances</span>
+                Money due <span>· from the Radall sheet</span>
               </h3>
               <BillsList
-                dues={bills.filter(b => b.days <= 14)}
+                dues={shownBills.filter(b => b.days <= 14 && !(b.bill.kind && b.days < 0))}
                 onPaid={onBillPaid}
                 limit={5}
                 empty={schedule ? 'No bills due in the next two weeks.' : 'Shows bills from the Finances "Bills" tab once it’s connected.'}

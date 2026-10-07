@@ -15,6 +15,7 @@ import { getActionableMetric } from '../../lib/actionable';
 import { usePriorityPins } from '../../lib/priorityPins';
 import { criticalKeys, useFeaturedLevels } from '../../lib/featuredLevels';
 import { addDays, eventStart, onDay, paidBillKeys, upcomingBills, type BillDue, type ScheduleSnapshot } from '../../lib/schedule';
+import { moneyBillDues, type MoneyModel } from '../../lib/money';
 import { usePlans } from '../../lib/plans';
 import { ScheduleSection } from './ScheduleSection';
 import { BillsList } from './BillsList';
@@ -75,7 +76,7 @@ function ScheduleSummary({ schedule, bills }: { schedule: ScheduleSnapshot | nul
   const maybes =
     plans.filter(p => p.status === 'open').length +
     events.filter(e => (e.myStatus === 'invited' || e.myStatus === 'maybe') && eventStart(e) >= addDays(today, -1)).length;
-  const soon = bills.filter(b => b.days <= 3).length;
+  const soon = bills.filter(b => b.days <= 3 && !(b.bill.kind && b.days < 0)).length;
   return (
     <>
       <span className="sum-chip">
@@ -88,7 +89,7 @@ function ScheduleSummary({ schedule, bills }: { schedule: ScheduleSnapshot | nul
       ) : null}
       {soon ? (
         <span className="sum-chip is-critical">
-          <b>{soon}</b> {soon === 1 ? 'bill' : 'bills'} due soon
+          <b>{soon}</b> {soon === 1 ? 'payment' : 'payments'} due soon
         </span>
       ) : null}
     </>
@@ -195,6 +196,7 @@ export function HomeView({
   renderSorting,
   capturesPanel,
   schedule,
+  money,
   onBillPaid,
 }: {
   snapshots: Record<SourceId, SourceSnapshot>;
@@ -210,6 +212,7 @@ export function HomeView({
   renderSorting?: (entries: CompletionEntry[]) => ReactNode;
   capturesPanel: ReactNode;
   schedule: ScheduleSnapshot | null;
+  money: MoneyModel | null;
   onBillPaid: (due: BillDue) => void;
 }) {
   const latest =
@@ -226,11 +229,18 @@ export function HomeView({
     .sort((a, b) => b.count - a.count);
   const openTotal = openBySite.reduce((sum, site) => sum + site.count, 0);
   // Bills: next unpaid due date per bill (paid on Life Hub = a Radall completion in the ledger).
-  const bills = upcomingBills(schedule?.bills || [], paidBillKeys(ledger));
+  // Plus the Radall sheet's money items (bills, card mins, subscriptions, pay later) — calendar only, never tasks.
+  const paidKeys = paidBillKeys(ledger);
+  const bills = [...upcomingBills(schedule?.bills || [], paidKeys), ...moneyBillDues(money, paidKeys)].sort((a, b) => a.due.localeCompare(b.due));
   const financeBills = (
     <div className="card-bills">
-      <p className="card-bills-label">Bills due</p>
-      <BillsList dues={bills.filter(b => b.days <= 21)} onPaid={onBillPaid} limit={4} empty="No bills due in the next 3 weeks." />
+      <p className="card-bills-label">
+        Money due · next 3 weeks
+        <button type="button" className="card-bills-open" onClick={() => enter('money')}>
+          Money page →
+        </button>
+      </p>
+      <BillsList dues={bills.filter(b => b.days >= 0 && b.days <= 21)} onPaid={onBillPaid} limit={4} empty="Nothing due in the next 3 weeks." />
     </div>
   );
   // TickTick split: tasks (the card's "to do") over habits still to check in today.
@@ -308,7 +318,7 @@ export function HomeView({
 
       <SourceRow
         ids={ROW_1}
-        extra={{ self: capturesPanel, radall: schedule?.bills.length ? financeBills : undefined }}
+        extra={{ self: capturesPanel, radall: bills.length ? financeBills : undefined }}
         label="Daily ops"
         tone="ops"
         icon="◐"
