@@ -62,7 +62,7 @@ export function FeaturedList({
         </div>
       )}
       {folded ? null : items.length ? (
-        items.map(item => {
+        <div className="featured-strip">{items.map(item => {
           const pinned = isPinned(sourceId, item.id);
           return (
             <article
@@ -106,7 +106,7 @@ export function FeaturedList({
               </div>
             </article>
           );
-        })
+        })}</div>
       ) : (
         <p className="featured-empty">
           {copy.placeholder
