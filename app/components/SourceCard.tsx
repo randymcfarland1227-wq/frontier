@@ -1,5 +1,7 @@
 'use client';
 
+import { useState } from 'react';
+import { readSaved, writeSaved, STORAGE_KEYS } from '../../lib/storage';
 import type { FeaturedItem, SourceDefinition, SourceSnapshot, TaskItem } from '../../lib/types';
 import { isConnectorSource } from '../../lib/connectors';
 import { getActionableMetric } from '../../lib/actionable';
@@ -38,7 +40,15 @@ export function SourceCard({
   extra?: React.ReactNode;
 }) {
   const showSync = isConnectorSource(source.id) && Boolean(snapshot.refreshedAt);
-  const collapsed = false;
+  const [collapsed, setCollapsed] = useState(() =>
+    readSaved<string[]>(STORAGE_KEYS.collapsedCards, []).includes(source.id),
+  );
+  const toggleCollapsed = () => {
+    const next = !collapsed;
+    const saved = readSaved<string[]>(STORAGE_KEYS.collapsedCards, []).filter(id => id !== source.id);
+    writeSaved(STORAGE_KEYS.collapsedCards, next ? [...saved, source.id] : saved);
+    setCollapsed(next);
+  };
   const links = source.relatedLinks || [];
 
   const actionable = getActionableMetric(source.id, snapshot);
@@ -89,6 +99,16 @@ export function SourceCard({
               ↗
             </button>
           ) : null}
+          <button
+            type="button"
+            className="card-mini card-collapse"
+            aria-expanded={!collapsed}
+            aria-label={`${collapsed ? 'Expand' : 'Collapse'} ${source.name}`}
+            title={collapsed ? 'Expand' : 'Collapse to header'}
+            onClick={toggleCollapsed}
+          >
+            {collapsed ? '▸' : '▾'}
+          </button>
         </div>
       </header>
       {collapsed ? null : (

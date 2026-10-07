@@ -275,11 +275,11 @@ export function PriorityBoard({
                             aria-label={`Add ${item.title} to the action list`}
                             title="Add to the action list"
                           >
-                            Add →
+                            +
                           </button>
                           {onComplete ? (
-                            <button type="button" className="row-action" onClick={() => finish(item)} aria-label={`Done: ${item.title}`}>
-                              Done
+                            <button type="button" className="row-action" onClick={() => finish(item)} aria-label={`Done: ${item.title}`} title="Done">
+                              ✓
                             </button>
                           ) : null}
                           <button
@@ -342,8 +342,8 @@ export function PriorityBoard({
                     </button>
                   </span>
                   {onComplete ? (
-                    <button type="button" className="row-action" onClick={() => finish(item)} aria-label={`Done: ${item.title}`}>
-                      Done
+                    <button type="button" className="row-action" onClick={() => finish(item)} aria-label={`Done: ${item.title}`} title="Done">
+                      ✓
                     </button>
                   ) : null}
                 </li>
