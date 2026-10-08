@@ -244,6 +244,13 @@
       "reason": "Build security while discovering work and ventures that fit your way of living.",
       "how": "Connect the existing move, role, resale, candle and venture work; keep their horizons distinct.",
       "proposed": true
+    },
+    {
+      "id": "mental-grounding",
+      "category": "mental",
+      "effort": "Grounding",
+      "reason": "Come back to center: grounding and alignment reminders that keep the day pointed the right way.",
+      "how": "Grounding reminders and alignment reminders from TickTick or Self."
     }
   ]
 }

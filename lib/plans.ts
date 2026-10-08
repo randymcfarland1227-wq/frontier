@@ -21,7 +21,7 @@ export type Plan = {
   note?: string;
   status: PlanStatus;
   /** 'event' = a confirmed event added on Life Hub (Schedule → Events), not a maybe */
-  kind?: 'event';
+  kind?: 'event' | 'appointment';
   /** Last day of a multi-day event (YYYY-MM-DD, inclusive) */
   endDate?: string;
   createdAt: string;
@@ -58,17 +58,17 @@ export function addPlan(input: Pick<Plan, 'title' | 'date' | 'from' | 'to' | 'no
 }
 
 /** A confirmed event added on Life Hub (a trip, a party…) — shows in Events and on the calendar. */
-export function addEvent(input: { title: string; date: string; endDate?: string; note?: string }) {
+export function addEvent(input: { title: string; date: string; endDate?: string; note?: string; kind?: 'event' | 'appointment' }) {
   const now = new Date().toISOString();
   save([
     {
-      id: `event-${Date.now()}`,
+      id: `${input.kind === 'appointment' ? 'appt' : 'event'}-${Date.now()}`,
       title: input.title.trim(),
       date: input.date,
       endDate: input.endDate && input.endDate > input.date ? input.endDate : undefined,
       note: input.note?.trim() || undefined,
       status: 'yes',
-      kind: 'event',
+      kind: input.kind || 'event',
       createdAt: now,
       updatedAt: now,
     },
