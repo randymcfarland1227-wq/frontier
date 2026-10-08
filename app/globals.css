@@ -3492,3 +3492,34 @@ button.hero-stat.stat-ticktick.has-rings { display: flex; align-items: center; g
 .space-card.radall .featured-main > strong, .space-card.radall .task-main > strong { min-width: 0; flex: 1 1 auto; }
 
 .pb-v3 .pv-group .pv-title { flex-wrap: nowrap; align-items: baseline; }
+
+/* === Flow review: one line per item (2026-10-08) === */
+.flow-summary { margin: 4px 0 8px; font-size: 13px; color: var(--muted); }
+.flow-summary b { color: var(--ink); }
+.flow-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 0 0 8px; }
+.flow-list { display: grid; gap: 2px; max-height: 60vh; overflow-y: auto; border: 1px solid var(--line); border-radius: 8px; padding: 4px; margin-bottom: 8px; }
+.flow-row {
+  display: grid; grid-template-columns: 18px minmax(0, 2fr) minmax(0, 1fr) 14px minmax(0, 1.6fr) 56px;
+  align-items: center; gap: 8px; min-height: 30px; padding: 3px 8px; border-radius: 6px; font-size: 12.5px; cursor: pointer;
+}
+.flow-row:hover { background: var(--surface-2); }
+.flow-row.kind-history { box-shadow: inset 3px 0 0 #d9a21b; }
+.flow-row.kind-change { box-shadow: inset 3px 0 0 #e0533d; }
+.flow-row input { margin: 0; width: 15px; height: 15px; }
+.flow-title { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600; color: var(--ink); }
+.flow-title small { margin-left: 6px; font-weight: 450; color: var(--muted); font-size: 11.5px; }
+.flow-src { margin-right: 6px; padding: 0 5px; border-radius: 4px; background: var(--surface-2); color: var(--muted); font-size: 11.5px; font-weight: 600; }
+.flow-from, .flow-to { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--muted); }
+.flow-to { color: var(--ink); }
+.flow-arrow { color: var(--muted); text-align: center; }
+.flow-n { text-align: right; color: var(--muted); font-size: 11.5px; white-space: nowrap; }
+.flow-empty { margin: 6px; color: var(--muted); font-size: 12.5px; }
+/* History rows: name | bucket | goal */
+.flow-row.flow-history-row { grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) minmax(0, 1.2fr); cursor: default; }
+.flow-history-row select { min-width: 0; height: 26px; font-size: 12px; }
+@media (max-width: 720px) {
+  .flow-row { grid-template-columns: 18px minmax(0, 1fr) 56px; }
+  .flow-row .flow-from, .flow-row .flow-arrow { display: none; }
+  .flow-row .flow-to { grid-column: 2 / 4; font-size: 12px; }
+  .flow-row.flow-history-row { grid-template-columns: minmax(0, 1fr); }
+}
