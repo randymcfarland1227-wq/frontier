@@ -382,3 +382,14 @@ Design critique + WCAG 2.1 AA + copy + design-system audit, then fixes (last blo
 - **TickTick rings** (`TickTickRings.tsx`, hero box) show what share of today's tasks and of today's habits is *logged*: done (green) + won't do (amber) vs still open.
   - Done = today's ledger entries.
   - Won't do = habits skipped today, plus tasks closed as won't-do (Worker `/api/ticktick/done` now returns `wontDo`, status −1). Kept in `lifehub-ticktick-daylog` (this browser, today only).
+
+## One type scale, Gmail stars, Self rows, Priority grid (2026-10-07)
+- **Type scale** (last block of `globals.css`). Inside every card there are three text sizes: **15px** card name + its numbers, **13px** every item title (tasks, starred, Self, bills, emails, empty notes), **12px** everything secondary (labels, dates, senders, tags, stats, buttons). `--fs-name/--fs-item/--fs-meta`; the older `--item-fs/--meta-fs` now point at the same values.
+- **Starred lists are one-line rows** again, the same as task rows (the sideways card strip is overridden inside cards).
+- **Gmail**:
+  - Stars are Life Hub stars (`HUB_STAR_SOURCES` + `TASKS_ARE_FEATURED` in `lib/hubStars.ts`). Every Gmail-starred email is a task in the card's list, and ☆ lifts one into "Starred action emails", keeping its sender line.
+  - Synced through the existing `stars` field.
+- **Self card**:
+  - Opens on Tasks when the Inbox is empty, and empty tabs hide.
+  - Empty notes are one short line; each item is one line (title, then the day chip; the note is in the hover text).
+- **Priority On deck** is a grid of site boxes, `--cols = min(sites, 3)`: 2 sites → 2 across, 3 → 3, 4+ → 3 across and wrapping. Titles wrap to two lines at 12.5px. The Action list stays on the left.

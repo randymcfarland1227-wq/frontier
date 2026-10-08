@@ -301,10 +301,11 @@ export function PriorityBoard({
 
         <div className="pv-col pv-deck">
           <h3 className="pv-col-head">
-            On deck <span>by site</span>
+            On deck <span>by site · + List moves it over</span>
           </h3>
           {groups.length ? (
-            <div className="pv-groups">
+            // A grid of site boxes that grows with the number of sites: 2 → 2×1, 3 → 3×1, 4+ → 3 across.
+            <div className="pv-groups" style={{ '--cols': Math.min(groups.length, 3) } as React.CSSProperties}>
               {groups.map(group => {
                 const def = sourceById[group.source];
                 return (
