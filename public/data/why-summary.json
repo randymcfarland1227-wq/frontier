@@ -1,0 +1,47 @@
+{
+  "note": "Why → Summary. Recaps are written by hand (Claude) from Randy's own reviews; refresh each month. Music: Google Doc 'Monthly Music Review'. Marvel: TickTick Marvel list → 'Monthly Reviews' section (e.g. 'Marvel-August 2026 Review').",
+  "updated": "2026-10-08",
+  "reviews": [
+    {
+      "id": "music",
+      "icon": "🎵",
+      "title": "Music",
+      "month": "September 2026",
+      "link": "https://docs.google.com/document/d/1nxgWIYZ-1jaaYeraiSaXYPbr-58amkJT5ZbuWHTCwgQ/edit",
+      "linkLabel": "Full review in Google Docs",
+      "gist": "A packed month (job search, income routines, digital reorganizing, finances) left little room for the open, vulnerable headspace sessions need. The win: Music Hub got a big upgrade. Now it's about actually using it.",
+      "points": [
+        { "label": "Guitar", "text": "A real, rooted connection. Barre chords and strumming still need work, and the new guitar section on the site is built for that. Songwriting comes easily on guitar." },
+        { "label": "Songwriting & vocals", "text": "Still the biggest pull, a calling to perform. Perfectionism and judging your own delivery get in the way. The loop is: start, get lost, deliver nothing, feel upset, skip next time. You picked up a book on how to write songs." },
+        { "label": "Ableton", "text": "Your workflow is optimized and you're still learning mastering. Next direction: cohesion, where every element serves one vision instead of being a mix of everything you like." }
+      ],
+      "carry": ["Record some guitar and sing over it", "Use the songwriting book to break the start-and-stall loop", "Build tracks around one vision; keep learning mastering"]
+    },
+    {
+      "id": "marvel",
+      "icon": "🐾",
+      "title": "Marvel",
+      "month": "August 2026",
+      "monthNote": "Latest review on file (written in September). No September review yet.",
+      "link": "https://ticktick.com/webapp/#p/69dd705c1bd491a95e9a99ca/tasks/6a97ae00443fc5b861dea735",
+      "linkLabel": "Full review in TickTick",
+      "gist": "Marvel is doing better but needs more stimulation. Your attention has been stretched while you work toward a home that's better for you both.",
+      "points": [
+        { "label": "Training", "text": "Research a calm-down command other than \"place\". He reads you well, but otherwise winds himself up." },
+        { "label": "Impulses", "text": "Improving, and you want that to come from understanding, not fear. He may not know the ladder yet." },
+        { "label": "Grooming", "text": "Doing it yourself for now (baths, brushing). He likes being groomed. The vac brush is there, it just needs using." },
+        { "label": "Walks", "text": "He needs more. His pulling makes brisk walks overwhelming, and you worry about reinforcing bad habits. He loves to learn, so figure out what to teach him." }
+      ],
+      "carry": ["Find a calm-down command to train", "Research leash and pulling work for walks", "Groom regularly with the vac brush", "Pick new things to teach him"]
+    }
+  ],
+  "goalsIntro": "Your goals across six areas. The names update live from the Life and Present Goals sheet; the one-line summaries were written Oct 8.",
+  "categoryGists": {
+    "physical": "Fuel, rest and care for your body: 170g protein, 3–4 bottles of water, whole foods, 7–8 hours of sleep, vitamins and self-care.",
+    "mental": "A calm, aware mind: reading, journaling as reflection, daily Healthy Minds, clean spaces, and grounding/alignment reminders.",
+    "connection": "Being present with people and with Marvel: plan lunches and experiences, be a villager in friendships, take pictures, train Marvel and audit monthly.",
+    "financial": "Independence: build credit, grow your moving-forward savings, and snowball the material odds and ends to done.",
+    "spiritual": "Creative expression and storytelling through guitar, vocals and production.",
+    "upkeep": "Keep life running: home and possessions, digital systems, admin, money admin and personal logistics."
+  }
+}

@@ -3633,3 +3633,44 @@ button.hero-stat.stat-ticktick.has-rings { display: flex; align-items: center; g
   .sc-month[data-season] .mini-item, .sc-month[data-season] .mini-item.kind-bill, .sc-month[data-season] .mini-item:is(.kind-plan, .kind-invite) { font-size: 0 !important; line-height: 0 !important; height: 6px !important; max-height: 6px !important; min-height: 0 !important; padding: 0 !important; border-radius: 3px; overflow: hidden !important; -webkit-line-clamp: unset !important; display: block !important; }
   .sc-month .mini-cell { min-height: 44px; }
 }
+
+/* === Review bar: only "done today", in green so it reads apart from open counts (2026-10-09) === */
+.sec :is(.collapsed-bar, .section-toggle-summary) .sum-chip.is-done, .sum-chip.is-done { background: #14532d !important; border-color: #22c55e !important; color: #dcfce7 !important; }
+.sec :is(.collapsed-bar, .section-toggle-summary) .sum-chip.is-done b, .sum-chip.is-done b { color: #4ade80 !important; }
+
+/* === Why → Summary (2026-10-09) === */
+.why-summary { display: grid; gap: 18px; }
+.ws-block h2 { margin: 0 0 8px; font-size: 17px; font-weight: 650; color: var(--ink); }
+.ws-block h2 span { color: var(--muted); font-weight: 500; font-size: 13px; }
+.ws-reviews { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 12px; }
+.ws-review { display: flex; flex-direction: column; gap: 10px; padding: 14px 16px; border-radius: 12px; background: var(--surface); border: 1px solid var(--line); border-top: 4px solid var(--ws-tone, var(--accent)); color: var(--ink); }
+.ws-review.ws-music { --ws-tone: #8b5cf6; }
+.ws-review.ws-marvel { --ws-tone: #b4532a; }
+.ws-review header { display: flex; align-items: center; gap: 10px; }
+.ws-icon { font-size: 22px; line-height: 1; }
+.ws-review h3 { margin: 0; font-size: 16px; font-weight: 650; }
+.ws-month { margin: 1px 0 0; font-size: 12px; color: var(--muted); }
+.ws-gist { margin: 0; font-size: 14px; line-height: 1.5; }
+.ws-points { margin: 0; display: grid; gap: 7px; }
+.ws-points > div { display: grid; grid-template-columns: 118px 1fr; gap: 10px; padding-top: 7px; border-top: 1px solid var(--line); }
+.ws-points dt { font-size: 12px; font-weight: 650; text-transform: uppercase; letter-spacing: .04em; color: var(--ws-tone); }
+.frontier-shell:not([data-color-mode="dark"]) .ws-music .ws-points dt { color: #6d28d9; }
+.ws-points dd { margin: 0; font-size: 13px; line-height: 1.5; }
+.ws-carry { padding: 9px 12px; border-radius: 9px; background: color-mix(in srgb, var(--ws-tone) 10%, var(--surface)); }
+.ws-carry p { margin: 0 0 4px; font-size: 12px; font-weight: 650; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); }
+.ws-carry ul { margin: 0; padding-left: 18px; font-size: 13px; line-height: 1.55; }
+.ws-link { align-self: flex-start; font-size: 13px; color: var(--accent-ink); text-decoration: none; font-weight: 600; }
+.ws-link:hover { text-decoration: underline; }
+.ws-intro { margin: -2px 0 10px; font-size: 13px; color: var(--muted); }
+.ws-areas { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 10px; }
+.ws-area { padding: 12px 14px; border-radius: 12px; background: var(--surface); border: 1px solid var(--line); color: var(--ink); }
+.ws-area h3 { margin: 0 0 4px; display: flex; align-items: center; gap: 6px; font-size: 15px; font-weight: 650; }
+.ws-count { margin-left: auto; min-width: 22px; padding: 0 7px; border-radius: 999px; background: var(--surface-2); color: var(--muted); font-size: 12px; text-align: center; }
+.ws-area-gist { margin: 0 0 8px; font-size: 13px; line-height: 1.45; color: var(--muted); }
+.ws-goal-list { margin: 0; padding: 0; list-style: none; display: flex; flex-wrap: wrap; gap: 5px; }
+.ws-goal-list li { display: inline-flex; align-items: center; gap: 5px; padding: 2px 9px; border-radius: 999px; background: var(--surface-2); font-size: 13px; }
+.ws-mom { font-size: 12px; color: var(--muted); }
+@media (max-width: 560px) {
+  .ws-reviews { grid-template-columns: 1fr; }
+  .ws-points > div { grid-template-columns: 1fr; gap: 2px; }
+}

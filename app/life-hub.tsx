@@ -1015,7 +1015,7 @@ goalsData ? (
       ) : active === 'logs' ? (
         <LogsView />
       ) : active === 'why' ? (
-        <WhyView goalsPanel={whyPanel} />
+        <WhyView goalsPanel={whyPanel} goals={goalsData} />
       ) : active === 'settings' ? (
         <div className="settings-view">
           <SiteIconSettings />

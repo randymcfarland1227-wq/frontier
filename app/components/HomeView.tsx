@@ -363,20 +363,9 @@ export function HomeView({
           tone="review"
           icon="✓"
           summary={
-            <>
-              <span className="sum-chip">
-                <b>{completionStats.today}</b> today
-              </span>
-              <span className="sum-chip">
-                <b>{completionStats.last7}</b> past 7 days
-              </span>
-              <span className="sum-chip">
-                <b>{completionStats.month}</b> this month
-              </span>
-              <span className="sum-chip">
-                <b>{openTotal}</b> open
-              </span>
-            </>
+            <span className="sum-chip is-done" title="Completed today across all sites">
+              <b>{completionStats.today}</b> done today
+            </span>
           }
         >
           <ReviewPanel
