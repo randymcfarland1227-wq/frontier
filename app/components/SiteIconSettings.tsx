@@ -9,15 +9,29 @@ import { SiteIcon } from './SiteIcon';
 /** Settings → Site pictures: your photo for Self, brand logos for Candle / Resale, or any site. */
 export function SiteIconSettings() {
   const { isCustom } = useSiteIcons();
-  const [error, setError] = useState('');
+  // Per-site result of the last upload, shown on that site's row ("Saved ✓" / what went wrong).
+  const [status, setStatus] = useState<Record<string, { ok: boolean; text: string }>>({});
 
-  const upload = async (id: SourceId, file?: File) => {
+  const upload = async (id: SourceId, input: HTMLInputElement) => {
+    const file = input.files?.[0];
+    // Clear it so picking the same file again still counts as a change.
+    input.value = '';
     if (!file) return;
-    setError('');
+    const heic = /\.(heic|heif)$/i.test(file.name) || /heic|heif/i.test(file.type);
+    setStatus(s => ({ ...s, [id]: { ok: true, text: 'Saving…' } }));
     try {
       setIcon(id, await fileToIcon(file));
+      setStatus(s => ({ ...s, [id]: { ok: true, text: 'Saved ✓' } }));
     } catch {
-      setError('That file could not be read as a picture.');
+      setStatus(s => ({
+        ...s,
+        [id]: {
+          ok: false,
+          text: heic
+            ? "iPhone/HEIC photos can't be read by the browser. Save it as JPG or PNG (Photos → File → Export) and upload that."
+            : `"${file.name}" couldn't be read as a picture. Try a JPG or PNG.`,
+        },
+      }));
     }
   };
 
@@ -33,7 +47,6 @@ export function SiteIconSettings() {
           </p>
         </div>
       </div>
-      {error ? <p className="review-empty" role="alert">{error}</p> : null}
       <div className="icon-grid">
         {sources.map(site => (
           <div key={site.id} className={`icon-tile ${site.id}`}>
@@ -44,12 +57,17 @@ export function SiteIconSettings() {
             </div>
             <label className="row-action ghost icon-upload">
               Upload
-              <input type="file" accept="image/*" onChange={e => void upload(site.id as SourceId, e.target.files?.[0])} />
+              <input type="file" accept="image/*" onChange={e => void upload(site.id as SourceId, e.currentTarget)} />
             </label>
             {isCustom(site.id as SourceId) ? (
               <button type="button" className="row-action ghost" onClick={() => setIcon(site.id as SourceId, null)}>
                 Reset
               </button>
+            ) : null}
+            {status[site.id] ? (
+              <p className={`icon-status${status[site.id].ok ? '' : ' is-error'}`} role={status[site.id].ok ? 'status' : 'alert'}>
+                {status[site.id].text}
+              </p>
             ) : null}
           </div>
         ))}

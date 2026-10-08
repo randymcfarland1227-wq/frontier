@@ -3557,3 +3557,6 @@ button.hero-stat.stat-ticktick.has-rings { display: flex; align-items: center; g
 .frontier-shell[data-color-mode="dark"] [data-season="halloween"] :is(.row-action.ghost, .seg button) { color: #3b0764; }
 .frontier-shell[data-color-mode="dark"] .cal[data-season="halloween"] { --season: #a78bfa; --season-2: #f97316; }
 .frontier-shell[data-color-mode="dark"] [data-season="halloween"] .mini-day { color: #4c1d95; }
+.icon-status { flex: 1 0 100%; margin: 4px 0 0; font-size: 12px; color: var(--muted); }
+.icon-status.is-error { color: #e0533d; font-weight: 600; }
+.icon-tile { flex-wrap: wrap; }
