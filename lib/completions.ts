@@ -19,6 +19,8 @@ export type CompletionEntry = {
   focusRules?: number;
   /** Area was set explicitly (e.g. promoted idea) — never re-sorted */
   focusManual?: boolean;
+  /** Timestamp of an explicit reviewed reclassification; newest wins across devices. */
+  focusUpdatedAt?: string;
 };
 
 export type CompletionLedger = {

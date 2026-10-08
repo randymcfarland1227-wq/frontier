@@ -59,6 +59,7 @@ type GoalsFile = {
   categories: GoalCategory[];
   areaOverrides?: Record<string, FocusAreaId>;
   efforts: Effort[];
+  supplementalEfforts?: Effort[];
 };
 
 function baseUrl(): string {
@@ -95,7 +96,8 @@ export async function loadGoals(): Promise<GoalsData | null> {
     getJson<unknown>(`${file.api}?action=reviews`),
   ]);
   const live = isEfforts(liveEfforts) && liveEfforts.length > 0;
-  const efforts = live ? (liveEfforts as Effort[]) : file.efforts;
+  const original = live ? (liveEfforts as Effort[]) : file.efforts;
+  const efforts = [...original, ...(file.supplementalEfforts || []).filter(e => !original.some(o => o.id === e.id))];
 
   const latest = new Map<string, Review>();
   if (isReviews(reviews)) {

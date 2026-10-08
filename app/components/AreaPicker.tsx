@@ -60,7 +60,7 @@ export function AreaPicker({
             </button>
           ))}
         </div>
-        <p className="review-lede area-picker-goal-label">Which goal does it work toward?</p>
+        <p className="review-lede area-picker-goal-label">Which goal or care standard does it serve?</p>
         <GoalSelect goals={goals} value={goal} onChange={setGoal} />
         <label className="area-picker-scope">
           <input type="checkbox" checked={wholeSource} onChange={e => setWholeSource(e.target.checked)} />

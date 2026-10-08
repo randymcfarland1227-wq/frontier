@@ -408,6 +408,49 @@ async function handleTickTickOpen(request: Request, env: Env): Promise<Response>
   }
 }
 
+/** Full definition inventory for Flow parity review. Read-only; partial failures stay explicit. */
+async function handleFlowCatalog(request: Request, env: Env): Promise<Response> {
+  const origin = request.headers.get("Origin");
+  if (request.method === "OPTIONS") return new Response(null, { status: 204, headers: corsHeaders(origin) });
+  if (origin && !CORS_ALLOW_ORIGINS.has(origin)) return jsonResponse({ ok: false, error: "cors_denied" }, 403, origin);
+  if (request.method !== "GET") return jsonResponse({ ok: false, error: "method_not_allowed" }, 405, origin);
+  if (!env.TICKTICK_ACCESS_TOKEN) return jsonResponse({ ok: false, error: "token_not_configured" }, 503, origin);
+  // Unlike legacy feeds, the new private catalog is never available before backup is claimed.
+  if (!(await env.LIFEHUB_STATE.get(AUTH_KEY)) || !(await syncKeyAllowed(request, env))) return jsonResponse({ ok: false, error: "backup_connection_required" }, 401, origin);
+  const errors: string[] = [];
+  const records: Array<Record<string, unknown>> = [];
+  try {
+    const raw = await ttFetch(env, "/project");
+    if (!Array.isArray(raw)) throw new Error("invalid_project_catalog");
+    const lists = [{ id: "inbox", name: "Inbox" }, ...raw.filter(p => p && typeof p.id === "string" && p.id !== "inbox" && !p.closed)];
+    const results = await Promise.all(lists.map(async list => {
+      try {
+        const data = await ttFetch(env, `/project/${encodeURIComponent(list.id)}/data`) as { tasks?: Array<Record<string, unknown>> };
+        if (!Array.isArray(data?.tasks)) throw new Error("invalid_task_catalog");
+        return data.tasks.filter(t => t && typeof t.id === "string" && t.status === 0).map(t => ({
+          id: t.id, title: t.title, executionType: "Task", projectId: t.projectId || list.id,
+          group: list.name, status: t.status, content: t.content || "", description: t.desc || "", items: t.items || [],
+          repeatRule: t.repeatFlag || "", reminders: t.reminders || [], timeZone: t.timeZone,
+          startDate: t.startDate, dueDate: t.dueDate, isAllDay: t.isAllDay, tags: t.tags || [], columnId: t.columnId,
+        }));
+      } catch { errors.push(`Could not read task list: ${list.name || list.id}`); return []; }
+    }));
+    records.push(...results.flat());
+  } catch { errors.push("Could not read TickTick projects"); }
+  try {
+    const habits = await ttFetch(env, "/habit");
+    if (!Array.isArray(habits)) throw new Error("invalid_habit_catalog");
+    records.push(...habits.filter(h => h && typeof h.id === "string").map(h => ({
+      id: h.id, title: h.name, executionType: "Habit", status: h.status, sectionId: h.sectionId,
+      repeatRule: h.repeatRule || "", reminders: h.reminders || [], goal: h.goal,
+      targetStartDate: h.targetStartDate, exDates: h.exDates || [],
+    })));
+  } catch { errors.push("Could not read TickTick habits"); }
+  return new Response(JSON.stringify({ ok: true, version: 1, asOf: new Date().toISOString(), complete: errors.length === 0, errors, records }), {
+    status: 200, headers: { ...corsHeaders(origin), "Content-Type": "application/json", "Cache-Control": "no-store" },
+  });
+}
+
 async function handleHabitCheckin(request: Request, env: Env): Promise<Response> {
   const origin = request.headers.get("Origin");
   if (request.method === "OPTIONS") return new Response(null, { status: 204, headers: corsHeaders(origin) });
@@ -760,6 +803,8 @@ export default {
     if (pathname === "/api/ticktick/done") {
       return handleTickTickDone(request, env);
     }
+
+    if (pathname === "/api/flow/ticktick/catalog") return handleFlowCatalog(request, env);
 
     if (pathname === "/api/ticktick/open") {
       return handleTickTickOpen(request, env);

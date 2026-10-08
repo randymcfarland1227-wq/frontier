@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "note": "Weights confirmed-ish 2026-09-23: Marvel own area; site repairs excluded from Balance (excludeSources). Weights sum to 1; benchmark defaults to weight. Most specific rule wins (projectIds/tags > titleIncludes > kinds > whole source); ties go to the area listed first. TickTick projects: Medical 69dd6ff6…, Life Planning 69dd701e…, Marvel 69dd705c…, Next Step Actions 69dd70fc…, Creativity 69def09b…, Maintenance Organization 69eef620…, Grounding 69f65a37…. TickTick items whose title matches a Routine Hub routine take that routine's category (routines.categoryAreas), scored 4 — above a single project/tag rule (3), below project+title combos (5). Bump rulesVersion to re-sort history. v3 (2026-09-23): renamed areas; planning → Home; Life Planning list → Home.",
+  "note": "Local Flow integration: seven stable bucket IDs plus creative and connection. Original pace weights and exclusions retained for explicit review. Saved/manual history changes only through reviewed task sorting. Move OS is relocation. Exact routine overrides share the Flow mapping.",
   "areas": [
     {
       "id": "self",
@@ -40,7 +40,7 @@
     },
     {
       "id": "money",
-      "name": "Money / Finance",
+      "name": "Money & Financial Independence",
       "weight": 0.15,
       "sourceMap": [
         {
@@ -79,9 +79,6 @@
       "name": "Body & Physical Care",
       "weight": 0.15,
       "sourceMap": [
-        {
-          "source": "move"
-        },
         {
           "source": "ticktick",
           "match": {
@@ -122,12 +119,6 @@
           "source": "role"
         },
         {
-          "source": "gmail"
-        },
-        {
-          "source": "outlook"
-        },
-        {
           "source": "ticktick",
           "match": {
             "projectIds": [
@@ -164,7 +155,7 @@
     },
     {
       "id": "marvel",
-      "name": "Marvel",
+      "name": "Marvel · Care & Connection",
       "weight": 0.1,
       "sourceMap": [
         {
@@ -190,7 +181,7 @@
     },
     {
       "id": "home",
-      "name": "Organizing, Cleaning, Upkeep & Planning",
+      "name": "Life Care, Organization & Systems",
       "weight": 0.15,
       "sourceMap": [
         {
@@ -222,8 +213,32 @@
               "69dd701e1ca911a95e9a97c7"
             ]
           }
+        },
+        {
+          "source": "move"
+        },
+        {
+          "source": "gmail"
+        },
+        {
+          "source": "outlook"
+        },
+        {
+          "source": "repair"
         }
       ]
+    },
+    {
+      "id": "creative",
+      "name": "Music & Creative Expression",
+      "weight": 0,
+      "sourceMap": []
+    },
+    {
+      "id": "connection",
+      "name": "People, Connection & Experiences",
+      "weight": 0,
+      "sourceMap": []
     }
   ],
   "excludeSources": [
@@ -248,12 +263,87 @@
       "organizing-goal-effort-review": "home",
       "organizing-week-planner-prep": "home",
       "organizing-next-step-awareness-review": "home",
-      "organizing-family-altruism-review": "home",
+      "organizing-family-altruism-review": "connection",
       "organizing-family-finance-review": "money",
       "mind-open-job-search": "work",
       "organizing-side-hustle-progress": "venture",
       "organizing-life-path-note": "home",
-      "organizing-job-search-map-note": "work"
+      "organizing-job-search-map-note": "work",
+      "mind-healthy-minds-session": "self",
+      "mind-journaling": "self",
+      "mind-reading": "self",
+      "mind-clothes-audit": "home",
+      "mind-smile-to-yourself": "self",
+      "mind-weekday-reminders": "self",
+      "mind-personal-check-in": "self",
+      "body-cardio-training": "body",
+      "body-protein-intake": "body",
+      "body-vitamins-supplements": "body",
+      "body-abdominal-training": "body",
+      "body-water-intake": "body",
+      "body-moisturize-body": "body",
+      "body-feet-care": "body",
+      "body-weekly-bath": "body",
+      "body-washing-face-complexion": "body",
+      "body-getting-haircut": "body",
+      "body-put-out-gym-clothes": "body",
+      "body-nail-cuticle-care": "body",
+      "soul-main-session": "creative",
+      "soul-support-session": "creative",
+      "soul-maintenance-session": "creative",
+      "soul-monthly-review": "creative",
+      "soul-vocal-training": "creative",
+      "soul-pinterest-reset": "creative",
+      "cleaning-wash-bedding": "home",
+      "cleaning-vacuum-room": "home",
+      "cleaning-wipe-room-surfaces": "home",
+      "cleaning-vacuum-car": "home",
+      "cleaning-clean-laundry": "home",
+      "cleaning-clean-phone-laptop-glasses": "home",
+      "cleaning-clean-tote-bag": "home",
+      "cleaning-clean-headphones": "home",
+      "cleaning-wash-tote-bag": "home",
+      "organizing-digital-declutter": "home",
+      "organizing-water-plants": "home",
+      "organizing-organize-drawers": "home",
+      "organizing-weekly-grocery-shop": "home",
+      "organizing-meal-prepping": "home",
+      "organizing-reset-medicine-holder": "home",
+      "dog-daily-brushing": "marvel",
+      "dog-play-sessions": "marvel",
+      "dog-cuddling": "marvel",
+      "dog-behavior-training": "marvel",
+      "dog-walks": "marvel",
+      "dog-command-training": "marvel",
+      "dog-weekly-vacuum-marvel": "marvel",
+      "dog-brush-teeth": "marvel",
+      "dog-supply-inventory-count": "marvel",
+      "dog-behavior-train-audit": "marvel",
+      "dog-supply-organization": "marvel",
+      "dog-clip-nails": "marvel",
+      "dog-behavioral-audit": "marvel",
+      "body-teeth-night": "body",
+      "body-full-gym-session": "body",
+      "body-active-pt": "body",
+      "body-creatine-fiber": "body",
+      "cleaning-room-reset": "home",
+      "cleaning-kitchen-usable": "home",
+      "mind-daytime-rest": "self",
+      "body-fruit-vegetable": "body",
+      "body-movement-break": "body",
+      "soul-creative-tinkering": "creative",
+      "body-face-shaving": "body",
+      "body-body-shaving": "body",
+      "body-recovery-options": "body",
+      "cleaning-bathroom-weekly": "home",
+      "cleaning-wash-towels": "home",
+      "organizing-instagram-review": "home",
+      "body-nutrition-flow-note": "body",
+      "body-gym-standards-note": "body",
+      "dog-marvel-care-note": "marvel",
+      "soul-music-log-note": "creative",
+      "soul-creative-project-menu-note": "creative",
+      "mind-rest-sleep-note": "self"
     }
   },
   "ignore": {
@@ -265,7 +355,11 @@
       "titles": [
         "Nutrition Flow — Use Macro Tracker",
         "Gym Session Standards",
-        "Life Path & Active Project Direction"
+        "Life Path & Active Project Direction",
+        "Daily Work & Income Flow",
+        "Creative / Tinkering & Project Menu",
+        "Open Grounding (Reminders)",
+        "Rest & Sleep Priorities"
       ]
     }
   }

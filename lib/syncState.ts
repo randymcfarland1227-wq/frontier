@@ -168,13 +168,16 @@ function mergeEntry(a: CompletionEntry, b: CompletionEntry): CompletionEntry {
   const other = first === a ? b : a;
   // Area: a hand-set area wins, then whichever copy was sorted under newer rules.
   const rank = (e: CompletionEntry) => (e.focusAreaId ? (e.focusManual ? 1e6 : (e.focusRules ?? 1)) : -1);
-  const area = rank(other) > rank(first) ? other : first;
+  const area = (other.focusUpdatedAt || '') !== (first.focusUpdatedAt || '')
+    ? ((other.focusUpdatedAt || '') > (first.focusUpdatedAt || '') ? other : first)
+    : rank(other) > rank(first) ? other : first;
   return {
     ...first,
     title: first.title ?? other.title,
     focusAreaId: area.focusAreaId,
     focusRules: area.focusRules,
     focusManual: area.focusManual,
+    focusUpdatedAt: area.focusUpdatedAt,
   };
 }
 

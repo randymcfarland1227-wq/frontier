@@ -21,7 +21,7 @@
       "id": "connection",
       "label": "Connection",
       "icon": "🤝",
-      "focusAreaId": "self"
+      "focusAreaId": "connection"
     },
     {
       "id": "financial",
@@ -33,7 +33,13 @@
       "id": "spiritual",
       "label": "Spiritual / Embodiment",
       "icon": "✨",
-      "focusAreaId": "self"
+      "focusAreaId": "creative"
+    },
+    {
+      "id": "upkeep",
+      "label": "Life Care & Upkeep",
+      "icon": "🏡",
+      "focusAreaId": "home"
     }
   ],
   "areaOverrides": {
@@ -180,6 +186,64 @@
       "effort": "Production",
       "reason": "To master how to deliver our creativity to a broad range in a quality and well-done way",
       "how": "Use TickTick reminder with the guitar reference sheet"
+    }
+  ],
+  "supplementalEfforts": [
+    {
+      "id": "upkeep-home",
+      "category": "upkeep",
+      "effort": "Home & possessions",
+      "reason": "Keep spaces and the things you use clean, organized and usable.",
+      "how": "Existing cleaning, laundry, possessions and home care actions.",
+      "proposed": true
+    },
+    {
+      "id": "upkeep-digital",
+      "category": "upkeep",
+      "effort": "Digital systems",
+      "reason": "Keep sites, devices, files and tools working for you.",
+      "how": "Site repairs, digital decluttering, file and device upkeep.",
+      "proposed": true
+    },
+    {
+      "id": "upkeep-admin",
+      "category": "upkeep",
+      "effort": "Communications & administration",
+      "reason": "Keep messages and everyday paperwork manageable.",
+      "how": "Gmail, Outlook, forms and administrative loose ends; classify goal-related exceptions by their actual purpose.",
+      "proposed": true
+    },
+    {
+      "id": "upkeep-financial",
+      "category": "upkeep",
+      "effort": "Financial administration",
+      "reason": "Keep financial records and obligations current.",
+      "how": "Record updates, bill administration and insurance logistics; distinguish these from credit, savings and income progress.",
+      "proposed": true
+    },
+    {
+      "id": "upkeep-personal",
+      "category": "upkeep",
+      "effort": "Personal logistics",
+      "reason": "Keep practical arrangements and everyday necessities in place.",
+      "how": "Appointments, returning equipment and personal loose ends; direct self-care can still belong to Physical Body.",
+      "proposed": true
+    },
+    {
+      "id": "physical-strength",
+      "category": "physical",
+      "effort": "Strength, mobility & recovery",
+      "reason": "A proposed home for the training, PT and movement practices already in your life.",
+      "how": "Keep the existing practices; add no new habits.",
+      "proposed": true
+    },
+    {
+      "id": "financial-independence",
+      "category": "financial",
+      "effort": "Independence & a nourishing livelihood",
+      "reason": "Build security while discovering work and ventures that fit your way of living.",
+      "how": "Connect the existing move, role, resale, candle and venture work; keep their horizons distinct.",
+      "proposed": true
     }
   ]
 }

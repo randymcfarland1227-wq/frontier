@@ -1,3 +1,4 @@
+import "./localPreview";
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { LifeHub } from "../app/life-hub";

@@ -92,6 +92,7 @@ import {
   type GoalsData,
 } from '../lib/goals';
 import { ruleFor, saveTaskRule, sourceRuleKey, taskRuleKey, useTaskRules } from '../lib/taskRules';
+import { FlowSyncReview } from './components/FlowSyncReview';
 import { TaskSorting } from './components/TaskSorting';
 import { SiteIconSettings } from './components/SiteIconSettings';
 import { NeedsSorting } from './components/NeedsSorting';
@@ -200,7 +201,7 @@ function hideLedgerDone(
 }
 
 export function LifeHub() {
-  const [active, setActive] = useState<SpaceId>('home');
+  const [active, setActive] = useState<SpaceId>(typeof window !== 'undefined' && window.location.hash === '#settings' ? 'settings' : 'home');
   const [focusOpen, setFocusOpen] = useState(false);
   const [focus, setFocus] = useState<FocusItem[]>(starterFocus);
   const [snapshots, setSnapshots] = useState<Record<SourceId, SourceSnapshot>>(emptySnapshots);
@@ -730,6 +731,7 @@ export function LifeHub() {
   };
 
   const broadcastComplete = (source: SourceId, id: string) => {
+    if (import.meta.env.VITE_LOCAL_PREVIEW === 'true') return;
     const def = sourceById[source];
     const origin = def.allowedOrigins?.[0]?.startsWith('.') ? '*' : def.allowedOrigins?.[0] || '*';
     sendComplete(frameRefs.current[source]?.contentWindow, source, id, origin);
@@ -737,6 +739,7 @@ export function LifeHub() {
   };
 
   const broadcastStar = (source: SourceId, id: string, starred: boolean) => {
+    if (import.meta.env.VITE_LOCAL_PREVIEW === 'true') return;
     const def = sourceById[source];
     const origin = def.allowedOrigins?.[0]?.startsWith('.') ? '*' : def.allowedOrigins?.[0] || '*';
     sendStar(frameRefs.current[source]?.contentWindow, source, id, starred, origin);
@@ -1011,6 +1014,7 @@ goalsData ? (
       ) : active === 'settings' ? (
         <div className="settings-view">
           <SiteIconSettings />
+          <FlowSyncReview />
           <TaskSorting
             snapshots={visibleSnapshots}
             ledger={visibleLedger}
@@ -1034,8 +1038,9 @@ goalsData ? (
           onSelfStar={id => syncSelf(toggleSelfStar(id))}
         />
       )}
+      {import.meta.env.VITE_LOCAL_PREVIEW === 'true' && <aside style={{position:'fixed',bottom:0,left:0,right:0,padding:'10px 20px',background:'#202824',color:'#fff',zIndex:9999}}>Local review · live writes disabled · <a href="/flow/#sync">Open Flow connections</a></aside>}
       <FocusDrawer open={focusOpen} close={() => setFocusOpen(false)} focus={focus} setFocus={setFocus} enter={enter} />
-      <SourceBridges register={registerFrame} />
+      {import.meta.env.VITE_LOCAL_PREVIEW !== 'true' && <SourceBridges register={registerFrame} />}
       {pendingArea && focusConfig ? (
         <AreaPicker
           title={pendingArea.title}
