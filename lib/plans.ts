@@ -20,6 +20,10 @@ export type Plan = {
   /** Who asked / where / anything to remember */
   note?: string;
   status: PlanStatus;
+  /** 'event' = a confirmed event added on Life Hub (Schedule → Events), not a maybe */
+  kind?: 'event';
+  /** Last day of a multi-day event (YYYY-MM-DD, inclusive) */
+  endDate?: string;
   createdAt: string;
   updatedAt?: string;
 };
@@ -53,6 +57,25 @@ export function addPlan(input: Pick<Plan, 'title' | 'date' | 'from' | 'to' | 'no
   ]);
 }
 
+/** A confirmed event added on Life Hub (a trip, a party…) — shows in Events and on the calendar. */
+export function addEvent(input: { title: string; date: string; endDate?: string; note?: string }) {
+  const now = new Date().toISOString();
+  save([
+    {
+      id: `event-${Date.now()}`,
+      title: input.title.trim(),
+      date: input.date,
+      endDate: input.endDate && input.endDate > input.date ? input.endDate : undefined,
+      note: input.note?.trim() || undefined,
+      status: 'yes',
+      kind: 'event',
+      createdAt: now,
+      updatedAt: now,
+    },
+    ...loadPlans(),
+  ]);
+}
+
 export function updatePlan(id: string, patch: Partial<Omit<Plan, 'id' | 'createdAt'>>) {
   const now = new Date().toISOString();
   save(loadPlans().map(p => (p.id === id ? { ...p, ...patch, updatedAt: now } : p)));
@@ -61,7 +84,7 @@ export function updatePlan(id: string, patch: Partial<Omit<Plan, 'id' | 'created
 /** The plan as a calendar slot: no start time = all day; no end time = one hour. */
 export function planSlot(p: Plan): { start: string; end: string; allDay: boolean } {
   if (!p.from) {
-    const [y, m, d] = p.date.split('-').map(Number);
+    const [y, m, d] = (p.endDate || p.date).split('-').map(Number);
     const next = new Date(y, m - 1, d + 1);
     const nextKey = `${next.getFullYear()}-${String(next.getMonth() + 1).padStart(2, '0')}-${String(next.getDate()).padStart(2, '0')}`;
     return { start: p.date, end: nextKey, allDay: true };
@@ -83,5 +106,5 @@ export function usePlans() {
       window.removeEventListener('lifehub:synced', reload);
     };
   }, []);
-  return { plans, add: addPlan, update: updatePlan };
+  return { plans, add: addPlan, addEvent, update: updatePlan };
 }

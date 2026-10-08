@@ -18,6 +18,7 @@ import { addDays, eventStart, onDay, paidBillKeys, upcomingBills, type BillDue, 
 import { usePlans } from '../../lib/plans';
 import { ScheduleSection } from './ScheduleSection';
 import { BillsList } from './BillsList';
+import { TickTickRings } from './TickTickRings';
 
 const ROW_1: SourceId[] = ['ticktick', 'radall', 'self', 'gmail', 'outlook', 'repair'];
 const ROW_2: SourceId[] = ['role', 'move'];
@@ -275,18 +276,11 @@ export function HomeView({
               </div>
               <button
                 type="button"
-                className="hero-stat stat-ticktick"
+                className="hero-stat stat-ticktick has-rings"
                 onClick={() => enter('ticktick')}
-                title="TickTick today: tasks due or overdue, and habits not checked in yet — opens TickTick's page"
+                title="TickTick today: how much is logged (done or won't do) — opens TickTick's page"
               >
-                <span className="stat-half">
-                  <strong>{ticktickTasks}</strong>
-                  <span>TickTick {ticktickTasks === 1 ? 'task' : 'tasks'}</span>
-                </span>
-                <span className="stat-half">
-                  <strong>{ticktickHabits}</strong>
-                  <span>{ticktickHabits === 1 ? 'habit' : 'habits'} left</span>
-                </span>
+                <TickTickRings ledger={ledger} openTasks={ticktickTasks} openHabits={ticktickHabits} />
               </button>
             </div>
             {openBySite.length ? (

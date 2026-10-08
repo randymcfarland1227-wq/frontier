@@ -2,7 +2,8 @@
  * Life Hub Schedule — sends Google Calendar + the Finances sheet's "Bills" tab to Life Hub.
  *
  * Every 10 minutes it reads:
- *   - every calendar you have switched on in Google Calendar (last 7 days → next 6 weeks), and
+ *   - every calendar you have switched on in Google Calendar (last 7 days → next 6 weeks, plus
+ *     one-off / all-day events up to ~4 months ahead for the Events list), and
  *   - the "Bills" tab of the Finances spreadsheet,
  * then POSTs one private snapshot to the Life Hub Worker (/api/schedule/snapshot). Life Hub only
  * reads it back with your backup key, so none of this lands in the public website files.
@@ -20,11 +21,14 @@ var LH_SCHEDULE = {
   DAYS_BACK: 7,
   DAYS_AHEAD: 42,
   MAX_EVENTS: 800,
+  /** Further out (Life Hub's Events list): one-off and all-day events only, up to this many days ahead */
+  EVENTS_AHEAD: 120,
+  MAX_FAR_EVENTS: 200,
   /**
-   * Script property holding the Worker's MAIL_PUSH_KEY secret. If the Mail Sync script keeps it
-   * under a different property name, change this one line to match.
+   * Script property holding the Worker's MAIL_PUSH_KEY secret (Mail Sync stores it as LIFEHUB_MAIL_KEY). If that ever
+   * changes, change this one line to match.
    */
-  KEY_PROPERTY: 'MAIL_PUSH_KEY',
+  KEY_PROPERTY: 'LIFEHUB_MAIL_KEY',
 };
 
 /** Bills tab columns, in order. Life Hub finds them by name, so you can move them around. */
@@ -87,8 +91,10 @@ function lhReadCalendars_() {
   var now = new Date();
   var from = new Date(now.getTime() - LH_SCHEDULE.DAYS_BACK * 864e5);
   var to = new Date(now.getTime() + LH_SCHEDULE.DAYS_AHEAD * 864e5);
+  var far = new Date(now.getTime() + LH_SCHEDULE.EVENTS_AHEAD * 864e5);
   var calendars = [];
   var events = [];
+  var farCount = 0;
   CalendarApp.getAllCalendars().forEach(function (cal) {
     // Only what you see in Google Calendar (switched on, not hidden).
     if (cal.isHidden() || !cal.isSelected()) return;
@@ -98,33 +104,51 @@ function lhReadCalendars_() {
     calendars.push({ name: name, color: color });
     cal.getEvents(from, to).forEach(function (ev) {
       if (events.length >= LH_SCHEDULE.MAX_EVENTS) return;
-      var status = lhStatus_(ev);
-      if (status === 'no') return; // declined
-      var allDay = ev.isAllDayEvent();
-      var start = allDay ? Utilities.formatDate(ev.getAllDayStartDate(), tz, 'yyyy-MM-dd') : ev.getStartTime().toISOString();
-      var end = allDay ? Utilities.formatDate(ev.getAllDayEndDate(), tz, 'yyyy-MM-dd') : ev.getEndTime().toISOString();
-      var item = {
-        // Recurring events share one id, so the start keeps each occurrence apart.
-        id: ev.getId() + '|' + start,
-        title: ev.getTitle() || '(No title)',
-        start: start,
-        end: end,
-        allDay: allDay,
-        calendar: name,
-        color: color,
-        myStatus: status,
-        url: lhEventUrl_(ev, cal),
-      };
-      var where = ev.getLocation();
-      if (where) item.location = where.slice(0, 200);
-      if (status === 'invited' || status === 'maybe') {
-        var creators = ev.getCreators();
-        if (creators && creators.length) item.organizer = creators[0];
-      }
+      var item = lhEventItem_(ev, cal, name, color, tz);
+      if (item) events.push(item);
+    });
+    // Beyond the calendar window, only things worth seeing coming (trips, appointments, parties):
+    // one-off or all-day events — no weekly repeats — so the snapshot stays small.
+    cal.getEvents(to, far).forEach(function (ev) {
+      if (farCount >= LH_SCHEDULE.MAX_FAR_EVENTS) return;
+      if (ev.getStartTime() < to) return; // already sent in the first pass
+      if (ev.isRecurringEvent() && !ev.isAllDayEvent()) return;
+      var item = lhEventItem_(ev, cal, name, color, tz);
+      if (!item) return;
       events.push(item);
+      farCount++;
     });
   });
   return { calendars: calendars, events: events };
+}
+
+function lhEventItem_(ev, cal, name, color, tz) {
+  var status = lhStatus_(ev);
+  if (status === 'no') return null; // declined
+  var allDay = ev.isAllDayEvent();
+  var start = allDay ? Utilities.formatDate(ev.getAllDayStartDate(), tz, 'yyyy-MM-dd') : ev.getStartTime().toISOString();
+  var end = allDay ? Utilities.formatDate(ev.getAllDayEndDate(), tz, 'yyyy-MM-dd') : ev.getEndTime().toISOString();
+  var item = {
+    // Recurring events share one id, so the start keeps each occurrence apart.
+    id: ev.getId() + '|' + start,
+    title: ev.getTitle() || '(No title)',
+    start: start,
+    end: end,
+    allDay: allDay,
+    calendar: name,
+    color: color,
+    myStatus: status,
+    url: lhEventUrl_(ev, cal),
+  };
+  // Weekly classes etc. never count as "Events" on Life Hub.
+  if (ev.isRecurringEvent()) item.recurring = true;
+  var where = ev.getLocation();
+  if (where) item.location = where.slice(0, 200);
+  if (status === 'invited' || status === 'maybe') {
+    var creators = ev.getCreators();
+    if (creators && creators.length) item.organizer = creators[0];
+  }
+  return item;
 }
 
 function lhStatus_(ev) {

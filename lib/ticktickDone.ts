@@ -104,6 +104,7 @@ export async function pullTickTickDone(): Promise<CompletionLedger | null> {
     habits?: DoneHabit[];
     schedule?: HabitSchedule[];
     skipped?: Array<{ id: string; stamp: string }>;
+    wontDo?: Array<{ id: string; title?: string; closedAt?: string }>;
   };
   try {
     const res = await fetch(`${WORKER_BASE}/api/ticktick/done?${q}`, { headers: syncKeyHeader(), cache: 'no-store' });
@@ -121,6 +122,11 @@ export async function pullTickTickDone(): Promise<CompletionLedger | null> {
       return off.length ? { ...h, exDates: [...(h.exDates || []), ...off] } : h;
     });
   }
+  saveDayLog({
+    day: stamp(end),
+    skippedHabits: (body.skipped || []).filter(s => s.stamp === stamp(end)).map(s => s.id),
+    wontDoTasks: (body.wontDo || []).filter(t => t.closedAt && stamp(new Date(t.closedAt)) === stamp(end)).map(t => t.id),
+  });
   let ledger = loadLedger();
   const before = Object.keys(ledger.entries).length;
   let moved = false;
@@ -158,4 +164,32 @@ export function checkInTickTickHabit(habitId: string) {
     headers: { 'Content-Type': 'application/json', ...syncKeyHeader() },
     body: JSON.stringify({ habitId, stamp: stamp(new Date()) }),
   }).catch(() => undefined);
+}
+
+/**
+ * Today's "won't do" log from TickTick (habits marked not done, tasks closed as won't do), for the
+ * logged-today chart. Kept for this browser only; refreshed on every TickTick pull.
+ */
+export type TickTickDayLog = { day: string; skippedHabits: string[]; wontDoTasks: string[] };
+export const TICKTICK_DAYLOG_EVENT = 'lifehub:ticktick-daylog';
+const DAYLOG_KEY = 'lifehub-ticktick-daylog';
+
+function saveDayLog(log: TickTickDayLog) {
+  try {
+    localStorage.setItem(DAYLOG_KEY, JSON.stringify(log));
+    window.dispatchEvent(new CustomEvent(TICKTICK_DAYLOG_EVENT));
+  } catch {
+    /* storage unavailable */
+  }
+}
+
+export function loadDayLog(): TickTickDayLog {
+  const today = stamp(new Date());
+  try {
+    const log = JSON.parse(localStorage.getItem(DAYLOG_KEY) || 'null') as TickTickDayLog | null;
+    if (log && log.day === today) return log;
+  } catch {
+    /* ignore */
+  }
+  return { day: today, skippedHabits: [], wontDoTasks: [] };
 }

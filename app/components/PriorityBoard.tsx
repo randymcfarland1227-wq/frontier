@@ -6,8 +6,6 @@ import type { FeaturedItem, SourceId, SourceSnapshot } from '../../lib/types';
 import { SOURCE_IDS, sourceById } from '../../lib/sources';
 import { DECK, PLAN, openBefore, pinKey, placePin, unpin, usePriorityPins, type Lane } from '../../lib/priorityPins';
 import { byLevel, criticalKeys, useFeaturedLevels } from '../../lib/featuredLevels';
-import { LevelDot } from './LevelDot';
-import { CriticalFlag } from './CriticalFlag';
 import { SiteIcon } from './SiteIcon';
 import { PriorityPanel, type PriorityItem } from './PriorityPanel';
 
@@ -162,49 +160,58 @@ export function PriorityBoard({
     onDrop: onDrop(lane, item.key),
   });
 
-  const rowMain = (item: PriorityItem) => {
-    const blocked = openBefore(lanes[item.key]);
-    const note = lanes[item.key]?.note;
+  const levelClass = (item: PriorityItem) => {
+    const lv = levelOf(item.source, item.id);
+    return `${lv ? ` lv-${lv}` : ''}${isCritical(item.source, item.id) ? ' is-critical' : ''}`;
+  };
+
+  /** Title button (opens the side panel) + the small chips that matter: due day, waiting, note. */
+  const rowTitle = (item: PriorityItem) => {
+    const entry = lanes[item.key];
+    const blocked = openBefore(entry);
     return (
-      <button type="button" className="plan-open" onClick={() => setOpenKey(item.key)} title="Open details, plan and what's in the way">
-        <span className="plan-open-title">
+      <>
+        <button
+          type="button"
+          className="pv-title"
+          onClick={() => setOpenKey(item.key)}
+          title={[item.title, item.detail, entry?.note].filter(Boolean).join(' — ')}
+        >
           {item.tag ? <span className={`task-tag tone-${tagTone(item.tag)}`}>{item.tag}</span> : null}
-          <strong>{item.title}</strong>
-          {lanes[item.key]?.due ? <span className="plan-due-chip">{dueChip(lanes[item.key]!.due!)}</span> : null}
-        </span>
-        {item.detail || note ? <span className="plan-open-sub">{item.detail || note}</span> : null}
+          <span className="pv-text">{item.title}</span>
+        </button>
+        {isCritical(item.source, item.id) ? <span className="pv-chip is-crit">Critical</span> : null}
+        {entry?.due ? <span className="pv-chip">{dueChip(entry.due)}</span> : null}
         {blocked ? (
-          <span className="plan-blocked">
-            Waiting on {blocked} thing{blocked === 1 ? '' : 's'} first
+          <span className="pv-chip is-wait" title={`Waiting on ${blocked} thing${blocked === 1 ? '' : 's'} first`}>
+            Waiting · {blocked}
           </span>
         ) : null}
-      </button>
+        {entry?.note ? (
+          <span className="pv-chip is-note" title={entry.note} aria-label="Has a plan note">
+            ✎
+          </span>
+        ) : null}
+      </>
     );
   };
 
-  const marks = (item: PriorityItem) => (
-    <>
-      <LevelDot level={levelOf(item.source, item.id)} title={item.title} onCycle={() => cycle(item.source, item.id)} />
-      <CriticalFlag on={isCritical(item.source, item.id)} title={item.title} onToggle={() => toggleCritical(item.source, item.id)} />
-    </>
-  );
+  const check = (item: PriorityItem) =>
+    onComplete ? (
+      <button type="button" className="pv-check" onClick={() => finish(item)} aria-label={`Done: ${item.title}`} title="Mark done" />
+    ) : null;
 
   const openItem = openKey ? catalog.get(openKey) : undefined;
   const openLane: Lane | null = openKey ? (lanes[openKey]?.lane as Lane | null) ?? (criticals.includes(openKey) ? DECK : null) : null;
 
   return (
-    <section className="priority-board workstation glass-panel pb-v2" aria-label="Priority">
-      <div className="priority-head">
-        <div className="pb-title">
-          <p className="section-label">Priority</p>
-          <h2>Doing now</h2>
-          <p className="pb-summary">
-            {plan.length || deckCount
-              ? `${plan.length} on your action list · ${deckCount} on deck · click any item for details and your plan`
-              : 'Pin from any card, star a Self task, mark something Critical, or pull a task in here.'}
-          </p>
-        </div>
-        <div className="ws-add">
+    <section className="priority-board workstation glass-panel pb-v3" aria-label="Priority">
+      <div className="pv-head">
+        <h2 className="pv-heading">Doing now</h2>
+        <p className="pv-counts">
+          <b>{plan.length}</b> on your list · <b>{deckCount}</b> on deck
+        </p>
+        <div className="ws-add pv-search">
           <input
             type="search"
             value={query}
@@ -241,98 +248,38 @@ export function PriorityBoard({
         </div>
       </div>
 
-      <div className="pb-stages">
-        <div className="pb-stage pb-deck">
-          <h3 className="pb-stage-label">
-            On deck <span>· by site</span>
-          </h3>
-          {groups.length ? (
-            <div className="plan-groups">
-              {groups.map(group => {
-                const def = sourceById[group.source];
-                return (
-                  <div key={group.source} className={`plan-group grp-${group.source}${group.critical ? ' has-critical' : ''}`}>
-                    <div className="plan-group-head">
-                      <SiteIcon source={group.source} className="plan-group-icon" />
-                      <button type="button" className="plan-group-name" onClick={() => enter(group.source)} title={`Open ${def.name} page`}>
-                        {def.name}
-                      </button>
-                      <span className="plan-group-count">{group.items.length}</span>
-                    </div>
-                    <div className="plan-group-list">
-                      {group.items.map(item => (
-                        <article
-                          key={item.key}
-                          className={`plan-item${isCritical(item.source, item.id) ? ' is-critical' : ''}${dragging === item.key ? ' is-dragging' : ''}`}
-                          {...dragProps(item, DECK)}
-                        >
-                          {marks(item)}
-                          {rowMain(item)}
-                          <button
-                            type="button"
-                            className="row-action plan-add"
-                            onClick={() => move(item, PLAN)}
-                            aria-label={`Add ${item.title} to the action list`}
-                            title="Add to the action list"
-                          >
-                            +
-                          </button>
-                          {onComplete ? (
-                            <button type="button" className="row-action" onClick={() => finish(item)} aria-label={`Done: ${item.title}`} title="Done">
-                              ✓
-                            </button>
-                          ) : null}
-                          <button
-                            type="button"
-                            className="row-action ghost"
-                            aria-label={`Take ${item.title} off the plan`}
-                            title="Take off the plan"
-                            onClick={() => remove(item)}
-                          >
-                            ✕
-                          </button>
-                        </article>
-                      ))}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          ) : (
-            <p className="pb-empty">Nothing waiting. Pin items from any card, or search above.</p>
-          )}
-        </div>
-
+      <div className="pv-cols">
         <div
-          className={`pb-stage pb-plan${dragging && !plan.some(i => i.key === dragging) ? ' is-target' : ''}`}
+          className={`pv-col pv-plan${dragging && !plan.some(i => i.key === dragging) ? ' is-target' : ''}`}
           onDragOver={e => {
             if (dragging) e.preventDefault();
           }}
           onDrop={onDrop(PLAN)}
         >
-          <h3 className="pb-stage-label">
-            Action list <span>· in the order you&apos;ll do it</span>
+          <h3 className="pv-col-head">
+            Action list <span>in the order you&apos;ll do it</span>
           </h3>
           {plan.length ? (
-            <ol className="pb-plan-list">
+            <ol className="pv-list">
               {plan.map((item, i) => (
                 <li
                   key={item.key}
-                  className={`plan-item plan-step src-${item.source}${isCritical(item.source, item.id) ? ' is-critical' : ''}${dragging === item.key ? ' is-dragging' : ''}${over === item.key ? ' is-over' : ''}`}
+                  className={`pv-row src-${item.source}${levelClass(item)}${dragging === item.key ? ' is-dragging' : ''}${over === item.key ? ' is-over' : ''}`}
                   {...dragProps(item, PLAN)}
                 >
-                  <span className="plan-num" aria-hidden="true">
+                  <span className="pv-num" aria-hidden="true">
                     {i + 1}
                   </span>
-                  <SiteIcon source={item.source} className="plan-step-icon" />
-                  {rowMain(item)}
-                  <span className="plan-order">
-                    <button type="button" className="row-action ghost" onClick={() => nudge(i, -1)} disabled={i === 0} aria-label={`Move ${item.title} up`} title="Move up">
+                  {check(item)}
+                  <SiteIcon source={item.source} className="pv-site" />
+                  {rowTitle(item)}
+                  <span className="pv-tools">
+                    <button type="button" className="pv-tool" onClick={() => nudge(i, -1)} disabled={i === 0} aria-label={`Move ${item.title} up`} title="Move up">
                       ▲
                     </button>
                     <button
                       type="button"
-                      className="row-action ghost"
+                      className="pv-tool"
                       onClick={() => nudge(i, 1)}
                       disabled={i === plan.length - 1}
                       aria-label={`Move ${item.title} down`}
@@ -340,19 +287,61 @@ export function PriorityBoard({
                     >
                       ▼
                     </button>
-                  </span>
-                  {onComplete ? (
-                    <button type="button" className="row-action" onClick={() => finish(item)} aria-label={`Done: ${item.title}`} title="Done">
-                      ✓
+                    <button type="button" className="pv-tool" onClick={() => move(item, DECK)} aria-label={`Put ${item.title} back on deck`} title="Back on deck">
+                      ↩
                     </button>
-                  ) : null}
+                  </span>
                 </li>
               ))}
             </ol>
           ) : (
-            <p className="pb-empty">
-              Decide what you&apos;re doing: press <b>+</b> on anything on deck (or drag it here), then put them in order.
-            </p>
+            <p className="pv-empty">Nothing on your list yet. Press + List on anything on deck, or drag it here.</p>
+          )}
+        </div>
+
+        <div className="pv-col pv-deck">
+          <h3 className="pv-col-head">
+            On deck <span>by site</span>
+          </h3>
+          {groups.length ? (
+            <div className="pv-groups">
+              {groups.map(group => {
+                const def = sourceById[group.source];
+                return (
+                  <section key={group.source} className={`pv-group src-${group.source}`} aria-label={def.name}>
+                    <button type="button" className="pv-group-head" onClick={() => enter(group.source)} title={`Open ${def.name} page`}>
+                      <SiteIcon source={group.source} className="pv-site" />
+                      <span>{def.name}</span>
+                      <b>{group.items.length}</b>
+                    </button>
+                    <ul className="pv-list">
+                      {group.items.map(item => (
+                        <li key={item.key} className={`pv-row${levelClass(item)}${dragging === item.key ? ' is-dragging' : ''}`} {...dragProps(item, DECK)}>
+                          {check(item)}
+                          {rowTitle(item)}
+                          <span className="pv-tools">
+                            <button
+                              type="button"
+                              className="pv-tool pv-add"
+                              onClick={() => move(item, PLAN)}
+                              aria-label={`Add ${item.title} to the action list`}
+                              title="Add to the action list"
+                            >
+                              + List
+                            </button>
+                            <button type="button" className="pv-tool" aria-label={`Take ${item.title} off the plan`} title="Take off the plan" onClick={() => remove(item)}>
+                              ✕
+                            </button>
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                  </section>
+                );
+              })}
+            </div>
+          ) : (
+            <p className="pv-empty">Nothing waiting. Pin items from any card, or search above.</p>
           )}
         </div>
       </div>

@@ -27,11 +27,13 @@ import {
 } from '../../lib/schedule';
 import { MONEY_KINDS } from '../../lib/money';
 import { planSlot, usePlans, type Plan } from '../../lib/plans';
+import { EVENTS_AHEAD_DAYS, eventCountdown, eventIcon, isListedEvent, setEventMark, useEventMarks } from '../../lib/events';
 import { readSaved, writeSaved } from '../../lib/storage';
 import { BillsList } from './BillsList';
 import { CalendarView, SEASON, type CalItem } from './CalendarView';
 
 const PLAN_COLOR = '#7b4a68';
+const EVENT_COLOR = '#b4532a';
 const BILL_COLOR = '#a8632a';
 const VIEW_KEY = 'lifehub-schedule-view';
 const LAYERS_KEY = 'lifehub-schedule-layers';
@@ -307,6 +309,156 @@ function Agenda({
   );
 }
 
+/** Short date for an Events row: "Sat, Oct 11" or "Fri, Oct 10 – Sun, Oct 12" for multi-day. */
+function eventDates(slot: Slot) {
+  const fmt = (d: Date) => d.toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' });
+  const start = eventStart(slot);
+  // All-day ends are exclusive (the day after); timed ends are the real end.
+  // (a party ending at midnight is still one day)
+  const last = slot.allDay ? addDays(fromDayKey(slot.end.slice(0, 10)), -1) : new Date(eventEnd(slot).getTime() - 1);
+  const multi = dayKey(last) > dayKey(start);
+  return `${fmt(start)}${multi ? ` – ${fmt(last)}` : slot.allDay ? '' : ` · ${timeLabel(start)}`}`;
+}
+
+function EventForm({ onDone }: { onDone: () => void }) {
+  const { addEvent } = usePlans();
+  const [title, setTitle] = useState('');
+  const [date, setDate] = useState(() => dayKey(new Date()));
+  const [endDate, setEndDate] = useState('');
+  const [note, setNote] = useState('');
+  const submit = (e: FormEvent) => {
+    e.preventDefault();
+    if (!title.trim() || !date) return;
+    addEvent({ title, date, endDate, note });
+    onDone();
+  };
+  return (
+    <form
+      className="plan-form"
+      onSubmit={submit}
+      onKeyDown={e => {
+        if (e.key !== 'Escape') return;
+        e.stopPropagation();
+        onDone();
+      }}
+    >
+      <label className="plan-form-wide">
+        <span>Event</span>
+        <input autoFocus value={title} onChange={e => setTitle(e.target.value)} placeholder="e.g. Trip to Morgantown" required />
+      </label>
+      <label>
+        <span>From</span>
+        <input type="date" value={date} onChange={e => setDate(e.target.value)} required />
+      </label>
+      <label>
+        <span>To (optional)</span>
+        <input type="date" value={endDate} min={date} onChange={e => setEndDate(e.target.value)} />
+      </label>
+      <label className="plan-form-wide">
+        <span>Note</span>
+        <input value={note} onChange={e => setNote(e.target.value)} placeholder="Optional" />
+      </label>
+      <div className="plan-form-actions">
+        <button type="submit" className="row-action">
+          Add event
+        </button>
+        <button type="button" className="row-action ghost" onClick={onDone}>
+          Cancel
+        </button>
+      </div>
+    </form>
+  );
+}
+
+/**
+ * Events: trips, parties, showers, appointments… over the next few months, apart from the
+ * everyday calendar. Google events are picked automatically (see lib/events.ts); ✕ hides one,
+ * ☆ in a day's pop-out adds one, and "+ Add an event" covers things not in Google Calendar.
+ */
+function EventsList({
+  events,
+  plans,
+  onShow,
+  onDropPlan,
+}: {
+  events: CalEvent[];
+  plans: Plan[];
+  onShow: (date: string, id?: string) => void;
+  onDropPlan: (p: Plan) => void;
+}) {
+  const marks = useEventMarks();
+  const [adding, setAdding] = useState(false);
+  const now = new Date();
+  const horizon = addDays(startOfDay(now), EVENTS_AHEAD_DAYS);
+  type Row = { id: string; title: string; slot: Slot; note?: string; url?: string; plan?: Plan };
+  const rows: Row[] = [
+    ...events
+      .filter(e => isListedEvent(e, marks) && eventEnd(e) > now && eventStart(e) < horizon)
+      .map(e => ({ id: e.id, title: e.title, slot: e as Slot, note: e.location, url: e.url })),
+    ...plans
+      .filter(p => p.kind === 'event' && p.status === 'yes')
+      .map(p => ({ id: p.id, title: p.title, slot: planSlot(p) as Slot, note: p.note, plan: p }))
+      .filter(r => eventEnd(r.slot) > now && eventStart(r.slot) < horizon),
+  ].sort((a, b) => eventStart(a.slot).getTime() - eventStart(b.slot).getTime());
+
+  return (
+    <>
+      {rows.length ? (
+        <ul className="events-list">
+          {rows.map(r => {
+            const start = eventStart(r.slot);
+            const soon = eventCountdown(start, now);
+            return (
+              <li key={r.id} className={`event-row${soon === 'Now' || soon === 'Tomorrow' || soon === 'This weekend' ? ' is-soon' : ''}`}>
+                <button type="button" className="event-main" onClick={() => onShow(dayKey(start < startOfDay(now) ? now : start), r.id)} title={[r.title, r.note].filter(Boolean).join(' — ')}>
+                  <span className="event-icon" aria-hidden="true">
+                    {eventIcon(r.title)}
+                  </span>
+                  <span className="event-text">
+                    <strong>{r.title}</strong>
+                    <span className="event-when">{eventDates(r.slot)}</span>
+                  </span>
+                  <span className="event-soon">{soon}</span>
+                </button>
+                {r.plan ? (
+                  <a
+                    className="event-tool"
+                    href={googleCalendarLink({ title: r.title, ...r.slot, details: r.note })}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    title="Add to Google Calendar"
+                    aria-label={`Add ${r.title} to Google Calendar`}
+                  >
+                    ↗
+                  </a>
+                ) : null}
+                <button
+                  type="button"
+                  className="event-tool"
+                  onClick={() => (r.plan ? onDropPlan(r.plan) : setEventMark(r.id, 'hide'))}
+                  title="Remove from Events"
+                  aria-label={`Remove ${r.title} from Events`}
+                >
+                  ✕
+                </button>
+              </li>
+            );
+          })}
+        </ul>
+      ) : (
+        <p className="sched-empty">No trips or events coming up. Add one, or press ☆ on anything in a day&apos;s pop-out.</p>
+      )}
+      {adding ? (
+        <EventForm onDone={() => setAdding(false)} />
+      ) : (
+        <button type="button" className="sched-add" onClick={() => setAdding(true)}>
+          + Add an event
+        </button>
+      )}
+    </>
+  );
+}
+
 /** Needs to confirm: Google invitations not answered yet + maybe-plans, each with how it fits. */
 function MaybeList({
   invites,
@@ -477,6 +629,24 @@ function MonthMini({ month, items, picked, onPick }: { month: Date; items: CalIt
 }
 
 /** Pop-out for one day: everything on it, with the same actions as the lists. */
+/** ☆ / ★ in a day's pop-out: show this event in Events (or take it out). */
+function EventStar({ event }: { event: CalEvent }) {
+  const marks = useEventMarks();
+  const on = isListedEvent(event, marks);
+  return (
+    <button
+      type="button"
+      className={`row-action ghost event-star${on ? ' is-on' : ''}`}
+      aria-pressed={on}
+      onClick={() => setEventMark(event.id, on ? 'hide' : 'event')}
+      title={on ? 'In Events — click to take it out' : 'Show in Events'}
+      aria-label={on ? `Take ${event.title} out of Events` : `Show ${event.title} in Events`}
+    >
+      {on ? '★ Event' : '☆ Event'}
+    </button>
+  );
+}
+
 function DayPopover({
   day,
   pos,
@@ -616,6 +786,9 @@ function DayPopover({
                       {it.task.done ? 'Undo' : 'Done'}
                     </button>
                   ) : null}
+                  {it.kind === 'event' && events.some(e => e.id === it.id) ? (
+                    <EventStar event={events.find(e => e.id === it.id)!} />
+                  ) : null}
                   {(it.kind === 'event' || it.kind === 'invite') && it.url ? (
                     <a className="row-action ghost" href={it.url} target="_blank" rel="noopener noreferrer" aria-label={`${it.kind === 'invite' ? 'Reply to' : 'Open'} ${it.title} in Google Calendar`}>
                       {it.kind === 'invite' ? 'Reply ↗' : 'Open ↗'}
@@ -706,6 +879,10 @@ export function ScheduleSection({
     }));
     for (const p of plans.filter(p => p.status === 'open')) {
       out.push({ id: p.id, kind: 'plan', title: p.title, ...planSlot(p), color: PLAN_COLOR, sub: p.note });
+    }
+    // Events added on Life Hub (Schedule → Events) sit on the calendar like confirmed events.
+    for (const p of plans.filter(p => p.kind === 'event' && p.status === 'yes')) {
+      out.push({ id: p.id, kind: 'event', title: p.title, ...planSlot(p), color: EVENT_COLOR, sub: ['Added on Life Hub', p.note].filter(Boolean).join(' · ') });
     }
     for (const b of shownBills) {
       out.push({
@@ -830,12 +1007,20 @@ export function ScheduleSection({
             </h3>
             <Agenda events={events} bills={shownBills} tasks={shownTasks} schedule={schedule} onShow={show} limit={16} />
           </section>
-          <section className="sched-block sc-confirm" aria-labelledby="sc-confirm">
-            <h3 id="sc-confirm">
-              Needs to confirm <span>· {maybeCount}</span>
-            </h3>
-            <MaybeList invites={invites} plans={openPlans} events={events} onShow={show} onAnswer={answer} />
-          </section>
+          <div className="sc-mid">
+            <section className="sched-block sc-events" aria-labelledby="sc-events">
+              <h3 id="sc-events">
+                Events <span>· trips, parties, appointments</span>
+              </h3>
+              <EventsList events={events} plans={plans} onShow={show} onDropPlan={p => update(p.id, { status: 'dropped' })} />
+            </section>
+            <section className="sched-block sc-confirm" aria-labelledby="sc-confirm">
+              <h3 id="sc-confirm">
+                Needs to confirm <span>· {maybeCount}</span>
+              </h3>
+              <MaybeList invites={invites} plans={openPlans} events={events} onShow={show} onAnswer={answer} />
+            </section>
+          </div>
           <div className="sc-month cal-themed" ref={monthBox} data-season={SEASON[month.getMonth()]}>
             <h3 className="cal-title cal-script-title">{month.toLocaleDateString(undefined, { month: 'long' })}</h3>
             {!schedule ? <p className="cal-notice">Google Calendar isn&apos;t connected yet — maybe-plans and bills still show.</p> : null}
@@ -864,12 +1049,19 @@ export function ScheduleSection({
         </div>
       ) : (
         <div className="sched-grid">
-          <aside className="sched-rail" aria-label="Coming up, not confirmed, bills">
+          <aside className="sched-rail" aria-label="Coming up, events, not confirmed, bills">
             <section className="sched-block">
               <h3>
                 Coming up <span>· next 7 days</span>
               </h3>
               <Agenda events={events} schedule={schedule} onShow={show} />
+            </section>
+
+            <section className="sched-block">
+              <h3>
+                Events <span>· trips, parties, appointments</span>
+              </h3>
+              <EventsList events={events} plans={plans} onShow={show} onDropPlan={p => update(p.id, { status: 'dropped' })} />
             </section>
 
             <section className="sched-block">
