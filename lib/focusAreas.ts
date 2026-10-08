@@ -152,7 +152,7 @@ function isConfig(value: unknown): value is FocusAreaConfig {
 /** Fetch `public/data/focus-areas.json` once and cache it for record-time resolution. */
 export async function loadFocusAreas(): Promise<FocusAreaConfig | null> {
   try {
-    const res = await fetch(`${baseUrl()}data/focus-areas.json`, { cache: 'no-store' });
+    const res = await fetch(`${baseUrl()}data/focus-areas.json?t=${Date.now()}`, { cache: 'no-store' });
     if (!res.ok) return null;
     const json: unknown = await res.json();
     if (!isConfig(json)) return null;

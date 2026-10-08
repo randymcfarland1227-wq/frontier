@@ -21,7 +21,7 @@ export function UpdateNotice() {
     const base = (import.meta.env.BASE_URL || '/').replace(/\/?$/, '/');
     const check = async () => {
       try {
-        const html = await (await fetch(`${base}index.html`, { cache: 'no-store' })).text();
+        const html = await (await fetch(`${base}index.html?check=${Date.now()}`, { cache: 'no-store' })).text();
         const live = html.match(/\/assets\/(index-[^"']+\.js)/)?.[1];
         if (live && live !== mine) setStale(true);
       } catch {
