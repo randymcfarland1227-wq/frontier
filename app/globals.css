@@ -3604,3 +3604,32 @@ button.hero-stat.stat-ticktick.has-rings { display: flex; align-items: center; g
 .sc-month[data-season] .mini-grid { grid-template-rows: auto !important; }
 .sc-month[data-season] .mini-name { align-self: end; padding-bottom: 2px; }
 .sc-month[data-season] .mini-item { word-break: normal !important; overflow-wrap: break-word; hyphens: auto; }
+
+/* === Doing now: tag + date + status on one small line under the name (2026-10-09) === */
+.pb-v3 .pv-sub { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 4px; min-width: 0; }
+.pb-v3 .pv-sub .task-tag, .pb-v3 .pv-sub .pv-chip { font-size: 12px !important; line-height: 17px; padding: 0 6px; font-weight: 500; }
+/* Name stays clearly bigger than the line under it (12px is the site's text floor) */
+.pb-v3 .pv-group .pv-text { font-size: 14px !important; }
+.pb-v3 .pv-group .pv-sub { order: 3; flex: 1 0 100%; margin: 0 0 1px 23px; }
+.pb-v3 .pv-group .pv-text { flex: none; }
+
+/* === Events + Appointments: rows stay inside the column (2026-10-09) === */
+.sc-appts { container-type: inline-size; }
+.events-list { min-width: 0; max-width: 100%; }
+.event-row { min-width: 0; max-width: 100%; overflow: hidden; }
+.event-main { overflow: hidden; }
+/* Name on top, date underneath — no long single line to spill sideways */
+.event-text { flex-direction: column; align-items: flex-start; gap: 0; overflow: hidden; }
+.event-text strong, .event-text .event-when { display: block; max-width: 100%; overflow: hidden !important; text-overflow: ellipsis; white-space: nowrap !important; }
+.event-text .event-when { font-size: 12px; color: var(--muted); }
+.event-soon { flex-shrink: 0; }
+.event-tool { flex-shrink: 0; }
+/* Names wrap to two lines instead of being cut short */
+.event-text strong { white-space: normal !important; display: -webkit-box !important; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; overflow-wrap: break-word; word-break: normal; line-height: 1.3; }
+.event-main { align-items: center; }
+
+/* Phone month grid: day boxes are ~37px wide, too narrow for names — show colored bars, tap the day for details (2026-10-09) */
+@media (max-width: 560px) {
+  .sc-month[data-season] .mini-item, .sc-month[data-season] .mini-item.kind-bill, .sc-month[data-season] .mini-item:is(.kind-plan, .kind-invite) { font-size: 0 !important; line-height: 0 !important; height: 6px !important; max-height: 6px !important; min-height: 0 !important; padding: 0 !important; border-radius: 3px; overflow: hidden !important; -webkit-line-clamp: unset !important; display: block !important; }
+  .sc-month .mini-cell { min-height: 44px; }
+}

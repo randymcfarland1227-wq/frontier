@@ -27,7 +27,7 @@ import {
 } from '../../lib/schedule';
 import { MONEY_KINDS } from '../../lib/money';
 import { planSlot, usePlans, type Plan } from '../../lib/plans';
-import { EVENTS_AHEAD_DAYS, eventCountdown, eventIcon, isListedEvent, setEventMark, useEventMarks } from '../../lib/events';
+import { EVENTS_AHEAD_DAYS, eventCountdown, eventIcon, isAppointmentTitle, listKindOf, setEventMark, useEventMarks, type ListKind } from '../../lib/events';
 import { readSaved, writeSaved } from '../../lib/storage';
 import { BillsList } from './BillsList';
 import { CalendarView, SEASON, type CalItem } from './CalendarView';
@@ -320,7 +320,7 @@ function eventDates(slot: Slot) {
   return `${fmt(start)}${multi ? ` – ${fmt(last)}` : slot.allDay ? '' : ` · ${timeLabel(start)}`}`;
 }
 
-function EventForm({ onDone }: { onDone: () => void }) {
+function EventForm({ onDone, appt }: { onDone: () => void; appt?: boolean }) {
   const { addEvent } = usePlans();
   const [title, setTitle] = useState('');
   const [date, setDate] = useState(() => dayKey(new Date()));
@@ -329,7 +329,7 @@ function EventForm({ onDone }: { onDone: () => void }) {
   const submit = (e: FormEvent) => {
     e.preventDefault();
     if (!title.trim() || !date) return;
-    addEvent({ title, date, endDate, note });
+    addEvent({ title, date, endDate, note, kind: appt ? 'appointment' : 'event' });
     onDone();
   };
   return (
@@ -343,24 +343,26 @@ function EventForm({ onDone }: { onDone: () => void }) {
       }}
     >
       <label className="plan-form-wide">
-        <span>Event</span>
-        <input autoFocus value={title} onChange={e => setTitle(e.target.value)} placeholder="e.g. Trip to Morgantown" required />
+        <span>{appt ? 'Appointment' : 'Event'}</span>
+        <input autoFocus value={title} onChange={e => setTitle(e.target.value)} placeholder={appt ? 'e.g. Dentist — cleaning' : 'e.g. Trip to Morgantown'} required />
       </label>
       <label>
-        <span>From</span>
+        <span>{appt ? 'Date' : 'From'}</span>
         <input type="date" value={date} onChange={e => setDate(e.target.value)} required />
       </label>
-      <label>
-        <span>To (optional)</span>
-        <input type="date" value={endDate} min={date} onChange={e => setEndDate(e.target.value)} />
-      </label>
+      {appt ? null : (
+        <label>
+          <span>To (optional)</span>
+          <input type="date" value={endDate} min={date} onChange={e => setEndDate(e.target.value)} />
+        </label>
+      )}
       <label className="plan-form-wide">
         <span>Note</span>
-        <input value={note} onChange={e => setNote(e.target.value)} placeholder="Optional" />
+        <input value={note} onChange={e => setNote(e.target.value)} placeholder={appt ? 'Time, place — optional' : 'Optional'} />
       </label>
       <div className="plan-form-actions">
         <button type="submit" className="row-action">
-          Add event
+          {appt ? 'Add appointment' : 'Add event'}
         </button>
         <button type="button" className="row-action ghost" onClick={onDone}>
           Cancel
@@ -376,27 +378,30 @@ function EventForm({ onDone }: { onDone: () => void }) {
  * ☆ in a day's pop-out adds one, and "+ Add an event" covers things not in Google Calendar.
  */
 function EventsList({
+  list = 'event',
   events,
   plans,
   onShow,
   onDropPlan,
 }: {
+  list?: ListKind;
   events: CalEvent[];
   plans: Plan[];
   onShow: (date: string, id?: string) => void;
   onDropPlan: (p: Plan) => void;
 }) {
   const marks = useEventMarks();
+  const appt = list === 'appt';
   const [adding, setAdding] = useState(false);
   const now = new Date();
   const horizon = addDays(startOfDay(now), EVENTS_AHEAD_DAYS);
   type Row = { id: string; title: string; slot: Slot; note?: string; url?: string; plan?: Plan };
   const rows: Row[] = [
     ...events
-      .filter(e => isListedEvent(e, marks) && eventEnd(e) > now && eventStart(e) < horizon)
+      .filter(e => listKindOf(e, marks) === list && eventEnd(e) > now && eventStart(e) < horizon)
       .map(e => ({ id: e.id, title: e.title, slot: e as Slot, note: e.location, url: e.url })),
     ...plans
-      .filter(p => p.kind === 'event' && p.status === 'yes')
+      .filter(p => (p.kind === 'appointment' ? 'appt' : p.kind) === list && p.status === 'yes')
       .map(p => ({ id: p.id, title: p.title, slot: planSlot(p) as Slot, note: p.note, plan: p }))
       .filter(r => eventEnd(r.slot) > now && eventStart(r.slot) < horizon),
   ].sort((a, b) => eventStart(a.slot).getTime() - eventStart(b.slot).getTime());
@@ -436,8 +441,8 @@ function EventsList({
                   type="button"
                   className="event-tool"
                   onClick={() => (r.plan ? onDropPlan(r.plan) : setEventMark(r.id, 'hide'))}
-                  title="Remove from Events"
-                  aria-label={`Remove ${r.title} from Events`}
+                  title={`Remove from ${appt ? 'Appointments' : 'Events'}`}
+                  aria-label={`Remove ${r.title} from ${appt ? 'Appointments' : 'Events'}`}
                 >
                   ✕
                 </button>
@@ -446,13 +451,15 @@ function EventsList({
           })}
         </ul>
       ) : (
-        <p className="sched-empty">No trips or events coming up. Add one, or press ☆ on anything in a day&apos;s pop-out.</p>
+        <p className="sched-empty">
+          {appt ? 'No appointments coming up.' : 'No trips or events coming up. Add one, or press ☆ on anything in a day\'s pop-out.'}
+        </p>
       )}
       {adding ? (
-        <EventForm onDone={() => setAdding(false)} />
+        <EventForm appt={appt} onDone={() => setAdding(false)} />
       ) : (
         <button type="button" className="sched-add" onClick={() => setAdding(true)}>
-          + Add an event
+          {appt ? '+ Add an appointment' : '+ Add an event'}
         </button>
       )}
     </>
@@ -632,17 +639,20 @@ function MonthMini({ month, items, picked, onPick }: { month: Date; items: CalIt
 /** ☆ / ★ in a day's pop-out: show this event in Events (or take it out). */
 function EventStar({ event }: { event: CalEvent }) {
   const marks = useEventMarks();
-  const on = isListedEvent(event, marks);
+  const kind = listKindOf(event, marks);
+  const on = kind !== null;
+  const name = (kind ?? (isAppointmentTitle(event.title) ? 'appt' : 'event')) === 'appt' ? 'Appointment' : 'Event';
+  const listName = name === 'Appointment' ? 'Appointments' : 'Events';
   return (
     <button
       type="button"
       className={`row-action ghost event-star${on ? ' is-on' : ''}`}
       aria-pressed={on}
-      onClick={() => setEventMark(event.id, on ? 'hide' : 'event')}
-      title={on ? 'In Events — click to take it out' : 'Show in Events'}
-      aria-label={on ? `Take ${event.title} out of Events` : `Show ${event.title} in Events`}
+      onClick={() => setEventMark(event.id, on ? 'hide' : name === 'Appointment' ? 'appt' : 'event')}
+      title={on ? `In ${listName} — click to take it out` : `Show in ${listName}`}
+      aria-label={on ? `Take ${event.title} out of ${listName}` : `Show ${event.title} in ${listName}`}
     >
-      {on ? '★ Event' : '☆ Event'}
+      {on ? `★ ${name}` : `☆ ${name}`}
     </button>
   );
 }
@@ -881,7 +891,7 @@ export function ScheduleSection({
       out.push({ id: p.id, kind: 'plan', title: p.title, ...planSlot(p), color: PLAN_COLOR, sub: p.note });
     }
     // Events added on Life Hub (Schedule → Events) sit on the calendar like confirmed events.
-    for (const p of plans.filter(p => p.kind === 'event' && p.status === 'yes')) {
+    for (const p of plans.filter(p => (p.kind === 'event' || p.kind === 'appointment') && p.status === 'yes')) {
       out.push({ id: p.id, kind: 'event', title: p.title, ...planSlot(p), color: EVENT_COLOR, sub: ['Added on Life Hub', p.note].filter(Boolean).join(' · ') });
     }
     for (const b of shownBills) {
@@ -1010,9 +1020,15 @@ export function ScheduleSection({
           <div className="sc-mid">
             <section className="sched-block sc-events" aria-labelledby="sc-events">
               <h3 id="sc-events">
-                Events <span>· trips, parties, appointments</span>
+                Events <span>· trips, parties, plans</span>
               </h3>
               <EventsList events={events} plans={plans} onShow={show} onDropPlan={p => update(p.id, { status: 'dropped' })} />
+            </section>
+            <section className="sched-block sc-appts" aria-labelledby="sc-appts">
+              <h3 id="sc-appts">
+                Appointments <span>· doctor, dentist, vet…</span>
+              </h3>
+              <EventsList list="appt" events={events} plans={plans} onShow={show} onDropPlan={p => update(p.id, { status: 'dropped' })} />
             </section>
             <section className="sched-block sc-confirm" aria-labelledby="sc-confirm">
               <h3 id="sc-confirm">
@@ -1059,9 +1075,16 @@ export function ScheduleSection({
 
             <section className="sched-block">
               <h3>
-                Events <span>· trips, parties, appointments</span>
+                Events <span>· trips, parties, plans</span>
               </h3>
               <EventsList events={events} plans={plans} onShow={show} onDropPlan={p => update(p.id, { status: 'dropped' })} />
+            </section>
+
+            <section className="sched-block">
+              <h3>
+                Appointments <span>· doctor, dentist, vet…</span>
+              </h3>
+              <EventsList list="appt" events={events} plans={plans} onShow={show} onDropPlan={p => update(p.id, { status: 'dropped' })} />
             </section>
 
             <section className="sched-block">

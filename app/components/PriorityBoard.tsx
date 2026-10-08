@@ -172,6 +172,8 @@ export function PriorityBoard({
   const rowTitle = (item: PriorityItem) => {
     const entry = lanes[item.key];
     const blocked = openBefore(entry);
+    const critical = isCritical(item.source, item.id);
+    const hasSub = Boolean(item.tag || critical || entry?.due || blocked || entry?.note);
     return (
       <>
         <button
@@ -181,18 +183,23 @@ export function PriorityBoard({
           title={[item.title, item.detail, entry?.note].filter(Boolean).join(' — ')}
         >
           <span className="pv-text">{item.title}</span>
-          {item.tag ? <span className={`task-tag tone-${tagTone(item.tag)}`} title={item.tag}>{item.tag}</span> : null}
         </button>
-        {isCritical(item.source, item.id) ? <span className="pv-chip is-crit">Critical</span> : null}
-        {entry?.due ? <span className="pv-chip">{dueChip(entry.due)}</span> : null}
-        {blocked ? (
-          <span className="pv-chip is-wait" title={`Waiting on ${blocked} thing${blocked === 1 ? '' : 's'} first`}>
-            Waiting · {blocked}
-          </span>
-        ) : null}
-        {entry?.note ? (
-          <span className="pv-chip is-note" title={entry.note} aria-label="Has a plan note">
-            ✎
+        {/* Type, date and status sit together on one small line under the name */}
+        {hasSub ? (
+          <span className="pv-sub">
+            {item.tag ? <span className={`task-tag tone-${tagTone(item.tag)}`} title={item.tag}>{item.tag}</span> : null}
+            {critical ? <span className="pv-chip is-crit">Critical</span> : null}
+            {entry?.due ? <span className="pv-chip">{dueChip(entry.due)}</span> : null}
+            {blocked ? (
+              <span className="pv-chip is-wait" title={`Waiting on ${blocked} thing${blocked === 1 ? '' : 's'} first`}>
+                Waiting · {blocked}
+              </span>
+            ) : null}
+            {entry?.note ? (
+              <span className="pv-chip is-note" title={entry.note} aria-label="Has a plan note">
+                ✎
+              </span>
+            ) : null}
           </span>
         ) : null}
       </>
