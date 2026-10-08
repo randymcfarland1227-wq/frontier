@@ -89,7 +89,7 @@ const isReviews = (v: unknown): v is Review[] => Array.isArray(v) && v.every(r =
 
 /** Live efforts + latest review per effort from Goals hub; falls back to the bundled snapshot. */
 export async function loadGoals(): Promise<GoalsData | null> {
-  const file = await getJson<GoalsFile>(`${baseUrl()}data/goals.json`);
+  const file = await getJson<GoalsFile>(`${baseUrl()}data/goals.json?t=${Date.now()}`);
   if (!file) return null;
   const [liveEfforts, reviews] = await Promise.all([
     getJson<unknown>(`${file.api}?action=efforts`),
