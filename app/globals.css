@@ -3458,3 +3458,24 @@ button.hero-stat.stat-ticktick.has-rings { display: flex; align-items: center; g
 .task-split .day-menu-date { width: 100%; flex: 1 1 110px; }
 .space-card .row-day, .row-day { color: var(--ink) !important; background: color-mix(in srgb, var(--accent) 22%, var(--surface)) !important; }
 .day-menu-label { color: var(--ink); }
+
+/* === Self Starred list, Move, task types (2026-10-07) === */
+.space-card .self-starred { margin: 0 0 8px; padding: 4px 6px 6px; border: 1px solid var(--line); border-radius: 9px; background: var(--surface-2); }
+.space-card .self-starred-head { display: flex; align-items: center; gap: 6px; margin: 2px 2px 4px; font-size: var(--fs-meta); font-weight: 650; color: var(--ink); }
+.space-card .self-starred-head span[aria-hidden] { color: #e0912f; }
+.space-card .capture-move {
+  height: 24px; max-width: 72px; padding: 0 4px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface);
+  color: var(--ink); font: inherit; font-size: var(--fs-meta); cursor: pointer;
+}
+.space-card .capture-move:hover { border-color: var(--accent); }
+.day-menu-tag { display: inline-flex; align-items: center; gap: 4px; }
+.day-menu-type { width: 130px; height: 24px; padding: 0 6px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); color: var(--ink); font: inherit; font-size: 12px; }
+/* Money due sits under the tasks in Radall now: a little air between them */
+.space-card .card-body > .card-bills { margin-top: 10px; }
+/* Finance task types + readable tags in day mode (bright tag text on a pale tint was ~2:1) */
+.task-tag.tone-buy { --tag-color: #d946ef; }
+.task-tag.tone-sub { --tag-color: #38bdf8; }
+.task-tag.tone-bill { --tag-color: #f97316; }
+.task-tag.tone-insure { --tag-color: #22c55e; }
+.task-tag.tone-paper { --tag-color: #eab308; }
+.frontier-shell:not([data-color-mode="dark"]) .task-tag[class*="tone-"] { color: color-mix(in srgb, var(--tag-color) 45%, #000) !important; background: color-mix(in srgb, var(--tag-color) 18%, #fff) !important; }

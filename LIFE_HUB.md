@@ -405,3 +405,17 @@ Design critique + WCAG 2.1 AA + copy + design-system audit, then fixes (last blo
   - Priority rows (a small 📅 next to "+ List", and on the action list).
 - Rows with a day show a small day chip.
 - TickTick rows: a round ✓ replaces Done. In the tasks | habits columns, names wrap to two lines, and "overdue" is a red left edge (still in the hover text).
+
+## Self stars, moving Self tasks, finance task types (2026-10-07)
+- **Self ★ no longer pins to Priority.**
+  - Starred Self tasks sit in a **Starred** list at the top of the Self card. **Pin** there sends one to Priority, and the Self "+ Day" box stays.
+  - One-time cleanup (`lifehub-selfpins-cleared`): auto-pinned Self items still On deck with no day, note or steps were unpinned.
+- **Move a Self task to another site.**
+  - The Self row's **Move** dropdown offers Finances, Repair Log, Role Hub, Move OS, Venture Lab, Resale and Candle. It sets `SelfItem.home`.
+  - The task then shows in that card as `self:<id>`, counted in its open number. Done and ☆ still act on the Self task (rerouted in `completeOnHub` / `starOnHub`).
+  - ☆ menu → **↩ Back to Self** returns it.
+  - It stays a Life Hub item: nothing is written to the Radall sheet.
+- **Task types** (`lib/taskTags.ts`, new synced field `tags`, Worker redeployed):
+  - On Finances tasks, the ☆ / Pin menu has a **Type** box with suggestions (Items to buy, Bills, Subscriptions, Insurance, Paperwork, Taxes).
+  - The type shows as the colored tag before the title. New tag tones were added, and tags are readable in day mode.
+- **Radall card:** tasks first, then "Money due · next 3 weeks".
