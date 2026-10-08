@@ -3560,3 +3560,74 @@ button.hero-stat.stat-ticktick.has-rings { display: flex; align-items: center; g
 .icon-status { flex: 1 0 100%; margin: 4px 0 0; font-size: 12px; color: var(--muted); }
 .icon-status.is-error { color: #e0533d; font-weight: 600; }
 .icon-tile { flex-wrap: wrap; }
+
+/* ===== Bills: pin, change (skip / move / amount), overdue, folding days (2026-10-08) ===== */
+.bill-item { display: grid; gap: 4px; min-width: 0; }
+.bill-pin.is-on { border-color: color-mix(in srgb, var(--accent) 55%, var(--row-line)); color: var(--accent-ink); }
+/* Skipped this time: quiet, dashed, still listed until its day passes. */
+.bill-row.is-skipped { border-style: dashed; background: transparent; }
+.bill-row.is-skipped .bill-when { background: color-mix(in srgb, var(--muted) 10%, transparent); color: var(--muted); }
+.bill-row.is-skipped .bill-main strong { color: var(--muted); text-decoration: line-through; }
+.agenda-bill.is-skipped .agenda-name { text-decoration: line-through; color: var(--muted); }
+
+/* Change form */
+.bill-change {
+  display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; padding: 10px;
+  border: 1px solid var(--row-line); border-radius: 8px; background: var(--surface); color: var(--ink);
+}
+.bill-change-title { grid-column: 1 / -1; margin: 0; font-size: 13px; font-weight: 500; }
+.bill-change-modes { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 6px; }
+.bill-change-modes label {
+  display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border: 1px solid var(--row-line);
+  border-radius: 999px; font-size: 13px; cursor: pointer;
+}
+.bill-change-modes label.is-on { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 10%, var(--surface)); }
+.bill-change-modes input { accent-color: var(--accent); margin: 0; }
+.bill-change-field { display: grid; gap: 2px; min-width: 0; }
+.bill-change-field.is-wide { grid-column: 1 / -1; }
+.bill-change-field > span { color: var(--muted); font-size: 12px; }
+.bill-change-field input {
+  min-width: 0; width: 100%; padding: 6px 8px; border: 1px solid var(--row-line); border-radius: 7px;
+  background: var(--glass); color: var(--ink); font: inherit; font-size: 13px;
+}
+.bill-change-actions { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 6px; }
+.bill-change-reset { margin-left: auto; }
+
+/* Overdue box under Upcoming (home) and in the Finances card */
+.sc-left { display: flex; flex-direction: column; gap: 10px; min-width: 0; align-self: stretch; }
+.sc-left > .sc-upcoming { flex: 1 1 auto; }
+.sc-overdue { border-color: color-mix(in srgb, #c0392b 45%, var(--row-line)); background: color-mix(in srgb, #c0392b 6%, var(--row)); }
+.sc-overdue h3 { color: #8a2a17; }
+.frontier-shell[data-color-mode="dark"] .sc-overdue h3 { color: #f6c3b0; }
+@media (min-width: 1100px) {
+  .sched-compact .sc-left { contain: size; }
+  .sched-compact .sc-left > .sc-upcoming { flex: 1 1 0; min-height: 0; }
+  .sched-compact .sc-left > .sc-overdue { flex: 0 1 auto; max-height: 48%; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; }
+}
+.card-bills-overdue { margin-top: 10px; padding-top: 8px; border-top: 1px dashed color-mix(in srgb, #c0392b 45%, var(--row-line)); }
+.card-bills-overdue .card-bills-label { color: #8a2a17; }
+.frontier-shell[data-color-mode="dark"] .card-bills-overdue .card-bills-label { color: #f6c3b0; }
+
+/* Money page rows: Paid · Pin · Change; skipped / overdue states; Change form row */
+.mny-due-tools { display: inline-flex; gap: 4px; flex-wrap: wrap; justify-content: flex-end; }
+.mny-due-group li.is-skipped { border-style: dashed; border-left-style: solid; background: transparent; }
+.mny-due-group li.is-skipped .mny-due-name, .mny-due-group li.is-skipped .mny-due-amt { color: var(--muted); text-decoration: line-through; }
+.mny-due-group li.is-overdue { border-left-color: #c0392b; }
+.mny-due-change { text-decoration: none; display: inline; }
+.mny-due-group li.mny-due-edit { display: block; padding: 0; border: 0; background: none; }
+/* Fold a day: tap its header */
+.mny-due-fold { display: inline-flex; align-items: center; gap: 8px; padding: 2px 0; border: 0; background: none; color: inherit; font: inherit; cursor: pointer; }
+.mny-due-fold .mny-fold-chev { transform: rotate(90deg); border-left-color: var(--t); }
+.mny-due-group.is-folded .mny-due-fold .mny-fold-chev { transform: none; border-left-color: var(--muted); }
+.mny-due-fold small { color: var(--muted); font-size: 12px; font-weight: 400; }
+.mny-sec-overdue .mny-sec-titles h2 { color: var(--t); }
+@media (max-width: 720px) {
+  .mny-due-group li { grid-template-columns: auto minmax(0, 1fr) auto !important; }
+  .mny-due-group li .mny-due-tools { grid-column: 1 / -1; justify-content: flex-start; }
+  .mny-due-group li .mny-due-day { grid-column: 1 / -1; }
+}
+/* Narrow overdue boxes: buttons get their own line so bill names stay readable. */
+.sc-overdue .bill-row, .card-bills-overdue .bill-row { flex-wrap: wrap; }
+.sc-overdue .bill-actions, .card-bills-overdue .bill-actions { flex-basis: 100%; justify-content: flex-end; }
+.sc-overdue h3 span { color: #8a2a17; }
+.frontier-shell[data-color-mode="dark"] .sc-overdue h3 span { color: #f6c3b0; }

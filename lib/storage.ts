@@ -31,6 +31,10 @@ export const STORAGE_KEYS = {
   priorityPins: 'lifehub-priority-pins',
   /** Priority workstation lanes: "source:id" → { lane, order, at } — cloud-synced */
   priorityLanes: 'lifehub-priority-lanes',
+  /** Bill changes logged on Life Hub (skip / move / amount / note per due) — cloud-synced */
+  billEdits: 'lifehub-bill-edits',
+  /** Days folded in the Money page's 7-day list (this device) */
+  moneyFoldedDays: 'lifehub-money-folded-days',
   /** Maybe-plans not confirmed yet (Schedule) — cloud-synced */
   plans: 'lifehub-plans',
   /** Money page payment plans — cloud-synced */

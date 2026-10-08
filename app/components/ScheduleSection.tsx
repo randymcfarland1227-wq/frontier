@@ -30,6 +30,8 @@ import { planSlot, usePlans, type Plan } from '../../lib/plans';
 import { EVENTS_AHEAD_DAYS, eventCountdown, eventIcon, isListedEvent, setEventMark, useEventMarks } from '../../lib/events';
 import { readSaved, writeSaved } from '../../lib/storage';
 import { BillsList } from './BillsList';
+import { BillPinButton } from './BillControls';
+import { isOverdue } from '../../lib/billEdits';
 import { CalendarView, SEASON, type CalItem } from './CalendarView';
 
 const PLAN_COLOR = '#7b4a68';
@@ -227,12 +229,10 @@ function Agenda({
       const day = dayKey(eventStart(e) < today ? today : eventStart(e));
       return { key: e.id, day, sort: e.allDay ? 0 : eventStart(e).getTime(), event: e };
     });
-  // Bills due this week (overdue ones sit on today).
+  // Bills due this week. Past ones aren't here: unpaid ones are in the Overdue box below.
   for (const b of bills || []) {
-    if (b.days > 7) continue;
-    // Money from the sheet is never "overdue" — past ones stay on their day in the calendar.
-    if (b.bill.kind && b.days < 0) continue;
-    rows.push({ key: b.key, day: b.days < 0 ? dayKey(today) : b.due, sort: -1, bill: b });
+    if (b.days > 7 || b.days < 0) continue;
+    rows.push({ key: b.key, day: b.due, sort: -1, bill: b });
   }
   for (const t of tasks || []) {
     if (t.done) continue;
@@ -282,14 +282,14 @@ function Agenda({
               ) : (
                 <li key={r.key}>
                   <span
-                    className={`agenda-item agenda-bill${r.bill!.bill.kind ? ` is-money kind-${r.bill!.bill.kind}` : ''}${r.bill!.days < 0 ? ' is-overdue' : r.bill!.days <= 3 && !r.bill!.bill.kind ? ' is-soon' : ''}`}
+                    className={`agenda-item agenda-bill${r.bill!.bill.kind ? ` is-money kind-${r.bill!.bill.kind}` : ''}${r.bill!.skipped ? ' is-skipped' : r.bill!.days <= 3 && !r.bill!.bill.kind ? ' is-soon' : ''}`}
                     style={{ '--ev': billColor(r.bill!) } as React.CSSProperties}
                   >
-                    <span className="agenda-time">{r.bill!.days < 0 ? 'Overdue' : moneyTag(r.bill!)}</span>
+                    <span className="agenda-time">{r.bill!.skipped ? 'Skipped' : moneyTag(r.bill!)}</span>
                     <span className="agenda-title">
                       <span className="agenda-name">{r.bill!.bill.name}</span>
                       <span className="agenda-sub">
-                        {[money(r.bill!.bill.amount), r.bill!.bill.kind === 'paylater' ? r.bill!.bill.notes?.split(' · ')[2] : '', countdown(r.bill!.days)].filter(Boolean).join(' · ')}
+                        {[money(r.bill!.bill.amount), r.bill!.bill.kind === 'paylater' ? r.bill!.bill.notes?.split(' · ')[2] : '', r.bill!.skipped ? r.bill!.editNote : countdown(r.bill!.days)].filter(Boolean).join(' · ')}
                       </span>
                     </span>
                     {r.bill!.bill.payUrl ? (
@@ -456,6 +456,20 @@ function EventsList({
         </button>
       )}
     </>
+  );
+}
+
+/** Bills past their day and not marked paid (or skipped), under Upcoming. Hidden when there are none. */
+function OverdueBox({ bills, onBillPaid }: { bills: BillDue[]; onBillPaid: (due: BillDue) => void }) {
+  const overdue = bills.filter(isOverdue);
+  if (!overdue.length) return null;
+  return (
+    <section className="sched-block sc-overdue" aria-labelledby="sc-overdue">
+      <h3 id="sc-overdue">
+        Overdue <span>· {overdue.length} not marked paid</span>
+      </h3>
+      <BillsList dues={overdue} onPaid={onBillPaid} />
+    </section>
   );
 }
 
@@ -779,6 +793,7 @@ function DayPopover({
                       <button type="button" className="row-action ghost" onClick={() => onBillPaid(it.bill!)} aria-label={`Mark ${it.title} paid`}>
                         Paid
                       </button>
+                      <BillPinButton due={it.bill} />
                     </>
                   ) : null}
                   {it.kind === 'task' && it.task?.selfId && onTaskDone ? (
@@ -1001,12 +1016,15 @@ export function ScheduleSection({
 
       {!expanded ? (
         <div className="sched-compact">
-          <section className="sched-block sc-upcoming" aria-labelledby="sc-up">
-            <h3 id="sc-up">
-              Upcoming <span>· next 7 days</span>
-            </h3>
-            <Agenda events={events} bills={shownBills} tasks={shownTasks} schedule={schedule} onShow={show} limit={16} />
-          </section>
+          <div className="sc-left">
+            <section className="sched-block sc-upcoming" aria-labelledby="sc-up">
+              <h3 id="sc-up">
+                Upcoming <span>· next 7 days</span>
+              </h3>
+              <Agenda events={events} bills={shownBills} tasks={shownTasks} schedule={schedule} onShow={show} limit={16} />
+            </section>
+            <OverdueBox bills={bills} onBillPaid={onBillPaid} />
+          </div>
           <div className="sc-mid">
             <section className="sched-block sc-events" aria-labelledby="sc-events">
               <h3 id="sc-events">
@@ -1056,6 +1074,7 @@ export function ScheduleSection({
               </h3>
               <Agenda events={events} schedule={schedule} onShow={show} />
             </section>
+            <OverdueBox bills={bills} onBillPaid={onBillPaid} />
 
             <section className="sched-block">
               <h3>
@@ -1076,7 +1095,7 @@ export function ScheduleSection({
                 Money due <span>· from the Radall sheet</span>
               </h3>
               <BillsList
-                dues={shownBills.filter(b => b.days <= 14 && !(b.bill.kind && b.days < 0))}
+                dues={shownBills.filter(b => b.days >= 0 && b.days <= 14)}
                 onPaid={onBillPaid}
                 limit={5}
                 empty={schedule ? 'No bills due in the next two weeks.' : 'Shows bills from the Finances "Bills" tab once it’s connected.'}

@@ -9,13 +9,30 @@ import { byLevel, criticalKeys, useFeaturedLevels } from '../../lib/featuredLeve
 import { SiteIcon } from './SiteIcon';
 import { PriorityPanel, type PriorityItem } from './PriorityPanel';
 import { DayMenu } from './DayMenu';
+import { countdown, fromDayKey, money, type BillDue } from '../../lib/schedule';
 
 /** Self's stand-in detail for starred items with no note — not worth a subtext line. */
 const FILLER_DETAIL = 'Captured in Self inbox';
 
-/** Every open task and featured item across the hub, by pin key. */
-function buildCatalog(snapshots: Record<SourceId, SourceSnapshot>) {
+/** Every open task and featured item across the hub, by pin key — plus bills that are still owed. */
+function buildCatalog(snapshots: Record<SourceId, SourceSnapshot>, bills: BillDue[] = []) {
   const catalog = new Map<string, PriorityItem>();
+  // Bills pin as Finances items; checking one off marks that due date paid.
+  for (const b of bills) {
+    const key = pinKey('radall', b.key);
+    const day = fromDayKey(b.due).toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' });
+    catalog.set(key, {
+      id: b.key,
+      title: `Pay ${b.bill.name}`,
+      detail: [money(b.bill.amount), `due ${day}`, countdown(b.days), b.editNote || ''].filter(Boolean).join(' · '),
+      meta: 'Bill',
+      originUrl: b.bill.payUrl,
+      completable: true,
+      tag: 'Bills',
+      source: 'radall',
+      key,
+    });
+  }
   for (const id of SOURCE_IDS) {
     const snap = snapshots[id];
     if (!snap) continue;
@@ -66,10 +83,13 @@ export function PriorityBoard({
   snapshots,
   enter,
   onComplete,
+  bills,
 }: {
   snapshots: Record<SourceId, SourceSnapshot>;
   enter: (id: SourceId) => void;
   onComplete?: (source: SourceId, item: FeaturedItem) => void;
+  /** Bills still owed — pinnable like tasks */
+  bills?: BillDue[];
 }) {
   const { lanes, pins } = usePriorityPins();
   const { levels, levelOf, cycle, isCritical, toggleCritical } = useFeaturedLevels();
@@ -80,7 +100,7 @@ export function PriorityBoard({
   // Row whose 📅 day line is open
   const [dayFor, setDayFor] = useState<string | null>(null);
 
-  const catalog = useMemo(() => buildCatalog(snapshots), [snapshots]);
+  const catalog = useMemo(() => buildCatalog(snapshots, bills), [snapshots, bills]);
   const criticals = useMemo(() => criticalKeys(levels).map(([s, id]) => pinKey(s, id)), [levels]);
 
   // Action list: your order. Items that aren't open anywhere any more drop out.
