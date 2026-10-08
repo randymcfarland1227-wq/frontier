@@ -75,7 +75,7 @@ import { completeRoleTask, pullRoleSnapshot, starRoleItem } from '../lib/roleFee
 import { pullGmailSnapshot, unstarGmail } from '../lib/gmailFeed';
 import { pullRadallSnapshot } from '../lib/radallFeed';
 import { buildTickTickToday, fetchOpenTickTick } from '../lib/ticktickLive';
-import { isIgnoredItem, resolveFocusArea } from '../lib/focusAreas';
+import { earnsNoCredit, isIgnoredItem, resolveFocusArea } from '../lib/focusAreas';
 
 /** Sources where one bucket doesn't fit every item — ask on Done. */
 const ASK_AREA_SOURCES: SourceId[] = ['gmail', 'outlook'];
@@ -449,7 +449,7 @@ export function LifeHub() {
     if (!focusConfig) return taggedLedger;
     const entries: typeof taggedLedger.entries = {};
     for (const [k, e] of Object.entries(taggedLedger.entries)) {
-      if (isIgnoredItem(e.source, e.title, focusConfig)) continue;
+      if (earnsNoCredit(e.source, e.title, focusConfig)) continue;
       // A bucket picked on Task sorting re-sorts past completions of that task too.
       const picked = ruleFor(e.source, e.title, e.taskId, taskRules).area;
       entries[k] =

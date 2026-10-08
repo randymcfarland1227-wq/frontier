@@ -8,7 +8,7 @@ import { recordCompletion, loadLedger, moveCompletionEarlier, saveLedger, type C
 import { tickTickTitleKey } from './syncState';
 import { syncKeyHeader } from './cloudSync';
 import type { HabitSchedule } from './energy';
-import { isIgnoredItem } from './focusAreas';
+import { earnsNoCredit } from './focusAreas';
 
 const WORKER_BASE =
   (import.meta as ImportMeta & { env?: { VITE_WORKER_URL?: string } }).env?.VITE_WORKER_URL ||
@@ -130,7 +130,7 @@ export async function pullTickTickDone(): Promise<CompletionLedger | null> {
   let ledger = loadLedger();
   const before = Object.keys(ledger.entries).length;
   let moved = false;
-  for (const t of attributeTickTickTasks((body.tasks || []).filter(t => !isIgnoredItem('ticktick', t.title)))) {
+  for (const t of attributeTickTickTasks((body.tasks || []).filter(t => !earnsNoCredit('ticktick', t.title)))) {
     // Already recorded (e.g. hub Done, or before this rule)? Move it to the right day.
     if (moveCompletionEarlier(ledger, 'ticktick', t.id, t.at)) moved = true;
     ledger = recordCompletion('ticktick', t.id, {
@@ -142,7 +142,7 @@ export async function pullTickTickDone(): Promise<CompletionLedger | null> {
     });
   }
   if (moved) saveLedger(ledger);
-  for (const h of (body.habits || []).filter(h => !isIgnoredItem('ticktick', h.title))) {
+  for (const h of (body.habits || []).filter(h => !earnsNoCredit('ticktick', h.title))) {
     const day = stampDate(h.stamp);
     const exact = h.completedAt ? new Date(h.completedAt) : null;
     const sameDay = exact && stamp(exact) === h.stamp;
