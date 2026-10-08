@@ -48,6 +48,8 @@ export type FocusAreaConfig = {
   areas: FocusArea[];
   /** Items that aren't tasks (reminders, reference notes), per source */
   ignore?: Partial<Record<SourceId, { titleIncludes?: string[]; titles?: string[] }>>;
+  /** Shown and counted as to-do, but no completion credit and not Balance workload (orientation / container items) */
+  noCredit?: Partial<Record<SourceId, { titleIncludes?: string[]; titles?: string[] }>>;
   /** Sources whose completions never count toward Balance (e.g. site repair) */
   excludeSources?: SourceId[];
 };
@@ -111,6 +113,22 @@ export function isIgnoredItem(source: SourceId, title: string | undefined, confi
     (rule.titles || []).some(x => x.trim().toLowerCase() === t) ||
     (rule.titleIncludes || []).some(x => x && t.includes(x.toLowerCase()))
   );
+}
+
+/** Orientation / container items: listed like tasks, but earn no completion credit (focus-areas.json `noCredit`). */
+export function isNoCreditItem(source: SourceId, title: string | undefined, config: FocusAreaConfig | null = loadedConfig): boolean {
+  const rule = config?.noCredit?.[source];
+  if (!rule || !title) return false;
+  const t = title.trim().toLowerCase();
+  return (
+    (rule.titles || []).some(x => x.trim().toLowerCase() === t) ||
+    (rule.titleIncludes || []).some(x => x && t.includes(x.toLowerCase()))
+  );
+}
+
+/** Not counted anywhere as done or as workload: hidden items plus no-credit items. */
+export function earnsNoCredit(source: SourceId, title: string | undefined, config: FocusAreaConfig | null = loadedConfig): boolean {
+  return isIgnoredItem(source, title, config) || isNoCreditItem(source, title, config);
 }
 
 function baseUrl(): string {

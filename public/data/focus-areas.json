@@ -355,7 +355,14 @@
       "titles": [
         "Nutrition Flow — Use Macro Tracker",
         "Gym Session Standards",
-        "Life Path & Active Project Direction",
+        "Life Path & Active Project Direction"
+      ]
+    }
+  },
+  "noCredit": {
+    "note": "Orientation / container items (Flow): shown and counted on the TickTick card like any task, but checking them off earns no completion credit and they are not Balance workload.",
+    "ticktick": {
+      "titles": [
         "Daily Work & Income Flow",
         "Creative / Tinkering & Project Menu",
         "Open Grounding (Reminders)",

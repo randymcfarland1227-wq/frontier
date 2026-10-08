@@ -15,7 +15,7 @@
 import type { SourceId, SourceSnapshot, TaskItem } from './types';
 import type { CompletionEntry, CompletionLedger } from './completions';
 import type { SelfItem } from './adapters/self';
-import { resolveFocusArea, type FocusAreaConfig, type FocusAreaId } from './focusAreas';
+import { earnsNoCredit, resolveFocusArea, type FocusAreaConfig, type FocusAreaId } from './focusAreas';
 import { readSaved, writeSaved, STORAGE_KEYS } from './storage';
 
 export type EnergyWindow = 'today' | 'last7' | 'month' | 'all';
@@ -141,6 +141,8 @@ export function todayAvailability(
       if (t.status === 'done') continue;
       // Habits come from the schedule below (the TickTick file lists every habit, due or not).
       if (source === 'ticktick' && (t.kind === 'habit' || t.id.startsWith('habit-')) && schedule) continue;
+      // Orientation / container items (Flow) aren't workload
+      if (earnsNoCredit(source, t.title, config)) continue;
       add(areaFor(config, source, t));
     }
   }
@@ -155,7 +157,7 @@ export function todayAvailability(
   }
   if (schedule) {
     for (const h of schedule) {
-      if (habitDueOn(h, today)) add(resolveFocusArea({ source: 'ticktick', taskId: h.id, title: h.title, kind: 'habit' }, config));
+      if (habitDueOn(h, today) && !earnsNoCredit('ticktick', h.title, config)) add(resolveFocusArea({ source: 'ticktick', taskId: h.id, title: h.title, kind: 'habit' }, config));
     }
   }
   return out;
@@ -378,7 +380,7 @@ export function bucketSuggestions(
   // 1. TickTick habits due today and not yet done
   if (schedule) {
     for (const h of schedule) {
-      if (!habitDueOn(h, new Date()) || doneToday.has(`ticktick::${h.id}`)) continue;
+      if (!habitDueOn(h, new Date()) || doneToday.has(`ticktick::${h.id}`) || earnsNoCredit('ticktick', h.title, config)) continue;
       add(resolveFocusArea({ source: 'ticktick', taskId: h.id, title: h.title, kind: 'habit' }, config), {
         title: h.title || 'Habit',
         source: 'ticktick',
@@ -396,6 +398,7 @@ export function bucketSuggestions(
     for (const t of snapshots[source]?.tasks || []) {
       if (t.status === 'done' || doneToday.has(`${source}::${t.id}`)) continue;
       if (source === 'ticktick' && (t.kind === 'habit' || t.id.startsWith('habit-'))) continue;
+      if (earnsNoCredit(source, t.title, config)) continue;
       add(areaFor(config, source, t), { title: t.title, source, why: 'task' });
     }
   };
