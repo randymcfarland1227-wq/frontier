@@ -3140,6 +3140,7 @@ button.hero-stat.stat-ticktick.has-rings { display: flex; align-items: center; g
   .pb-v3 .pv-search { flex-basis: 100%; margin-left: 0; }
   .pb-v3 .pv-chip.is-note, .pb-v3 .pv-plan .pv-tool[title="Back on deck"] { display: none; }
   .pb-v3 .pv-tool { min-width: 30px; height: 30px; }
+}
 /* ===== Money page v3: one story, tabs, three container levels (2026-10-07) =====
    Tone = meaning, same everywhere: cash (teal), due (amber), owed (rose), plan (indigo),
    shop (violet), save (sky). Levels: Section card (colored header) → Fold row → table. */
