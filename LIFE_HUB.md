@@ -393,3 +393,15 @@ Design critique + WCAG 2.1 AA + copy + design-system audit, then fixes (last blo
   - Opens on Tasks when the Inbox is empty, and empty tabs hide.
   - Empty notes are one short line; each item is one line (title, then the day chip; the note is in the hover text).
 - **Priority On deck** is a grid of site boxes, `--cols = min(sites, 3)`: 2 sites → 2 across, 3 → 3, 4+ → 3 across and wrapping. Titles wrap to two lines at 12.5px. The Action list stays on the left.
+
+## Star / Pin / 📅 → give it a day (2026-10-07)
+- `DayMenu.tsx`: a small line that opens under a row with:
+  - an optional toggle: ☆ Star on task rows, ◎ Pin to Priority on starred items;
+  - **Today**, **Tomorrow**, a date picker, and **No day**.
+- Giving a day pins the item to Priority (On deck) if it isn't already, and sets `due` on its Priority entry. That puts it on the calendar (the existing `calTasks` path); no new synced field.
+- Used in:
+  - TaskList ☆ (every site except Self, which keeps its own day box);
+  - FeaturedList Pin;
+  - Priority rows (a small 📅 next to "+ List", and on the action list).
+- Rows with a day show a small day chip.
+- TickTick rows: a round ✓ replaces Done. In the tasks | habits columns, names wrap to two lines, and "overdue" is a red left edge (still in the hover text).

@@ -4,7 +4,8 @@ import { useState } from 'react';
 import { tagTone } from '../../lib/tagTone';
 import type { FeaturedItem, SourceId, SourceSnapshot } from '../../lib/types';
 import { sourceById } from '../../lib/sources';
-import { usePriorityPins } from '../../lib/priorityPins';
+import { pinKey, usePriorityPins } from '../../lib/priorityPins';
+import { DayMenu, shortDue } from './DayMenu';
 import { byLevel, useFeaturedLevels } from '../../lib/featuredLevels';
 import { LevelDot } from './LevelDot';
 import { CriticalFlag } from './CriticalFlag';
@@ -28,7 +29,13 @@ export function FeaturedList({
   const [showAll, setShowAll] = useState(false);
   const PREVIEW = compact ? 4 : 12;
   const items = showAll ? sorted : sorted.slice(0, PREVIEW);
-  const { addPin, removePin, isPinned } = usePriorityPins();
+  const { addPin, removePin, isPinned, lanes } = usePriorityPins();
+  // Row whose Pin menu (pin / give it a day) is open
+  const [menuFor, setMenuFor] = useState<string | null>(null);
+  const dueOf = (id: string) => {
+    const e = lanes[pinKey(sourceId, id)];
+    return e?.lane ? e.due : undefined;
+  };
   /** Card view only: the starred list can fold down to its heading (remembered per card). */
   const [folded, setFolded] = useState(() =>
     compact && readSaved<string[]>(STORAGE_KEYS.collapsedFeatured, []).includes(sourceId),
@@ -66,7 +73,7 @@ export function FeaturedList({
           const pinned = isPinned(sourceId, item.id);
           return (
             <article
-              className={`featured-row one-line${isCritical(sourceId, item.id) ? ' is-critical' : ''}`}
+              className={`featured-row one-line${isCritical(sourceId, item.id) ? ' is-critical' : ''}${menuFor === item.id ? ' has-menu' : ''}`}
               key={item.id}
               title={[item.title, item.detail, item.meta].filter(Boolean).join(' — ')}
             >
@@ -81,15 +88,17 @@ export function FeaturedList({
                 ) : (
                   <strong>{item.title}</strong>
                 )}
+                {dueOf(item.id) ? <span className="row-day">{shortDue(dueOf(item.id)!)}</span> : null}
                 {item.meta ? <span className="featured-meta">{compact ? item.meta.replace(/^From /, '') : item.meta}</span> : null}
               </div>
               <div className="featured-actions">
                 <button
                   type="button"
                   className={`row-action ghost ${pinned ? 'active' : ''}`}
-                  onClick={() => (pinned ? removePin(sourceId, item.id) : addPin(sourceId, item.id))}
-                  aria-pressed={pinned}
-                  aria-label={pinned ? `Remove ${item.title} from priority` : `Add ${item.title} to priority`}
+                  data-day-trigger
+                  onClick={() => setMenuFor(m => (m === item.id ? null : item.id))}
+                  aria-expanded={menuFor === item.id}
+                  aria-label={`Pin or give a day: ${item.title}`}
                 >
                   {pinned ? 'Pinned' : 'Pin'}
                 </button>
@@ -104,6 +113,18 @@ export function FeaturedList({
                   </button>
                 ) : null}
               </div>
+              {menuFor === item.id ? (
+                <DayMenu
+                  itemKey={pinKey(sourceId, item.id)}
+                  title={item.title}
+                  toggle={{
+                    label: pinned ? '◎ Pinned' : '◎ Pin to Priority',
+                    on: pinned,
+                    onClick: () => (pinned ? removePin(sourceId, item.id) : addPin(sourceId, item.id)),
+                  }}
+                  onClose={() => setMenuFor(null)}
+                />
+              ) : null}
             </article>
           );
         })}</div>

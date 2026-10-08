@@ -3,6 +3,8 @@
 import { useMemo, useState } from 'react';
 import { tagTone } from '../../lib/tagTone';
 import type { SourceId, SourceSnapshot, TaskItem } from '../../lib/types';
+import { pinKey, usePriorityPins } from '../../lib/priorityPins';
+import { DayMenu, shortDue } from './DayMenu';
 
 /** Rows per column in the side-by-side view before "Show more". */
 const SPLIT_PREVIEW = 6;
@@ -50,6 +52,13 @@ export function TaskList({
   fill?: boolean;
 }) {
   const [expandedState, setExpanded] = useState(false);
+  // Row whose ☆ menu (star / give it a day) is open
+  const [menuFor, setMenuFor] = useState<string | null>(null);
+  const { lanes } = usePriorityPins();
+  // Self keeps its own day box; everywhere else ☆ opens the star + day line.
+  const dayMenus = sourceId !== 'self';
+  // TickTick: a small ✓ instead of a Done button, so the names get the room.
+  const checkDone = sourceId === 'ticktick';
   /** The split view is always open: Tasks and Habits columns show without tapping Expand. */
   const expanded = split || open || expandedState;
   const bare = split || open;
@@ -87,9 +96,12 @@ export function TaskList({
     ? Math.max(0, tasks.length - SPLIT_PREVIEW, habits.length - SPLIT_PREVIEW)
     : Math.max(hiddenCount, habitHidden);
 
-  const renderRow = (task: TaskItem) => (
+  const renderRow = (task: TaskItem) => {
+    const key = pinKey(sourceId, task.id);
+    const due = lanes[key]?.lane ? lanes[key]?.due : undefined;
+    return (
                 <article
-                  className={`task-row one-line ${task.status === 'done' ? 'done' : ''} ${isHabit(task) ? 'habit' : ''}`}
+                  className={`task-row one-line ${task.status === 'done' ? 'done' : ''} ${isHabit(task) ? 'habit' : ''}${whenLabel(task) === 'overdue' ? ' is-overdue' : ''}${menuFor === task.id ? ' has-menu' : ''}`}
                   key={task.id}
                   title={[task.title, whenLabel(task), task.detail].filter(Boolean).join(' — ')}
                 >
@@ -103,27 +115,45 @@ export function TaskList({
                     ) : (
                       <strong>{task.title}</strong>
                     )}
+                    {due ? <span className="row-day">{shortDue(due)}</span> : null}
                     <span className={`task-when${whenLabel(task) === 'overdue' ? ' is-overdue' : ''}`}>{whenLabel(task)}</span>
                   </div>
                   <div className="task-actions">
                     {onStar ? (
-                      <button type="button" className="row-action ghost" onClick={() => onStar(task)} aria-label="Toggle star">
+                      <button
+                        type="button"
+                        className="row-action ghost row-star"
+                        data-day-trigger
+                        onClick={() => (dayMenus ? setMenuFor(m => (m === task.id ? null : task.id)) : onStar(task))}
+                        aria-label={dayMenus ? `Star or give a day: ${task.title}` : 'Toggle star'}
+                        aria-expanded={dayMenus ? menuFor === task.id : undefined}
+                      >
                         {task.starred ? '★' : '☆'}
                       </button>
                     ) : null}
                     {onComplete && task.status !== 'done' ? (
                       <button
                         type="button"
-                        className="row-action"
+                        className={checkDone ? 'row-check' : 'row-action'}
                         onClick={() => onComplete(task)}
                         aria-label={`Complete ${task.title}`}
+                        title={checkDone ? 'Done' : undefined}
                       >
-                        Done
+                        {checkDone ? '✓' : 'Done'}
                       </button>
                     ) : null}
                   </div>
+                  {menuFor === task.id && onStar ? (
+                    <DayMenu
+                      itemKey={key}
+                      title={task.title}
+                      toggle={{ label: task.starred ? '★ Starred' : '☆ Star', on: Boolean(task.starred), onClick: () => onStar(task) }}
+                      onClose={() => setMenuFor(null)}
+                    />
+                  ) : null}
                 </article>
-  );
+    );
+  };
 
   return (
     <section className={`task-list ${compact ? 'compact' : ''}`} data-source={sourceId}>
