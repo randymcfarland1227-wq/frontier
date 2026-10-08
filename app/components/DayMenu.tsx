@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
+import { useId, useState } from 'react';
 import { DECK, placePin, updatePinDetails, usePriorityPins } from '../../lib/priorityPins';
 
 const dayKey = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
@@ -30,13 +31,21 @@ export function DayMenu({
   itemKey,
   title,
   toggle,
+  tag,
+  backToSelf,
   onClose,
 }: {
   itemKey: string;
   title: string;
   toggle?: { label: string; on: boolean; onClick: () => void };
+  /** Task type label ("Items to buy") — typed or picked from suggestions */
+  tag?: { value: string; suggestions: string[]; onChange: (tag: string | null) => void };
+  /** For a Self task moved here: send it back to the Self card */
+  backToSelf?: () => void;
   onClose: () => void;
 }) {
+  const listId = useId();
+  const [tagDraft, setTagDraft] = useState(tag?.value || '');
   const { lanes } = usePriorityPins();
   const due = lanes[itemKey]?.lane ? lanes[itemKey]?.due : undefined;
   const ref = useRef<HTMLDivElement>(null);
@@ -86,6 +95,33 @@ export function DayMenu({
       {due ? (
         <button type="button" className="day-menu-btn" onClick={() => setDay(undefined)} title="Remove the day">
           No day
+        </button>
+      ) : null}
+      {tag ? (
+        <span className="day-menu-tag">
+          <span className="day-menu-label">Type</span>
+          <input
+            className="day-menu-type"
+            list={listId}
+            value={tagDraft}
+            placeholder="e.g. Items to buy"
+            onChange={e => setTagDraft(e.target.value)}
+            onBlur={() => tagDraft !== tag.value && tag.onChange(tagDraft || null)}
+            onKeyDown={e => {
+              if (e.key === 'Enter') tag.onChange(tagDraft || null);
+            }}
+            aria-label="Task type"
+          />
+          <datalist id={listId}>
+            {tag.suggestions.map(t => (
+              <option key={t} value={t} />
+            ))}
+          </datalist>
+        </span>
+      ) : null}
+      {backToSelf ? (
+        <button type="button" className="day-menu-btn" onClick={backToSelf} title="Move it back to the Self card">
+          ↩ Back to Self
         </button>
       ) : null}
       <button type="button" className="day-menu-close" onClick={onClose} aria-label="Close">

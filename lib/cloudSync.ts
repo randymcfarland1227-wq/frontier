@@ -35,6 +35,7 @@ const SYNCED_KEYS: string[] = [
   STORAGE_KEYS.plans,
   STORAGE_KEYS.payPlans,
   STORAGE_KEYS.eventMarks,
+  STORAGE_KEYS.taskTags,
 ];
 
 export type SyncStatus = {
@@ -91,6 +92,7 @@ export function readLocalState(): SyncedState {
     plans: readSaved(STORAGE_KEYS.plans, []),
     payPlans: readSaved(STORAGE_KEYS.payPlans, []),
     eventMarks: readSaved(STORAGE_KEYS.eventMarks, {}),
+    tags: readSaved(STORAGE_KEYS.taskTags, {}),
   });
 }
 
@@ -112,6 +114,7 @@ function writeLocalState(next: SyncedState): boolean {
     [STORAGE_KEYS.plans, current.plans, next.plans],
     [STORAGE_KEYS.payPlans, current.payPlans, next.payPlans],
     [STORAGE_KEYS.eventMarks, current.eventMarks, next.eventMarks],
+    [STORAGE_KEYS.taskTags, current.tags, next.tags],
   ];
   let changed = false;
   applying = true;

@@ -6,6 +6,8 @@ import type { FeaturedItem, SourceId, SourceSnapshot } from '../../lib/types';
 import { sourceById } from '../../lib/sources';
 import { pinKey, usePriorityPins } from '../../lib/priorityPins';
 import { DayMenu, shortDue } from './DayMenu';
+import { setTaskTag, TAG_SUGGESTIONS, TAGGABLE } from '../../lib/taskTags';
+import { setSelfHome } from '../../lib/adapters/self';
 import { byLevel, useFeaturedLevels } from '../../lib/featuredLevels';
 import { LevelDot } from './LevelDot';
 import { CriticalFlag } from './CriticalFlag';
@@ -122,6 +124,12 @@ export function FeaturedList({
                     on: pinned,
                     onClick: () => (pinned ? removePin(sourceId, item.id) : addPin(sourceId, item.id)),
                   }}
+                  tag={
+                    TAGGABLE.includes(sourceId)
+                      ? { value: item.tag || '', suggestions: TAG_SUGGESTIONS[sourceId] || [], onChange: t => setTaskTag(sourceId, item.id, t) }
+                      : undefined
+                  }
+                  backToSelf={item.id.startsWith('self:') ? () => setSelfHome(item.id.slice(5), undefined) : undefined}
                   onClose={() => setMenuFor(null)}
                 />
               ) : null}

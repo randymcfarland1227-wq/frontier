@@ -18,6 +18,8 @@ export type SelfItem = {
   due?: string;
   /** Prep task for a calendar event / maybe-plan (e.g. "Change oil" before the game) */
   forEvent?: { id: string; title: string; date: string };
+  /** Moved to another site's card (e.g. a finance task captured in Self). Unset = lives in Self. */
+  home?: string;
 };
 
 export function loadSelfItems(): SelfItem[] {
@@ -28,7 +30,9 @@ export function saveSelfItems(items: SelfItem[]) {
   writeSaved(STORAGE_KEYS.self, items);
 }
 
-export function selfSnapshotFrom(items: SelfItem[]): SourceSnapshot {
+export function selfSnapshotFrom(allItems: SelfItem[]): SourceSnapshot {
+  // Tasks moved to another site show in that site's card instead (see life-hub visibleSnapshots).
+  const items = allItems.filter(i => !i.home);
   const open = items.filter(i => !i.done);
   const starred = open.filter(i => i.starred);
   const done = items.filter(i => i.done);
@@ -109,6 +113,17 @@ export function setSelfDue(id: string, due?: string): SelfItem[] {
   const at = new Date().toISOString();
   const updated = loadSelfItems().map(i => (i.id === id ? { ...i, due: due || undefined, updatedAt: at } : i));
   saveSelfItems(updated);
+  return updated;
+}
+
+export const SELF_ITEMS_EVENT = 'lifehub:self-items';
+
+/** Move a Self task to another site's card (or back to Self with `home` unset). */
+export function setSelfHome(id: string, home?: string): SelfItem[] {
+  const at = new Date().toISOString();
+  const updated = loadSelfItems().map(i => (i.id === id ? { ...i, home: home || undefined, updatedAt: at } : i));
+  saveSelfItems(updated);
+  if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent(SELF_ITEMS_EVENT));
   return updated;
 }
 

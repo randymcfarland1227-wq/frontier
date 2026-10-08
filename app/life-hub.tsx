@@ -21,8 +21,11 @@ import {
   setSelfDue,
   toggleSelfComplete,
   toggleSelfStar,
+  setSelfHome,
+  SELF_ITEMS_EVENT,
   type SelfItem,
 } from '../lib/adapters/self';
+import { tagOf, useTaskTags } from '../lib/taskTags';
 import {
   CONNECTOR_SOURCE_IDS,
   fetchConnectorSnapshots,
@@ -55,7 +58,7 @@ import { CapturesPanel } from './components/CapturesPanel';
 import { REFRESH_EVENT, syncGoogleNow } from '../lib/syncNow';
 import { WhyPanel } from './components/WhyPanel';
 import { AreaPicker } from './components/AreaPicker';
-import { loadPriorityPins, pinKey, savePriorityPins } from '../lib/priorityPins';
+import { DECK, loadLanes, unpin } from '../lib/priorityPins';
 import { checkInTickTickHabit, getHabitSchedule, pullTickTickDone } from '../lib/ticktickDone';
 import {
   bucketSuggestions,
@@ -233,6 +236,27 @@ export function LifeHub() {
   const syncSelf = useCallback((items: SelfItem[]) => {
     setSelfItems(items);
     setSnapshots(current => ({ ...current, self: selfSnapshotFrom(items) }));
+  }, []);
+
+  useEffect(() => {
+    const reload = () => syncSelf(loadSelfItems());
+    window.addEventListener(SELF_ITEMS_EVENT, reload);
+    return () => window.removeEventListener(SELF_ITEMS_EVENT, reload);
+  }, [syncSelf]);
+
+  // One-time: Self stars used to pin straight to Priority. Starring now only stars; take the
+  // auto-pinned ones (still On deck, with no day, plan note or steps) back off Priority.
+  useEffect(() => {
+    try {
+      if (localStorage.getItem('lifehub-selfpins-cleared')) return;
+      const lanes = loadLanes();
+      for (const [key, e] of Object.entries(lanes)) {
+        if (key.startsWith('self:') && e?.lane === DECK && !e.due && !e.note && !(e.before || []).length) unpin(key);
+      }
+      localStorage.setItem('lifehub-selfpins-cleared', '1');
+    } catch {
+      /* storage unavailable */
+    }
   }, []);
 
   const loadConnectors = useCallback(async () => {
@@ -446,7 +470,7 @@ export function LifeHub() {
   }, []);
 
   // Same for what's listed: reminders / reference notes never show, wherever they came from.
-  const visibleSnapshots = useMemo(() => {
+  const baseSnapshots = useMemo(() => {
     const out = { ...snapshots };
     for (const id of HUB_STAR_SOURCES) {
       if (out[id]) out[id] = applyHubStars(id, out[id], hubStars);
@@ -478,6 +502,43 @@ export function LifeHub() {
     }
     return out;
   }, [snapshots, focusConfig, hubStars]);
+
+  // Self tasks moved to another site show in that site's card (id "self:<id>"), and task type
+  // labels set on Life Hub ("Items to buy") show as each task's tag.
+  const taskTags = useTaskTags();
+  const visibleSnapshots = useMemo(() => {
+    const out = { ...baseSnapshots };
+    for (const item of selfItems) {
+      const home = item.home as SourceId | undefined;
+      if (!home || home === 'self' || !out[home]) continue;
+      const snap = out[home];
+      const id = `self:${item.id}`;
+      const task: TaskItem = {
+        id,
+        title: item.title,
+        detail: [item.detail, 'Moved from Self'].filter(Boolean).join(' · '),
+        status: item.done ? 'done' : 'open',
+        starred: item.starred,
+      };
+      const featured = item.starred && !item.done
+        ? [...snap.featured, { id, title: item.title, detail: item.detail || '', meta: 'From Self', completable: true }]
+        : snap.featured;
+      const metrics = !item.done && Number.isFinite(snap.metrics?.open) ? { ...snap.metrics, open: Number(snap.metrics.open) + 1 } : snap.metrics;
+      out[home] = { ...snap, tasks: [...snap.tasks, task], featured, metrics };
+    }
+    for (const id of Object.keys(out) as SourceId[]) {
+      const snap = out[id];
+      if (!snap) continue;
+      const withTag = <T extends { id: string; tag?: string }>(x: T): T => {
+        const t = tagOf(taskTags, id, x.id);
+        return t === undefined ? x : { ...x, tag: t || undefined };
+      };
+      if (Object.keys(taskTags).some(k => k.startsWith(`${id}::`))) {
+        out[id] = { ...snap, tasks: snap.tasks.map(withTag), featured: snap.featured.map(withTag) };
+      }
+    }
+    return out;
+  }, [baseSnapshots, selfItems, taskTags]);
 
   // Today's workload per bucket (open items + done today + habits due today), remembered per day.
   const todayAvail = useMemo(
@@ -682,7 +743,9 @@ export function LifeHub() {
     sendStar(sourceWindows.current[source], source, id, starred, origin);
   };
 
-  const completeOnHub = (source: SourceId, id: string, chosenArea?: string) => {
+  const completeOnHub = (source: SourceId, id: string, chosenArea?: string): void => {
+    // A Self task shown on another site's card is still a Self task.
+    if (source !== 'self' && id.startsWith('self:')) return completeOnHub('self', id.slice(5), chosenArea);
     const snapNow = snapshotsRef.current[source];
     const taskNow = snapNow?.tasks?.find(t => t.id === id);
     const featuredNow = snapNow?.featured?.find(f => f.id === id);
@@ -769,6 +832,10 @@ export function LifeHub() {
   };
 
   const starOnHub = (source: SourceId, task: TaskItem) => {
+    if (source !== 'self' && task.id.startsWith('self:')) {
+      syncSelf(toggleSelfStar(task.id.slice(5)));
+      return;
+    }
     if (source === 'self') {
       syncSelf(toggleSelfStar(task.id));
       return;
@@ -918,14 +985,9 @@ goalsData ? (
               }}
               onTaskDone={id => completeOnHub('self', id)}
               onTaskUndo={id => syncSelf(toggleSelfComplete(id))}
-              onTaskStar={id => {
-                // Starring a Self task pins it to Priority (and unstarring unpins it).
-                const items = toggleSelfStar(id);
-                const key = pinKey('self', id);
-                const pins = loadPriorityPins().filter(k => k !== key);
-                savePriorityPins(items.find(i => i.id === id)?.starred ? [key, ...pins] : pins);
-                syncSelf(items);
-              }}
+              // Star = the Self card's Starred list; Pin (there) is what sends it to Priority.
+              onTaskStar={id => syncSelf(toggleSelfStar(id))}
+              onTaskMove={(id, home) => syncSelf(setSelfHome(id, home))}
               onStatus={(id, status) => setCaptures(setCaptureStatus(id, status))}
               onPromote={promoteCapture}
             />

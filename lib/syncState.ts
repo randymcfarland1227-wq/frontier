@@ -39,6 +39,8 @@ export type SyncedState = {
   payPlans: PayPlan[];
   /** Schedule "Events" list: event id → shown ('event') or hidden ('hide'); newest change wins */
   eventMarks: Record<string, { mark: string | null; at: string }>;
+  /** Task type labels: "source::id" → label ("Items to buy"); newest change wins */
+  tags: Record<string, { tag: string | null; at: string }>;
 };
 
 /**
@@ -100,6 +102,7 @@ export function emptyState(): SyncedState {
     plans: [],
     payPlans: [],
     eventMarks: {},
+    tags: {},
   };
 }
 
@@ -133,6 +136,7 @@ export function normalizeState(raw: unknown): SyncedState {
     plans: Array.isArray(s.plans) ? s.plans.filter(p => p && typeof p.id === 'string') : [],
     payPlans: Array.isArray(s.payPlans) ? s.payPlans.filter(p => p && typeof p.id === 'string') : [],
     eventMarks: s.eventMarks && typeof s.eventMarks === 'object' ? s.eventMarks : {},
+    tags: s.tags && typeof s.tags === 'object' ? s.tags : {},
   };
 }
 
@@ -214,6 +218,7 @@ export function mergeState(aRaw: unknown, bRaw: unknown): SyncedState {
     plans: mergeById(a.plans, b.plans),
     payPlans: mergeById(a.payPlans, b.payPlans),
     eventMarks: mergeLevels(a.eventMarks, b.eventMarks),
+    tags: mergeLevels(a.tags, b.tags),
   };
 }
 

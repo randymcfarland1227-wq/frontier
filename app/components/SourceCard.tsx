@@ -113,8 +113,8 @@ export function SourceCard({
       </header>
       {collapsed ? null : (
         <div className="card-body">
-          {extra}
-          {/* The Self card's body is the Self tool itself (it has its own task list) */}
+          {/* The Self card's body is the Self tool itself; other cards' extras (Radall's money due) go below the tasks */}
+          {source.id === 'self' ? extra : null}
           {extra && source.id === 'self' ? null : (
           <>
           {snapshot.featured.length ? (
@@ -133,6 +133,7 @@ export function SourceCard({
           />
           </>
           )}
+          {source.id === 'self' ? null : extra}
         </div>
       )}
     </article>

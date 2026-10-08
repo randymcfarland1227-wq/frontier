@@ -9,6 +9,18 @@ import {
 } from '../../lib/captures';
 import type { FocusArea } from '../../lib/focusAreas';
 import type { SelfItem } from '../../lib/adapters/self';
+import { usePriorityPins } from '../../lib/priorityPins';
+
+/** Where a Self task can be moved (it then shows in that site's card). */
+const MOVE_TO: Array<[string, string]> = [
+  ['radall', 'Finances'],
+  ['repair', 'Repair Log'],
+  ['role', 'Role Hub'],
+  ['move', 'Move OS'],
+  ['income', 'Venture Lab'],
+  ['resale', 'Resale Hub'],
+  ['candle', 'Peculiar Candle'],
+];
 
 type Tab = CaptureStatus | 'tasks';
 type Kind = 'task' | 'log' | CaptureKind;
@@ -117,6 +129,7 @@ export function CapturesPanel({
   onTaskUndo,
   onTaskStar,
   onTaskDue,
+  onTaskMove,
 }: {
   captures: Capture[];
   areas: FocusArea[];
@@ -132,7 +145,10 @@ export function CapturesPanel({
   onTaskStar: (id: string) => void;
   /** Set or clear a task's optional day */
   onTaskDue: (id: string, due?: string) => void;
+  /** Move a task to another site's card */
+  onTaskMove?: (id: string, home: string) => void;
 }) {
+  const { isPinned, addPin, removePin } = usePriorityPins();
   const [kind, setKind] = useState<Kind>('task');
   const [title, setTitle] = useState('');
   const [url, setUrl] = useState('');
@@ -166,13 +182,36 @@ export function CapturesPanel({
   }, [expanded, title, url, notes]);
 
   const areaName = (id?: string) => areas.find(a => a.id === id)?.name;
+  /** "Move" — send this task to another site's card (Finances, Repair Log…). */
+  const moveControl = (t: SelfItem) =>
+    onTaskMove ? (
+      <select
+        className="capture-move"
+        value=""
+        onChange={e => e.target.value && onTaskMove(t.id, e.target.value)}
+        aria-label={`Move ${t.title} to another site`}
+        title="Move to another site"
+      >
+        <option value="">Move</option>
+        {MOVE_TO.map(([id, name]) => (
+          <option key={id} value={id}>
+            → {name}
+          </option>
+        ))}
+      </select>
+    ) : null;
   // Dated tasks first (soonest first), then the rest in the order they were added.
-  const openTasks = selfItems
+  // Tasks moved to another site live in that site's card now.
+  const mine = selfItems.filter(i => !i.home);
+  const allOpen = mine
     .filter(i => !i.done)
     .map((t, i) => ({ t, i }))
     .sort((a, b) => (a.t.due && b.t.due ? a.t.due.localeCompare(b.t.due) : a.t.due ? -1 : b.t.due ? 1 : a.i - b.i))
     .map(x => x.t);
-  const doneTasks = selfItems.filter(i => i.done).slice(0, 15);
+  // Starred ones sit in their own list above the tabs; Pin there is what sends one to Priority.
+  const starredTasks = allOpen.filter(t => t.starred);
+  const openTasks = allOpen.filter(t => !t.starred);
+  const doneTasks = mine.filter(i => i.done).slice(0, 15);
   const counts: Record<Tab, number> = Object.fromEntries(
     TABS.map(t => [t.id, t.id === 'tasks' ? openTasks.length : captures.filter(c => c.status === t.id).length]),
   ) as Record<Tab, number>;
@@ -291,6 +330,45 @@ export function CapturesPanel({
         {kind === 'log' && logged ? <p className="capture-logged" role="status">✓ {logged}</p> : null}
       </form>
 
+      {starredTasks.length ? (
+        <div className="self-starred" aria-label="Starred Self tasks">
+          <p className="self-starred-head">
+            <span aria-hidden="true">★</span> Starred <span className="seg-count">{starredTasks.length}</span>
+          </p>
+          {starredTasks.map(t => {
+            const pinned = isPinned('self', t.id);
+            return (
+              <article className="capture-row is-task is-starred" key={t.id}>
+                <div className="capture-main">
+                  <div className="capture-meta">
+                    <DueChip due={t.due} onChange={due => onTaskDue(t.id, due)} />
+                  </div>
+                  <h3 title={[t.title, t.detail].filter(Boolean).join(' — ')}>{t.title}</h3>
+                </div>
+                <div className="capture-actions">
+                  {moveControl(t)}
+                  <button type="button" className="row-action ghost" onClick={() => onTaskStar(t.id)} aria-label={`Unstar ${t.title}`} title="Unstar">
+                    ★
+                  </button>
+                  <button
+                    type="button"
+                    className={`row-action ghost${pinned ? ' active' : ''}`}
+                    aria-pressed={pinned}
+                    onClick={() => (pinned ? removePin('self', t.id) : addPin('self', t.id))}
+                    title={pinned ? 'In Priority — click to take it off' : 'Pin to Priority'}
+                  >
+                    {pinned ? 'Pinned' : 'Pin'}
+                  </button>
+                  <button type="button" className="row-action" onClick={() => onTaskDone(t.id)}>
+                    Done
+                  </button>
+                </div>
+              </article>
+            );
+          })}
+        </div>
+      ) : null}
+
       <div className="seg capture-tabs" role="tablist" aria-label="Capture status">
         {/* Empty tabs step aside (the open one always shows), so the row stays one line. */}
         {TABS.filter(t => t.id === tab || t.id === 'inbox' || t.id === 'tasks' || counts[t.id] > 0).map(t => (
@@ -326,11 +404,12 @@ export function CapturesPanel({
                 {t.detail ? <p>{t.detail}</p> : null}
               </div>
               <div className="capture-actions">
+                {t.done ? null : moveControl(t)}
                 <button
                   type="button"
                   className="row-action ghost"
-                  aria-label={t.starred ? 'Unstar' : 'Star to show in Priority'}
-                  title={t.starred ? 'Starred — shows in Priority' : 'Star to show in Priority'}
+                  aria-label={t.starred ? 'Unstar' : 'Star'}
+                  title={t.starred ? 'Starred' : 'Star — shows in Starred above (Pin it there for Priority)'}
                   onClick={() => onTaskStar(t.id)}
                 >
                   {t.starred ? '★' : '☆'}
