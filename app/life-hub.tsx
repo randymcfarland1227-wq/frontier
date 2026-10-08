@@ -93,6 +93,7 @@ import {
 } from '../lib/goals';
 import { ruleFor, saveTaskRule, sourceRuleKey, taskRuleKey, useTaskRules } from '../lib/taskRules';
 import { FlowSyncReview } from './components/FlowSyncReview';
+import { WhyView } from './components/WhyView';
 import { TaskSorting } from './components/TaskSorting';
 import { SiteIconSettings } from './components/SiteIconSettings';
 import { NeedsSorting } from './components/NeedsSorting';
@@ -1010,7 +1011,7 @@ goalsData ? (
           syncing={connectorSyncing}
         />
       ) : active === 'why' ? (
-        <div className="settings-view why-view">{whyPanel || <p className="review-empty">Loading goals…</p>}</div>
+        <WhyView goalsPanel={whyPanel} />
       ) : active === 'settings' ? (
         <div className="settings-view">
           <SiteIconSettings />

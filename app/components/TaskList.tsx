@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import { tagTone } from '../../lib/tagTone';
+import { isMusicTask, MUSIC_HUB_URL } from '../../lib/sources';
 import type { SourceId, SourceSnapshot, TaskItem } from '../../lib/types';
 import { pinKey, usePriorityPins } from '../../lib/priorityPins';
 import { DayMenu, shortDue } from './DayMenu';
@@ -117,6 +118,11 @@ export function TaskList({
                     ) : (
                       <strong>{task.title}</strong>
                     )}
+                    {isMusicTask(task.title) ? (
+                      <a className="row-music" href={MUSIC_HUB_URL} target="_blank" rel="noopener noreferrer" title="Open Music Hub" aria-label="Open Music Hub">
+                        ♪
+                      </a>
+                    ) : null}
                     {due ? <span className="row-day">{shortDue(due)}</span> : null}
                     <span className={`task-when${whenLabel(task) === 'overdue' ? ' is-overdue' : ''}`}>{whenLabel(task)}</span>
                   </div>
