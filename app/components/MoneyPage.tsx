@@ -15,7 +15,9 @@ import {
   type MoneyModel,
   type Table,
 } from '../../lib/money';
-import { dayName, fromDayKey, money, startOfDay, startOfWeek, type BillDue } from '../../lib/schedule';
+import { dayKey, dayName, fromDayKey, money, startOfDay, startOfWeek, type BillDue } from '../../lib/schedule';
+import { usePayPlans } from '../../lib/payPlans';
+import { readSaved, writeSaved } from '../../lib/storage';
 
 type Save = (edits: CellEdit[]) => Promise<{ ok: boolean; results: EditResult[]; error?: string }>;
 
@@ -246,246 +248,246 @@ function SheetTable({ table, onSave, opts = {} }: { table: Table; onSave: Save; 
   );
 }
 
-function Panel({
+// ---------------------------------------------------------------------------
+// Layout pieces, three levels: Section (a card with a colored header) → Fold (a row that opens)
+// → the table or list inside it. Every Section belongs to one money "tone" (cash, due, owed,
+// plan, shop, save), and the color means the same thing everywhere on the page.
+// ---------------------------------------------------------------------------
+
+type Tone = 'cash' | 'due' | 'owed' | 'plan' | 'shop' | 'save';
+
+function Section({
+  tone,
   title,
-  sub,
+  figure,
+  figureLabel,
+  hint,
   href,
   className = '',
   children,
 }: {
+  tone: Tone;
   title: string;
-  sub?: ReactNode;
+  /** The one number this section is about */
+  figure?: ReactNode;
+  figureLabel?: string;
+  hint?: string;
   href?: string;
   className?: string;
   children: ReactNode;
 }) {
   return (
-    <section className={`mpanel glass-panel ${className}`}>
-      <header className="mpanel-head">
-        <h2>{title}</h2>
-        {sub ? <span className="mpanel-sub">{sub}</span> : null}
+    <section className={`mny-sec tone-${tone} ${className}`}>
+      <header className="mny-sec-head">
+        <div className="mny-sec-titles">
+          <h2>{title}</h2>
+          {hint ? <p>{hint}</p> : null}
+        </div>
+        {figure !== undefined ? (
+          <div className="mny-sec-figure">
+            <b>{figure}</b>
+            {figureLabel ? <span>{figureLabel}</span> : null}
+          </div>
+        ) : null}
         {href ? (
-          <a className="mpanel-link" href={href} target="_blank" rel="noopener noreferrer">
+          <a className="mny-sec-link" href={href} target="_blank" rel="noopener noreferrer" title="Open this part of the sheet">
             Sheet ↗
           </a>
         ) : null}
       </header>
-      {children}
+      <div className="mny-sec-body">{children}</div>
     </section>
   );
 }
 
-function Sub({ title, children, open = true, wide = false }: { title: ReactNode; children: ReactNode; open?: boolean; wide?: boolean }) {
+function Fold({
+  title,
+  meta,
+  total,
+  open = false,
+  children,
+}: {
+  title: string;
+  meta?: ReactNode;
+  total?: ReactNode;
+  open?: boolean;
+  children: ReactNode;
+}) {
   return (
-    <details className={`msub${wide ? ' is-wide' : ''}`} open={open}>
-      <summary>{title}</summary>
-      {children}
+    <details className="mny-fold" open={open}>
+      <summary>
+        <span className="mny-fold-chev" aria-hidden="true" />
+        <span className="mny-fold-title">{title}</span>
+        {meta ? <span className="mny-fold-meta">{meta}</span> : null}
+        {total ? <span className="mny-fold-total">{total}</span> : null}
+      </summary>
+      <div className="mny-fold-body">{children}</div>
     </details>
   );
 }
 
 // ---------------------------------------------------------------------------
-// Coming up: every dated money item, by week, with Paid
+// Due list: dated money items grouped by day (this week) or by week (the next five)
 // ---------------------------------------------------------------------------
 
-function ComingUp({ dues, onPaid }: { dues: BillDue[]; onPaid: (d: BillDue) => void }) {
+function DueList({ dues, onPaid, by, days }: { dues: BillDue[]; onPaid: (d: BillDue) => void; by: 'day' | 'week'; days: number }) {
   const today = startOfDay(new Date());
-  const upcoming = dues.filter(d => d.days >= 0 && d.days <= 35);
-  const earlier = dues.filter(d => d.days < 0 && fromDayKey(d.due).getMonth() === today.getMonth());
-  const weeks = new Map<string, BillDue[]>();
+  const upcoming = dues.filter(d => d.days >= 0 && d.days <= days);
+  const groups = new Map<string, BillDue[]>();
   for (const d of upcoming) {
-    const wk = startOfWeek(fromDayKey(d.due)).toISOString();
-    weeks.set(wk, [...(weeks.get(wk) || []), d]);
+    const k = by === 'day' ? d.due : dayKey(startOfWeek(fromDayKey(d.due)));
+    groups.set(k, [...(groups.get(k) || []), d]);
   }
-  const row = (d: BillDue) => {
-    const k = d.bill.kind;
-    const color = k ? MONEY_KINDS[k].color : '#a8632a';
-    const [, provider, installment] = (d.bill.notes || '').split(' · ');
-    return (
-      <li key={d.key} className={`mdue${d.days < 0 ? ' is-past' : d.days <= 2 ? ' is-near' : ''}`} style={{ '--ev': color } as React.CSSProperties}>
-        <span className="mdue-day">{d.days < 0 ? fromDayKey(d.due).toLocaleDateString([], { month: 'short', day: 'numeric' }) : dayName(fromDayKey(d.due))}</span>
-        <span className="mdue-tag">{k === 'paylater' ? provider || 'Pay later' : k ? MONEY_KINDS[k].label : 'Bill'}</span>
-        <span className="mdue-name">
-          {d.bill.name}
-          {installment ? <small> {installment}</small> : null}
-        </span>
-        <span className="mdue-amt">{money(d.bill.amount) || '?'}</span>
-        <button type="button" className="row-action ghost mdue-paid" onClick={() => onPaid(d)} aria-label={`Mark ${d.bill.name} paid`} title="Mark paid on Life Hub">
-          Paid
-        </button>
-      </li>
-    );
+  const label = (k: string) => {
+    if (by === 'day') return dayName(fromDayKey(k));
+    const weeksOut = Math.round((fromDayKey(k).getTime() - startOfWeek(today).getTime()) / (7 * 86_400_000));
+    return weeksOut === 0 ? 'This week' : weeksOut === 1 ? 'Next week' : `Week of ${fromDayKey(k).toLocaleDateString([], { month: 'short', day: 'numeric' })}`;
   };
+  if (!upcoming.length) return <p className="mny-empty">Nothing due{by === 'day' ? ' in the next 7 days' : ''}. Nice.</p>;
   return (
-    <>
-      {[...weeks.entries()].map(([wk, list]) => {
-        const start = new Date(wk);
-        const total = list.reduce((s, d) => s + (d.bill.amount || 0), 0);
-        const weeksOut = Math.round((start.getTime() - startOfWeek(today).getTime()) / (7 * 86_400_000));
-        const label = weeksOut === 0 ? 'This week' : weeksOut === 1 ? 'Next week' : `Week of ${start.toLocaleDateString([], { month: 'short', day: 'numeric' })}`;
-        return (
-          <div key={wk} className="mweek">
+    <div className="mny-due">
+      {[...groups.entries()].map(([k, list], gi) => {
+        const total = money(list.reduce((s, d) => s + (d.bill.amount || 0), 0));
+        const items = (
+          <ul>
+            {list.map(d => {
+              const kind = d.bill.kind;
+              const [, provider, installment] = (d.bill.notes || '').split(' · ');
+              return (
+                <li key={d.key} style={{ '--ev': kind ? MONEY_KINDS[kind].color : '#a8632a' } as React.CSSProperties}>
+                  {by === 'week' ? <span className="mny-due-day">{fromDayKey(d.due).toLocaleDateString([], { weekday: 'short', day: 'numeric' })}</span> : null}
+                  <span className="mny-due-kind">{kind === 'paylater' ? provider || 'Pay later' : kind ? MONEY_KINDS[kind].label : 'Bill'}</span>
+                  <span className="mny-due-name">
+                    {d.bill.name}
+                    {installment ? <small> · {installment}</small> : null}
+                  </span>
+                  <span className="mny-due-amt">{money(d.bill.amount) || '?'}</span>
+                  <button type="button" className="mny-btn" onClick={() => onPaid(d)} aria-label={`Mark ${d.bill.name} paid`} title="Mark paid on Life Hub">
+                    Paid
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+        );
+        // By week: each week is a fold (this week open); by day: plain groups.
+        return by === 'week' ? (
+          <Fold key={k} title={label(k)} meta={`${list.length} payments`} total={total} open={gi === 0}>
+            {items}
+          </Fold>
+        ) : (
+          <div key={k} className="mny-due-group">
             <h3>
-              {label} <span>{money(total)}</span>
+              <span>{label(k)}</span>
+              <b>{total}</b>
             </h3>
-            <ul className="mdue-list">{list.map(row)}</ul>
+            {items}
           </div>
         );
       })}
-      {!upcoming.length ? <p className="sched-empty">Nothing dated in the next 5 weeks.</p> : null}
-      {earlier.length ? (
-        <Sub title={`Earlier this month · ${earlier.length}`} open={false}>
-          <ul className="mdue-list">{earlier.map(row)}</ul>
-        </Sub>
-      ) : null}
-    </>
+    </div>
   );
 }
 
 // ---------------------------------------------------------------------------
-// Top row: Cash | Cards | Outstanding — what you have and what you owe, at a glance
+// Accounts + cards
 // ---------------------------------------------------------------------------
 
-function CashCard({ model, onSave }: { model: MoneyModel; onSave: Save }) {
+function AccountsList({ model, onSave }: { model: MoneyModel; onSave: Save }) {
   const accts = model.accounts;
+  if (!accts) return null;
   return (
-    <section className="mtop glass-panel" aria-label="Cash">
-      <header className="mtop-head">
-        <h2>Cash</h2>
-      </header>
-      <div className="mtop-big">
-        <span>
-          <small>On hand</small>
-          <b>{model.cashOnHand?.text || '—'}</b>
-        </span>
-        <span>
-          <small>Balanced</small>
-          <b>{model.balancedCash?.text || '—'}</b>
-        </span>
-      </div>
-      {accts ? (
-        <ul className="mtop-list">
-          <li className="mtop-list-head">
-            <span>Account</span>
-            <span>Checking</span>
-            <span>Savings</span>
-          </li>
-          {accts.rows.map(r => (
-            <li key={r[0].r}>
-              <span className="mtop-name">{r[0].text}</span>
-              <EditCell cell={r[1]} onSave={onSave} className="is-num" placeholder="—" />
-              <EditCell cell={r[2]} onSave={onSave} className="is-num" placeholder="—" />
-            </li>
-          ))}
-          {accts.total ? (
-            <li className="mtop-total">
-              <span>Total</span>
-              <EditCell cell={accts.total[1]} onSave={onSave} className="is-num" placeholder="" />
-              <EditCell cell={accts.total[2]} onSave={onSave} className="is-num" placeholder="" />
-            </li>
-          ) : null}
-        </ul>
+    <ul className="mny-accts">
+      <li className="mny-accts-head">
+        <span>Account</span>
+        <span>Checking</span>
+        <span>Savings</span>
+      </li>
+      {accts.rows.map(r => (
+        <li key={r[0].r}>
+          <span className="mny-accts-name">{r[0].text}</span>
+          <EditCell cell={r[1]} onSave={onSave} className="is-num" placeholder="—" />
+          <EditCell cell={r[2]} onSave={onSave} className="is-num" placeholder="—" />
+        </li>
+      ))}
+      {accts.total ? (
+        <li className="mny-accts-total">
+          <span>All accounts</span>
+          <EditCell cell={accts.total[1]} onSave={onSave} className="is-num" placeholder="" />
+          <EditCell cell={accts.total[2]} onSave={onSave} className="is-num" placeholder="" />
+        </li>
       ) : null}
-    </section>
+    </ul>
   );
 }
 
-function CardsCard({ model, onSave }: { model: MoneyModel; onSave: Save }) {
+function CardsList({ model, onSave, detailed = false }: { model: MoneyModel; onSave: Save; detailed?: boolean }) {
   const cards = cardSummaries(model);
   const [open, setOpen] = useState<string | null>(null);
-  const total = model.cards?.total;
   return (
-    <section className="mtop glass-panel" aria-label="Credit cards">
-      <header className="mtop-head">
-        <h2>Credit cards</h2>
-        {total ? (
-          <span className="mpanel-sub">
-            {total[1]?.text} owed · {total[2]?.text} available
-          </span>
-        ) : null}
-      </header>
-      <ul className="mcards">
-        {cards.map(c => {
-          const isOpen = open === c.name;
-          const bal = amountOf(c.balance?.text || '') || 0;
-          const avail = amountOf(c.available?.text || '');
-          const limit = amountOf(c.limit?.text || '') ?? (avail !== undefined ? bal + avail : undefined);
-          const used = limit ? Math.min(100, Math.round((bal / limit) * 100)) : undefined;
-          return (
-            <li key={c.name} className={`mcard${isOpen ? ' is-open' : ''}`}>
-              <button type="button" className="mcard-row" onClick={() => setOpen(isOpen ? null : c.name)} aria-expanded={isOpen}>
-                <span className="mcard-name">{c.name}</span>
-                <span className="mcard-bal">{c.balance?.text || '—'}</span>
-                <span className="mcard-bar" aria-hidden="true">
-                  <i style={{ width: `${used ?? 0}%` }} className={used !== undefined && used > 30 ? 'is-high' : ''} />
-                </span>
-                <span className="mcard-min">{c.min?.text && c.min.text !== '$0.00' ? `${c.min.text} min${c.minDate?.text && c.minDate.text !== 'N/a' ? ` · ${c.minDate.text}` : ''}` : ''}</span>
-              </button>
-              {isOpen ? (
-                <div className="mcard-detail">
+    <ul className="mny-cards">
+      {cards.map(c => {
+        const isOpen = open === c.name;
+        const bal = amountOf(c.balance?.text || '') || 0;
+        const avail = amountOf(c.available?.text || '');
+        const limit = amountOf(c.limit?.text || '') ?? (avail !== undefined ? bal + avail : undefined);
+        const used = limit ? Math.min(100, Math.round((bal / limit) * 100)) : undefined;
+        const min = c.min?.text && c.min.text !== '$0.00' ? c.min.text : '';
+        return (
+          <li key={c.name} className={`mny-card${isOpen ? ' is-open' : ''}`}>
+            <button type="button" className="mny-card-row" onClick={() => setOpen(isOpen ? null : c.name)} aria-expanded={isOpen}>
+              <span className="mny-fold-chev" aria-hidden="true" />
+              <span className="mny-card-name">{c.name}</span>
+              <span className="mny-card-bar" aria-label={used !== undefined ? `${used}% used` : undefined}>
+                <i style={{ width: `${used ?? 0}%` }} className={used !== undefined && used > 30 ? 'is-high' : ''} />
+              </span>
+              <span className="mny-card-bal">{c.balance?.text || '—'}</span>
+              {detailed || min ? <span className="mny-card-min">{min ? `${min} min${c.minDate?.text && c.minDate.text !== 'N/a' ? ` · ${c.minDate.text}` : ''}` : ''}</span> : null}
+            </button>
+            {isOpen ? (
+              <div className="mny-card-detail">
+                <label>
+                  <span>Balance</span>
+                  <EditCell cell={c.balance} onSave={onSave} />
+                </label>
+                <label>
+                  <span>Available</span>
+                  <EditCell cell={c.available} onSave={onSave} />
+                </label>
+                {c.min ? (
                   <label>
-                    <span>Balance</span>
-                    <EditCell cell={c.balance} onSave={onSave} />
+                    <span>Minimum</span>
+                    <EditCell cell={c.min} onSave={onSave} />
                   </label>
+                ) : null}
+                {c.minDate ? (
                   <label>
-                    <span>Available</span>
-                    <EditCell cell={c.available} onSave={onSave} />
+                    <span>Min due</span>
+                    <EditCell cell={c.minDate} onSave={onSave} />
                   </label>
-                  {c.min ? (
-                    <label>
-                      <span>Minimum</span>
-                      <EditCell cell={c.min} onSave={onSave} />
-                    </label>
-                  ) : null}
-                  {c.minDate ? (
-                    <label>
-                      <span>Min due</span>
-                      <EditCell cell={c.minDate} onSave={onSave} />
-                    </label>
-                  ) : null}
-                  {c.matrix
-                    ? c.matrix.header.map((h, i) =>
-                        i > 0 && h && c.matrix!.row[i]?.text !== undefined && !/^bal$/i.test(h) ? (
-                          <label key={h}>
-                            <span>{h === 'Avi Cred' ? 'Balance (matrix)' : h}</span>
-                            <EditCell cell={c.matrix!.row[i]} onSave={onSave} />
-                          </label>
-                        ) : null,
-                      )
-                    : null}
-                  {used !== undefined ? <p className="mcard-used">{used}% used{limit ? ` of ${money(limit)}` : ''}</p> : null}
-                </div>
-              ) : null}
-            </li>
-          );
-        })}
-      </ul>
-    </section>
-  );
-}
-
-function OutstandingCard({ model, onSave }: { model: MoneyModel; onSave: Save }) {
-  const t = model.outstanding;
-  const total = (t?.rows || []).reduce((s, r) => s + (amountOf(r[1]?.text || '') || 0), 0);
-  return (
-    <section className="mtop glass-panel" aria-label="Outstanding">
-      <header className="mtop-head">
-        <h2>Outstanding</h2>
-        <span className="mpanel-sub">{money(total)} known</span>
-      </header>
-      {t ? (
-        <ul className="mtop-list is-two">
-          {t.rows.map(r => (
-            <li key={r[0].r}>
-              <EditCell cell={r[0]} onSave={onSave} className="mtop-name" />
-              <EditCell cell={r[1]} onSave={onSave} className="is-num" placeholder="?" />
-            </li>
-          ))}
-        </ul>
-      ) : (
-        <p className="sched-empty">No Outstanding block found on the Randy tab.</p>
-      )}
-    </section>
+                ) : null}
+                {c.matrix
+                  ? c.matrix.header.map((h, i) =>
+                      i > 1 && h && !/^bal$/i.test(h) ? (
+                        <label key={h}>
+                          <span>{h}</span>
+                          <EditCell cell={c.matrix!.row[i]} onSave={onSave} />
+                        </label>
+                      ) : null,
+                    )
+                  : null}
+                {used !== undefined ? (
+                  <p className="mny-card-used">
+                    {used}% used{limit ? ` of ${money(limit)}` : ''}
+                    {used > 30 ? ' · above 30% hurts your score' : ''}
+                  </p>
+                ) : null}
+              </div>
+            ) : null}
+          </li>
+        );
+      })}
+    </ul>
   );
 }
 
@@ -494,6 +496,8 @@ function OutstandingCard({ model, onSave }: { model: MoneyModel; onSave: Save })
 // ---------------------------------------------------------------------------
 
 const NEEDED_OPTIONS = ['Yes', 'Y Low', 'No', 'Ordered'];
+type TabId = 'week' | 'due' | 'plan' | 'accounts' | 'owed' | 'shop' | 'save';
+const TAB_KEY = 'lifehub-money-tab';
 
 export function MoneyPage({
   model,
@@ -512,11 +516,17 @@ export function MoneyPage({
 }) {
   const [note, setNote] = useState<{ text: string; tone: 'ok' | 'bad' } | null>(null);
   const [provider, setProvider] = useState('All');
+  const [tab, setTabState] = useState<TabId>(() => readSaved<TabId>(TAB_KEY, 'week'));
+  const setTab = (t: TabId) => {
+    setTabState(t);
+    writeSaved(TAB_KEY, t);
+  };
   useEffect(() => {
     if (!note) return;
     const t = window.setTimeout(() => setNote(null), 6000);
     return () => window.clearTimeout(t);
   }, [note]);
+  const payPlans = usePayPlans();
 
   const save: Save = async edits => {
     setNote({ text: 'Saving to the sheet…', tone: 'ok' });
@@ -528,32 +538,64 @@ export function MoneyPage({
   };
 
   const sheetDues = useMemo(() => dues.filter(d => d.bill.kind !== 'plan'), [dues]);
-  const next7 = dues.filter(d => d.days >= 0 && d.days <= 7);
-  const monthEnd = useMemo(() => {
-    const t = new Date();
-    return new Date(t.getFullYear(), t.getMonth() + 1, 0);
-  }, []);
-  const restOfMonth = dues.filter(d => d.days >= 0 && fromDayKey(d.due) <= monthEnd);
+  const today = startOfDay(new Date());
+  const monthEnd = new Date(today.getFullYear(), today.getMonth() + 1, 0);
   const sum = (list: BillDue[]) => list.reduce((s, d) => s + (d.bill.amount || 0), 0);
+  const next7 = dues.filter(d => d.days >= 0 && d.days <= 7);
+  const restOfMonth = dues.filter(d => d.days >= 0 && fromDayKey(d.due) <= monthEnd);
 
   if (!model) {
     return (
       <div className="settings-view money-view">
-        <section className="mpanel glass-panel">
-          <h2>Money</h2>
-          <p className="sched-empty">
-            Waiting for the Radall sheet. It arrives with Google’s next sync (every 10 minutes) — or press Refresh at the top.
-          </p>
+        <section className="mny-sec tone-cash">
+          <header className="mny-sec-head">
+            <div className="mny-sec-titles">
+              <h2>Money</h2>
+              <p>Waiting for the Radall sheet. It arrives with Google’s next sync (every 10 minutes) — or press Refresh at the top.</p>
+            </div>
+          </header>
         </section>
       </div>
     );
   }
 
-  const link = (tab: string) => sheetLink(model, tab);
-  const fico = model.scores.find(s => /fico/i.test(s.label))?.value;
+  const link = (t: string) => sheetLink(model, t);
+  const cash = amountOf(model.cashOnHand?.text || '');
+  const dueWeek = sum(next7);
+  const afterWeek = cash !== undefined ? cash - dueWeek : undefined;
+  const cardsOwed = amountOf(model.cards?.total?.[1]?.text || '');
+  const cardsAvail = amountOf(model.cards?.total?.[2]?.text || '');
+  const cardsUsed = cardsOwed !== undefined && cardsAvail !== undefined && cardsOwed + cardsAvail > 0 ? Math.round((cardsOwed / (cardsOwed + cardsAvail)) * 100) : undefined;
   const pay = model.paylaterSums;
+  const fico = model.scores.find(s => /fico/i.test(s.label))?.value;
+  const lastNum = (row?: Cell[]) => (row ? amountOf([...row].reverse().find(c => amountOf(c.text) !== undefined)?.text || '') || 0 : 0);
+  const outstandingSum = (model.outstanding?.rows || []).reduce((s, r) => s + (amountOf(r[1]?.text || '') || 0), 0);
+  const nonCreditSum = model.nonCredit.reduce((s, t) => s + lastNum(t.total), 0);
+  const collectionsSum = (model.collections?.rows || []).reduce((s, r) => s + (amountOf(r[1]?.text || '') || 0), 0);
+  const owedSum = outstandingSum + nonCreditSum + collectionsSum;
+
+  const neededNow = model.recurring ? model.recurring.rows.filter(r => /^(yes|y\s*low)$/i.test(r[0].text)) : [];
+  const struckOf = (t: Table | null, bought: boolean) => (t ? { ...t, rows: t.rows.filter(r => r.some(c => c.struck) === bought) } : null);
+  const openNeeded = struckOf(model.restockNeeded, false);
+  const openWants = struckOf(model.wants, false);
+  const boughtRows = [...(struckOf(model.restockNeeded, true)?.rows || []), ...(struckOf(model.wants, true)?.rows || [])];
+  const bought = model.wants && boughtRows.length ? { ...model.wants, key: 'bought', groups: undefined, rows: boughtRows } : null;
+  const lastRow = (t: Table | null) => (t && t.rows.length ? t.rows[t.rows.length - 1][0].r : undefined);
+  const moveTo = (row: Cell[], target: Table | null, label: string) => {
+    const after = lastRow(target);
+    if (after === undefined) return null;
+    return (
+      <button
+        type="button"
+        className="mny-btn"
+        title={`Move it to ${label} in the sheet`}
+        onClick={() => void save([{ tab: row[0].tab, r: row[0].r, c: row[0].c, c1: row[0].c, c2: row[row.length - 1].c, expect: row[0].text, moveAfter: after }])}
+      >
+        → {label}
+      </button>
+    );
+  };
   const providers = ['All', ...new Set((model.ledger?.rows || []).map(r => r[4]?.text).filter(Boolean))];
-  const today = startOfDay(new Date());
   const ledgerAhead = model.ledger
     ? {
         ...model.ledger,
@@ -563,60 +605,85 @@ export function MoneyPage({
         }),
       }
     : null;
-  const neededNow = model.recurring
-    ? { ...model.recurring, rows: model.recurring.rows.filter(r => /^(yes|y\s*low)$/i.test(r[0].text)) }
-    : null;
-  const struckOf = (t: Table | null, bought: boolean) => (t ? { ...t, rows: t.rows.filter(r => r.some(c => c.struck) === bought) } : null);
-  const openNeeded = struckOf(model.restockNeeded, false);
-  const openWants = struckOf(model.wants, false);
-  const boughtRows = [...(struckOf(model.restockNeeded, true)?.rows || []), ...(struckOf(model.wants, true)?.rows || [])];
-  const bought = model.wants && boughtRows.length ? { ...model.wants, key: 'bought', groups: undefined, rows: boughtRows } : null;
-  const lastRow = (t: Table | null) => (t && t.rows.length ? t.rows[t.rows.length - 1][0].r : t ? undefined : undefined);
-  const moveTo = (row: Cell[], target: Table | null, label: string) => {
-    const after = lastRow(target);
-    if (after === undefined) return null;
-    return (
-      <button
-        type="button"
-        className="row-action ghost"
-        title={`Move it to ${label} in the sheet`}
-        onClick={() =>
-          void save([{ tab: row[0].tab, r: row[0].r, c: row[0].c, c1: row[0].c, c2: row[row.length - 1].c, expect: row[0].text, moveAfter: after }])
-        }
-      >
-        → {label}
-      </button>
-    );
-  };
   const monthRe = new RegExp(`^(${today.toLocaleDateString('en-US', { month: 'long' })}|${today.toLocaleDateString('en-US', { month: 'short' })})[- ]?(${today.getFullYear()})?$`, 'i');
   const isNow = (row: Cell[]) => (row.slice(0, 2).some(c => monthRe.test(c.text)) ? 'is-now' : '');
+  const livePlan = payPlans.find(p => !p.archived);
+
+  const TABS: Array<{ id: TabId; tone: Tone; label: string; figure: string }> = [
+    { id: 'week', tone: 'due', label: 'This week', figure: money(dueWeek) },
+    { id: 'due', tone: 'due', label: 'Due dates', figure: `${restOfMonth.length} left` },
+    { id: 'plan', tone: 'plan', label: 'Plan', figure: livePlan ? livePlan.title : 'New' },
+    { id: 'accounts', tone: 'cash', label: 'Accounts & cards', figure: model.cashOnHand?.text || '' },
+    { id: 'owed', tone: 'owed', label: 'What I owe', figure: money(owedSum) },
+    { id: 'shop', tone: 'shop', label: 'Shopping', figure: `${neededNow.length + (openNeeded?.rows.length || 0)} needed` },
+    { id: 'save', tone: 'save', label: 'Savings & move', figure: '' },
+  ];
 
   return (
-    <div className="settings-view money-view">
-      <section className="mpanel glass-panel money-hero">
-        <div className="money-hero-head">
-          <p className="section-label">Money</p>
-          <h1>Radall</h1>
-          <span className="mpanel-sub">
-            Sheet as of {new Date(model.refreshedAt).toLocaleString([], { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })} · click any
-            value to change it in the sheet
-          </span>
-          <span className="money-hero-actions">
-            <button type="button" className="row-action ghost" onClick={onRefresh} disabled={syncing}>
+    <div className="settings-view money-view mny">
+      {/* The story in one line: what you have, what's coming, what's left. */}
+      <section className="mny-stand" aria-label="Where you stand">
+        <div className="mny-stand-top">
+          <p className="mny-eyebrow">Money · where you stand</p>
+          <span className="mny-stand-meta">
+            Radall sheet · {new Date(model.refreshedAt).toLocaleString([], { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}
+            <button type="button" className="mny-btn" onClick={onRefresh} disabled={syncing}>
               {syncing ? 'Syncing…' : 'Refresh'}
             </button>
             {model.sheetUrl ? (
-              <a className="row-action ghost" href={model.sheetUrl} target="_blank" rel="noopener noreferrer">
+              <a className="mny-btn" href={model.sheetUrl} target="_blank" rel="noopener noreferrer">
                 Open sheet ↗
               </a>
             ) : null}
           </span>
         </div>
-        <div className="money-stats">
-          <Stat label="Due next 7 days" value={money(sum(next7))} sub={`${next7.length} payments`} tone="warn" />
-          <Stat label={`Left in ${today.toLocaleDateString([], { month: 'long' })}`} value={money(sum(restOfMonth))} sub={`${restOfMonth.length} payments`} />
-          <Stat label="Pay later owed" value={pay?.total?.[1]?.text} sub={pay?.total?.[3]?.text ? `${pay.total[3].text} available` : undefined} />
-          {fico ? <Stat label="Credit score" value={String(Math.round(Number(fico)) || fico)} sub="FICO" /> : null}
+        <div className="mny-flow">
+          <div className="mny-flow-step tone-cash">
+            <span>Cash on hand</span>
+            <b>{model.cashOnHand?.text || '—'}</b>
+            <small>{model.balancedCash?.text ? `${model.balancedCash.text} balanced` : ''}</small>
+          </div>
+          <span className="mny-flow-op" aria-hidden="true">
+            −
+          </span>
+          <button type="button" className="mny-flow-step tone-due is-link" onClick={() => setTab('week')}>
+            <span>Due next 7 days</span>
+            <b>{money(dueWeek)}</b>
+            <small>{next7.length} payments</small>
+          </button>
+          <span className="mny-flow-op" aria-hidden="true">
+            =
+          </span>
+          <div className={`mny-flow-step is-result${afterWeek !== undefined && afterWeek < 0 ? ' is-short' : ' is-ok'}`}>
+            <span>{afterWeek !== undefined && afterWeek < 0 ? 'Short this week' : 'Left after this week'}</span>
+            <b>{afterWeek !== undefined ? money(Math.abs(afterWeek)) : '—'}</b>
+            <small>{afterWeek !== undefined && afterWeek < 0 ? 'needs income or a plan' : 'before anything new comes in'}</small>
+          </div>
+          <div className="mny-flow-side">
+            <button type="button" className="mny-mini tone-due" onClick={() => setTab('due')}>
+              <span>Rest of {today.toLocaleDateString([], { month: 'long' })}</span>
+              <b>{money(sum(restOfMonth))}</b>
+            </button>
+            <button type="button" className="mny-mini tone-cash" onClick={() => setTab('accounts')}>
+              <span>Cards</span>
+              <b>{model.cards?.total?.[1]?.text || '—'}</b>
+              {cardsUsed !== undefined ? <small>{cardsUsed}% used</small> : null}
+            </button>
+            <button type="button" className="mny-mini tone-due" onClick={() => setTab('due')}>
+              <span>Pay later</span>
+              <b>{pay?.total?.[1]?.text || '—'}</b>
+            </button>
+            <button type="button" className="mny-mini tone-owed" onClick={() => setTab('owed')}>
+              <span>Owed elsewhere</span>
+              <b>{money(owedSum)}</b>
+            </button>
+            {fico ? (
+              <button type="button" className="mny-mini tone-cash" onClick={() => setTab('accounts')}>
+                <span>Credit score</span>
+                <b>{Math.round(Number(fico)) || fico}</b>
+              </button>
+            ) : null}
+          </div>
         </div>
         {note ? (
           <p className={`money-note is-${note.tone}`} role="status">
@@ -625,187 +692,240 @@ export function MoneyPage({
         ) : null}
       </section>
 
-      <div className="money-top">
-        <CashCard model={model} onSave={save} />
-        <CardsCard model={model} onSave={save} />
-        <OutstandingCard model={model} onSave={save} />
-      </div>
+      <nav className="mny-tabs" role="tablist" aria-label="Money sections">
+        {TABS.map(t => (
+          <button key={t.id} type="button" role="tab" aria-selected={tab === t.id} className={`mny-tab tone-${t.tone}${tab === t.id ? ' is-on' : ''}`} onClick={() => setTab(t.id)}>
+            <span className="mny-tab-label">{t.label}</span>
+            {t.figure ? <span className="mny-tab-fig">{t.figure}</span> : null}
+          </button>
+        ))}
+      </nav>
 
-      <div className="money-grid">
-        <Panel title="Plan payments" sub="Pick the days, see what’s due, add extra payments — saved in Life Hub, not the sheet" className="span-12">
-          <PayPlanner dues={sheetDues} debts={debtOptions(model)} cashOnHand={model.cashOnHand?.text} balancedCash={model.balancedCash?.text} />
-        </Panel>
+      <div className="mny-panel" role="tabpanel">
+        {tab === 'week' ? (
+          <div className="mny-cols">
+            <Section tone="due" title="Due in the next 7 days" hint="Tap Paid when it’s done — it stays on the calendar, never becomes a task." figure={money(dueWeek)} figureLabel={`${next7.length} payments`}>
+              <DueList dues={dues} onPaid={onPaid} by="day" days={7} />
+            </Section>
+            <div className="mny-stack">
+              <Section tone="cash" title="Money right now" figure={model.cashOnHand?.text} figureLabel="on hand" href={link('Randy')}>
+                <AccountsList model={model} onSave={save} />
+              </Section>
+              <Section tone="plan" title="Your plan" hint={livePlan ? `Open: ${livePlan.title}` : 'No plan yet for the coming days.'}>
+                <button type="button" className="mny-cta" onClick={() => setTab('plan')}>
+                  {livePlan ? 'Open the plan →' : 'Make a plan →'}
+                </button>
+              </Section>
+            </div>
+          </div>
+        ) : null}
 
-        <Panel title="Coming up" sub="Bills, card mins, subscriptions, pay later, planned" className="span-4">
-          <ComingUp dues={dues} onPaid={onPaid} />
-        </Panel>
-
-        <Panel title="This month" sub="Click to edit — saves to the sheet" href={link('Randy')} className="span-4">
-          {model.bills ? (
-            <Sub title={<>Bills <span>{model.bills.total?.[2]?.text}</span></>}>
-              <SheetTable table={model.bills} onSave={save} />
-            </Sub>
-          ) : null}
-          {model.cardMins ? (
-            <Sub title={<>Card minimums <span>{model.cardMins.total?.[2]?.text}</span></>}>
-              <SheetTable table={{ ...model.cardMins, header: ['Date Due', 'Card', 'Amount'] }} onSave={save} />
-            </Sub>
-          ) : null}
-          {model.subs ? (
-            <Sub title={<>Subscriptions <span>{model.subs.total?.[2]?.text}</span></>}>
-              <SheetTable table={model.subs} onSave={save} opts={{ strike: { on: 'Skip', off: 'Unskip' } }} />
-              {model.subsOther.length ? (
-                <SheetTable
-                  table={{ key: 'subsOther', title: 'Trial / paused', tab: 'Randy', header: ['Status', 'Subscription', 'Amount'], rows: model.subsOther }}
-                  onSave={save}
-                />
+        {tab === 'due' ? (
+          <div className="mny-cols">
+            <Section tone="due" title="Next five weeks" hint="Bills, card minimums, subscriptions, pay later and planned payments." figure={money(sum(dues.filter(d => d.days >= 0 && d.days <= 35)))}>
+              <DueList dues={dues} onPaid={onPaid} by="week" days={35} />
+            </Section>
+            <Section tone="due" title="This month in the sheet" hint="Click any amount or date to change it in the sheet." href={link('Randy')}>
+              {model.bills ? (
+                <Fold title="Bills" total={model.bills.total?.[2]?.text} meta={`${model.bills.rows.length}`} open>
+                  <SheetTable table={model.bills} onSave={save} />
+                </Fold>
               ) : null}
-            </Sub>
-          ) : null}
-        </Panel>
+              {model.cardMins ? (
+                <Fold title="Card minimums" total={model.cardMins.total?.[2]?.text} meta={`${model.cardMins.rows.length}`}>
+                  <SheetTable table={{ ...model.cardMins, header: ['Date Due', 'Card', 'Amount'] }} onSave={save} />
+                </Fold>
+              ) : null}
+              {model.subs ? (
+                <Fold title="Subscriptions" total={model.subs.total?.[2]?.text} meta={`${model.subs.rows.length} · Skip crosses one out`}>
+                  <SheetTable table={model.subs} onSave={save} opts={{ strike: { on: 'Skip', off: 'Unskip' } }} />
+                  {model.subsOther.length ? (
+                    <SheetTable
+                      table={{ key: 'subsOther', title: 'Trial / paused', tab: 'Randy', header: ['Status', 'Subscription', 'Amount'], rows: model.subsOther }}
+                      onSave={save}
+                    />
+                  ) : null}
+                </Fold>
+              ) : null}
+              <Fold title="Pay later" total={pay?.total?.[1]?.text} meta="Klarna · Affirm · Afterpay · Zip">
+                {pay ? (
+                  <div className="mny-providers">
+                    {pay.rows.map(r => (
+                      <div key={r[0].r} className="mny-provider">
+                        <strong>{r[0].text.replace(/\s*sum$/i, '')}</strong>
+                        <span>
+                          <EditCell cell={r[1]} onSave={save} /> owed
+                        </span>
+                        <span>
+                          <EditCell cell={r[3]} onSave={save} /> available
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                ) : null}
+                {model.buckets ? <SheetTable table={model.buckets} onSave={save} /> : null}
+                {ledgerAhead ? (
+                  <>
+                    <div className="mny-filter" role="group" aria-label="Provider">
+                      {providers.map(p => (
+                        <button key={p} type="button" className={`mny-chip${provider === p ? ' is-on' : ''}`} aria-pressed={provider === p} onClick={() => setProvider(p)}>
+                          {p}
+                        </button>
+                      ))}
+                    </div>
+                    <SheetTable table={ledgerAhead} onSave={save} opts={{ limit: 12 }} />
+                  </>
+                ) : null}
+              </Fold>
+            </Section>
+          </div>
+        ) : null}
 
-        <Panel title="Balancing" sub="Accounts plus pending money → cash on hand" href={link('Randy')} className="span-4">
-          {model.balancing ? (
-            <SheetTable table={{ ...model.balancing, header: ['Account', ...model.balancing.header.slice(1)] }} onSave={save} />
-          ) : null}
-        </Panel>
+        {tab === 'plan' ? (
+          <Section tone="plan" title="Plan payments" hint="Pick the days, start from your cash, see what’s due, add extra payments — saved in Life Hub, not the sheet.">
+            <PayPlanner dues={sheetDues} debts={debtOptions(model)} cashOnHand={model.cashOnHand?.text} balancedCash={model.balancedCash?.text} />
+          </Section>
+        ) : null}
 
-        <Panel title="Pay later" sub="Klarna, Affirm, Afterpay — add Zip rows to the Full Ledger and they show here" href={link('Paylater')} className="span-6">
-          {pay ? (
-            <div className="mproviders">
-              {pay.rows.map(r => (
-                <div key={r[0].r} className="mprovider">
-                  <strong>{r[0].text.replace(/\s*sum$/i, '')}</strong>
-                  <span>
-                    <EditCell cell={r[1]} onSave={save} /> owed
-                  </span>
-                  <span className="mprovider-avail">
-                    <EditCell cell={r[3]} onSave={save} /> available
-                  </span>
-                </div>
-              ))}
+        {tab === 'accounts' ? (
+          <div className="mny-cols">
+            <div className="mny-stack">
+              <Section tone="cash" title="Cash" figure={model.cashOnHand?.text} figureLabel={model.balancedCash?.text ? `on hand · ${model.balancedCash.text} balanced` : 'on hand'} href={link('Randy')}>
+                <AccountsList model={model} onSave={save} />
+                {model.balancing ? (
+                  <Fold title="Balancing" meta="accounts + pending money → cash on hand">
+                    <SheetTable table={{ ...model.balancing, header: ['Account', ...model.balancing.header.slice(1)] }} onSave={save} />
+                  </Fold>
+                ) : null}
+              </Section>
+              <Section tone="cash" title="Credit" figure={fico ? String(Math.round(Number(fico)) || fico) : undefined} figureLabel="FICO" href={link('Credit Matrix')}>
+                {model.scores.length ? (
+                  <div className="mny-tiles">
+                    {model.scores.map(s => (
+                      <span key={s.label} className="mny-tile">
+                        <span>{s.label}</span>
+                        <b>{s.value}</b>
+                      </span>
+                    ))}
+                  </div>
+                ) : null}
+                {model.creditAccounts ? (
+                  <Fold title="Current accounts" meta="Toyota · Fortiva · Nelnet">
+                    <SheetTable table={model.creditAccounts} onSave={save} />
+                  </Fold>
+                ) : null}
+                {model.utilEst ? (
+                  <Fold title="Utilization estimate">
+                    <SheetTable table={model.utilEst} onSave={save} />
+                  </Fold>
+                ) : null}
+              </Section>
             </div>
-          ) : null}
-          <div className="mcols mcols-wide2">
-            {model.buckets ? (
-              <Sub title={<>By week <span>{model.monthTotal ? `${model.monthTotal.label} ${model.monthTotal.cell.text}` : ''}</span></>}>
-                <SheetTable table={model.buckets} onSave={save} />
-              </Sub>
-            ) : null}
-            {ledgerAhead ? (
-              <Sub title={<>Upcoming installments <span>{ledgerAhead.rows.length}</span></>}>
-                <div className="mfilter" role="group" aria-label="Provider">
-                  {providers.map(p => (
-                    <button key={p} type="button" className={`layer-chip${provider === p ? ' on' : ''}`} aria-pressed={provider === p} onClick={() => setProvider(p)}>
-                      {p}
-                    </button>
-                  ))}
-                </div>
-                <SheetTable table={ledgerAhead} onSave={save} opts={{ limit: 14 }} />
-              </Sub>
-            ) : null}
+            <Section
+              tone="cash"
+              title="Credit cards"
+              figure={model.cards?.total?.[1]?.text}
+              figureLabel={`owed${model.cards?.total?.[2]?.text ? ` · ${model.cards.total[2].text} available` : ''}`}
+              hint="Tap a card for its details. Bars show how much of the limit is used."
+              href={link('Randy')}
+            >
+              <CardsList model={model} onSave={save} detailed />
+            </Section>
           </div>
-        </Panel>
+        ) : null}
 
-        <Panel title="Restock & purchases" sub="Tick to cross off what you bought · move between lists" href={link('Restock/Purchases')} className="span-6">
-          {model.upcomingSpend.rows.length ? (
-            <div className="mspend-tiles">
-              {model.upcomingSpend.rows.map(([l, v]) => (
-                <span key={l.r} className="mspend-tile">
-                  {l.text} <b>{v.text}</b>
-                </span>
-              ))}
+        {tab === 'owed' ? (
+          <div className="mny-cols">
+            <div className="mny-stack">
+              <Section tone="owed" title="Outstanding" figure={money(outstandingSum)} figureLabel="known" href={link('Randy')}>
+                {model.outstanding ? <SheetTable table={model.outstanding} onSave={save} /> : null}
+              </Section>
+              <Section tone="owed" title="Not on credit" hint="Cash advances, repairs, tickets, taxes." figure={money(nonCreditSum)} href={link('Non-Credit')}>
+                {model.nonCredit.map(t => (
+                  <Fold key={t.key} title={t.title} meta={`${t.rows.length}`} total={t.total?.[t.total.length - 1]?.text}>
+                    <SheetTable table={t} onSave={save} />
+                  </Fold>
+                ))}
+              </Section>
             </div>
-          ) : null}
-          {openNeeded ? (
-            <Sub title={<>Needed purchases <span>{openNeeded.rows.length} open</span></>}>
-              {openNeeded.rows.length ? (
-                <SheetTable table={openNeeded} onSave={save} opts={{ check: 'Bought', hide: [0, 3, 6], actions: row => moveTo(row, model.wants, 'Wants') }} />
-              ) : (
-                <p className="sched-empty">Nothing open — everything here is bought.</p>
-              )}
-            </Sub>
-          ) : null}
-          {openWants ? (
-            <Sub title={<>Wants <span>{openWants.rows.length} open</span></>}>
-              <SheetTable table={openWants} onSave={save} opts={{ check: 'Bought', hide: [0, 3, 6], actions: row => moveTo(row, model.restockNeeded, 'Needed') }} />
-            </Sub>
-          ) : null}
-          {model.recurring ? (
-            <Sub title={<>Re-occurring restock <span>{neededNow?.rows.length || 0} needed now · set Needed? from the dropdown</span></>}>
-              <SheetTable table={model.recurring} onSave={save} opts={{ hide: [3, 6], select: { col: 0, options: NEEDED_OPTIONS }, rowClass: r => (/^(yes|y\s*low)$/i.test(r[0].text) ? 'is-now' : '') }} />
-            </Sub>
-          ) : null}
-          {bought ? (
-            <Sub title={<>Bought <span>{bought.rows.length} crossed off</span></>} open={false}>
-              <SheetTable table={bought} onSave={save} opts={{ check: 'Bought', hide: [0, 3, 6] }} />
-            </Sub>
-          ) : null}
-        </Panel>
-
-        <Panel title="What’s owed" sub="Non-credit, collections, payoff plans" href={link('Non-Credit')} className="span-12">
-          <div className="mcols mcols-3">
-            {model.nonCredit.map(t => (
-              <Sub key={t.key} title={<>{t.title} <span>{t.total?.[t.total.length - 1]?.text}</span></>} open={t.rows.length <= 6}>
-                <SheetTable table={t} onSave={save} />
-              </Sub>
-            ))}
-            {model.collections ? (
-              <Sub title="Collections / past due" wide>
-                <SheetTable table={model.collections} onSave={save} />
-              </Sub>
-            ) : null}
-            {model.payoff ? (
-              <Sub title={<>Payoff priorities <span>from the CC/Savings Planner</span></>} wide>
-                <SheetTable table={model.payoff} onSave={save} />
-              </Sub>
-            ) : null}
-            {model.plans.map(t => (
-              <Sub key={t.key} title={t.title} open={false}>
-                <SheetTable table={t} onSave={save} opts={{ rowClass: isNow }} />
-              </Sub>
-            ))}
-          </div>
-        </Panel>
-
-        <Panel title="Credit" sub="Scores, accounts, utilization" href={link('Credit Matrix')} className="span-6">
-          {model.scores.length ? (
-            <div className="mspend-tiles">
-              {model.scores.map(s => (
-                <span key={s.label} className="mspend-tile">
-                  {s.label} <b>{s.value}</b>
-                </span>
-              ))}
+            <div className="mny-stack">
+              {model.collections ? (
+                <Section tone="owed" title="Collections & past due" figure={money(collectionsSum)} href={link('Credit Matrix')}>
+                  <SheetTable table={model.collections} onSave={save} />
+                </Section>
+              ) : null}
+              <Section tone="plan" title="Payoff plans" hint="Priorities from the CC/Savings Planner and month-by-month payoffs.">
+                {model.payoff ? (
+                  <Fold title="Payoff priorities" meta={`${model.payoff.rows.length} debts`} open>
+                    <SheetTable table={model.payoff} onSave={save} />
+                  </Fold>
+                ) : null}
+                {model.plans.map(t => (
+                  <Fold key={t.key} title={t.title} meta="this month highlighted">
+                    <SheetTable table={t} onSave={save} opts={{ rowClass: isNow }} />
+                  </Fold>
+                ))}
+              </Section>
             </div>
-          ) : null}
-          <div className="mcols">
-            {model.creditAccounts ? (
-              <Sub title="Current accounts">
-                <SheetTable table={model.creditAccounts} onSave={save} />
-              </Sub>
-            ) : null}
-            {model.utilEst ? (
-              <Sub title="Utilization estimate" open={false}>
-                <SheetTable table={model.utilEst} onSave={save} />
-              </Sub>
-            ) : null}
           </div>
-        </Panel>
+        ) : null}
 
-        <Panel title="Savings & move" sub="Values are estimates; dates in the planner are older" href={link('Move Sav /COG Estimate')} className="span-6">
-          {model.savings ? (
-            <Sub title="Savings balances">
-              <SheetTable table={{ ...model.savings, header: ['Fund', ...model.savings.header.slice(1)] }} onSave={save} />
-            </Sub>
-          ) : null}
-          <div className="mcols">
-            {model.move.map(t => (
-              <Sub key={t.key} title={t.title} open={t.rows.length <= 8}>
-                <SheetTable table={t} onSave={save} />
-              </Sub>
-            ))}
+        {tab === 'shop' ? (
+          <div className="mny-cols">
+            <Section tone="shop" title="Restock" hint="Set Needed? from the dropdown — Yes and Y Low rise to the top list." figure={model.upcomingSpend.rows.find(r => /resupply/i.test(r[0].text))?.[1]?.text} figureLabel="resupply" href={link('Restock/Purchases')}>
+              {model.recurring ? (
+                <>
+                  <Fold title="Needed now" meta={`${neededNow.length} items`} open>
+                    {neededNow.length ? (
+                      <SheetTable table={{ ...model.recurring, rows: neededNow }} onSave={save} opts={{ hide: [3, 6], select: { col: 0, options: NEEDED_OPTIONS } }} />
+                    ) : (
+                      <p className="mny-empty">Nothing marked Yes or Y Low.</p>
+                    )}
+                  </Fold>
+                  <Fold title="All re-occurring items" meta={`${model.recurring.rows.length}`}>
+                    <SheetTable table={model.recurring} onSave={save} opts={{ hide: [3, 6], select: { col: 0, options: NEEDED_OPTIONS } }} />
+                  </Fold>
+                </>
+              ) : null}
+            </Section>
+            <Section tone="shop" title="Purchases" hint="Tick when bought (crosses it out in the sheet). Move items between lists." href={link('Restock/Purchases')}>
+              {openNeeded ? (
+                <Fold title="Needed" meta={`${openNeeded.rows.length} open`} open={openNeeded.rows.length > 0}>
+                  {openNeeded.rows.length ? (
+                    <SheetTable table={openNeeded} onSave={save} opts={{ check: 'Bought', hide: [0, 3, 6], actions: row => moveTo(row, model.wants, 'Wants') }} />
+                  ) : (
+                    <p className="mny-empty">Nothing open — everything here is bought.</p>
+                  )}
+                </Fold>
+              ) : null}
+              {openWants ? (
+                <Fold title="Wants" meta={`${openWants.rows.length} open`} open>
+                  <SheetTable table={openWants} onSave={save} opts={{ check: 'Bought', hide: [0, 3, 6], actions: row => moveTo(row, model.restockNeeded, 'Needed') }} />
+                </Fold>
+              ) : null}
+              {bought ? (
+                <Fold title="Bought" meta={`${bought.rows.length} crossed off`}>
+                  <SheetTable table={bought} onSave={save} opts={{ check: 'Bought', hide: [0, 3, 6] }} />
+                </Fold>
+              ) : null}
+            </Section>
           </div>
-        </Panel>
+        ) : null}
+
+        {tab === 'save' ? (
+          <div className="mny-cols">
+            <Section tone="save" title="Savings" hint="Values are still right; the planner’s dates are older." href={link('🌟 CC/Savings Planner')}>
+              {model.savings ? <SheetTable table={{ ...model.savings, header: ['Fund', ...model.savings.header.slice(1)] }} onSave={save} /> : null}
+            </Section>
+            <Section tone="save" title="Move estimate" href={link('Move Sav /COG Estimate')}>
+              {model.move.map((t, i) => (
+                <Fold key={t.key} title={t.title} meta={`${t.rows.length}`} open={i === 0}>
+                  <SheetTable table={t} onSave={save} />
+                </Fold>
+              ))}
+            </Section>
+          </div>
+        ) : null}
       </div>
 
       {model.missing.length ? (
@@ -813,19 +933,7 @@ export function MoneyPage({
           Couldn’t find these headings in the sheet (renamed or moved?): {model.missing.join(', ')}. Everything else still shows.
         </p>
       ) : null}
-      <p className="money-foot">
-        Every change from Life Hub is logged on the sheet’s “Life Hub edits” tab. Money here never turns into tasks — it lives on the calendar and this page.
-      </p>
-    </div>
-  );
-}
-
-function Stat({ label, value, sub, tone }: { label: string; value?: string; sub?: string; tone?: 'warn' }) {
-  return (
-    <div className={`mstat${tone ? ` is-${tone}` : ''}`}>
-      <span className="mstat-label">{label}</span>
-      <b>{value || '—'}</b>
-      {sub ? <span className="mstat-sub">{sub}</span> : null}
+      <p className="money-foot">Every change from Life Hub is logged on the sheet’s “Life Hub edits” tab.</p>
     </div>
   );
 }
