@@ -252,6 +252,10 @@ export async function joinWithKey(input: string): Promise<SyncStatus> {
   const result = await syncNow();
   if (result.state === 'error' && result.error === 'wrong_key') {
     setKey(previous);
+  } else if (result.state === 'ok' && typeof window !== 'undefined') {
+    // Now connected: pull the private live feeds (TickTick, Radall, calendar, Gmail) right away,
+    // instead of showing the morning snapshot until the next 10-minute pull.
+    window.dispatchEvent(new Event('lifehub:refresh'));
   }
   return result;
 }
