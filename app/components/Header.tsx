@@ -35,6 +35,14 @@ export function Header({
         <SitesMenu active={active} enter={enter} />
         <button
           type="button"
+          className={`nav-pill${active === 'logs' ? ' active' : ''}`}
+          onClick={() => enter(active === 'logs' ? 'home' : 'logs')}
+          title="Logs: nutrition & movement, Marvel, music"
+        >
+          <span aria-hidden="true">✎</span> Logs
+        </button>
+        <button
+          type="button"
           className={`nav-pill${active === 'why' ? ' active' : ''}`}
           onClick={() => enter(active === 'why' ? 'home' : 'why')}
           title="Why: your goals and the work attached to them"

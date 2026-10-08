@@ -3536,3 +3536,15 @@ button.hero-stat.stat-ticktick.has-rings { display: flex; align-items: center; g
 .flow-row.tt-row.is-skip { box-shadow: inset 3px 0 0 #d9a21b; }
 .flow-row.tt-row .flow-n { width: auto; white-space: normal; text-align: right; }
 .flow-row.tt-row { grid-template-columns: 18px minmax(0, 1.5fr) minmax(0, 1.2fr) 14px minmax(0, 1.2fr) 120px; }
+/* Logs page + Flow links on Why cards (2026-10-08) */
+.logs-card { max-width: 640px; padding: 22px; }
+.logs-card h2 { margin: 2px 0 8px; }
+.why-flow { margin: 8px 0; padding: 6px 8px; border-radius: 8px; background: var(--surface-2); }
+.why-flow-head { margin: 0 0 4px; font-size: 12px; font-weight: 650; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
+.why-flow-row { display: flex; align-items: center; gap: 6px; min-height: 22px; font-size: 12.5px; }
+.why-flow-tier { flex: 0 0 auto; min-width: 54px; padding: 0 5px; border-radius: 4px; font-size: 11.5px; font-weight: 650; text-align: center; background: var(--surface); color: var(--ink); }
+.why-flow-tier.t-drive { box-shadow: inset 0 -2px 0 #2f9e5b; }
+.why-flow-tier.t-enable { box-shadow: inset 0 -2px 0 #3d7aa8; }
+.why-flow-tier.t-upkeep { box-shadow: inset 0 -2px 0 #d9a21b; }
+.why-flow-title { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--ink); }
+.why-flow-bucket { flex: 0 0 auto; color: var(--muted); font-size: 11.5px; }

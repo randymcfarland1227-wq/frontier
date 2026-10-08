@@ -7,7 +7,8 @@ import type { Capture } from '../../lib/captures';
 import type { FocusArea } from '../../lib/focusAreas';
 import type { SelfItem } from '../../lib/adapters/self';
 import { sourceById } from '../../lib/sources';
-import { useTaskRules } from '../../lib/taskRules';
+import { useTaskRules, taskTitleKey } from '../../lib/taskRules';
+import flowMap from '../../public/data/flow-map.json';
 import {
   goalMomentum,
   ledgerTaskKeys,
@@ -20,6 +21,19 @@ import {
 
 const MOMENTUM_MARK: Record<string, string> = { 'On Track': '●', Slipping: '◐', Stalled: '○' };
 const WEEK = 7;
+
+/** Flow's connections: TickTick items and routines that serve each goal (public/data/flow-map.json). */
+type FlowRecord = { id: string; title: string; executionType: string; goalIds?: string[]; primaryGoal?: string | null; bucket?: string; credit?: boolean };
+type FlowRoutine = { id: string; focus: string; active?: boolean; bucket?: string; link?: { tier?: string; efforts?: string[] } };
+const FLOW_RECORDS = (flowMap as { records: FlowRecord[] }).records;
+const FLOW_ROUTINES = (flowMap as { routines: FlowRoutine[] }).routines;
+const TIER: Record<string, string> = { drive: 'Drives', enable: 'Enables', upkeep: 'Upkeep' };
+function flowFor(goalId: string) {
+  return {
+    records: FLOW_RECORDS.filter(r => r.credit !== false && (r.primaryGoal === goalId || (r.goalIds || []).includes(goalId))),
+    routines: FLOW_ROUTINES.filter(r => r.active !== false && (r.link?.efforts || []).includes(goalId)),
+  };
+}
 
 type Candidate = { key: string; target: GoalLinkTarget; title: string; where: string };
 type Resolved = { title: string; where: string; state: string };
@@ -116,7 +130,22 @@ export function WhyPanel({
   const byGoal = (g: Goal) => links.filter(l => l.goalId === g.id);
   // Tasks sorted to a goal on the Task sorting page count as attached work too.
   const sortedTo = (g: Goal) => Object.entries(rules).filter(([k, r]) => r.goal === g.id && !k.endsWith('::*')).length;
-  const attached = (g: Goal) => byGoal(g).length + sortedTo(g);
+  const attached = (g: Goal) => {
+    const f = flowFor(g.id);
+    return byGoal(g).length + sortedTo(g) + f.records.length + f.routines.length;
+  };
+  // Completions this week of the TickTick items Flow ties to a goal (not already counted by a rule for it).
+  const [weekStart] = useState(() => new Date().getTime() - WEEK * 864e5);
+  const flowDone = (g: Goal) => {
+    const titles = new Set(flowFor(g.id).records.map(r => taskTitleKey(r.title)));
+    return Object.values(ledger.entries).filter(
+      e =>
+        e.source === 'ticktick' &&
+        Date.parse(e.completedAt) >= weekStart &&
+        titles.has(taskTitleKey(e.title)) &&
+        rules[`ticktick::t:${taskTitleKey(e.title)}`]?.goal !== g.id,
+    ).length;
+  };
   const unlinkedCount = data.goals.filter(g => attached(g) === 0).length;
 
   return (
@@ -160,7 +189,8 @@ export function WhyPanel({
       <div className="why-grid">
         {visible.map(goal => {
           const goalLinks = byGoal(goal);
-          const momentum = goalMomentum(goal.id, links, ledger, captures, WEEK, rules);
+          const momentum = goalMomentum(goal.id, links, ledger, captures, WEEK, rules) + flowDone(goal);
+          const flow = flowFor(goal.id);
           const linkedCount = attached(goal);
           const isOpen = open === goal.id;
           const linkedKeys = new Set(goalLinks.map(l => targetKey(l.target)));
@@ -202,13 +232,32 @@ export function WhyPanel({
                     setQuery('');
                   }}
                 >
-                  {isOpen ? 'Close' : goalLinks.length ? 'Work' : 'Link work'}
+                  {isOpen ? 'Close' : linkedCount ? 'Work' : 'Link work'}
                 </button>
               </div>
 
               {isOpen ? (
                 <div className="why-work">
                   {goal.how ? <p className="why-how"><span>How:</span> {goal.how}</p> : null}
+                  {flow.routines.length || flow.records.length ? (
+                    <div className="why-flow">
+                      <p className="why-flow-head">From Flow</p>
+                      {flow.routines.map(r => (
+                        <div className="why-flow-row" key={r.id}>
+                          <span className={`why-flow-tier t-${r.link?.tier || 'drive'}`}>{TIER[r.link?.tier || ''] || 'Routine'}</span>
+                          <span className="why-flow-title">{r.focus}</span>
+                          {r.bucket ? <span className="why-flow-bucket">{areaName(r.bucket)}</span> : null}
+                        </div>
+                      ))}
+                      {flow.records.map(r => (
+                        <div className="why-flow-row" key={r.id}>
+                          <span className="why-flow-tier t-tt">{r.executionType === 'Habit' ? 'Habit' : 'Task'}</span>
+                          <span className="why-flow-title">{r.title}</span>
+                          {r.bucket ? <span className="why-flow-bucket">{areaName(r.bucket)}</span> : null}
+                        </div>
+                      ))}
+                    </div>
+                  ) : null}
                   {goalLinks.map(link => {
                     const r = resolve(link);
                     return (

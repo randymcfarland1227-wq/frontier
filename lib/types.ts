@@ -16,8 +16,8 @@ export type SourceId =
 /** Legacy Work Room id for Role Hub snapshots */
 export type LegacySourceId = 'search';
 
-/** 'settings' = Task sorting page · 'why' = goals page */
-export type SpaceId = 'home' | 'settings' | 'why' | 'money' | SourceId;
+/** 'settings' = Task sorting page · 'why' = goals page · 'logs' = embedded log sites */
+export type SpaceId = 'home' | 'settings' | 'why' | 'money' | 'logs' | SourceId;
 
 export type FeaturedItem = {
   id: string;
