@@ -3,6 +3,7 @@
 import { useEffect, useRef } from 'react';
 import { useId, useState } from 'react';
 import { DECK, placePin, updatePinDetails, usePriorityPins } from '../../lib/priorityPins';
+import { MOVE_TARGETS } from '../../lib/siteMoves';
 
 const dayKey = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 
@@ -33,6 +34,9 @@ export function DayMenu({
   toggle,
   tag,
   backToSelf,
+  move,
+  onRemove,
+  critical,
   onClose,
 }: {
   itemKey: string;
@@ -42,6 +46,12 @@ export function DayMenu({
   tag?: { value: string; suggestions: string[]; onChange: (tag: string | null) => void };
   /** For a Self task moved here: send it back to the Self card */
   backToSelf?: () => void;
+  /** Move to another site's list (same name, details and link); `from` is the site it's in now */
+  move?: { from: string; onMove: (to: string) => void };
+  /** Take it off Life Hub without counting it as done */
+  onRemove?: () => void;
+  /** Mark / unmark Critical */
+  critical?: { on: boolean; onClick: () => void };
   onClose: () => void;
 }) {
   const listId = useId();
@@ -84,6 +94,11 @@ export function DayMenu({
           {toggle.label}
         </button>
       ) : null}
+      {critical ? (
+        <button type="button" className={`day-menu-btn day-menu-crit${critical.on ? ' is-on' : ''}`} aria-pressed={critical.on} onClick={critical.onClick}>
+          {critical.on ? 'Critical ✓' : 'Critical'}
+        </button>
+      ) : null}
       <span className="day-menu-label">Day</span>
       <button type="button" className={`day-menu-btn${due === today ? ' is-on' : ''}`} onClick={() => setDay(today)}>
         Today
@@ -122,6 +137,39 @@ export function DayMenu({
       {backToSelf ? (
         <button type="button" className="day-menu-btn" onClick={backToSelf} title="Move it back to the Self card">
           ↩ Back to Self
+        </button>
+      ) : null}
+      {move ? (
+        <select
+          className="day-menu-move"
+          value=""
+          aria-label="Move to another site"
+          onChange={e => {
+            if (!e.target.value) return;
+            move.onMove(e.target.value);
+            onClose();
+          }}
+        >
+          <option value="">Move to…</option>
+          {MOVE_TARGETS.filter(([id]) => id !== move.from).map(([id, name]) => (
+            <option key={id} value={id}>
+              → {name}
+            </option>
+          ))}
+        </select>
+      ) : null}
+      {onRemove ? (
+        <button
+          type="button"
+          className="day-menu-btn day-menu-remove"
+          title="Take it off Life Hub without counting it as done"
+          onClick={() => {
+            if (!window.confirm(`Remove “${title}” from Life Hub?\n\nIt won't count as done, and nothing changes on its own site.`)) return;
+            onRemove();
+            onClose();
+          }}
+        >
+          🗑 Remove
         </button>
       ) : null}
       <button type="button" className="day-menu-close" onClick={onClose} aria-label="Close">
