@@ -419,3 +419,8 @@ Design critique + WCAG 2.1 AA + copy + design-system audit, then fixes (last blo
   - On Finances tasks, the ☆ / Pin menu has a **Type** box with suggestions (Items to buy, Bills, Subscriptions, Insurance, Paperwork, Taxes).
   - The type shows as the colored tag before the title. New tag tones were added, and tags are readable in day mode.
 - **Radall card:** tasks first, then "Money due · next 3 weeks".
+
+## Compact finance task types (2026-10-07)
+- Finance types use small, sentence-case tags with bounded width, keeping task titles readable.
+- Doing now / Focus rows and task search show the type after the title.
+- Pinned featured rows hide the inactive critical (!) toggle; explicitly Critical items retain their label and control.

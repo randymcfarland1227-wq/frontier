@@ -80,7 +80,9 @@ export function FeaturedList({
               title={[item.title, item.detail, item.meta].filter(Boolean).join(' — ')}
             >
               <LevelDot level={levelOf(sourceId, item.id)} title={item.title} onCycle={() => cycle(sourceId, item.id)} />
-              <CriticalFlag on={isCritical(sourceId, item.id)} title={item.title} onToggle={() => toggleCritical(sourceId, item.id)} />
+              {!pinned || isCritical(sourceId, item.id) ? (
+                <CriticalFlag on={isCritical(sourceId, item.id)} title={item.title} onToggle={() => toggleCritical(sourceId, item.id)} />
+              ) : null}
               <div className="featured-main">
                 {item.tag ? <span className={`task-tag tone-${tagTone(item.tag)}`}>{item.tag}</span> : null}
                 {item.originUrl ? (
