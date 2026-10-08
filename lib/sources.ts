@@ -275,3 +275,7 @@ export function normalizeSourceId(raw: string): SourceId | null {
   if ((SOURCE_IDS as string[]).includes(raw)) return raw as SourceId;
   return null;
 }
+
+/** Music Hub: music tasks link here so a session can be opened right from Life Hub. */
+export const MUSIC_HUB_URL = 'https://my-music-hub.randymcfarland1227.workers.dev/';
+export const isMusicTask = (title?: string) => /\b(music|vocal|vocals|guitar|serum|production|singing|song)/i.test(title || '');

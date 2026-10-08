@@ -3523,3 +3523,10 @@ button.hero-stat.stat-ticktick.has-rings { display: flex; align-items: center; g
   .flow-row .flow-to { grid-column: 2 / 4; font-size: 12px; }
   .flow-row.flow-history-row { grid-template-columns: minmax(0, 1fr); }
 }
+
+/* === Why: Flow embedded (2026-10-08) === */
+.why-tabs { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 0 0 10px; }
+.why-flow-frame { display: block; width: 100%; height: calc(100vh - 150px); min-height: 560px; border: 1px solid var(--line); border-radius: 12px; background: #0b0b0d; }
+/* Music tasks: ♪ opens Music Hub */
+.row-music { flex: 0 0 auto; display: inline-grid; place-items: center; width: 20px; height: 20px; border-radius: 50%; background: color-mix(in srgb, #8b5cf6 22%, transparent); color: var(--ink); font-size: 12px; text-decoration: none; }
+.row-music:hover { background: #8b5cf6; color: #fff; }

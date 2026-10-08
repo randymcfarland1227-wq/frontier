@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { tagTone } from '../../lib/tagTone';
 import type { FeaturedItem, SourceId, SourceSnapshot } from '../../lib/types';
-import { sourceById } from '../../lib/sources';
+import { sourceById, isMusicTask, MUSIC_HUB_URL } from '../../lib/sources';
 import { pinKey, usePriorityPins } from '../../lib/priorityPins';
 import { DayMenu, shortDue } from './DayMenu';
 import { setTaskTag, TAG_SUGGESTIONS, TAGGABLE } from '../../lib/taskTags';
@@ -92,6 +92,11 @@ export function FeaturedList({
                 ) : (
                   <strong>{item.title}</strong>
                 )}
+                {isMusicTask(item.title) ? (
+                  <a className="row-music" href={MUSIC_HUB_URL} target="_blank" rel="noopener noreferrer" title="Open Music Hub" aria-label="Open Music Hub">
+                    ♪
+                  </a>
+                ) : null}
                 {dueOf(item.id) ? <span className="row-day">{shortDue(dueOf(item.id)!)}</span> : null}
                 {item.meta ? <span className="featured-meta">{compact ? item.meta.replace(/^From /, '') : item.meta}</span> : null}
               </div>
