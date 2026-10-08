@@ -180,8 +180,8 @@ export function PriorityBoard({
           onClick={() => setOpenKey(item.key)}
           title={[item.title, item.detail, entry?.note].filter(Boolean).join(' — ')}
         >
-          {item.tag ? <span className={`task-tag tone-${tagTone(item.tag)}`}>{item.tag}</span> : null}
           <span className="pv-text">{item.title}</span>
+          {item.tag ? <span className={`task-tag tone-${tagTone(item.tag)}`} title={item.tag}>{item.tag}</span> : null}
         </button>
         {isCritical(item.source, item.id) ? <span className="pv-chip is-crit">Critical</span> : null}
         {entry?.due ? <span className="pv-chip">{dueChip(entry.due)}</span> : null}
@@ -237,8 +237,8 @@ export function PriorityBoard({
                   }}
                 >
                   <SiteIcon source={m.source} className="ws-match-icon" />
-                  {m.tag ? <span className={`task-tag tone-${tagTone(m.tag)}`}>{m.tag}</span> : null}
                   <strong>{m.title}</strong>
+                  {m.tag ? <span className={`task-tag tone-${tagTone(m.tag)}`} title={m.tag}>{m.tag}</span> : null}
                   <span className="ws-match-add">+ Add</span>
                 </button>
               ))}

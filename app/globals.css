@@ -3479,3 +3479,16 @@ button.hero-stat.stat-ticktick.has-rings { display: flex; align-items: center; g
 .task-tag.tone-insure { --tag-color: #22c55e; }
 .task-tag.tone-paper { --tag-color: #eab308; }
 .frontier-shell:not([data-color-mode="dark"]) .task-tag[class*="tone-"] { color: color-mix(in srgb, var(--tag-color) 45%, #000) !important; background: color-mix(in srgb, var(--tag-color) 18%, #fff) !important; }
+
+/* Compact finance types: the task title keeps the available space. */
+.space-card.radall .task-tag, .theme-radall .task-tag, .pb-v3 .task-tag {
+  font-size: 10px !important; font-weight: 600; line-height: 1.3 !important;
+  letter-spacing: 0; text-transform: none; padding: 1px 4px;
+  flex: 0 1 auto; min-width: 0; max-width: min(84px, 30%);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.pb-v3 .pv-title .task-tag { flex: 0 1 auto; }
+.pb-v3 .pv-title .pv-text { flex: 0 1 auto; }
+.space-card.radall .featured-main > strong, .space-card.radall .task-main > strong { min-width: 0; flex: 1 1 auto; }
+
+.pb-v3 .pv-group .pv-title { flex-wrap: nowrap; align-items: baseline; }
