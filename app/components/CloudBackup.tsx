@@ -92,7 +92,7 @@ export function CloudBackup() {
                 Turn on backup
               </button>
               <button type="button" className="row-action ghost" onClick={() => setJoining(j => !j)}>
-                I have a key
+                I have a link or key
               </button>
             </>
           ) : (
@@ -123,7 +123,7 @@ export function CloudBackup() {
           <input
             value={key}
             onChange={e => setKey(e.target.value)}
-            placeholder="Paste the key from your other device"
+            placeholder="Paste the link (or key) from your other device"
             aria-label="Backup key"
             autoComplete="off"
             spellCheck={false}

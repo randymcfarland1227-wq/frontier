@@ -200,9 +200,12 @@ export async function enableBackup(): Promise<SyncStatus> {
   return syncNow();
 }
 
-export async function joinWithKey(key: string): Promise<SyncStatus> {
+export async function joinWithKey(input: string): Promise<SyncStatus> {
   const previous = getKey();
-  setKey(key.trim());
+  // Accept the raw key or the whole "Link another device" link (home-screen apps on iPhone have
+  // their own storage and no address bar, so pasting the link here is how they get connected).
+  const fromLink = input.match(/#sync-key=([0-9a-f]{24,})/i);
+  setKey((fromLink ? fromLink[1] : input).trim());
   const result = await syncNow();
   if (result.state === 'error' && result.error === 'wrong_key') {
     setKey(previous);
