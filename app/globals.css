@@ -3560,3 +3560,47 @@ button.hero-stat.stat-ticktick.has-rings { display: flex; align-items: center; g
 .icon-status { flex: 1 0 100%; margin: 4px 0 0; font-size: 12px; color: var(--muted); }
 .icon-status.is-error { color: #e0533d; font-weight: 600; }
 .icon-tile { flex-wrap: wrap; }
+
+/* === Review on the page's scale (2026-10-09) === */
+.review-panel .review-head h2 { font-size: 17px !important; letter-spacing: -.01em; }
+.review-panel :is(.review-lede, .review-empty, .balance-legend) { font-size: 13px !important; }
+.review-panel .period-tiles strong { font-size: 22px; }
+.review-panel .review-bar-label span { font-size: 13px; }
+
+/* === Calendar uses its space: title at the top, thin margins, taller cells, readable items === */
+.sc-month[data-season] { padding: 8px 10px 10px !important; }
+.sc-month[data-season] .cal-script-title { margin: 0 0 4px !important; padding-left: 4px; text-align: left !important; font-size: 22px !important; line-height: 1.15; }
+.sc-month[data-season]::before { top: 6px; right: 10px; font-size: 16px; letter-spacing: 3px; }
+.sc-month[data-season]::after { display: none; }
+.sc-month[data-season] .cal-notice { margin: 0 0 4px; }
+.sc-month[data-season] .mini { margin: 0; }
+.sc-month[data-season] .mini-grid { gap: 4px; }
+.sc-month[data-season] .mini-cell { min-height: 66px; padding: 3px 4px; }
+.sc-month[data-season] .mini-item, .sc-month[data-season] .mini-item.kind-bill, .sc-month[data-season] .mini-item:is(.kind-plan, .kind-invite) {
+  font-size: 11px !important; line-height: 1.25 !important; padding: 1px 5px !important;
+}
+
+/* === Doing now site boxes: tag and date chips sit under the name instead of squeezing it === */
+.pb-v3 .pv-group .pv-row { flex-wrap: wrap; row-gap: 2px; }
+.pb-v3 .pv-group .pv-title { flex: 1 1 55%; }
+.pb-v3 .pv-group .pv-title .task-tag { max-width: none; overflow: visible; }
+.pb-v3 .pv-group .pv-text { flex: 1 1 100%; }
+.pb-v3 .pv-group .pv-row > .pv-chip { order: 3; margin-left: 23px; }
+.pb-v3 .pv-group .pv-row > .pv-tools { order: 2; }
+.pb-v3 .pv-group .pv-title { flex-wrap: wrap; row-gap: 2px; }
+.pb-v3 .pv-group .pv-title .task-tag { order: 2; flex: 0 0 auto; max-width: none !important; overflow: visible !important; text-overflow: clip !important; white-space: nowrap; }
+.pb-v3 .pv-group .pv-title .pv-text { order: 1; }
+@media (min-width: 1100px) {
+  .sched-compact { grid-template-columns: minmax(0, .8fr) minmax(0, .8fr) minmax(0, 2.1fr) !important; }
+}
+@media (min-width: 1100px) {
+  .sched-compact { grid-template-columns: minmax(0, .9fr) minmax(0, .85fr) minmax(0, 1.9fr) !important; }
+}
+/* Busy days grow taller instead of clipping their events */
+.sc-month[data-season] .mini-grid { grid-auto-rows: minmax(66px, auto) !important; align-items: stretch; }
+.sc-month[data-season] .mini-cell { height: auto !important; overflow: visible !important; }
+.sc-month[data-season] .mini-item, .sc-month[data-season] .mini-item.kind-bill, .sc-month[data-season] .mini-item:is(.kind-plan, .kind-invite) { max-height: none !important; -webkit-line-clamp: 3 !important; }
+/* Weekday letters stay one short row; only the week rows get the extra height */
+.sc-month[data-season] .mini-grid { grid-template-rows: auto !important; }
+.sc-month[data-season] .mini-name { align-self: end; padding-bottom: 2px; }
+.sc-month[data-season] .mini-item { word-break: normal !important; overflow-wrap: break-word; hyphens: auto; }
