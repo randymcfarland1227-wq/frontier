@@ -452,3 +452,10 @@ Design critique + WCAG 2.1 AA + copy + design-system audit, then fixes (last blo
 - **Why** opens on an embedded **Flow** tab (live flow-hub); "Goals & work" keeps the old view.
 - **♪** on music tasks opens Music Hub (https://my-music-hub.randymcfarland1227.workers.dev/). Randy marks music sessions done in Life Hub; no session-ID linkage.
 - **No-credit items:** `focus-areas.json` `noCredit` means listed and counted on the TickTick card, but no completion credit and not Balance workload. These were in `ignore` (hidden), which made TickTick show 6 where TickTick had 8.
+- **Logs page** (header: Sites · **Logs** · Why) has tabs, remembered per device:
+  - **Nutrition & movement**: Daylight Matrix, embedded. It shares Life Hub's address, so its data carries over.
+  - **Music**: My Music Hub, embedded (its data is on its server).
+  - **Marvel**: a card that opens the Den in its own window. The Den keeps its data in the browser for its own address, and browsers partition that when it's shown inside another site, so an embed would look empty. It would also need X-Frame-Options removed and SameSite=None/Partitioned cookies.
+- **Why → Goals & work** reads Flow's links from `flow-map.json`:
+  - routines (Drives / Enables / Upkeep) and TickTick items per goal count as attached work, and show under "From Flow" with their bucket;
+  - completions of those TickTick items this week count toward the goal's momentum.

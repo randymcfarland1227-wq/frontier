@@ -94,6 +94,7 @@ import {
 import { ruleFor, saveTaskRule, sourceRuleKey, taskRuleKey, useTaskRules } from '../lib/taskRules';
 import { FlowSyncReview } from './components/FlowSyncReview';
 import { WhyView } from './components/WhyView';
+import { LogsView } from './components/LogsView';
 import { TaskSorting } from './components/TaskSorting';
 import { SiteIconSettings } from './components/SiteIconSettings';
 import { NeedsSorting } from './components/NeedsSorting';
@@ -911,7 +912,7 @@ goalsData ? (
   );
 
   return (
-    <main className={`frontier-shell theme-${active === 'home' || active === 'settings' || active === 'why' || active === 'money' ? 'home' : active}`} data-color-mode={theme}>
+    <main className={`frontier-shell theme-${active === 'home' || active === 'settings' || active === 'why' || active === 'money' || active === 'logs' ? 'home' : active}`} data-color-mode={theme}>
       <Header
         active={active}
         enter={enter}
@@ -1010,6 +1011,8 @@ goalsData ? (
           onRefresh={() => void refreshEverything()}
           syncing={connectorSyncing}
         />
+      ) : active === 'logs' ? (
+        <LogsView />
       ) : active === 'why' ? (
         <WhyView goalsPanel={whyPanel} />
       ) : active === 'settings' ? (
