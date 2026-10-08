@@ -367,3 +367,18 @@ Design critique + WCAG 2.1 AA + copy + design-system audit, then fixes (last blo
 - **Data (private):** `apps-script/LifeHubSchedule.gs` (added to the Life Hub Mail Sync project) reads calendars that are switched on (last 7 days → next 6 weeks) and the Finances sheet's **Bills** tab every 10 min, then POSTs `{source:'schedule', events, bills}` to Worker `/api/schedule/snapshot` (X-Mail-Key). Life Hub GETs with the backup key (`lib/schedule.ts`), caching the last copy in `lifehub-schedule-cache`. Never in `public/data`. Setup steps: `docs/SCHEDULE_SETUP.md`.
 - **Maybe-plans** (`lib/plans.ts`): title, day, optional from/to, note. Each shows how it fits: "Clashes with X (time)" (overlaps a confirmed timed event) / "Free then" / "That day: …". **Yes** opens a pre-filled Google Calendar event (template link, no API) and marks it `yes`; **No** marks it `no`. Plans are never deleted (status only), so the merge can't bring them back. Synced as the new `plans` field. **Needs a Worker deploy** to sync across devices (the Worker's `normalizeState` would otherwise drop it; local copies are kept meanwhile).
 - **Bills** (`lib/schedule.ts` `billDues`): monthly by **Due day** (clamped to month length) and/or a one-off **Due date**; only dates after **Paid through**; with no Paid through, monthly bills count from today (a freshly filled sheet never shows false overdue; set Paid through to get real overdue warnings). **Paid** on Life Hub = ledger completion `radall` / `bill:<id>:<YYYY-MM-DD>` (real Hub Done, syncs, counts in Balance) and hides that due date. Autopay bills drop off after the date. Also shown in the Radall Finances card (next 21 days).
+
+## Events, Priority v3, TickTick rings (2026-10-07)
+- **Schedule → Events** (top half of the middle column; "Needs to confirm" is the bottom half; also in the expanded rail). `lib/events.ts`:
+  - A Google event is listed automatically when all of these hold: confirmed, not `recurring`, and not on a holidays/birthdays calendar.
+  - It must also be at least one of: all-day / multi-day, 4h+ long, or titled with an event word (shower, trip, party, dental, doctor, appointment, wedding…).
+  - Up to 120 days ahead, with an icon by keyword and a countdown chip.
+  - **✕** hides an event and **☆ Event** in a day pop-out shows one; both are stored in the new synced field `eventMarks` (id → {mark, at}, newest wins).
+  - **+ Add an event** creates a plan with `kind: 'event'`, `status: 'yes'` and an optional `endDate`. It shows on the calendar and has a ↗ link to add it to Google.
+- **Apps Script** (`LifeHubSchedule.gs`, pushed to the Mail Sync project): marks `recurring` events. After the 42-day window it also sends one-off or all-day events out to 120 days (max 200). The Worker's schedule size cap was raised to 1.5 MB.
+- **Priority v3** (`PriorityBoard.tsx`, `.pb-v3`):
+  - Two full-width lists. Action list on the left: numbered, 16px checkbox = Done, site logo, one line. On deck on the right: one thin header per site, "+ List".
+  - Subtext moved to the side panel. Color and Critical show as a left edge or chip. Row tools show on hover (always on touch).
+- **TickTick rings** (`TickTickRings.tsx`, hero box) show what share of today's tasks and of today's habits is *logged*: done (green) + won't do (amber) vs still open.
+  - Done = today's ledger entries.
+  - Won't do = habits skipped today, plus tasks closed as won't-do (Worker `/api/ticktick/done` now returns `wontDo`, status −1). Kept in `lifehub-ticktick-daylog` (this browser, today only).

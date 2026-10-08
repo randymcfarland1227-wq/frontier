@@ -290,11 +290,16 @@ async function handleTickTickDone(request: Request, env: Env): Promise<Response>
 
   const errors: string[] = [];
   let tasks: Array<Record<string, unknown>> = [];
+  // Tasks closed as "won't do" (status -1): never a completion, but logged for the day.
+  let wontDo: Array<Record<string, unknown>> = [];
   try {
     const raw = (await ttFetch(env, "/task/completed", {
       method: "POST",
       body: JSON.stringify({ startDate: fmt(start), endDate: fmt(end) }),
     })) as Array<Record<string, unknown>> | null;
+    wontDo = (raw || [])
+      .filter(t => t && t.status === -1 && typeof t.id === "string")
+      .map(t => ({ id: t.id, title: t.title, closedAt: ttTime(t.completedTime) || ttTime(t.modifiedTime) }));
     tasks = (raw || [])
       .filter(t => t && t.status === 2 && typeof t.id === "string")
       .map(t => ({
@@ -355,7 +360,7 @@ async function handleTickTickDone(request: Request, env: Env): Promise<Response>
     errors.push(`habits:${(e as Error).message}`);
   }
 
-  return jsonResponse({ ok: errors.length < 2, tasks, habits, schedule, skipped, errors }, 200, origin);
+  return jsonResponse({ ok: errors.length < 2, tasks, habits, schedule, skipped, wontDo, errors }, 200, origin);
 }
 
 /**
@@ -624,7 +629,7 @@ async function handleSchedule(request: Request, env: Env): Promise<Response> {
       return jsonResponse({ ok: false, error: "wrong_key" }, 401, origin);
     }
     const text = await request.text();
-    if (text.length > 500_000) return jsonResponse({ ok: false, error: "too_large" }, 413, origin);
+    if (text.length > 1_500_000) return jsonResponse({ ok: false, error: "too_large" }, 413, origin);
     let snap: { source?: unknown; refreshedAt?: unknown; events?: unknown; bills?: unknown };
     try {
       snap = JSON.parse(text);

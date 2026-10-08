@@ -36,6 +36,8 @@ export type CalEvent = {
   myStatus: MyStatus;
   /** Who invited me, when it's an invitation */
   organizer?: string;
+  /** Part of a repeating series (weekly class etc.) — never auto-listed as an Event */
+  recurring?: boolean;
 };
 
 export type Bill = {

@@ -35,6 +35,8 @@ export const STORAGE_KEYS = {
   plans: 'lifehub-plans',
   /** Money page payment plans — cloud-synced */
   payPlans: 'lifehub-pay-plans',
+  /** Schedule events shown / hidden in the Events list — cloud-synced */
+  eventMarks: 'lifehub-event-marks',
   /** Uploaded site pictures (Self photo, brand logos) — cloud-synced */
   siteIcons: 'lifehub-site-icons',
   captures: 'lifehub-captures',
