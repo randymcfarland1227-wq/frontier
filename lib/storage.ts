@@ -39,6 +39,8 @@ export const STORAGE_KEYS = {
   eventMarks: 'lifehub-event-marks',
   /** Task type labels ("Items to buy"…) per task — cloud-synced */
   taskTags: 'lifehub-task-tags',
+  /** Items removed from Life Hub (not done) — cloud-synced */
+  hiddenItems: 'lifehub-hidden-items',
   /** Uploaded site pictures (Self photo, brand logos) — cloud-synced */
   siteIcons: 'lifehub-site-icons',
   captures: 'lifehub-captures',

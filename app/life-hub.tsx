@@ -94,6 +94,7 @@ import {
 import { ruleFor, saveTaskRule, sourceRuleKey, taskRuleKey, useTaskRules } from '../lib/taskRules';
 import { FlowSyncReview } from './components/FlowSyncReview';
 import { WhyView } from './components/WhyView';
+import { isHidden, useHiddenItems } from '../lib/siteMoves';
 import { LogsView } from './components/LogsView';
 import { UpdateNotice } from './components/UpdateNotice';
 import { TaskSorting } from './components/TaskSorting';
@@ -510,22 +511,51 @@ export function LifeHub() {
   // Self tasks moved to another site show in that site's card (id "self:<id>"), and task type
   // labels set on Life Hub ("Items to buy") show as each task's tag.
   const taskTags = useTaskTags();
+  const hiddenItems = useHiddenItems();
   const visibleSnapshots = useMemo(() => {
     const out = { ...baseSnapshots };
+    // Removed rows (not done) leave every list and count.
+    if (Object.keys(hiddenItems).length) {
+      for (const id of Object.keys(out) as SourceId[]) {
+        const snap = out[id];
+        if (!snap) continue;
+        const gone = (x: { id: string }) => isHidden(hiddenItems, id, x.id);
+        const goneIds = [...new Set([...snap.tasks, ...snap.featured].filter(gone).map(x => x.id))];
+        if (!goneIds.length) continue;
+        // Counts drop the same way they do when something is completed on Life Hub.
+        let metrics = snap.metrics;
+        for (const gid of goneIds) metrics = metricsAfterLocalComplete(id, { ...snap, metrics }, gid);
+        // …but a removed item isn't done: keep the done counters as they were.
+        metrics = { ...metrics };
+        for (const k of ['done', 'completedTasks']) {
+          if (k in (snap.metrics || {})) metrics[k] = snap.metrics[k];
+          else delete metrics[k];
+        }
+        out[id] = {
+          ...snap,
+          tasks: snap.tasks.filter(t => !gone(t)),
+          featured: snap.featured.filter(f => !gone(f)),
+          metrics,
+        };
+      }
+    }
     for (const item of selfItems) {
       const home = item.home as SourceId | undefined;
       if (!home || home === 'self' || !out[home]) continue;
+      if (hiddenItems[`self::${item.id}`]?.mark === 'hide') continue;
+      const fromName = item.from ? sourceById[item.from.source as SourceId]?.name || item.from.source : 'Self';
       const snap = out[home];
       const id = `self:${item.id}`;
       const task: TaskItem = {
         id,
         title: item.title,
-        detail: [item.detail, 'Moved from Self'].filter(Boolean).join(' · '),
+        detail: [item.detail, `Moved from ${fromName}`].filter(Boolean).join(' · '),
         status: item.done ? 'done' : 'open',
         starred: item.starred,
+        ...(item.from?.url ? { originUrl: item.from.url } : {}),
       };
       const featured = item.starred && !item.done
-        ? [...snap.featured, { id, title: item.title, detail: item.detail || '', meta: 'From Self', completable: true }]
+        ? [...snap.featured, { id, title: item.title, detail: item.detail || '', meta: `From ${fromName}`, completable: true, ...(item.from?.url ? { originUrl: item.from.url } : {}) }]
         : snap.featured;
       const metrics = !item.done && Number.isFinite(snap.metrics?.open) ? { ...snap.metrics, open: Number(snap.metrics.open) + 1 } : snap.metrics;
       out[home] = { ...snap, tasks: [...snap.tasks, task], featured, metrics };
@@ -542,7 +572,7 @@ export function LifeHub() {
       }
     }
     return out;
-  }, [baseSnapshots, selfItems, taskTags]);
+  }, [baseSnapshots, selfItems, taskTags, hiddenItems]);
 
   // Today's workload per bucket (open items + done today + habits due today), remembered per day.
   const todayAvail = useMemo(
@@ -777,6 +807,8 @@ export function LifeHub() {
         recordCompletion('self', id, { via: 'self', title, task: taskNow, focusAreaId: chosenArea || selfItem?.focusAreaId }),
       );
       syncSelf(toggleSelfComplete(id));
+      // A Gmail item moved to another site: finishing it also unstars the email.
+      if (selfItem?.from?.source === 'gmail' && !selfItem.done) unstarGmail(selfItem.from.id);
       return;
     }
 

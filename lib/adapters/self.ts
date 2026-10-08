@@ -20,6 +20,8 @@ export type SelfItem = {
   forEvent?: { id: string; title: string; date: string };
   /** Moved to another site's card (e.g. a finance task captured in Self). Unset = lives in Self. */
   home?: string;
+  /** Moved here from another site's row (a Gmail or Outlook item…) — keeps its link */
+  from?: { source: string; id: string; url?: string };
 };
 
 export function loadSelfItems(): SelfItem[] {
@@ -66,7 +68,7 @@ export function selfSnapshotFrom(allItems: SelfItem[]): SourceSnapshot {
 export function addSelfItem(
   title: string,
   detail = '',
-  extra?: Pick<SelfItem, 'focusAreaId' | 'fromCaptureId' | 'due' | 'forEvent'>,
+  extra?: Pick<SelfItem, 'focusAreaId' | 'fromCaptureId' | 'due' | 'forEvent' | 'from'>,
 ): SelfItem[] {
   const items = loadSelfItems();
   const next: SelfItem = {

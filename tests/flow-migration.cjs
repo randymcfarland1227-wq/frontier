@@ -52,3 +52,14 @@ console.log('Migration checks pass: immutable input, stable counts/identity/date
   assert.equal(mergeCandle({ raw: null, at: '' }, mac).raw, mac.raw, 'a device without Candle data never wipes it');
   console.log('Candle sync checks pass.');
 }
+
+// Removed items ("hidden") sync: newest change wins in both merge orders; a device without the field never un-removes.
+{
+  const a = { ...emptyState(), hidden: { 'radall::row-4': { mark: 'hide', at: '2026-10-09T10:00:00.000Z' } } };
+  const b = { ...emptyState(), hidden: { 'radall::row-4': { mark: null, at: '2026-10-09T09:00:00.000Z' } } };
+  for (const [x, y] of [[a, b], [b, a]]) assert.equal(mergeState(x, y).hidden['radall::row-4'].mark, 'hide');
+  const old = { ...emptyState() };
+  delete old.hidden;
+  assert.equal(mergeState(old, a).hidden['radall::row-4'].mark, 'hide');
+  console.log('Removed-item sync checks pass.');
+}

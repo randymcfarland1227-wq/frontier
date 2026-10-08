@@ -42,6 +42,8 @@ export type SyncedState = {
   eventMarks: Record<string, { mark: string | null; at: string }>;
   /** Task type labels: "source::id" → label ("Items to buy"); newest change wins */
   tags: Record<string, { tag: string | null; at: string }>;
+  /** Items removed from Life Hub without counting as done: "source::id" → 'hide' / null; newest change wins */
+  hidden: Record<string, { mark: string | null; at: string }>;
   /** Peculiar Command Center's studio data (same-origin localStorage bundle); newest change wins */
   candle: CandleBundle;
 };
@@ -106,6 +108,7 @@ export function emptyState(): SyncedState {
     payPlans: [],
     eventMarks: {},
     tags: {},
+    hidden: {},
     candle: { raw: null, at: '' },
   };
 }
@@ -141,6 +144,7 @@ export function normalizeState(raw: unknown): SyncedState {
     payPlans: Array.isArray(s.payPlans) ? s.payPlans.filter(p => p && typeof p.id === 'string') : [],
     eventMarks: s.eventMarks && typeof s.eventMarks === 'object' ? s.eventMarks : {},
     tags: s.tags && typeof s.tags === 'object' ? s.tags : {},
+    hidden: s.hidden && typeof s.hidden === 'object' ? s.hidden : {},
     candle: normalizeCandle(s.candle),
   };
 }
@@ -227,6 +231,7 @@ export function mergeState(aRaw: unknown, bRaw: unknown): SyncedState {
     payPlans: mergeById(a.payPlans, b.payPlans),
     eventMarks: mergeLevels(a.eventMarks, b.eventMarks),
     tags: mergeLevels(a.tags, b.tags),
+    hidden: mergeLevels(a.hidden, b.hidden),
     candle: mergeCandle(a.candle, b.candle),
   };
 }

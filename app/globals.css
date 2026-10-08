@@ -3674,3 +3674,12 @@ button.hero-stat.stat-ticktick.has-rings { display: flex; align-items: center; g
   .ws-reviews { grid-template-columns: 1fr; }
   .ws-points > div { grid-template-columns: 1fr; gap: 2px; }
 }
+
+/* === Row menu: Move to… / Remove / Critical; On deck names clip (2026-10-09) === */
+.day-menu-move { height: 26px; padding: 0 6px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); color: var(--ink); font: inherit; font-size: 12px; }
+.day-menu-btn.day-menu-remove { color: #b42318; }
+.frontier-shell[data-color-mode="dark"] .day-menu-btn.day-menu-remove { color: #f19a8f; }
+.day-menu-btn.day-menu-crit.is-on { background: #b42318; border-color: #b42318; color: #fff; }
+/* Long names (email subjects) stop before the 📅 / + List tools instead of running under them */
+.pb-v3 .pv-group .pv-title { min-width: 0; overflow: hidden; }
+.pb-v3 .pv-group .pv-text { flex: 0 1 auto !important; min-width: 0; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

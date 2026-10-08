@@ -8,6 +8,7 @@ import { pinKey, usePriorityPins } from '../../lib/priorityPins';
 import { DayMenu, shortDue } from './DayMenu';
 import { setTaskTag, TAG_SUGGESTIONS, TAGGABLE } from '../../lib/taskTags';
 import { setSelfHome } from '../../lib/adapters/self';
+import { moveItem, removeItem } from '../../lib/siteMoves';
 
 /** Rows per column in the side-by-side view before "Show more". */
 const SPLIT_PREVIEW = 6;
@@ -162,6 +163,8 @@ export function TaskList({
                           : undefined
                       }
                       backToSelf={task.id.startsWith('self:') ? () => setSelfHome(task.id.slice(5), undefined) : undefined}
+                    move={sourceId !== 'self' ? { from: sourceId, onMove: to => moveItem(sourceId, task, to) } : undefined}
+                    onRemove={sourceId !== 'self' ? () => removeItem(sourceId, task.id) : undefined}
                       onClose={() => setMenuFor(null)}
                     />
                   ) : null}

@@ -8,6 +8,7 @@ import { pinKey, usePriorityPins } from '../../lib/priorityPins';
 import { DayMenu, shortDue } from './DayMenu';
 import { setTaskTag, TAG_SUGGESTIONS, TAGGABLE } from '../../lib/taskTags';
 import { setSelfHome } from '../../lib/adapters/self';
+import { moveItem, removeItem } from '../../lib/siteMoves';
 import { byLevel, useFeaturedLevels } from '../../lib/featuredLevels';
 import { LevelDot } from './LevelDot';
 import { CriticalFlag } from './CriticalFlag';
@@ -80,8 +81,9 @@ export function FeaturedList({
               title={[item.title, item.detail, item.meta].filter(Boolean).join(' — ')}
             >
               <LevelDot level={levelOf(sourceId, item.id)} title={item.title} onCycle={() => cycle(sourceId, item.id)} />
-              {!pinned || isCritical(sourceId, item.id) ? (
-                <CriticalFlag on={isCritical(sourceId, item.id)} title={item.title} onToggle={() => toggleCritical(sourceId, item.id)} />
+              {/* No "!" on starred rows — the list already says it's starred; the flag shows only once it's Critical */}
+              {isCritical(sourceId, item.id) ? (
+                <CriticalFlag on title={item.title} onToggle={() => toggleCritical(sourceId, item.id)} />
               ) : null}
               <div className="featured-main">
                 {item.tag ? <span className={`task-tag tone-${tagTone(item.tag)}`}>{item.tag}</span> : null}
@@ -137,6 +139,9 @@ export function FeaturedList({
                       : undefined
                   }
                   backToSelf={item.id.startsWith('self:') ? () => setSelfHome(item.id.slice(5), undefined) : undefined}
+                  critical={{ on: isCritical(sourceId, item.id), onClick: () => toggleCritical(sourceId, item.id) }}
+                  move={sourceId !== 'self' ? { from: sourceId, onMove: to => moveItem(sourceId, item, to) } : undefined}
+                  onRemove={sourceId !== 'self' ? () => removeItem(sourceId, item.id) : undefined}
                   onClose={() => setMenuFor(null)}
                 />
               ) : null}
