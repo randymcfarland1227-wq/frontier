@@ -66,17 +66,35 @@ export function TickTickWriteBack() {
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState('');
 
-  const load = async (file?: File) => {
+  const load = async (input: HTMLInputElement) => {
+    const file = input.files?.[0];
+    input.value = '';
     if (!file) return;
     try {
-      const plan = JSON.parse(await file.text()) as Plan;
+      const plan = JSON.parse(await file.text()) as Plan & { state?: unknown; rows?: unknown };
+      if (!plan.differences && (plan.state || plan.rows)) {
+        setChanges([]);
+        setNotice(
+          `"${file.name}" is Life Hub's own review export, not Flow's plan. In Flow: Review → TickTick sync ⇄ → Export reviewed sync plan (it downloads flow-reviewed-sync-plan.json); load that here.`,
+        );
+        return;
+      }
+      if (!plan.differences) {
+        setChanges([]);
+        setNotice(`"${file.name}" isn't a Flow sync plan. Use flow-reviewed-sync-plan.json from Flow's TickTick sync page.`);
+        return;
+      }
       const { changes: list, skipped: n } = changesFrom(plan);
       setChanges(list);
       setSkipped(n);
       setPicked([]);
       setResults({});
       setUndo([]);
-      setNotice(list.length ? `${list.length} task changes ready to review.` : 'No task name / instructions / repeat changes in this plan.');
+      setNotice(
+        list.length
+          ? `${list.length} task changes ready to review.`
+          : "Loaded — this plan has no task name / instructions / repeat changes (everything already matches, or Flow's edits are to habits or checklists).",
+      );
     } catch {
       setNotice("That file isn't a Flow sync plan.");
     }
@@ -158,7 +176,7 @@ export function TickTickWriteBack() {
       <div className="flow-bar">
         <label className="row-action ghost tt-file">
           Load Flow plan…
-          <input type="file" accept="application/json" hidden onChange={e => void load(e.target.files?.[0])} />
+          <input type="file" accept="application/json,.json" hidden onChange={e => void load(e.currentTarget)} />
         </label>
         {changes.length ? (
           <>
