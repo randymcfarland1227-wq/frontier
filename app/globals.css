@@ -3309,3 +3309,95 @@ button.hero-stat.stat-ticktick.has-rings { display: flex; align-items: center; g
   display: grid; grid-template-columns: auto auto minmax(0, 1fr) auto auto; align-items: center; gap: 10px; padding: 6px 8px 6px 10px;
   border: 1px solid var(--line, var(--row-line)); border-left: 4px solid var(--ev); border-radius: 8px; background: var(--surface); font-size: 13.5px;
 }
+
+/* =====================================================================================
+   One type scale for every card (2026-10-07). Three sizes, nothing else inside a card:
+   15px  card name + its numbers
+   13px  every item title (tasks, starred items, Self, bills, emails) and empty notes
+   12px  everything secondary: labels, dates, senders, tags, stats, buttons
+   ===================================================================================== */
+:root { --fs-name: 15px; --fs-item: 13px; --fs-meta: 12px; --item-fs: 13px; --meta-fs: 12px; }
+
+/* Header */
+.space-card .card-name, .space-card .card-head h2 { font-size: var(--fs-name) !important; font-weight: 650 !important; line-height: 1.25 !important; letter-spacing: 0 !important; }
+.space-card .card-stat b, .space-card .card-stat.is-main b { font-size: var(--fs-name) !important; line-height: 1.2 !important; }
+.space-card .card-stat, .space-card .card-stat .stat-label, .space-card .card-sub, .space-card .card-sub a { font-size: var(--fs-meta) !important; }
+.space-card .site-icon { font-size: 16px !important; }
+
+/* Section labels inside a card */
+.space-card :is(.featured-heading h3, .featured-heading span, .task-split-label, .task-split-note, .card-bills-label, .card-bills-open, .seg button, .seg-count, .featured-more, .featured-fold-icon) {
+  font-size: var(--fs-meta) !important;
+}
+
+/* Item titles */
+.space-card :is(.task-main strong, .task-main a, .featured-main strong, .featured-main a, .capture-main h3, .capture-main h3 a, .bill-main, .bill-main strong, .habit-chip) {
+  font-size: var(--fs-item) !important; font-weight: 550 !important; line-height: 1.35 !important; letter-spacing: 0 !important;
+}
+.space-card :is(.featured-empty, .review-empty, .capture-empty, .sched-empty) { font-size: var(--fs-item) !important; line-height: 1.4; }
+
+/* Secondary bits */
+.space-card :is(.task-when, .featured-meta, .task-tag, .capture-meta, .capture-meta *, .capture-main p, .bill-sub, .bill-when, .bill-when *, .critical-flag) {
+  font-size: var(--fs-meta) !important; line-height: 1.3 !important;
+}
+.space-card :is(.row-action, .bill-actions .row-action) { font-size: var(--fs-meta) !important; min-height: 24px !important; padding: 2px 9px !important; }
+
+/* Starred items: plain one-line rows, same as task rows (not little cards in a sideways strip) */
+.space-card .featured-list.compact .featured-strip { flex-direction: column !important; flex-wrap: nowrap !important; overflow: visible !important; gap: 3px !important; padding-bottom: 0 !important; }
+.space-card .featured-list.compact .featured-strip > .featured-row {
+  flex: 0 0 auto !important; max-width: none !important; width: 100%;
+  flex-direction: row !important; flex-wrap: nowrap !important; align-items: center !important; gap: 6px !important;
+  padding: 3px 6px !important; min-height: 32px;
+}
+.space-card .featured-list.compact .featured-strip > .featured-row .featured-main { flex: 1 1 auto; min-width: 0; display: flex !important; align-items: center; gap: 8px; }
+.space-card .featured-list.compact .featured-strip > .featured-row .featured-main strong { display: block !important; white-space: nowrap !important; overflow: hidden; text-overflow: ellipsis; -webkit-line-clamp: unset; }
+.space-card .featured-list.compact .featured-strip > .featured-row .featured-main .origin-link { min-width: 0; overflow: hidden; }
+.space-card .featured-list.compact .featured-strip > .featured-row .featured-actions { flex: 0 0 auto; margin-left: auto; }
+
+/* Self: one line per item — title, then small details; the note shows on hover */
+.space-card .capture-row { align-items: center !important; gap: 8px !important; padding: 4px 6px !important; flex-direction: row !important; }
+.space-card .capture-main { flex: 1 1 auto; min-width: 0; display: flex; align-items: center; gap: 8px; }
+.space-card .capture-main h3 { order: -1; flex: 1 1 auto; min-width: 0; margin: 0 !important; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.space-card .capture-meta { flex: 0 1 auto; min-width: 0; margin: 0 !important; display: flex; align-items: center; gap: 6px; white-space: nowrap; overflow: hidden; color: var(--muted); }
+.space-card .capture-row.is-task .capture-kind { display: none; }
+.space-card .capture-main p { display: none; }
+.space-card .capture-actions { flex: 0 0 auto; display: flex; gap: 4px; }
+.space-card .capture-empty { margin: 4px 2px; color: var(--muted); }
+.space-card .captures-panel .capture-list { min-height: 0 !important; }
+
+/* Bills in the Radall card: one line each, small "when" chip */
+.space-card .bill-row { align-items: center !important; gap: 8px !important; padding: 4px 6px !important; min-height: 32px; }
+.space-card .bill-when { flex: 0 0 auto; min-width: 0 !important; width: auto !important; padding: 1px 7px !important; border-radius: 999px !important; white-space: nowrap; display: inline-flex !important; gap: 3px; }
+.space-card .bill-when br { display: none; }
+.space-card .bill-main { min-width: 0; display: flex !important; align-items: baseline; gap: 8px; overflow: hidden; white-space: nowrap; }
+.space-card .bill-main strong { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.space-card .bill-sub { min-width: 0; overflow: hidden; text-overflow: ellipsis; color: var(--muted); }
+
+/* Priority: On deck = a grid of site boxes that grows with the number of sites */
+.pb-v3 .pv-cols { grid-template-columns: minmax(250px, .75fr) minmax(0, 2fr); }
+@media (max-width: 1100px) { .pb-v3 .pv-cols { grid-template-columns: minmax(0, 1fr); } }
+.pb-v3 .pv-deck { background: transparent; border: 0; padding: 0; }
+.pb-v3 .pv-deck > .pv-col-head { margin: 2px 4px 6px; }
+.pb-v3 .pv-groups { display: grid; grid-template-columns: repeat(var(--cols, 1), minmax(0, 1fr)); gap: 8px; max-height: none !important; overflow: visible !important; }
+@media (max-width: 900px) { .pb-v3 .pv-groups { grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); } }
+.pb-v3 .pv-group { min-width: 0; padding: 4px 4px 6px; border: 1px solid var(--line); border-radius: 9px; background: var(--surface); }
+.pb-v3 .pv-group .pv-list { max-height: 210px; overflow-y: auto; scrollbar-width: thin; }
+.pb-v3 .pv-group .pv-row { align-items: flex-start; padding-top: 4px; padding-bottom: 4px; }
+.pb-v3 .pv-group .pv-check { margin-top: 1px; }
+.pb-v3 .pv-group .pv-title { align-items: flex-start; flex-wrap: wrap; }
+.pb-v3 .pv-group .pv-text { white-space: normal; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; font-size: 12.5px; line-height: 1.3; }
+.pb-v3 .pv-group .pv-tools { align-self: center; }
+/* Fixes after the first look */
+.space-card .featured-list.compact .featured-strip > .featured-row .featured-main { justify-content: flex-start !important; text-align: left !important; }
+.space-card .featured-list.compact .featured-strip > .featured-row .featured-main .origin-link { flex: 0 1 auto; display: block; text-align: left; }
+.space-card .featured-list.compact .featured-strip > .featured-row .featured-meta { flex: 0 1 auto; min-width: 0; max-width: 40%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block !important; }
+.space-card .featured-list.compact .featured-strip > .featured-row :is(.level-dot, .critical-flag) { flex: 0 0 auto; position: relative; top: 0; left: 0; right: auto; }
+.space-card .capture-row { min-width: 0; }
+.space-card .capture-main .capture-ago { display: none; }
+.space-card .capture-meta .capture-due, .space-card .capture-meta .capture-area { white-space: nowrap; }
+.space-card .capture-actions .row-action { padding: 2px 8px !important; }
+.space-card .featured-list.compact .featured-strip > .featured-row .featured-main { flex-direction: row !important; align-items: center !important; }
+.space-card .featured-list.compact .featured-strip > .featured-row .level-dot { flex: 0 0 12px !important; width: 12px !important; height: 12px !important; }
+.space-card .featured-list.compact .featured-strip > .featured-row .featured-meta { max-width: 32%; }
+/* Readable accents in cards: subtitle links and the "Pinned" state */
+.space-card .card-sub a { color: color-mix(in srgb, var(--accent) 62%, var(--ink)) !important; }
+.space-card .row-action.ghost.active { color: var(--ink) !important; background: color-mix(in srgb, var(--accent) 22%, var(--surface)) !important; }

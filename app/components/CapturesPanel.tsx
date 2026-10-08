@@ -138,7 +138,8 @@ export function CapturesPanel({
   const [url, setUrl] = useState('');
   const [notes, setNotes] = useState('');
   const [area, setArea] = useState('');
-  const [tab, setTab] = useState<Tab>('inbox');
+  // Open on the inbox only when it has something in it; otherwise on your tasks.
+  const [tab, setTab] = useState<Tab>(() => (captures.some(c => c.status === 'inbox') ? 'inbox' : 'tasks'));
   const [doneDay, setDoneDay] = useState(() => localDay());
   const [taskDay, setTaskDay] = useState('');
   const [logged, setLogged] = useState('');
@@ -291,7 +292,8 @@ export function CapturesPanel({
       </form>
 
       <div className="seg capture-tabs" role="tablist" aria-label="Capture status">
-        {TABS.map(t => (
+        {/* Empty tabs step aside (the open one always shows), so the row stays one line. */}
+        {TABS.filter(t => t.id === tab || t.id === 'inbox' || t.id === 'tasks' || counts[t.id] > 0).map(t => (
           <button
             key={t.id}
             type="button"
@@ -308,7 +310,7 @@ export function CapturesPanel({
       {tab === 'tasks' ? (
         <div className="capture-list">
           {openTasks.length === 0 && doneTasks.length === 0 ? (
-            <p className="review-empty">No Self tasks. Choose Task above to add one.</p>
+            <p className="capture-empty">No Self tasks yet.</p>
           ) : null}
           {[...openTasks, ...doneTasks].map(t => (
             <article className={`capture-row is-task${t.done ? ' is-done' : ''}`} key={t.id}>
@@ -316,7 +318,7 @@ export function CapturesPanel({
                 <div className="capture-meta">
                   <span className="capture-kind kind-task">Task</span>
                   {areaName(t.focusAreaId) ? <span className="capture-area">{areaName(t.focusAreaId)}</span> : null}
-                  {t.done ? <span>done · {shortDay(t.createdAt)}</span> : <span>{ago(t.createdAt)}</span>}
+                  {t.done ? <span>done · {shortDay(t.createdAt)}</span> : <span className="capture-ago">{ago(t.createdAt)}</span>}
                   {!t.done ? <DueChip due={t.due} onChange={due => onTaskDue(t.id, due)} /> : t.due ? <span>{dueLabel(t.due)}</span> : null}
                   {t.forEvent ? <span className="capture-for">for {t.forEvent.title}</span> : null}
                 </div>
@@ -349,9 +351,7 @@ export function CapturesPanel({
       ) : (
       <div className="capture-list">
         {visible.length === 0 ? (
-          <p className="review-empty">
-            {tab === 'inbox' ? 'Inbox clear. Capture anything you want to come back to.' : `Nothing ${tab}.`}
-          </p>
+          <p className="capture-empty">{tab === 'inbox' ? 'Inbox clear.' : `Nothing ${tab}.`}</p>
         ) : (
           visible.map(c => {
             const task = c.promotedTo?.source === 'self' ? selfItems.find(i => i.id === c.promotedTo?.taskId) : undefined;
@@ -361,7 +361,7 @@ export function CapturesPanel({
                   <div className="capture-meta">
                     <span className={`capture-kind kind-${c.kind}`}>{KIND_LABEL[c.kind]}</span>
                     {areaName(c.focusAreaId) ? <span className="capture-area">{areaName(c.focusAreaId)}</span> : null}
-                    <span>{ago(c.createdAt)}</span>
+                    <span className="capture-ago">{ago(c.createdAt)}</span>
                   </div>
                   <h3>
                     {c.url ? (
