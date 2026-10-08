@@ -136,7 +136,7 @@ Star on connector items still opens the origin URL until two-way API star exists
 ## Still needed (later passes)
 
 1. **Origin bridges** — sell-hub, Role Hub script, peculiar-command-center (candle), income-venture-lab, move-os, site-repair-log should:
-   - include `tasks[]` in snapshots
+   - include `tasks[]` in snapshots — and keep recently finished ones as `status: "done"` with `completedAt` (ISO). Life Hub only counts a completion (and its Balance bucket) when a source reports it done; a task that just disappears is never counted. Candle does this (last 31 days).
    - listen for `randys-workroom:complete` / `:star`
    - allow both Pages and Worker parent origins (see above)
 2. **TickTick token** — already on sync box for snapshots; also set Worker secret `TICKTICK_ACCESS_TOKEN` via wrangler (do not commit the token)
