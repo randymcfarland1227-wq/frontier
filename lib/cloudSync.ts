@@ -6,6 +6,7 @@
  */
 
 import { loadLedger } from './completions';
+import { hashText, PCC_KEY, type CandleBundle } from './candleSync';
 import { loadCaptures } from './captures';
 import { loadSelfItems } from './adapters/self';
 import { readSaved, writeSaved, STORAGE_KEYS, LOCAL_WRITE_EVENT } from './storage';
@@ -76,6 +77,44 @@ function setKey(key: string | undefined) {
   writeSaved(STORAGE_KEYS.sync, key ? { key } : {});
 }
 
+const CANDLE_META = 'lifehub-candle-sync';
+
+/**
+ * Peculiar Command Center's saved bundle, stamped with when it last changed on this device.
+ * A change is noticed by comparing with the copy last synced; a device that has never synced
+ * reports no time, so the first sync falls back to "more progress wins" (see candleSync.ts).
+ */
+function readCandle(): CandleBundle {
+  let raw: string | null = null;
+  try {
+    raw = localStorage.getItem(PCC_KEY);
+  } catch {
+    return { raw: null, at: '' };
+  }
+  const meta = readSaved<{ hash?: string; at?: string }>(CANDLE_META, {});
+  if (!raw) return { raw: null, at: meta.at || '' };
+  if (meta.hash && meta.hash !== hashText(raw)) {
+    const at = new Date().toISOString();
+    writeSaved(CANDLE_META, { hash: hashText(raw), at });
+    return { raw, at };
+  }
+  return { raw, at: meta.at || '' };
+}
+
+function writeCandle(next: CandleBundle): boolean {
+  if (!next.raw) return false;
+  let current: string | null = null;
+  try {
+    current = localStorage.getItem(PCC_KEY);
+    if (current !== next.raw) localStorage.setItem(PCC_KEY, next.raw);
+  } catch {
+    return false;
+  }
+  // Remember what was synced, so the next local change is noticed and stamped.
+  writeSaved(CANDLE_META, { hash: hashText(next.raw), at: next.at });
+  return current !== next.raw;
+}
+
 export function readLocalState(): SyncedState {
   return normalizeState({
     completions: loadLedger(),
@@ -93,6 +132,7 @@ export function readLocalState(): SyncedState {
     payPlans: readSaved(STORAGE_KEYS.payPlans, []),
     eventMarks: readSaved(STORAGE_KEYS.eventMarks, {}),
     tags: readSaved(STORAGE_KEYS.taskTags, {}),
+    candle: readCandle(),
   });
 }
 
@@ -125,6 +165,9 @@ function writeLocalState(next: SyncedState): boolean {
         changed = true;
       }
     }
+    // Peculiar's bundle: written straight to its own key (an open Peculiar tab / Life Hub's hidden
+    // copy reload from the storage event).
+    if (writeCandle(next.candle)) changed = true;
   } finally {
     applying = false;
   }
