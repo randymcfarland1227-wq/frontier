@@ -1,7 +1,7 @@
 /* eslint-disable */
 // Node test script (CommonJS on purpose): node tests/flow-migration.cjs
 const fs=require('node:fs'),vm=require('node:vm'),assert=require('node:assert/strict'),ts=require('typescript');
-function load(file){const module={exports:{}};const code=ts.transpileModule(fs.readFileSync(file,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022}}).outputText;vm.runInNewContext(code,{module,exports:module.exports,require,structuredClone,Date,Map,Set,Object,JSON,Number,Error},{filename:file});return module.exports;}
+function load(file){const module={exports:{}};const code=ts.transpileModule(fs.readFileSync(file,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022}}).outputText;vm.runInNewContext(code,{module,exports:module.exports,require:m=>m.startsWith('./')?load(require('node:path').join(require('node:path').dirname(file),m)+'.ts'):require(m),structuredClone,Date,Map,Set,Object,JSON,Number,Error},{filename:file});return module.exports;}
 const {migrateSorting}=load('lib/flowMigration.ts'),{mergeState,emptyState}=load('lib/syncState.ts');
 const time='2026-10-08T12:00:00.000Z';
 const entry={source:'ticktick',taskId:'old-id',title:'Music Session- Main',completedAt:'2026-10-07T17:00:00.000Z',via:'hub',focusAreaId:'self',focusManual:true};
@@ -38,4 +38,17 @@ console.log('Migration checks pass: immutable input, stable counts/identity/date
   assert.equal(next.rules[selfKey].goal, 'none');
   assert.equal(audit.changes[0].entries.length, 2);
   console.log('Non-TickTick history checks pass.');
+}
+// Peculiar Candle bundle sync: newest wins; first sync (no times) → more progress wins.
+{
+  const { mergeCandle } = load('lib/candleSync.ts');
+  const mk = (done, steps) => JSON.stringify({ state: { tasks: [...Array(done)].map(() => ({ status: 'COMPLETE' })).concat([{ status: 'OPEN', steps: [...Array(steps)].map(() => ({ value: 'x' })) }]) } });
+  const mac = { raw: mk(11, 3), at: '' }, phone = { raw: mk(0, 0), at: '' };
+  assert.equal(mergeCandle(phone, mac).raw, mac.raw, 'first sync: more progress wins');
+  assert.equal(mergeCandle(mac, phone).raw, mac.raw, 'first sync, either order');
+  const later = { raw: mk(1, 0), at: '2026-10-09T10:00:00.000Z' };
+  assert.equal(mergeCandle({ ...mac, at: '2026-10-08T10:00:00.000Z' }, later).raw, later.raw, 'newest edit wins after that');
+  assert.equal(mergeCandle(undefined, mac).raw, mac.raw);
+  assert.equal(mergeCandle({ raw: null, at: '' }, mac).raw, mac.raw, 'a device without Candle data never wipes it');
+  console.log('Candle sync checks pass.');
 }

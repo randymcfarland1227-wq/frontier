@@ -9,6 +9,7 @@ import type { SelfItem } from './adapters/self';
 import type { GoalLink } from './goals';
 import type { Plan } from './plans';
 import type { PayPlan } from './payPlans';
+import { mergeCandle, normalizeCandle, type CandleBundle } from './candleSync';
 
 export type LocalGoalLinks = { added: GoalLink[]; removed: string[] };
 
@@ -41,6 +42,8 @@ export type SyncedState = {
   eventMarks: Record<string, { mark: string | null; at: string }>;
   /** Task type labels: "source::id" → label ("Items to buy"); newest change wins */
   tags: Record<string, { tag: string | null; at: string }>;
+  /** Peculiar Command Center's studio data (same-origin localStorage bundle); newest change wins */
+  candle: CandleBundle;
 };
 
 /**
@@ -103,6 +106,7 @@ export function emptyState(): SyncedState {
     payPlans: [],
     eventMarks: {},
     tags: {},
+    candle: { raw: null, at: '' },
   };
 }
 
@@ -137,6 +141,7 @@ export function normalizeState(raw: unknown): SyncedState {
     payPlans: Array.isArray(s.payPlans) ? s.payPlans.filter(p => p && typeof p.id === 'string') : [],
     eventMarks: s.eventMarks && typeof s.eventMarks === 'object' ? s.eventMarks : {},
     tags: s.tags && typeof s.tags === 'object' ? s.tags : {},
+    candle: normalizeCandle(s.candle),
   };
 }
 
@@ -222,6 +227,7 @@ export function mergeState(aRaw: unknown, bRaw: unknown): SyncedState {
     payPlans: mergeById(a.payPlans, b.payPlans),
     eventMarks: mergeLevels(a.eventMarks, b.eventMarks),
     tags: mergeLevels(a.tags, b.tags),
+    candle: mergeCandle(a.candle, b.candle),
   };
 }
 
