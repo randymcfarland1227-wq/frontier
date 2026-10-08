@@ -3549,3 +3549,11 @@ button.hero-stat.stat-ticktick.has-rings { display: flex; align-items: center; g
 .why-flow-title { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--ink); }
 .why-flow-bucket { flex: 0 0 auto; color: var(--muted); font-size: 11.5px; }
 .update-notice { position: fixed; left: 50%; bottom: 16px; transform: translateX(-50%); z-index: 9000; display: flex; align-items: center; gap: 10px; padding: 8px 10px 8px 14px; border-radius: 999px; background: var(--ink); color: var(--surface); font-size: 13px; font-weight: 600; box-shadow: 0 6px 24px rgba(0,0,0,.3); }
+
+/* October at night: deep purple instead of bright orange (orange stays for day mode) */
+.frontier-shell[data-color-mode="dark"] [data-season="halloween"] {
+  --cal-bg: linear-gradient(160deg, #2a1050, #4c1d95 55%, #3b0f6e); --cal-border: #8b5cf6; --cal-head: #fdba74; --cal-ink: #ede9fe;
+}
+.frontier-shell[data-color-mode="dark"] [data-season="halloween"] :is(.row-action.ghost, .seg button) { color: #3b0764; }
+.frontier-shell[data-color-mode="dark"] .cal[data-season="halloween"] { --season: #a78bfa; --season-2: #f97316; }
+.frontier-shell[data-color-mode="dark"] [data-season="halloween"] .mini-day { color: #4c1d95; }
