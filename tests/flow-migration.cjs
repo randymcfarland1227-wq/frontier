@@ -17,7 +17,8 @@ const map=JSON.parse(fs.readFileSync('public/data/flow-map.json'));const focus=J
 assert.equal(map.records.length,74);assert.equal(map.routines.length,87);assert.equal(new Set(map.buckets.map(b=>b.id)).size,9);for(const id of ['self','money','body','work','venture','marvel','home'])assert.ok(focus.areas.some(a=>a.id===id));assert.equal(goals.categories.length,6);assert.equal(goals.efforts.length,20);assert.equal(goals.supplementalEfforts.length,7);
 assert.ok(!focus.areas.find(a=>a.id==='body').sourceMap.some(r=>r.source==='move'));assert.ok(focus.areas.find(a=>a.id==='home').sourceMap.some(r=>r.source==='move'));assert.deepEqual(focus.excludeSources,['repair']);
 // No-credit (orientation / container) items stay listed on the TickTick card: they're in noCredit, not the hidden ignore list.
-for(const t of map.records.filter(t=>!t.credit))assert.ok(focus.noCredit.ticktick.titles.includes(t.title)||focus.ignore.ticktick.titles.includes(t.title),t.title);
+for(const t of map.records.filter(t=>!t.credit))assert.ok(focus.noCredit.ticktick.titles.includes(t.title)||(focus.noCredit.ticktick.titleIncludes||[]).some(x=>t.title.toLowerCase().includes(x)),t.title);
+assert.equal(focus.ignore.ticktick.titles.length,0,'nothing on TickTick is hidden: the card matches TickTick');
 for(const t of ['Daily Work & Income Flow','Creative / Tinkering & Project Menu','Rest & Sleep Priorities'])assert.ok(!focus.ignore.ticktick.titles.includes(t),`${t} must stay visible`);
 console.log('Migration checks pass: immutable input, stable counts/identity/dates, explicit manual reassignment, intentional no-goal, validation, idempotence, both merge orders, preserved original IDs and definitions.');
 // Non-TickTick history (Self / Radall …) uses the same path: count, ids and dates kept; only the chosen key moves.
