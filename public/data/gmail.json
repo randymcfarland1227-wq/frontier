@@ -1,35 +1,11 @@
 {
   "source": "gmail",
   "metrics": {
-    "starred": 5,
-    "unread": 1,
-    "action": 5
+    "starred": 2,
+    "unread": 0,
+    "action": 2
   },
   "featured": [
-    {
-      "id": "1a10a62d5ab3211a",
-      "title": "Welcome to the Zip app!",
-      "detail": "You've got access to all new features.",
-      "meta": "From hello@us-edm.zip.co",
-      "originUrl": "https://mail.google.com/mail/?authuser=randymcfarland1227@gmail.com#all/thread-f:1878183758338924826",
-      "completable": false
-    },
-    {
-      "id": "1a0f147f0a7f47dc",
-      "title": "You made the sale for Texas Instruments TI-84 Plus Graphing Calculator Bl...",
-      "detail": "Next, pack it up and ship it out.",
-      "meta": "From ebay@ebay.com",
-      "originUrl": "https://mail.google.com/mail/?authuser=randymcfarland1227@gmail.com#all/thread-f:1877742105506301916",
-      "completable": false
-    },
-    {
-      "id": "1a0ebf7c7d8db90a",
-      "title": "Payment declined for Google One subscription",
-      "detail": "Google Play Your subscription will be cancelled UPDATE PAYMENT Hi Randy, Transaction was declined. [OR-PFGVEM-18] If you don't update your payment method, you'll lose all of the be",
-      "meta": "From googleplay-noreply@google.com",
-      "originUrl": "https://mail.google.com/mail/?authuser=randymcfarland1227@gmail.com#all/thread-f:1877648636063365386",
-      "completable": false
-    },
     {
       "id": "1a0ca8746bd9e24c",
       "title": "AutoPay failed—make your payment now",
@@ -41,37 +17,13 @@
     {
       "id": "1a0b567ce591d78a",
       "title": "RE: Senior Cvent Platform Administrator - REMOTE",
-      "detail": "Hi Randy, please let me know the best time to call Best regards, Armeena Syiemlieh Lead Recruiter ApTask Global Workforce",
+      "detail": "Hi Randy, please let me know the best time to call Best regards, Armeena Syiemlieh Lead Recruiter https://www.linkedin.com/in/asyiemlieh/ ApTask Global Workforce 📞 Office: 612-614",
       "meta": "From asyiemlieh@agwtalent.com",
       "originUrl": "https://mail.google.com/mail/?authuser=randymcfarland1227@gmail.com#all/thread-f:1876688764157417354",
       "completable": false
     }
   ],
   "tasks": [
-    {
-      "id": "1a10a62d5ab3211a",
-      "title": "Welcome to the Zip app!",
-      "detail": "You've got access to all new features.",
-      "status": "open",
-      "starred": true,
-      "originUrl": "https://mail.google.com/mail/?authuser=randymcfarland1227@gmail.com#all/thread-f:1878183758338924826"
-    },
-    {
-      "id": "1a0f147f0a7f47dc",
-      "title": "You made the sale for Texas Instruments TI-84 Plus Graphing Calculator Bl...",
-      "detail": "Next, pack it up and ship it out.",
-      "status": "open",
-      "starred": true,
-      "originUrl": "https://mail.google.com/mail/?authuser=randymcfarland1227@gmail.com#all/thread-f:1877742105506301916"
-    },
-    {
-      "id": "1a0ebf7c7d8db90a",
-      "title": "Payment declined for Google One subscription",
-      "detail": "Google Play Your subscription will be cancelled UPDATE PAYMENT Hi Randy, Transaction was declined. [OR-PFGVEM-18] If you don't update your payment method, you'll lose all of the be",
-      "status": "open",
-      "starred": true,
-      "originUrl": "https://mail.google.com/mail/?authuser=randymcfarland1227@gmail.com#all/thread-f:1877648636063365386"
-    },
     {
       "id": "1a0ca8746bd9e24c",
       "title": "AutoPay failed—make your payment now",
@@ -83,11 +35,11 @@
     {
       "id": "1a0b567ce591d78a",
       "title": "RE: Senior Cvent Platform Administrator - REMOTE",
-      "detail": "Hi Randy, please let me know the best time to call Best regards, Armeena Syiemlieh Lead Recruiter ApTask Global Workforce",
+      "detail": "Hi Randy, please let me know the best time to call Best regards, Armeena Syiemlieh Lead Recruiter https://www.linkedin.com/in/asyiemlieh/ ApTask Global Workforce 📞 Office: 612-614",
       "status": "open",
       "starred": true,
       "originUrl": "https://mail.google.com/mail/?authuser=randymcfarland1227@gmail.com#all/thread-f:1876688764157417354"
     }
   ],
-  "refreshedAt": "2026-10-07T12:49:34.943Z"
+  "refreshedAt": "2026-10-08T12:43:03.187Z"
 }
