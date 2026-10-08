@@ -440,3 +440,15 @@ Design critique + WCAG 2.1 AA + copy + design-system audit, then fixes (last blo
   - Music Hub session-ID linkage.
   - A labeled baseline for workload after the bucket split; old aggregate workload is not split retroactively.
 - `VITE_LOCAL_PREVIEW=true` is only for review builds.
+
+## TickTick write-back, Flow on Why, music link, no-credit items (2026-10-08)
+- **Write-back** (Settings → bottom of "Review the homes for your work"):
+  - Load Flow's exported "reviewed sync plan" and tick changes.
+  - Worker `POST /api/flow/ticktick/apply` writes **tasks only**, and only `title` / `content` / `repeatFlag`. It requires the claimed backup connection and takes at most 40 per call.
+  - Each task is re-read first. It's skipped if it's no longer open, or if any changed field differs from what the plan saw (`changed_in_ticktick`).
+  - The whole task is sent back with only those fields changed, so checklists, reminders, dates and tags are kept.
+  - Before-values download first. **Undo** sends them back with the same stale check.
+  - Habits stay read-only (their write API is unverified).
+- **Why** opens on an embedded **Flow** tab (live flow-hub); "Goals & work" keeps the old view.
+- **♪** on music tasks opens Music Hub (https://my-music-hub.randymcfarland1227.workers.dev/). Randy marks music sessions done in Life Hub; no session-ID linkage.
+- **No-credit items:** `focus-areas.json` `noCredit` means listed and counted on the TickTick card, but no completion credit and not Balance workload. These were in `ignore` (hidden), which made TickTick show 6 where TickTick had 8.

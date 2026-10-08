@@ -7,6 +7,7 @@ import { migrateSorting, sortingKey, type SortingChange, type SortingState } fro
 import { sourceById } from '../../lib/sources';
 import type { SourceId } from '../../lib/types';
 import { TASK_RULES_EVENT } from '../../lib/taskRules';
+import { TickTickWriteBack } from './TickTickWriteBack';
 
 function readSorting(): SortingState {
   return { rules: readSaved(STORAGE_KEYS.taskRules, {}), completions: readSaved(STORAGE_KEYS.completions, { entries: {} }) };
@@ -207,5 +208,6 @@ export function FlowSyncReview() {
       })}</div>
       <button type="button" className="row-action" disabled={!pickedCount} onClick={applyHistory}>Back up and apply {pickedCount} picked {pickedCount === 1 ? 'row' : 'rows'}</button>
     </>}
+    <TickTickWriteBack />
   </section>;
 }

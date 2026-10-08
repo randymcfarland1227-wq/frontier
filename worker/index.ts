@@ -451,6 +451,76 @@ async function handleFlowCatalog(request: Request, env: Env): Promise<Response> 
   });
 }
 
+/**
+ * POST /api/flow/ticktick/apply — write reviewed Flow changes to TickTick **tasks** only.
+ * Only title, content (instructions) and repeatFlag can change; checklists, status, sections and
+ * deletions are never written. Each change carries the values the plan saw ("expect"): the task is
+ * re-read first and skipped if TickTick changed since, so a stale plan can't overwrite newer edits.
+ * Returns the before-values of every write so the page can offer an exact undo.
+ */
+const FLOW_WRITABLE = ["title", "content", "repeatFlag"] as const;
+type FlowField = (typeof FLOW_WRITABLE)[number];
+
+async function handleFlowApply(request: Request, env: Env): Promise<Response> {
+  const origin = request.headers.get("Origin");
+  if (request.method === "OPTIONS") return new Response(null, { status: 204, headers: corsHeaders(origin) });
+  if (origin && !CORS_ALLOW_ORIGINS.has(origin)) return jsonResponse({ ok: false, error: "cors_denied" }, 403, origin);
+  if (request.method !== "POST") return jsonResponse({ ok: false, error: "method_not_allowed" }, 405, origin);
+  if (!env.TICKTICK_ACCESS_TOKEN) return jsonResponse({ ok: false, error: "token_not_configured" }, 503, origin);
+  if (!(await env.LIFEHUB_STATE.get(AUTH_KEY)) || !(await syncKeyAllowed(request, env))) {
+    return jsonResponse({ ok: false, error: "backup_connection_required" }, 401, origin);
+  }
+  let body: { changes?: unknown };
+  try {
+    body = (await request.json()) as { changes?: unknown };
+  } catch {
+    return jsonResponse({ ok: false, error: "bad_json" }, 400, origin);
+  }
+  const changes = Array.isArray(body.changes) ? body.changes : [];
+  if (!changes.length || changes.length > 40) return jsonResponse({ ok: false, error: "bad_changes" }, 400, origin);
+
+  const norm = (v: unknown) => (v == null ? "" : String(v));
+  const results: Array<Record<string, unknown>> = [];
+  for (const raw of changes as Array<Record<string, unknown>>) {
+    const id = typeof raw?.id === "string" ? raw.id : "";
+    const projectId = typeof raw?.projectId === "string" ? raw.projectId : "";
+    const set = (raw?.set && typeof raw.set === "object" ? raw.set : {}) as Record<string, unknown>;
+    const expect = (raw?.expect && typeof raw.expect === "object" ? raw.expect : {}) as Record<string, unknown>;
+    const fields = Object.keys(set).filter((k): k is FlowField => (FLOW_WRITABLE as readonly string[]).includes(k));
+    if (!id || !projectId || !fields.length || Object.keys(set).length !== fields.length) {
+      results.push({ id, ok: false, error: "invalid_change" });
+      continue;
+    }
+    try {
+      const current = (await ttFetch(env, `/project/${encodeURIComponent(projectId)}/task/${encodeURIComponent(id)}`)) as Record<string, unknown> | null;
+      if (!current || current.id !== id) {
+        results.push({ id, ok: false, error: "not_found" });
+        continue;
+      }
+      if (current.status !== 0) {
+        results.push({ id, ok: false, error: "not_open" });
+        continue;
+      }
+      const stale = fields.filter(f => Object.hasOwn(expect, f) && norm(current[f]) !== norm(expect[f]));
+      if (stale.length) {
+        results.push({ id, ok: false, error: "changed_in_ticktick", fields: stale, current: Object.fromEntries(fields.map(f => [f, current[f] ?? ""])) });
+        continue;
+      }
+      const before = Object.fromEntries(fields.map(f => [f, current[f] ?? ""]));
+      // Send the whole task back with only the reviewed fields changed, so checklist items,
+      // reminders, dates and tags are kept exactly as they are.
+      await ttFetch(env, `/task/${encodeURIComponent(id)}`, {
+        method: "POST",
+        body: JSON.stringify({ ...current, ...Object.fromEntries(fields.map(f => [f, set[f]])), id, projectId }),
+      });
+      results.push({ id, ok: true, fields, before });
+    } catch (e) {
+      results.push({ id, ok: false, error: (e as Error).message || "ticktick_error" });
+    }
+  }
+  return jsonResponse({ ok: true, results }, 200, origin);
+}
+
 async function handleHabitCheckin(request: Request, env: Env): Promise<Response> {
   const origin = request.headers.get("Origin");
   if (request.method === "OPTIONS") return new Response(null, { status: 204, headers: corsHeaders(origin) });
@@ -805,6 +875,7 @@ export default {
     }
 
     if (pathname === "/api/flow/ticktick/catalog") return handleFlowCatalog(request, env);
+    if (pathname === "/api/flow/ticktick/apply") return handleFlowApply(request, env);
 
     if (pathname === "/api/ticktick/open") {
       return handleTickTickOpen(request, env);
