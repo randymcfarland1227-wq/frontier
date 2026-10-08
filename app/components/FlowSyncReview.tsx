@@ -25,13 +25,18 @@ export function FlowSyncReview() {
   // Everything else in the history: chosen bucket / goal per task key (only rows you change apply)
   const [picks, setPicks] = useState<Record<string, { area?: string; goal?: string }>>({});
   const [histFilter, setHistFilter] = useState<'review' | 'all'>('review');
+  const [ttFilter, setTtFilter] = useState<'look' | 'fill' | 'all'>('look');
   const rows = map.records.map(t => {
     const key = sortingKey('ticktick', t.title, t.id);
     const own = review?.rules[key]; const wide = review?.rules['ticktick::*'];
     const prior = Object.values(review?.completions.entries || {}).filter(e => sortingKey(e.source, e.title, e.taskId) === key);
     const beforeArea = own?.area || wide?.area || prior[0]?.focusAreaId;
     const beforeGoal = own?.goal || wide?.goal;
-    return { ...t, key, beforeArea, beforeGoal, prior, differs: beforeArea !== t.bucket || (t.primaryGoal && beforeGoal !== t.primaryGoal) };
+    const differs = Boolean(beforeArea !== t.bucket || (t.primaryGoal && beforeGoal !== t.primaryGoal));
+    // 'fill' = nothing chosen and no past completions (accepting changes no history);
+    // 'history' = would re-file past completions; 'change' = replaces a choice you made.
+    const kind: 'fill' | 'history' | 'change' = prior.length ? 'history' : own?.area || own?.goal ? 'change' : 'fill';
+    return { ...t, key, beforeArea, beforeGoal, prior, differs, kind };
   });
   const areaName = (id?: string | null) => map.buckets.find(b => b.id === id)?.name || id || 'Not saved';
   const goalName = (id?: string | null) => id === 'none' ? 'No goal (intentional)' : map.efforts.find(g => g.id === id)?.effort || id || 'Needs goal / care standard';
@@ -139,30 +144,56 @@ export function FlowSyncReview() {
     {review && <>
       <p>{Object.keys(review.completions.entries).length} stored completion records · {Object.keys(review.rules).length} remembered rules · {rows.filter(r => r.differs).length} proposed differences. Zero completions are created by sorting.</p>
       <p>{outside.length} additional rules or source defaults remain visible in Task sorting below. They are preserved, including intentional “No goal” choices. Existing source defaults only change if you edit them there.</p>
-      <div className="sorting-list">{rows.map(r => <label className="sorting-row" key={r.key}>
-        <input type="checkbox" checked={selected.includes(r.key)} disabled={!r.differs} onChange={e => setSelected(s => e.target.checked ? [...s, r.key] : s.filter(k => k !== r.key))} />
-        <div className="sorting-task"><strong>{r.title}</strong><span>{r.executionType} · {r.semanticKind === 'action' ? 'Action credit' : 'Orientation / container · no action credit'} · {r.prior.length} historical marks</span>
-          <span>Saved: {areaName(r.beforeArea)} → {goalName(r.beforeGoal)}</span><span>Proposed: {areaName(r.bucket)} → {r.primaryGoal ? goalName(r.primaryGoal) : 'Keep your chosen goal; session content decides'}</span>
-        </div>
-      </label>)}</div>
+      {(() => {
+        const diff = rows.filter(r => r.differs);
+        const fill = diff.filter(r => r.kind === 'fill');
+        const look = diff.filter(r => r.kind !== 'fill');
+        const shown = ttFilter === 'fill' ? fill : ttFilter === 'look' ? look : diff;
+        const selectAll = (list: typeof rows) => setSelected(s => [...new Set([...s, ...list.map(r => r.key)])]);
+        return <>
+          <h3 className="flow-history-head">TickTick · {diff.length} suggested</h3>
+          <p className="flow-summary">
+            <b>{fill.length}</b> just fill in a bucket that was never set and touch no past completions. Safe to accept in one go.
+            {' '}<b>{look.length}</b> would change something you chose or move past completions. Worth a quick look.
+          </p>
+          <div className="flow-bar">
+            <div className="seg" role="group" aria-label="Show">
+              <button type="button" className={ttFilter === 'look' ? 'active' : ''} onClick={() => setTtFilter('look')}>Worth a look {look.length}</button>
+              <button type="button" className={ttFilter === 'fill' ? 'active' : ''} onClick={() => setTtFilter('fill')}>New only {fill.length}</button>
+              <button type="button" className={ttFilter === 'all' ? 'active' : ''} onClick={() => setTtFilter('all')}>All {diff.length}</button>
+            </div>
+            <button type="button" className="row-action ghost" disabled={!fill.length} onClick={() => selectAll(fill)}>Select all {fill.length} new</button>
+            <button type="button" className="row-action ghost" disabled={!shown.length} onClick={() => selectAll(shown)}>Select all shown</button>
+            <button type="button" className="row-action ghost" disabled={!selected.length} onClick={() => setSelected([])}>Clear</button>
+          </div>
+          <div className="flow-list">{shown.map(r => <label className={`flow-row kind-${r.kind}`} key={r.key} title={`${r.title} · ${r.executionType} · ${r.semanticKind === 'action' ? 'action credit' : 'orientation / container, no credit'}`}>
+            <input type="checkbox" checked={selected.includes(r.key)} onChange={e => setSelected(s => e.target.checked ? [...s, r.key] : s.filter(k => k !== r.key))} />
+            <span className="flow-title">{r.title}<small>{r.executionType}{r.semanticKind === 'action' ? '' : ' · no credit'}</small></span>
+            <span className="flow-from">{r.beforeArea ? areaName(r.beforeArea) : '—'}</span>
+            <span className="flow-arrow" aria-hidden="true">→</span>
+            <span className="flow-to"><b>{areaName(r.bucket)}</b>{r.primaryGoal ? ` · ${goalName(r.primaryGoal)}` : ''}</span>
+            <span className="flow-n">{r.prior.length ? `${r.prior.length} past` : ''}</span>
+          </label>)}{shown.length ? null : <p className="flow-empty">Nothing in this view.</p>}</div>
+        </>;
+      })()}
       <button type="button" className="row-action" disabled={!selected.length} onClick={apply}>Back up and apply {selected.length} reviewed assignments</button>
       <button type="button" className="row-action ghost" onClick={() => download('frontier-flow-sorting-review.json', { version: 1, state: review, rows, history })}>Export this review</button>
 
       <h3 className="flow-history-head">Everything else in your history</h3>
-      <p>{history.length} tasks from every other site (Self, Gmail, Radall, Role Hub…) and remembered rules · {history.filter(needsReview).length} need a look (no bucket, no goal, or done under more than one bucket). Nothing here changes unless you pick a new bucket or goal on a row.</p>
+      <p className="flow-summary">{history.length} tasks from every other site (Self, Gmail, Radall, Role Hub…) and remembered rules · {history.filter(needsReview).length} need a look (no bucket, no goal, or done under more than one bucket). Nothing here changes unless you pick a new bucket or goal on a row.</p>
       <div className="seg" role="group" aria-label="Show">
         <button type="button" className={histFilter === 'review' ? 'active' : ''} onClick={() => setHistFilter('review')}>Needs a look</button>
         <button type="button" className={histFilter === 'all' ? 'active' : ''} onClick={() => setHistFilter('all')}>All {history.length}</button>
       </div>
-      <div className="sorting-list">{shownHistory.map(h => {
+      <div className="flow-list">{shownHistory.map(h => {
         const p = picks[h.key] || {};
         const set = (patch: { area?: string; goal?: string }) => setPicks(all => ({ ...all, [h.key]: { ...all[h.key], ...patch } }));
-        return <div className="sorting-row flow-history-row" key={h.key}>
-          <div className="sorting-task">
-            <span className="priority-source">{sourceById[h.source as SourceId]?.shortName || h.source}</span>
-            <strong title={h.title}>{h.title}</strong>
-            <span>{h.count ? `${h.count}× done${h.last ? ` · last ${new Date(h.last).toLocaleDateString()}` : ''}` : 'Remembered rule · not done yet'}{h.mixed ? ` · done under ${h.areas.map(areaName).join(' + ')}` : ''}</span>
-          </div>
+        return <div className="flow-row flow-history-row" key={h.key}>
+          <span className="flow-title" title={h.mixed ? `Done under ${h.areas.map(areaName).join(' + ')}` : h.title}>
+            <span className="flow-src">{sourceById[h.source as SourceId]?.shortName || h.source}</span>
+            {h.title}
+            <small>{h.count ? `${h.count}×` : 'rule only'}{h.mixed ? ' · mixed' : ''}</small>
+          </span>
           <select value={p.area ?? h.area ?? ''} onChange={e => set({ area: e.target.value || undefined })} aria-label={`Bucket for ${h.title}`}>
             <option value="">{h.area ? areaName(h.area) : 'Pick a bucket…'}</option>
             {map.buckets.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
