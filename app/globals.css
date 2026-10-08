@@ -3401,3 +3401,60 @@ button.hero-stat.stat-ticktick.has-rings { display: flex; align-items: center; g
 /* Readable accents in cards: subtitle links and the "Pinned" state */
 .space-card .card-sub a { color: color-mix(in srgb, var(--accent) 62%, var(--ink)) !important; }
 .space-card .row-action.ghost.active { color: var(--ink) !important; background: color-mix(in srgb, var(--accent) 22%, var(--surface)) !important; }
+
+/* === Star / Pin / 📅 → a small "day" line under the row (2026-10-07) === */
+:is(.task-row, .featured-row, .pv-row):has(> .day-menu) { flex-wrap: wrap !important; }
+.day-menu {
+  flex: 1 0 100%; order: 99; display: flex; flex-wrap: wrap; align-items: center; gap: 4px;
+  margin: 4px 0 1px; padding: 4px 6px; border-radius: 7px; background: var(--surface-2); border: 1px solid var(--line);
+}
+.day-menu-label { margin: 0 2px 0 6px; color: var(--muted); font-size: 12px; font-weight: 600; }
+.day-menu-btn, .day-menu-close {
+  height: 24px; padding: 0 8px; border: 1px solid var(--line); border-radius: 999px; background: var(--surface);
+  color: var(--ink); font: inherit; font-size: 12px; font-weight: 600; cursor: pointer; white-space: nowrap;
+}
+.day-menu-btn:hover { border-color: var(--accent); }
+.day-menu-btn.is-on { background: var(--accent); border-color: var(--accent); color: #fff; }
+.frontier-shell[data-color-mode="dark"] .day-menu-btn.is-on { color: #0b1414; }
+.day-menu-close { margin-left: auto; padding: 0 7px; border-color: transparent; background: none; color: var(--muted); }
+.day-menu-date { height: 24px; padding: 0 6px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); color: var(--ink); font: inherit; font-size: 12px; }
+
+/* A row that has a day shows it as a small chip */
+.row-day { flex: 0 0 auto; padding: 0 6px; border-radius: 999px; background: color-mix(in srgb, var(--accent) 18%, transparent); color: var(--ink); font-size: 12px !important; font-weight: 600; line-height: 18px; white-space: nowrap; }
+
+/* TickTick: a small round ✓ instead of a Done button */
+.row-check {
+  flex: 0 0 auto; display: grid; place-items: center; width: 24px; height: 24px; padding: 0; border-radius: 50%;
+  border: 1.5px solid color-mix(in srgb, var(--accent) 70%, var(--line)); background: transparent;
+  color: var(--accent); font-size: 13px; font-weight: 800; line-height: 1; cursor: pointer;
+}
+.row-check:hover { background: var(--accent); color: #fff; }
+.frontier-shell[data-color-mode="dark"] .row-check:hover { color: #0b1414; }
+.space-card .task-row .row-star { min-width: 24px; padding: 0 4px !important; }
+.space-card .task-split .task-actions { gap: 3px; }
+/* Tiny calendar next to + List in Priority */
+.pb-v3 .pv-cal { min-width: 22px; padding: 0 3px; font-size: 12px; filter: grayscale(.6); opacity: .8; }
+.pb-v3 .pv-cal.is-set, .pb-v3 .pv-cal:hover { filter: none; opacity: 1; }
+.pb-v3 .pv-deck .pv-tools .pv-tool.pv-cal { opacity: .8; }
+/* TickTick's two narrow columns: names get the room — up to two lines; "overdue" becomes a red edge */
+.space-card .task-split .task-row { align-items: center; min-height: 34px; }
+.space-card .task-split .task-row .task-when { display: none !important; }
+.space-card .task-split .task-row.is-overdue { box-shadow: inset 3px 0 0 #e0533d; }
+.space-card .task-split .task-row .task-main { align-items: center; }
+.space-card .task-split .task-row .task-main strong {
+  white-space: normal !important; display: -webkit-box !important; -webkit-box-orient: vertical; -webkit-line-clamp: 2;
+  overflow: hidden; text-overflow: clip; line-height: 1.25 !important;
+}
+.space-card .task-split .task-row .origin-link { min-width: 0; }
+.space-card .task-split .task-row .row-day { order: -1; }
+/* The day line always gets its own row (beats the older one-line rules) */
+.space-card .featured-list.compact .featured-strip > .featured-row.has-menu,
+.space-card .task-row.has-menu, .pb-v3 .pv-row:has(> .day-menu) { flex-wrap: wrap !important; }
+.space-card .featured-list.compact .featured-strip > .featured-row.has-menu > .day-menu { flex: 1 0 100% !important; }
+/* Narrow columns (TickTick tasks | habits): no "Day" label, tighter buttons */
+.task-split .day-menu { gap: 3px; padding: 4px; }
+.task-split .day-menu-label { display: none; }
+.task-split .day-menu-btn { padding: 0 6px; }
+.task-split .day-menu-date { width: 100%; flex: 1 1 110px; }
+.space-card .row-day, .row-day { color: var(--ink) !important; background: color-mix(in srgb, var(--accent) 22%, var(--surface)) !important; }
+.day-menu-label { color: var(--ink); }

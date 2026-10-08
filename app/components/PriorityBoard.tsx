@@ -8,6 +8,7 @@ import { DECK, PLAN, openBefore, pinKey, placePin, unpin, usePriorityPins, type 
 import { byLevel, criticalKeys, useFeaturedLevels } from '../../lib/featuredLevels';
 import { SiteIcon } from './SiteIcon';
 import { PriorityPanel, type PriorityItem } from './PriorityPanel';
+import { DayMenu } from './DayMenu';
 
 /** Self's stand-in detail for starred items with no note — not worth a subtext line. */
 const FILLER_DETAIL = 'Captured in Self inbox';
@@ -76,6 +77,8 @@ export function PriorityBoard({
   const [dragging, setDragging] = useState<string | null>(null);
   const [over, setOver] = useState<string | null>(null);
   const [openKey, setOpenKey] = useState<string | null>(null);
+  // Row whose 📅 day line is open
+  const [dayFor, setDayFor] = useState<string | null>(null);
 
   const catalog = useMemo(() => buildCatalog(snapshots), [snapshots]);
   const criticals = useMemo(() => criticalKeys(levels).map(([s, id]) => pinKey(s, id)), [levels]);
@@ -274,6 +277,17 @@ export function PriorityBoard({
                   <SiteIcon source={item.source} className="pv-site" />
                   {rowTitle(item)}
                   <span className="pv-tools">
+                    <button
+                    type="button"
+                    className={`pv-tool pv-cal${lanes[item.key]?.due ? ' is-set' : ''}`}
+                    data-day-trigger
+                    onClick={() => setDayFor(d => (d === item.key ? null : item.key))}
+                    aria-expanded={dayFor === item.key}
+                    aria-label={`Give ${item.title} a day`}
+                    title="Give it a day (shows on the calendar)"
+                    >
+                    📅
+                    </button>
                     <button type="button" className="pv-tool" onClick={() => nudge(i, -1)} disabled={i === 0} aria-label={`Move ${item.title} up`} title="Move up">
                       ▲
                     </button>
@@ -291,6 +305,7 @@ export function PriorityBoard({
                       ↩
                     </button>
                   </span>
+                  {dayFor === item.key ? <DayMenu itemKey={item.key} title={item.title} onClose={() => setDayFor(null)} /> : null}
                 </li>
               ))}
             </ol>
@@ -323,6 +338,17 @@ export function PriorityBoard({
                           <span className="pv-tools">
                             <button
                               type="button"
+                              className={`pv-tool pv-cal${lanes[item.key]?.due ? ' is-set' : ''}`}
+                              data-day-trigger
+                              onClick={() => setDayFor(d => (d === item.key ? null : item.key))}
+                              aria-expanded={dayFor === item.key}
+                              aria-label={`Give ${item.title} a day`}
+                              title="Give it a day (shows on the calendar)"
+                            >
+                              📅
+                            </button>
+                            <button
+                              type="button"
                               className="pv-tool pv-add"
                               onClick={() => move(item, PLAN)}
                               aria-label={`Add ${item.title} to the action list`}
@@ -334,6 +360,7 @@ export function PriorityBoard({
                               ✕
                             </button>
                           </span>
+                          {dayFor === item.key ? <DayMenu itemKey={item.key} title={item.title} onClose={() => setDayFor(null)} /> : null}
                         </li>
                       ))}
                     </ul>
