@@ -47,7 +47,7 @@ export function GoalSelect({
   const active = (goals?.goals || []).filter(g => g.status === 'active');
   return (
     <select className="sort-select" value={value} onChange={e => onChange(e.target.value)} aria-label={label}>
-      <option value="">— Pick a goal —</option>
+      <option value="">— Pick a goal or care standard —</option>
       <option value={NO_GOAL}>No goal</option>
       {(goals?.categories || []).map(c => {
         const inCat = active.filter(g => g.categoryId === c.id);

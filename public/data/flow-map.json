@@ -1,0 +1,4231 @@
+{
+  "categories": [
+    {
+      "id": "physical",
+      "label": "Physical Body",
+      "icon": "💪",
+      "headline": "Our body is our best friend and we take care of her like a delicate rose, so we have the best physical experience."
+    },
+    {
+      "id": "mental",
+      "label": "Mental",
+      "icon": "🧠",
+      "headline": "Equally as important as physical well-being is mental — we take care of our body daily, so we must do the same for our brain."
+    },
+    {
+      "id": "connection",
+      "label": "Connection",
+      "icon": "🤝",
+      "headline": "Building a life that focuses on the souls in the world around us rewards us with an experience of love, memories, joy, and connection."
+    },
+    {
+      "id": "financial",
+      "label": "Financial",
+      "icon": "💰",
+      "headline": "A healthy relationship with our finances lets us think in non-restrictive ways, and security eases tension in our brains and bodies."
+    },
+    {
+      "id": "spiritual",
+      "label": "Spiritual / Embodiment",
+      "icon": "✨",
+      "headline": "Having the deepest connection within our soul provides us purpose — how we act is how we embody it."
+    },
+    {
+      "id": "upkeep",
+      "label": "Life Care & Upkeep",
+      "icon": "🏡",
+      "headline": "A cared-for life gives us room to live: keeping our spaces, systems and everyday needs usable without making every task a growth project."
+    }
+  ],
+  "efforts": [
+    {
+      "id": "physical-protein",
+      "category": "physical",
+      "effort": "Protein Intake",
+      "reason": "To help grow muscles for both strength, aesthetic, and endurance",
+      "how": "170 grams of protein daily via natural sources and protein shakes"
+    },
+    {
+      "id": "physical-hydration",
+      "category": "physical",
+      "effort": "Hydrating Our Body",
+      "reason": "To give our body the required hydration for optimal physical and mental experience",
+      "how": "3–4 bottles a day (add lime for flavor if not wanting it plain)"
+    },
+    {
+      "id": "physical-selfcare",
+      "category": "physical",
+      "effort": "Self Care Practices",
+      "reason": "To take care of our beautiful body and also grow our confidence and ensure emboldness",
+      "how": "Follow the self care guide on a routine basis and keep up with needs"
+    },
+    {
+      "id": "physical-nourish",
+      "category": "physical",
+      "effort": "Nourishing Our Body",
+      "reason": "To give our body the proper tools to repair and manage functions for all parts of us",
+      "how": "Eating whole foods — fruits, vegetables, etc."
+    },
+    {
+      "id": "physical-sleep",
+      "category": "physical",
+      "effort": "Getting Good Sleep",
+      "reason": "To allow peak body repair and feeling rested to take on the world",
+      "how": "8 hours (7 hour minimum)"
+    },
+    {
+      "id": "physical-vitamins",
+      "category": "physical",
+      "effort": "Taking Vitamins / Supps",
+      "reason": "To supplement or enhance the vitamins we are deriving from foods",
+      "how": "Using the pill organizer and the purchase sheet to keep up on needs"
+    },
+    {
+      "id": "mental-reading",
+      "category": "mental",
+      "effort": "Reading More",
+      "reason": "To promote a healthy and aware brain while also learning / intaking low stimuli",
+      "how": "Using the books we have and setting an intention to be curious"
+    },
+    {
+      "id": "mental-journaling",
+      "category": "mental",
+      "effort": "Journaling",
+      "reason": "Present moment awareness — slowing down enough to realize we are all we need to be",
+      "how": "Using Google Docs as a reflection space, not as a task planner or psychoanalyzer"
+    },
+    {
+      "id": "mental-healthyminds",
+      "category": "mental",
+      "effort": "Healthy Minds Sessions",
+      "reason": "To cover a range of healthy mind practices that in turn grow a richer reality and experience",
+      "how": "Daily sessions on the Healthy Minds app"
+    },
+    {
+      "id": "mental-cleanspaces",
+      "category": "mental",
+      "effort": "Clean Spaces / Things",
+      "reason": "Less clutter will always equal calm — routine prevents needing to catch up",
+      "how": "Follow the TickTick schedule and do extra when we can"
+    },
+    {
+      "id": "connection-social",
+      "category": "connection",
+      "effort": "Social Connection",
+      "reason": "To feel connected and cultured — being present with the people in the world around us",
+      "how": "Look for / plan lunches, fun experiences, momentum"
+    },
+    {
+      "id": "connection-relationships",
+      "category": "connection",
+      "effort": "Cultivating Relationships",
+      "reason": "To give friendship and compassion to someone I can build memories and experiences with",
+      "how": "To be a villager — put in the effort"
+    },
+    {
+      "id": "connection-experiences",
+      "category": "connection",
+      "effort": "Experiences and Pics",
+      "reason": "Creating novel experiences I can look back on reflectively with proudness",
+      "how": "Make opportunities for pics"
+    },
+    {
+      "id": "connection-training",
+      "category": "connection",
+      "effort": "Training (Marvel)",
+      "reason": "To help Marvel and I's bond and promote an environment where he knows how to be",
+      "how": "Following the plan and auditing monthly"
+    },
+    {
+      "id": "financial-credit",
+      "category": "financial",
+      "effort": "Credit",
+      "reason": "To ascertain a credit score that opens the door for us to be independent and long lasting",
+      "how": "Making active accounts attractive, paying old debts, and a plan for the two big ones"
+    },
+    {
+      "id": "financial-savings",
+      "category": "financial",
+      "effort": "Moving Forward Savings",
+      "reason": "To give us the tools needed to spread our wings into the world, to experience life",
+      "how": "Using the savings tracker to best build how we are preparing ourselves"
+    },
+    {
+      "id": "financial-material",
+      "category": "financial",
+      "effort": "Material",
+      "reason": "To catch up on odds and ends that cause us disdain",
+      "how": "Use the sheet to snowball them into a complete state"
+    },
+    {
+      "id": "spiritual-guitar",
+      "category": "spiritual",
+      "effort": "Guitar",
+      "reason": "To embody the art of acoustic songwriting and storytelling",
+      "how": "Use TickTick reminder with the guitar reference sheet"
+    },
+    {
+      "id": "spiritual-vocal",
+      "category": "spiritual",
+      "effort": "Vocal",
+      "reason": "To give our gift a place to grow and tell the story of emotion through expression",
+      "how": "Use TickTick reminder with the guitar reference sheet"
+    },
+    {
+      "id": "spiritual-production",
+      "category": "spiritual",
+      "effort": "Production",
+      "reason": "To master how to deliver our creativity to a broad range in a quality and well-done way",
+      "how": "Use TickTick reminder with the guitar reference sheet"
+    },
+    {
+      "id": "upkeep-home",
+      "category": "upkeep",
+      "effort": "Home & possessions",
+      "reason": "Keep spaces and the things you use clean, organized and usable.",
+      "how": "Existing cleaning, laundry, possessions and home care actions.",
+      "proposed": true
+    },
+    {
+      "id": "upkeep-digital",
+      "category": "upkeep",
+      "effort": "Digital systems",
+      "reason": "Keep sites, devices, files and tools working for you.",
+      "how": "Site repairs, digital decluttering, file and device upkeep.",
+      "proposed": true
+    },
+    {
+      "id": "upkeep-admin",
+      "category": "upkeep",
+      "effort": "Communications & administration",
+      "reason": "Keep messages and everyday paperwork manageable.",
+      "how": "Gmail, Outlook, forms and administrative loose ends; classify goal-related exceptions by their actual purpose.",
+      "proposed": true
+    },
+    {
+      "id": "upkeep-financial",
+      "category": "upkeep",
+      "effort": "Financial administration",
+      "reason": "Keep financial records and obligations current.",
+      "how": "Record updates, bill administration and insurance logistics; distinguish these from credit, savings and income progress.",
+      "proposed": true
+    },
+    {
+      "id": "upkeep-personal",
+      "category": "upkeep",
+      "effort": "Personal logistics",
+      "reason": "Keep practical arrangements and everyday necessities in place.",
+      "how": "Appointments, returning equipment and personal loose ends; direct self-care can still belong to Physical Body.",
+      "proposed": true
+    },
+    {
+      "id": "physical-strength",
+      "category": "physical",
+      "effort": "Strength, mobility & recovery",
+      "reason": "A proposed home for the training, PT and movement practices already in your life.",
+      "how": "Keep the existing practices; add no new habits.",
+      "proposed": true
+    },
+    {
+      "id": "financial-independence",
+      "category": "financial",
+      "effort": "Independence & a nourishing livelihood",
+      "reason": "Build security while discovering work and ventures that fit your way of living.",
+      "how": "Connect the existing move, role, resale, candle and venture work; keep their horizons distinct.",
+      "proposed": true
+    }
+  ],
+  "routines": [
+    {
+      "id": "mind-healthy-minds-session",
+      "category": "mind",
+      "focus": "Healthy Minds Sessions",
+      "why": "To aid in mental growth and being present",
+      "what": "Awareness Monday, Connection Tuesday, Insight Wednesday, Purpose Thursday, Foundations Friday",
+      "frequency": "Habit · Mon–Fri",
+      "freq": 5,
+      "duration": "One guided session each weekday",
+      "object": "Healthy Minds App",
+      "active": true,
+      "dateAdded": "2026-01-01",
+      "link": {
+        "tier": "drive",
+        "efforts": [
+          "mental-healthyminds"
+        ]
+      },
+      "reminder": false,
+      "bucket": "self"
+    },
+    {
+      "id": "mind-journaling",
+      "category": "mind",
+      "focus": "Journal or Self Discovery",
+      "why": "To channel joys and desires and stay connected to yourself",
+      "what": "Journal, reflect, or complete a self-discovery practice",
+      "frequency": "Habit · Daily",
+      "freq": 7,
+      "duration": "A page, paragraph, or short prompt",
+      "object": "Notes, Google Doc, paper, or Bear",
+      "active": true,
+      "dateAdded": "2026-01-01",
+      "link": {
+        "tier": "drive",
+        "efforts": [
+          "mental-journaling"
+        ]
+      },
+      "reminder": false,
+      "bucket": "self"
+    },
+    {
+      "id": "mind-reading",
+      "category": "mind",
+      "focus": "Read (Even 3 Pages)",
+      "why": "To grow attention span while learning and relaxing the mind",
+      "what": "Read at least three pages",
+      "frequency": "Habit · Every 3 days",
+      "freq": 2.33,
+      "duration": "Three or more pages",
+      "object": "Books",
+      "active": true,
+      "dateAdded": "2026-01-01",
+      "link": {
+        "tier": "drive",
+        "efforts": [
+          "mental-reading"
+        ]
+      },
+      "reminder": false,
+      "bucket": "self"
+    },
+    {
+      "id": "mind-clothes-audit",
+      "category": "organizing",
+      "focus": "Monthly Closet Audit",
+      "why": "To keep clothing visible, usable, and aligned with your life",
+      "what": "Review seasonal clothes, shoes, and items to donate or reorganize",
+      "frequency": "Task · 1st Sat monthly",
+      "freq": 0.25,
+      "duration": "Monthly",
+      "object": "Closet and donation bags",
+      "active": true,
+      "dateAdded": "2026-01-01",
+      "link": {
+        "tier": "upkeep",
+        "efforts": [
+          "upkeep-home"
+        ]
+      },
+      "reminder": false,
+      "bucket": "home"
+    },
+    {
+      "id": "mind-smile-to-yourself",
+      "category": "mind",
+      "focus": "Smile to Yourself",
+      "why": "To intentionally create a small moment of warmth and self-connection",
+      "what": "Pause and smile to yourself",
+      "frequency": "Habit · Daily",
+      "freq": 7,
+      "duration": "A few seconds",
+      "object": "",
+      "active": true,
+      "dateAdded": "2026-08-28",
+      "link": {
+        "tier": "unsorted",
+        "efforts": []
+      },
+      "reminder": false,
+      "bucket": "self"
+    },
+    {
+      "id": "mind-weekday-reminders",
+      "category": "mind",
+      "focus": "Open Grounding (Reminders)",
+      "why": "To reconnect priorities, purpose, rest, joy, curiosity, and self-assurance with the day",
+      "what": "Read the grounding reminders and choose the attention the day needs",
+      "frequency": "Task · Mon–Fri",
+      "freq": 5,
+      "duration": "Brief weekday orientation",
+      "object": "TickTick Grounding list",
+      "active": true,
+      "dateAdded": "2026-08-28",
+      "link": {
+        "tier": "unsorted",
+        "efforts": []
+      },
+      "reminder": true,
+      "bucket": "self"
+    },
+    {
+      "id": "mind-personal-check-in",
+      "category": "mind",
+      "focus": "Personal Check In (Bi Weekly)",
+      "why": "To review routines, projects, tasks, and self-grounding",
+      "what": "Complete the routines, projects/tasks, and grounding checklist",
+      "frequency": "Task · Every other Sat",
+      "freq": 0.5,
+      "duration": "Bi-weekly",
+      "object": "TickTick checklist",
+      "active": true,
+      "dateAdded": "2026-08-28",
+      "link": {
+        "tier": "upkeep",
+        "efforts": [
+          "upkeep-admin"
+        ]
+      },
+      "reminder": false,
+      "bucket": "self"
+    },
+    {
+      "id": "body-cardio-training",
+      "category": "body",
+      "focus": "Cardio — Gym",
+      "why": "To build endurance for summer and festival season",
+      "what": "Complete the planned cardio session at the gym",
+      "frequency": "Habit · Tue & Fri",
+      "freq": 2,
+      "duration": "Two sessions a week",
+      "object": "Gym and time",
+      "active": true,
+      "dateAdded": "2026-01-01",
+      "link": {
+        "tier": "drive",
+        "efforts": [
+          "physical-strength"
+        ]
+      },
+      "reminder": false,
+      "bucket": "body"
+    },
+    {
+      "id": "body-protein-intake",
+      "category": "body",
+      "focus": "Protein Intake",
+      "why": "To give the body the proper resources to grow strength",
+      "what": "Meal prepping, protein shakes, clean eating",
+      "frequency": "Not in TickTick",
+      "freq": 0,
+      "duration": "189g a day",
+      "object": "Food shopping and protein powder",
+      "active": false,
+      "dateAdded": "2026-01-01",
+      "link": {
+        "tier": "drive",
+        "efforts": [
+          "physical-protein"
+        ]
+      },
+      "reminder": false,
+      "bucket": "body"
+    },
+    {
+      "id": "body-vitamins-supplements",
+      "category": "body",
+      "focus": "Medicine and Vitamins",
+      "why": "To support health, recovery, and well-being",
+      "what": "Take medicine, vitamins, and planned sleep supplements",
+      "frequency": "Habit · Daily",
+      "freq": 7,
+      "duration": "Daily",
+      "object": "Medicine and supplements",
+      "active": true,
+      "dateAdded": "2026-01-01",
+      "link": {
+        "tier": "drive",
+        "efforts": [
+          "physical-vitamins"
+        ]
+      },
+      "reminder": false,
+      "bucket": "body"
+    },
+    {
+      "id": "body-abdominal-training",
+      "category": "body",
+      "focus": "Abdominal Training — Gym",
+      "why": "To grow abdominal and internal muscles and sculpt physique",
+      "what": "Complete the planned abdominal training at the gym",
+      "frequency": "Habit · Mon & Wed",
+      "freq": 2,
+      "duration": "Two sessions a week",
+      "object": "Gym and time",
+      "active": true,
+      "dateAdded": "2026-01-01",
+      "link": {
+        "tier": "drive",
+        "efforts": [
+          "physical-strength"
+        ]
+      },
+      "reminder": false,
+      "bucket": "body"
+    },
+    {
+      "id": "body-water-intake",
+      "category": "body",
+      "focus": "Drink 5 Bottles of Water",
+      "why": "To support hydration, endurance, recovery, and regulation",
+      "what": "Drink at least five bottles of water",
+      "frequency": "Habit · Daily",
+      "freq": 7,
+      "duration": "Five bottles",
+      "object": "Water bottle",
+      "active": true,
+      "dateAdded": "2026-08-29",
+      "link": {
+        "tier": "drive",
+        "efforts": [
+          "physical-hydration"
+        ]
+      },
+      "reminder": false,
+      "bucket": "body"
+    },
+    {
+      "id": "body-moisturize-body",
+      "category": "body",
+      "focus": "Moisturize Body",
+      "why": "To support skin health and elasticity",
+      "what": "Moisturize entire body after shower",
+      "frequency": "Habit · Sun, Mon, Wed & Fri",
+      "freq": 4,
+      "duration": "Four times a week",
+      "object": "Lotion",
+      "active": true,
+      "dateAdded": "2026-01-01",
+      "link": {
+        "tier": "drive",
+        "efforts": [
+          "physical-selfcare"
+        ]
+      },
+      "reminder": false,
+      "bucket": "body"
+    },
+    {
+      "id": "body-feet-care",
+      "category": "body",
+      "focus": "Foot Care and Moisturize",
+      "why": "To support flexibility and decrease dead skin cells",
+      "what": "Footbath, pumice stone, and urea cream",
+      "frequency": "Task · Friday",
+      "freq": 1,
+      "duration": "Weekly",
+      "object": "Urea cream",
+      "active": true,
+      "dateAdded": "2026-01-01",
+      "link": {
+        "tier": "drive",
+        "efforts": [
+          "physical-selfcare"
+        ]
+      },
+      "reminder": false,
+      "bucket": "body"
+    },
+    {
+      "id": "body-weekly-bath",
+      "category": "body",
+      "focus": "Shower or Epsom Salt Bath",
+      "why": "To support hygiene, relaxation, and physical recovery",
+      "what": "Shower daily; on Friday an Epsom salt bath may replace the shower",
+      "frequency": "Habit · Daily",
+      "freq": 7,
+      "duration": "One shower or bath",
+      "object": "Shower supplies or Epsom salt",
+      "active": true,
+      "dateAdded": "2026-01-01",
+      "link": {
+        "tier": "drive",
+        "efforts": [
+          "physical-selfcare"
+        ]
+      },
+      "reminder": false,
+      "bucket": "body"
+    },
+    {
+      "id": "body-washing-face-complexion",
+      "category": "body",
+      "focus": "Face Washing & Care",
+      "why": "To help even complexion and support the moisture barrier",
+      "what": "Wash face and moisturize",
+      "frequency": "Habit · Daily",
+      "freq": 7,
+      "duration": "Daily",
+      "object": "Face wash and moisturizer",
+      "active": true,
+      "dateAdded": "2026-01-01",
+      "link": {
+        "tier": "drive",
+        "efforts": [
+          "physical-selfcare"
+        ]
+      },
+      "reminder": false,
+      "bucket": "body"
+    },
+    {
+      "id": "body-getting-haircut",
+      "category": "body",
+      "focus": "Schedule Haircut",
+      "why": "To support hair growth, evenness, and regular grooming",
+      "what": "Schedule a haircut",
+      "frequency": "Task · Every 3rd Sat",
+      "freq": 0.33,
+      "duration": "Every three weeks",
+      "object": "Money and preferred barber",
+      "active": true,
+      "dateAdded": "2026-01-01",
+      "link": {
+        "tier": "enable",
+        "efforts": [
+          "physical-selfcare"
+        ]
+      },
+      "reminder": false,
+      "bucket": "body"
+    },
+    {
+      "id": "body-put-out-gym-clothes",
+      "category": "body",
+      "focus": "Put Out Gym Clothes",
+      "why": "To reduce friction before the gym",
+      "what": "Lay out the next gym outfit",
+      "frequency": "Habit · Sun–Fri",
+      "freq": 6,
+      "duration": "Night before",
+      "object": "Gym clothes",
+      "active": true,
+      "dateAdded": "2026-08-28",
+      "link": {
+        "tier": "upkeep",
+        "efforts": []
+      },
+      "reminder": false,
+      "bucket": "body"
+    },
+    {
+      "id": "body-nail-cuticle-care",
+      "category": "body",
+      "focus": "Nail and Cuticle Care",
+      "why": "To maintain comfortable, well-kept hands and nails",
+      "what": "Trim, clean, and care for nails and cuticles",
+      "frequency": "Task · Wednesday",
+      "freq": 1,
+      "duration": "Weekly",
+      "object": "Nail-care tools",
+      "active": true,
+      "dateAdded": "2026-08-28",
+      "link": {
+        "tier": "drive",
+        "efforts": [
+          "physical-selfcare"
+        ]
+      },
+      "reminder": false,
+      "bucket": "body"
+    },
+    {
+      "id": "soul-main-session",
+      "category": "soul",
+      "focus": "Music Session — Main",
+      "why": "To place the most emphasis on the current music topic",
+      "what": "Complete the main music session and log the result",
+      "frequency": "Task · Tuesday",
+      "freq": 1,
+      "duration": "Weekly",
+      "object": "Music setup and session log",
+      "active": true,
+      "dateAdded": "2026-01-01",
+      "link": {
+        "tier": "enable",
+        "efforts": [
+          "spiritual-guitar",
+          "spiritual-vocal",
+          "spiritual-production"
+        ]
+      },
+      "reminder": false,
+      "bucket": "creative"
+    },
+    {
+      "id": "soul-support-session",
+      "category": "soul",
+      "focus": "Music Session — Support",
+      "why": "To give attention to a supplementary music skill",
+      "what": "Complete the support music session and log the result",
+      "frequency": "Task · Thursday",
+      "freq": 1,
+      "duration": "Weekly",
+      "object": "Music setup and session log",
+      "active": true,
+      "dateAdded": "2026-01-01",
+      "link": {
+        "tier": "enable",
+        "efforts": [
+          "spiritual-guitar",
+          "spiritual-vocal",
+          "spiritual-production"
+        ]
+      },
+      "reminder": false,
+      "bucket": "creative"
+    },
+    {
+      "id": "soul-maintenance-session",
+      "category": "soul",
+      "focus": "Music Session — Maintenance",
+      "why": "To maintain visibility and momentum on recent work",
+      "what": "Complete the maintenance music session and log the result",
+      "frequency": "Task · Wednesday",
+      "freq": 1,
+      "duration": "Weekly",
+      "object": "Music setup and session log",
+      "active": true,
+      "dateAdded": "2026-01-01",
+      "link": {
+        "tier": "enable",
+        "efforts": [
+          "spiritual-guitar",
+          "spiritual-vocal",
+          "spiritual-production"
+        ]
+      },
+      "reminder": false,
+      "bucket": "creative"
+    },
+    {
+      "id": "soul-monthly-review",
+      "category": "soul",
+      "focus": "Music Month Review",
+      "why": "To review progress and choose the next musical emphasis",
+      "what": "Review the month’s sessions, work, and development",
+      "frequency": "Task · Last Mon monthly",
+      "freq": 0.25,
+      "duration": "Monthly",
+      "object": "Music session log",
+      "active": true,
+      "dateAdded": "2026-01-01",
+      "link": {
+        "tier": "drive",
+        "efforts": [
+          "spiritual-guitar",
+          "spiritual-vocal",
+          "spiritual-production"
+        ]
+      },
+      "reminder": false,
+      "bucket": "creative"
+    },
+    {
+      "id": "soul-vocal-training",
+      "category": "soul",
+      "focus": "Vocal Training / Warm-Ups",
+      "why": "To build vocal control, consistency, and recording readiness",
+      "what": "Complete vocal warm-ups or a focused training session",
+      "frequency": "Habit · Mon, Wed & Fri",
+      "freq": 3,
+      "duration": "Three times a week",
+      "object": "Vocal exercises",
+      "active": true,
+      "dateAdded": "2026-08-28",
+      "link": {
+        "tier": "drive",
+        "efforts": [
+          "spiritual-vocal"
+        ]
+      },
+      "reminder": false,
+      "bucket": "creative"
+    },
+    {
+      "id": "soul-pinterest-reset",
+      "category": "soul",
+      "focus": "Pinterest Board Reset",
+      "why": "To keep visual inspiration current and intentional",
+      "what": "Review and reset Pinterest boards",
+      "frequency": "Task · 1st Sat every 2 months",
+      "freq": 0.125,
+      "duration": "Every two months",
+      "object": "Pinterest",
+      "active": true,
+      "dateAdded": "2026-08-28",
+      "link": {
+        "tier": "unsorted",
+        "efforts": []
+      },
+      "reminder": false,
+      "bucket": "creative"
+    },
+    {
+      "id": "cleaning-wash-bedding",
+      "category": "cleaning",
+      "focus": "Wash Bedding",
+      "why": "To help with complexion and overall dust",
+      "what": "Strip the duvet and all bedding, wash, dry, and remake the bed",
+      "frequency": "Task · Every other Fri",
+      "freq": 0.5,
+      "duration": "Bi-weekly",
+      "object": "Detergent",
+      "active": true,
+      "dateAdded": "2026-01-01",
+      "link": {
+        "tier": "upkeep",
+        "efforts": [
+          "upkeep-home",
+          "mental-cleanspaces"
+        ]
+      },
+      "reminder": false,
+      "bucket": "home"
+    },
+    {
+      "id": "cleaning-vacuum-room",
+      "category": "cleaning",
+      "focus": "Vacuum Room",
+      "why": "To help manage Marvel’s hair and dust",
+      "what": "Vacuum the room",
+      "frequency": "Habit · Sun, Tue, Thu & Sat",
+      "freq": 4,
+      "duration": "Four times a week",
+      "object": "Vacuum",
+      "active": true,
+      "dateAdded": "2026-01-01",
+      "link": {
+        "tier": "upkeep",
+        "efforts": [
+          "upkeep-home",
+          "mental-cleanspaces"
+        ]
+      },
+      "reminder": false,
+      "bucket": "home"
+    },
+    {
+      "id": "cleaning-wipe-room-surfaces",
+      "category": "cleaning",
+      "focus": "Wipe Room Surfaces",
+      "why": "To keep surfaces clean and the space peaceful",
+      "what": "Wipe down room surfaces",
+      "frequency": "Habit · Sun, Tue, Thu & Sat",
+      "freq": 4,
+      "duration": "Four times a week",
+      "object": "Rags and cleaner",
+      "active": true,
+      "dateAdded": "2026-01-01",
+      "link": {
+        "tier": "upkeep",
+        "efforts": [
+          "upkeep-home",
+          "mental-cleanspaces"
+        ]
+      },
+      "reminder": false,
+      "bucket": "home"
+    },
+    {
+      "id": "cleaning-vacuum-car",
+      "category": "cleaning",
+      "focus": "Vacuum Car",
+      "why": "To keep the car clean and peaceful",
+      "what": "Vacuum the car, ideally around the gym trip",
+      "frequency": "Task · Saturday",
+      "freq": 1,
+      "duration": "Weekly",
+      "object": "Quarters or car vacuum",
+      "active": true,
+      "dateAdded": "2026-01-01",
+      "link": {
+        "tier": "upkeep",
+        "efforts": [
+          "upkeep-home"
+        ]
+      },
+      "reminder": false,
+      "bucket": "home"
+    },
+    {
+      "id": "cleaning-clean-laundry",
+      "category": "cleaning",
+      "focus": "Wash Clothes",
+      "why": "To ensure smooth daily life and peace",
+      "what": "Wash, dry, fold, and put away clothes",
+      "frequency": "Task · Friday",
+      "freq": 1,
+      "duration": "Weekly",
+      "object": "Detergent",
+      "active": true,
+      "dateAdded": "2026-01-01",
+      "link": {
+        "tier": "upkeep",
+        "efforts": [
+          "upkeep-home",
+          "mental-cleanspaces"
+        ]
+      },
+      "reminder": false,
+      "bucket": "home"
+    },
+    {
+      "id": "cleaning-clean-phone-laptop-glasses",
+      "category": "cleaning",
+      "focus": "Wipe Down Phone, Laptop, and Glasses",
+      "why": "To take care of belongings and feel at peace",
+      "what": "Remove grime, fingerprints, and dust from daily devices and glasses",
+      "frequency": "Task · Tue, Thu & Sat",
+      "freq": 3,
+      "duration": "Three times a week",
+      "object": "Alcohol and screen-safe wipes",
+      "active": true,
+      "dateAdded": "2026-01-01",
+      "link": {
+        "tier": "upkeep",
+        "efforts": [
+          "upkeep-home"
+        ]
+      },
+      "reminder": false,
+      "bucket": "home"
+    },
+    {
+      "id": "cleaning-clean-tote-bag",
+      "category": "cleaning",
+      "focus": "Clean Out Tote",
+      "why": "To feel prepared and organized",
+      "what": "Remove unneeded items and audit the tote’s contents",
+      "frequency": "Task · Friday",
+      "freq": 1,
+      "duration": "Weekly",
+      "object": "",
+      "active": true,
+      "dateAdded": "2026-01-01",
+      "link": {
+        "tier": "upkeep",
+        "efforts": [
+          "upkeep-home"
+        ]
+      },
+      "reminder": false,
+      "bucket": "home"
+    },
+    {
+      "id": "cleaning-clean-headphones",
+      "category": "cleaning",
+      "focus": "Clean Headphones",
+      "why": "To promote ear health and sound quality",
+      "what": "Remove wax, dirt, and grime with appropriate wipes",
+      "frequency": "Task · Mon & Fri",
+      "freq": 2,
+      "duration": "Twice a week",
+      "object": "Alcohol wipes",
+      "active": true,
+      "dateAdded": "2026-01-01",
+      "link": {
+        "tier": "upkeep",
+        "efforts": [
+          "upkeep-home"
+        ]
+      },
+      "reminder": false,
+      "bucket": "home"
+    },
+    {
+      "id": "cleaning-wash-tote-bag",
+      "category": "cleaning",
+      "focus": "Wash Tote Bag",
+      "why": "To keep the everyday tote fresh and ready to use",
+      "what": "Wash and fully dry the tote bag",
+      "frequency": "Task · Every other Fri",
+      "freq": 0.5,
+      "duration": "Bi-weekly",
+      "object": "Laundry supplies",
+      "active": true,
+      "dateAdded": "2026-08-28",
+      "link": {
+        "tier": "upkeep",
+        "efforts": [
+          "upkeep-home"
+        ]
+      },
+      "reminder": false,
+      "bucket": "home"
+    },
+    {
+      "id": "organizing-digital-declutter",
+      "category": "organizing",
+      "focus": "Digital Declutter",
+      "why": "To reduce digital noise and clutter",
+      "what": "Review emails, contacts, browser history, saved payment methods, and old photos",
+      "frequency": "Task · Sunday",
+      "freq": 1,
+      "duration": "Weekly",
+      "object": "Phone and computer",
+      "active": true,
+      "dateAdded": "2026-01-01",
+      "link": {
+        "tier": "upkeep",
+        "efforts": [
+          "upkeep-digital"
+        ]
+      },
+      "reminder": false,
+      "bucket": "home"
+    },
+    {
+      "id": "organizing-water-plants",
+      "category": "organizing",
+      "focus": "Water Plants",
+      "why": "To keep plants healthy and alive",
+      "what": "Water plants according to the plant-care reference",
+      "frequency": "Task · Monday",
+      "freq": 1,
+      "duration": "Weekly",
+      "object": "Watering container",
+      "active": true,
+      "dateAdded": "2026-01-01",
+      "link": {
+        "tier": "upkeep",
+        "efforts": [
+          "upkeep-home"
+        ]
+      },
+      "reminder": false,
+      "bucket": "home"
+    },
+    {
+      "id": "organizing-organize-drawers",
+      "category": "organizing",
+      "focus": "Reset Drawers, Closet, and Fireplace",
+      "why": "To keep possessions available and shared spaces reset",
+      "what": "Reset drawers, closet, and fireplace area",
+      "frequency": "Task · Friday",
+      "freq": 1,
+      "duration": "Weekly",
+      "object": "",
+      "active": true,
+      "dateAdded": "2026-01-01",
+      "link": {
+        "tier": "enable",
+        "efforts": [
+          "mental-cleanspaces"
+        ]
+      },
+      "reminder": false,
+      "bucket": "home"
+    },
+    {
+      "id": "organizing-weekly-grocery-shop",
+      "category": "organizing",
+      "focus": "Put Grocery Order In",
+      "why": "To enable healthy eating and keep needed food available",
+      "what": "Submit the weekly grocery order",
+      "frequency": "Task · Friday",
+      "freq": 1,
+      "duration": "Weekly",
+      "object": "Grocery list and payment method",
+      "active": true,
+      "dateAdded": "2026-01-01",
+      "link": {
+        "tier": "enable",
+        "efforts": [
+          "physical-nourish",
+          "physical-protein"
+        ]
+      },
+      "reminder": false,
+      "bucket": "home"
+    },
+    {
+      "id": "organizing-meal-prepping",
+      "category": "organizing",
+      "focus": "Meal Prep",
+      "why": "To enable convenience, healthy eating, and fitness goals",
+      "what": "Prepare ingredients and meals for the coming week",
+      "frequency": "Task · Friday",
+      "freq": 1,
+      "duration": "Weekly",
+      "object": "Groceries and a clean kitchen",
+      "active": true,
+      "dateAdded": "2026-01-01",
+      "link": {
+        "tier": "enable",
+        "efforts": [
+          "physical-nourish",
+          "physical-protein"
+        ]
+      },
+      "reminder": false,
+      "bucket": "home"
+    },
+    {
+      "id": "organizing-personal-finance-allocation",
+      "category": "organizing",
+      "focus": "Weekly Finances Review",
+      "why": "To keep bills, expenses, purchases, savings, and family needs visible",
+      "what": "Complete the finance review checklist in TickTick",
+      "frequency": "Task · Wednesday",
+      "freq": 1,
+      "duration": "Weekly",
+      "object": "Finance trackers",
+      "active": true,
+      "dateAdded": "2026-01-01",
+      "link": {
+        "tier": "drive",
+        "efforts": [
+          "financial-credit",
+          "financial-savings"
+        ]
+      },
+      "reminder": false,
+      "bucket": "money"
+    },
+    {
+      "id": "organizing-savings-allocations",
+      "category": "organizing",
+      "focus": "Savings Allocations",
+      "why": "To ensure excess funds are put aside",
+      "what": "After personal allocation, move leftover funds to savings as part of Weekly Finances Review",
+      "frequency": "Task bundle · Wednesday",
+      "freq": 1,
+      "duration": "Weekly",
+      "object": "Next Steps document",
+      "active": true,
+      "dateAdded": "2026-01-01",
+      "link": {
+        "tier": "drive",
+        "efforts": [
+          "financial-savings"
+        ]
+      },
+      "reminder": false,
+      "bucket": "money"
+    },
+    {
+      "id": "organizing-needed-purchases",
+      "category": "organizing",
+      "focus": "Needed / Recurring Purchase Review",
+      "why": "To ensure a missing object does not block a growth routine",
+      "what": "Review inventory and needed purchases as part of Weekly Finances Review",
+      "frequency": "Task bundle · Wednesday",
+      "freq": 1,
+      "duration": "Weekly",
+      "object": "Inventory and purchase list",
+      "active": true,
+      "dateAdded": "2026-01-01",
+      "link": {
+        "tier": "drive",
+        "efforts": [
+          "financial-material"
+        ]
+      },
+      "reminder": false,
+      "bucket": "money"
+    },
+    {
+      "id": "organizing-goal-effort-review",
+      "category": "organizing",
+      "focus": "Goal Review",
+      "why": "To ensure effort is going toward something wanted",
+      "what": "Review personal and life goals and adjust direction",
+      "frequency": "Task · 1st Sat monthly",
+      "freq": 0.25,
+      "duration": "Monthly",
+      "object": "Goals and effort documents",
+      "active": true,
+      "dateAdded": "2026-01-01",
+      "link": {
+        "tier": "upkeep",
+        "efforts": [
+          "upkeep-admin"
+        ]
+      },
+      "reminder": false,
+      "bucket": "home"
+    },
+    {
+      "id": "organizing-week-planner-prep",
+      "category": "organizing",
+      "focus": "Fill in Planner for Week",
+      "why": "To complete needed things without feeling overwhelmed",
+      "what": "Fill the planner with tasks and projects for the coming week",
+      "frequency": "Task · Sunday",
+      "freq": 1,
+      "duration": "Weekly",
+      "object": "Planner",
+      "active": true,
+      "dateAdded": "2026-01-01",
+      "link": {
+        "tier": "upkeep",
+        "efforts": [
+          "upkeep-admin"
+        ]
+      },
+      "reminder": false,
+      "bucket": "home"
+    },
+    {
+      "id": "organizing-next-step-awareness-review",
+      "category": "organizing",
+      "focus": "Next Step Awareness Review",
+      "why": "To turn a larger plan into one visible physical move",
+      "what": "Open the next-step guide, choose one outcome, and place its next physical action in Next Step Actions",
+      "frequency": "Task · Sunday",
+      "freq": 1,
+      "duration": "Weekly review",
+      "object": "Next-step guide",
+      "active": true,
+      "dateAdded": "2026-01-01",
+      "link": {
+        "tier": "enable",
+        "efforts": [
+          "financial-credit",
+          "financial-savings"
+        ]
+      },
+      "reminder": false,
+      "bucket": "home"
+    },
+    {
+      "id": "organizing-family-altruism-review",
+      "category": "organizing",
+      "focus": "Family Altruism Review",
+      "why": "To see what effort can support independence and ease transitions",
+      "what": "Review bucket-list action items as an optional part of Weekly Finances Review",
+      "frequency": "Task bundle · Wed (optional)",
+      "freq": 1,
+      "duration": "Weekly",
+      "object": "Next Steps document",
+      "active": true,
+      "dateAdded": "2026-01-01",
+      "link": {
+        "tier": "unsorted",
+        "efforts": []
+      },
+      "reminder": false,
+      "bucket": "connection"
+    },
+    {
+      "id": "organizing-family-finance-review",
+      "category": "organizing",
+      "focus": "Family Finance Review",
+      "why": "To create peace of mind about plans and bill status",
+      "what": "Review the family finances tracker as an optional part of Weekly Finances Review",
+      "frequency": "Task bundle · Wed (optional)",
+      "freq": 1,
+      "duration": "Weekly",
+      "object": "House / Family Hub",
+      "active": true,
+      "dateAdded": "2026-01-01",
+      "link": {
+        "tier": "upkeep",
+        "efforts": [
+          "upkeep-financial"
+        ]
+      },
+      "reminder": false,
+      "bucket": "money"
+    },
+    {
+      "id": "organizing-reset-medicine-holder",
+      "category": "organizing",
+      "focus": "Reset Medicine and Vitamin Holder",
+      "why": "To make the daily medicine and vitamin habit easy to complete",
+      "what": "Refill and reset the medicine and vitamin organizer",
+      "frequency": "Task · Friday",
+      "freq": 1,
+      "duration": "Weekly",
+      "object": "Medicine and supplements",
+      "active": true,
+      "dateAdded": "2026-08-28",
+      "link": {
+        "tier": "enable",
+        "efforts": [
+          "physical-vitamins"
+        ]
+      },
+      "reminder": false,
+      "bucket": "home"
+    },
+    {
+      "id": "dog-daily-brushing",
+      "category": "dog",
+      "focus": "Daily Brushing",
+      "why": "To help with shedding",
+      "what": "Brush Marvel in the morning",
+      "frequency": "Not in TickTick",
+      "freq": 0,
+      "duration": "Daily",
+      "object": "Brush",
+      "active": false,
+      "dateAdded": "2026-01-01",
+      "link": {
+        "tier": "upkeep",
+        "efforts": []
+      },
+      "reminder": false,
+      "bucket": "marvel"
+    },
+    {
+      "id": "dog-play-sessions",
+      "category": "dog",
+      "focus": "Train / Play with Marvel",
+      "why": "To give Marvel an outlet for energy and strengthen your bond",
+      "what": "Complete a focused training or play session",
+      "frequency": "Habit · Mon, Wed & Fri",
+      "freq": 3,
+      "duration": "Three times a week",
+      "object": "Toys, clicker, and treats",
+      "active": true,
+      "dateAdded": "2026-01-01",
+      "link": {
+        "tier": "drive",
+        "efforts": [
+          "connection-training"
+        ]
+      },
+      "reminder": false,
+      "bucket": "marvel"
+    },
+    {
+      "id": "dog-cuddling",
+      "category": "dog",
+      "focus": "Cuddling",
+      "why": "To bond and snuggle",
+      "what": "Give Marvel your undivided attention",
+      "frequency": "Not in TickTick",
+      "freq": 0,
+      "duration": "20–30 mins",
+      "object": "",
+      "active": false,
+      "dateAdded": "2026-01-01",
+      "link": {
+        "tier": "upkeep",
+        "efforts": []
+      },
+      "reminder": false,
+      "bucket": "marvel"
+    },
+    {
+      "id": "dog-behavior-training",
+      "category": "dog",
+      "focus": "Daily Marvel Care — Attention + Enrichment",
+      "why": "To give Marvel varied attention, stimulation, and care during the workweek",
+      "what": "Choose from sniff, move, think, cuddle, brush, teeth, or supply care",
+      "frequency": "Habit · Mon–Fri",
+      "freq": 5,
+      "duration": "One meaningful care option",
+      "object": "Marvel care supplies",
+      "active": true,
+      "dateAdded": "2026-01-01",
+      "link": {
+        "tier": "drive",
+        "efforts": [
+          "connection-training"
+        ]
+      },
+      "reminder": false,
+      "bucket": "marvel"
+    },
+    {
+      "id": "dog-walks",
+      "category": "dog",
+      "focus": "Walk Marvel — Priority",
+      "why": "To prioritize Marvel’s movement, stimulation, bonding, and regulation",
+      "what": "Take Marvel for a focused walk",
+      "frequency": "Habit · Mon, Fri & Sat",
+      "freq": 3,
+      "duration": "Three times a week",
+      "object": "Leash, clicker, treats, and treat tote",
+      "active": true,
+      "dateAdded": "2026-01-01",
+      "link": {
+        "tier": "drive",
+        "efforts": [
+          "connection-training"
+        ]
+      },
+      "reminder": false,
+      "bucket": "marvel"
+    },
+    {
+      "id": "dog-command-training",
+      "category": "dog",
+      "focus": "Command Training",
+      "why": "To help with command listening",
+      "what": "Use the Marvel Hub for commands",
+      "frequency": "Covered by Train / Play habit",
+      "freq": 0,
+      "duration": "20–30 mins",
+      "object": "Clicker and treats",
+      "active": false,
+      "dateAdded": "2026-01-01",
+      "link": {
+        "tier": "drive",
+        "efforts": [
+          "connection-training"
+        ]
+      },
+      "reminder": false,
+      "bucket": "marvel"
+    },
+    {
+      "id": "dog-weekly-vacuum-marvel",
+      "category": "dog",
+      "focus": "Vacuum Brush Marvel",
+      "why": "To reduce shedding and loose hair",
+      "what": "Use the vacuum brush attachment",
+      "frequency": "Habit · Sun, Tue & Thu",
+      "freq": 3,
+      "duration": "Three times a week",
+      "object": "Vacuum brush attachment",
+      "active": true,
+      "dateAdded": "2026-01-01",
+      "link": {
+        "tier": "upkeep",
+        "efforts": []
+      },
+      "reminder": false,
+      "bucket": "marvel"
+    },
+    {
+      "id": "dog-brush-teeth",
+      "category": "dog",
+      "focus": "Brush Teeth",
+      "why": "To support oral health",
+      "what": "Use a finger brush to clean Marvel’s teeth",
+      "frequency": "Not in TickTick",
+      "freq": 0,
+      "duration": "Weekly",
+      "object": "Dog toothbrush",
+      "active": false,
+      "dateAdded": "2026-01-01",
+      "link": {
+        "tier": "upkeep",
+        "efforts": []
+      },
+      "reminder": false,
+      "bucket": "marvel"
+    },
+    {
+      "id": "dog-supply-inventory-count",
+      "category": "dog",
+      "focus": "Marvel Supply Count / Resupply",
+      "why": "To keep food, treats, chews, and toys available",
+      "what": "Complete the Marvel supply checklist within Weekly Finances Review",
+      "frequency": "Task bundle · Wednesday",
+      "freq": 1,
+      "duration": "Weekly",
+      "object": "Marvel supplies",
+      "active": true,
+      "dateAdded": "2026-01-01",
+      "link": {
+        "tier": "upkeep",
+        "efforts": []
+      },
+      "reminder": false,
+      "bucket": "marvel"
+    },
+    {
+      "id": "dog-behavior-train-audit",
+      "category": "dog",
+      "focus": "Marvel Review",
+      "why": "To review Marvel’s needs and choose the next areas of attention",
+      "what": "Review routines, behavior, grooming, and supplies",
+      "frequency": "Task · Monthly on the 30th",
+      "freq": 0.25,
+      "duration": "Monthly",
+      "object": "Marvel Guide",
+      "active": true,
+      "dateAdded": "2026-01-01",
+      "link": {
+        "tier": "drive",
+        "efforts": [
+          "connection-training"
+        ]
+      },
+      "reminder": false,
+      "bucket": "marvel"
+    },
+    {
+      "id": "dog-supply-organization",
+      "category": "dog",
+      "focus": "Supply Organization",
+      "why": "To audit Marvel’s existing inventory and see what is needed",
+      "what": "Clean and organize Marvel’s drawers and supplies",
+      "frequency": "Not in TickTick",
+      "freq": 0,
+      "duration": "Bi-weekly",
+      "object": "",
+      "active": false,
+      "dateAdded": "2026-01-01",
+      "link": {
+        "tier": "upkeep",
+        "efforts": []
+      },
+      "reminder": false,
+      "bucket": "marvel"
+    },
+    {
+      "id": "dog-clip-nails",
+      "category": "dog",
+      "focus": "Schedule Marvel Groomer Visit",
+      "why": "To maintain grooming, nail health, balance, and comfort",
+      "what": "Schedule Marvel’s monthly trip to the groomer",
+      "frequency": "Task · Monthly on the 13th",
+      "freq": 0.25,
+      "duration": "Monthly",
+      "object": "Groomer contact and funds",
+      "active": true,
+      "dateAdded": "2026-01-01",
+      "link": {
+        "tier": "upkeep",
+        "efforts": []
+      },
+      "reminder": false,
+      "bucket": "marvel"
+    },
+    {
+      "id": "dog-behavioral-audit",
+      "category": "dog",
+      "focus": "Behavioral Audit",
+      "why": "To place findings into action",
+      "what": "Dig into behaviors to work on",
+      "frequency": "Covered by Marvel Review",
+      "freq": 0,
+      "duration": "Monthly",
+      "object": "",
+      "active": false,
+      "dateAdded": "2026-01-01",
+      "link": {
+        "tier": "drive",
+        "efforts": [
+          "connection-training"
+        ]
+      },
+      "reminder": false,
+      "bucket": "marvel"
+    },
+    {
+      "id": "body-teeth-night",
+      "category": "body",
+      "focus": "Teeth Brushing — Night Routine",
+      "why": "To protect oral health through one dependable nighttime cue",
+      "what": "Brush teeth; this also includes flossing, mouthwash, and tongue scraping",
+      "frequency": "Habit · Daily · 11 PM",
+      "freq": 7,
+      "duration": "Night routine",
+      "object": "Oral-care supplies",
+      "active": true,
+      "dateAdded": "2026-08-29",
+      "link": {
+        "tier": "upkeep",
+        "efforts": []
+      },
+      "reminder": false,
+      "bucket": "body"
+    },
+    {
+      "id": "body-full-gym-session",
+      "category": "body",
+      "focus": "Full Gym Session — Complete Flow",
+      "why": "To build strength through complete, well-formed sessions",
+      "what": "Warm up, complete the planned sets and reps with enough weight and good form, then cool down",
+      "frequency": "Habit · Mon–Sat",
+      "freq": 6,
+      "duration": "One full planned session",
+      "object": "Gym plan",
+      "active": true,
+      "dateAdded": "2026-08-29",
+      "link": {
+        "tier": "drive",
+        "efforts": [
+          "physical-strength"
+        ]
+      },
+      "reminder": false,
+      "bucket": "body"
+    },
+    {
+      "id": "body-active-pt",
+      "category": "body",
+      "focus": "Active PT — Follow PDF",
+      "why": "To support healing and movement using the prescribed plan",
+      "what": "Open the PT PDF and complete the prescribed exercises",
+      "frequency": "Habit · Mon–Sat",
+      "freq": 6,
+      "duration": "Current prescribed session",
+      "object": "PT PDF",
+      "active": true,
+      "dateAdded": "2026-08-29",
+      "link": {
+        "tier": "drive",
+        "efforts": [
+          "physical-strength"
+        ]
+      },
+      "reminder": false,
+      "bucket": "body"
+    },
+    {
+      "id": "body-creatine-fiber",
+      "category": "body",
+      "focus": "Creatine and Fiber Supplements",
+      "why": "To support training and nutrition with one combined cue",
+      "what": "Take creatine and fiber together",
+      "frequency": "Habit · Daily",
+      "freq": 7,
+      "duration": "One combined supplement check",
+      "object": "Creatine and fiber",
+      "active": true,
+      "dateAdded": "2026-08-29",
+      "link": {
+        "tier": "drive",
+        "efforts": [
+          "physical-vitamins"
+        ]
+      },
+      "reminder": false,
+      "bucket": "body"
+    },
+    {
+      "id": "mind-open-job-search",
+      "category": "organizing",
+      "focus": "Daily Work & Income Flow",
+      "why": "To keep required work and income-building actions together in one visible weekday task",
+      "what": "Job: check Automation Pipeline postings and apply; browse and compile personally found postings and roles; check existing roles and applications. Resale: run the agent posting-stats update; list new items when needed; respond to inquiries; lower prices or offer bundles; ship items when needed; run the trending-items-to-acquire agent. Candles: complete the candle action.",
+      "frequency": "Task · Mon–Fri",
+      "freq": 5,
+      "duration": "Ten checklist items; when-needed items may be skipped when they do not apply",
+      "object": "Job Hub, resale flow, and candle-making materials",
+      "active": true,
+      "dateAdded": "2026-09-08",
+      "link": {
+        "tier": "enable",
+        "efforts": [
+          "financial-independence"
+        ]
+      },
+      "reminder": false,
+      "bucket": "work"
+    },
+    {
+      "id": "cleaning-room-reset",
+      "category": "cleaning",
+      "focus": "Clean Room Reset",
+      "why": "To keep the room regulating and usable without creating backlog",
+      "what": "Return visible items, remove trash, and clear the main walking and working surfaces",
+      "frequency": "Habit · Daily · Night",
+      "freq": 7,
+      "duration": "Daily reset",
+      "object": "Room-cleaning supplies",
+      "active": true,
+      "dateAdded": "2026-08-29",
+      "link": {
+        "tier": "upkeep",
+        "efforts": [
+          "upkeep-home",
+          "mental-cleanspaces"
+        ]
+      },
+      "reminder": false,
+      "bucket": "home"
+    },
+    {
+      "id": "cleaning-kitchen-usable",
+      "category": "cleaning",
+      "focus": "Make Kitchen Usable",
+      "why": "To keep food preparation available without creating backlog",
+      "what": "Clear one preparation surface, address dishes, and remove anything blocking cooking",
+      "frequency": "Habit · Daily",
+      "freq": 7,
+      "duration": "Daily reset",
+      "object": "Kitchen-cleaning supplies",
+      "active": true,
+      "dateAdded": "2026-08-29",
+      "link": {
+        "tier": "upkeep",
+        "efforts": [
+          "upkeep-home",
+          "mental-cleanspaces"
+        ]
+      },
+      "reminder": false,
+      "bucket": "home"
+    },
+    {
+      "id": "mind-daytime-rest",
+      "category": "mind",
+      "focus": "Daytime Rest / Quiet Reset",
+      "why": "To protect regulation and recovery while awake",
+      "what": "Rest physically or mentally; meditate or choose a simple low-thinking action",
+      "frequency": "Habit · Daily",
+      "freq": 7,
+      "duration": "One genuine pause",
+      "object": "Quiet space",
+      "active": true,
+      "dateAdded": "2026-08-29",
+      "link": {
+        "tier": "drive",
+        "efforts": [
+          "physical-sleep"
+        ]
+      },
+      "reminder": false,
+      "bucket": "self"
+    },
+    {
+      "id": "body-fruit-vegetable",
+      "category": "body",
+      "focus": "Eat a Fruit or Vegetable",
+      "why": "To add a simple antioxidant-rich serving to the day",
+      "what": "Eat one planned fruit or vegetable serving with a meal",
+      "frequency": "Habit · Daily",
+      "freq": 7,
+      "duration": "One serving",
+      "object": "Fruit or vegetables",
+      "active": true,
+      "dateAdded": "2026-08-29",
+      "link": {
+        "tier": "drive",
+        "efforts": [
+          "physical-nourish"
+        ]
+      },
+      "reminder": false,
+      "bucket": "body"
+    },
+    {
+      "id": "body-movement-break",
+      "category": "body",
+      "focus": "Movement Break — Walk, Stretch, or Stand",
+      "why": "To interrupt long sitting and support energy and mobility",
+      "what": "Walk, stretch, or stand briefly; even one minute counts",
+      "frequency": "Habit · Daily",
+      "freq": 7,
+      "duration": "One or more brief breaks",
+      "object": "",
+      "active": true,
+      "dateAdded": "2026-08-29",
+      "link": {
+        "tier": "drive",
+        "efforts": [
+          "physical-strength"
+        ]
+      },
+      "reminder": false,
+      "bucket": "body"
+    },
+    {
+      "id": "soul-creative-tinkering",
+      "category": "soul",
+      "focus": "Creative / Tinkering Session",
+      "why": "To make room for curiosity, learning, and unpressured creation",
+      "what": "Choose curiosity, intentional learning, or unrestricted making",
+      "frequency": "Habit · Daily",
+      "freq": 7,
+      "duration": "One bounded session",
+      "object": "Chosen creative materials",
+      "active": true,
+      "dateAdded": "2026-08-29",
+      "link": {
+        "tier": "drive",
+        "efforts": []
+      },
+      "reminder": false,
+      "bucket": "creative"
+    },
+    {
+      "id": "organizing-side-hustle-progress",
+      "category": "organizing",
+      "focus": "Side Hustle Progress",
+      "why": "To keep income-building experiments moving through small actions",
+      "what": "Resale and candle work now live inside Daily Work & Income Flow",
+      "frequency": "Covered by Daily Work & Income Flow",
+      "freq": 0,
+      "duration": "Preserved reference",
+      "object": "Selling or candle project materials",
+      "active": false,
+      "dateAdded": "2026-08-29",
+      "link": {
+        "tier": "drive",
+        "efforts": [
+          "financial-savings"
+        ]
+      },
+      "reminder": false,
+      "bucket": "venture"
+    },
+    {
+      "id": "body-face-shaving",
+      "category": "body",
+      "focus": "Face Shaving — Every 3 Days",
+      "why": "To maintain preferred grooming without daily pressure",
+      "what": "Shave or trim the face to the preferred standard",
+      "frequency": "Habit · Every 3 days",
+      "freq": 2.33,
+      "duration": "One grooming session",
+      "object": "Shaving supplies",
+      "active": true,
+      "dateAdded": "2026-08-29",
+      "link": {
+        "tier": "drive",
+        "efforts": [
+          "physical-selfcare"
+        ]
+      },
+      "reminder": false,
+      "bucket": "body"
+    },
+    {
+      "id": "body-body-shaving",
+      "category": "body",
+      "focus": "Body Shaving — Weekly",
+      "why": "To maintain preferred body grooming on a predictable day",
+      "what": "Complete the selected areas for the self-care session",
+      "frequency": "Habit · Friday",
+      "freq": 1,
+      "duration": "Weekly self-care",
+      "object": "Shaving supplies",
+      "active": true,
+      "dateAdded": "2026-08-29",
+      "link": {
+        "tier": "drive",
+        "efforts": [
+          "physical-selfcare"
+        ]
+      },
+      "reminder": false,
+      "bucket": "body"
+    },
+    {
+      "id": "body-recovery-options",
+      "category": "body",
+      "focus": "Recovery: TENS/Massage Gun/Dry Brush/Chair/Stretch-Yoga/Relax",
+      "why": "To respond to the body’s actual recovery needs without six separate habits",
+      "what": "Choose the recovery support your body needs tonight; one option is enough",
+      "frequency": "Habit · Daily · 11 PM",
+      "freq": 7,
+      "duration": "One chosen recovery option",
+      "object": "Recovery tools",
+      "active": true,
+      "dateAdded": "2026-08-29",
+      "link": {
+        "tier": "drive",
+        "efforts": [
+          "physical-strength"
+        ]
+      },
+      "reminder": false,
+      "bucket": "body"
+    },
+    {
+      "id": "cleaning-bathroom-weekly",
+      "category": "cleaning",
+      "focus": "Clean Bathroom — Weekly",
+      "why": "To keep the bathroom sanitary, regulating, and usable",
+      "what": "Clean the toilet, sink, mirror, tub or shower, floor, and remove trash",
+      "frequency": "Task · Saturday",
+      "freq": 1,
+      "duration": "Weekly bathroom reset",
+      "object": "Bathroom-cleaning supplies",
+      "active": true,
+      "dateAdded": "2026-08-29",
+      "link": {
+        "tier": "upkeep",
+        "efforts": [
+          "upkeep-home",
+          "mental-cleanspaces"
+        ]
+      },
+      "reminder": false,
+      "bucket": "home"
+    },
+    {
+      "id": "cleaning-wash-towels",
+      "category": "cleaning",
+      "focus": "Wash Towels",
+      "why": "To keep clean towels available",
+      "what": "Wash, dry, fold, and put away used towels",
+      "frequency": "Task · Friday",
+      "freq": 1,
+      "duration": "Weekly",
+      "object": "Laundry supplies",
+      "active": true,
+      "dateAdded": "2026-08-29",
+      "link": {
+        "tier": "upkeep",
+        "efforts": [
+          "upkeep-home"
+        ]
+      },
+      "reminder": false,
+      "bucket": "home"
+    },
+    {
+      "id": "organizing-instagram-review",
+      "category": "organizing",
+      "focus": "Instagram Following Review",
+      "why": "To keep the social feed intentional and reduce digital noise",
+      "what": "Review followed accounts and remove what no longer serves the feed",
+      "frequency": "Task · Yearly on Apr 1",
+      "freq": 0.02,
+      "duration": "Yearly",
+      "object": "Instagram",
+      "active": true,
+      "dateAdded": "2026-08-29",
+      "link": {
+        "tier": "upkeep",
+        "efforts": [
+          "upkeep-admin"
+        ]
+      },
+      "reminder": false,
+      "bucket": "home"
+    },
+    {
+      "id": "body-nutrition-flow-note",
+      "category": "body",
+      "focus": "Nutrition Flow — Use Macro Tracker",
+      "why": "To keep protein, meal spacing, energy snacks, fluids, and supplements visible without duplicating the macro tracker",
+      "what": "Use the macro tracker; TickTick supplies the supporting action cues",
+      "frequency": "Reminder · Daily",
+      "freq": 7,
+      "duration": "Daily guidance",
+      "object": "Macro tracker",
+      "active": true,
+      "dateAdded": "2026-08-29",
+      "link": {
+        "tier": "drive",
+        "efforts": [
+          "physical-protein",
+          "physical-nourish",
+          "physical-hydration"
+        ]
+      },
+      "reminder": true,
+      "bucket": "body"
+    },
+    {
+      "id": "body-gym-standards-note",
+      "category": "body",
+      "focus": "Gym Session Standards",
+      "why": "To define what counts as a full, safe, intentional gym session",
+      "what": "Warm up, use enough controlled weight, follow tempo and rest, complete planned sets and reps, follow PT, and cool down",
+      "frequency": "Reminder · Mon–Sat",
+      "freq": 6,
+      "duration": "Read with gym plan",
+      "object": "Gym and PT plans",
+      "active": true,
+      "dateAdded": "2026-08-29",
+      "link": {
+        "tier": "drive",
+        "efforts": []
+      },
+      "reminder": true,
+      "bucket": "body"
+    },
+    {
+      "id": "organizing-life-path-note",
+      "category": "organizing",
+      "focus": "Life Path & Active Project Direction",
+      "why": "To keep short-term direction, growth strategy, spiritual alignment, and long-term stability visible",
+      "what": "Keep outcomes here or in Routine Hub and schedule only the next physical action",
+      "frequency": "Project reminder · Sunday",
+      "freq": 1,
+      "duration": "Weekly direction review",
+      "object": "Life-path notes",
+      "active": true,
+      "dateAdded": "2026-08-29",
+      "link": {
+        "tier": "upkeep",
+        "efforts": [
+          "upkeep-admin"
+        ]
+      },
+      "reminder": true,
+      "bucket": "home"
+    },
+    {
+      "id": "organizing-job-search-map-note",
+      "category": "organizing",
+      "focus": "Job Search Flow — Coverage Map",
+      "why": "To make every job-search lane explicit while the detailed process stays external",
+      "what": "Role applications, automation-found roles, personally found roles, recruiter search, and occupational development",
+      "frequency": "Reference reminder · Monday",
+      "freq": 1,
+      "duration": "Weekly coverage review",
+      "object": "External job-search flow",
+      "active": true,
+      "dateAdded": "2026-08-29",
+      "link": {
+        "tier": "upkeep",
+        "efforts": [
+          "upkeep-admin"
+        ]
+      },
+      "reminder": true,
+      "bucket": "work"
+    },
+    {
+      "id": "dog-marvel-care-note",
+      "category": "dog",
+      "focus": "Marvel Care & Attention Menu",
+      "why": "To keep patience, attention, enrichment, grooming, and supplies visible together",
+      "what": "Use the menu to choose the care Marvel needs today",
+      "frequency": "Reminder · Mon–Fri",
+      "freq": 5,
+      "duration": "Weekday guidance",
+      "object": "Marvel care menu",
+      "active": true,
+      "dateAdded": "2026-08-29",
+      "link": {
+        "tier": "drive",
+        "efforts": [
+          "connection-training"
+        ]
+      },
+      "reminder": true,
+      "bucket": "marvel"
+    },
+    {
+      "id": "soul-music-log-note",
+      "category": "soul",
+      "focus": "Music Sessions Log",
+      "why": "To keep links and records for the scheduled music sessions together",
+      "what": "Open the appropriate session and record what happened",
+      "frequency": "Reference · Tue, Wed & Thu",
+      "freq": 3,
+      "duration": "Three session days a week",
+      "object": "Music session records",
+      "active": true,
+      "dateAdded": "2026-08-29",
+      "link": {
+        "tier": "drive",
+        "efforts": [
+          "spiritual-guitar",
+          "spiritual-vocal",
+          "spiritual-production"
+        ]
+      },
+      "reminder": true,
+      "bucket": "creative"
+    },
+    {
+      "id": "soul-creative-project-menu-note",
+      "category": "soul",
+      "focus": "Creative / Tinkering & Project Menu",
+      "why": "To keep deep dives, botanicals, lotions, sewing, knitting, and the baby blanket visible without crowding Today",
+      "what": "Choose a project and schedule only its next physical action",
+      "frequency": "Project reminder · Daily",
+      "freq": 7,
+      "duration": "Daily project guidance",
+      "object": "Creative project materials",
+      "active": true,
+      "dateAdded": "2026-08-29",
+      "link": {
+        "tier": "drive",
+        "efforts": []
+      },
+      "reminder": true,
+      "bucket": "creative"
+    },
+    {
+      "id": "mind-rest-sleep-note",
+      "category": "mind",
+      "focus": "Rest & Sleep Priorities",
+      "why": "To protect rest, healing, regulation, energy, and follow-through",
+      "what": "Use daytime rest when needed and let the nighttime routine support sleep as an outcome",
+      "frequency": "Reminder · Daily",
+      "freq": 7,
+      "duration": "Daily guidance",
+      "object": "Grounding list",
+      "active": true,
+      "dateAdded": "2026-08-29",
+      "link": {
+        "tier": "drive",
+        "efforts": [
+          "physical-sleep"
+        ]
+      },
+      "reminder": true,
+      "bucket": "self"
+    }
+  ],
+  "records": [
+    {
+      "id": "69ceedf0f95d5102bc895aab",
+      "name": "Medicine and Vitamins",
+      "instructions": "Includes medicine, vitamins, and planned sleep supplements.",
+      "sectionId": "6a93a173c8311933e19da4c9",
+      "repeatRule": "RRULE:FREQ=WEEKLY;BYDAY=SU,MO,TU,WE,TH,FR,SA",
+      "status": 0,
+      "goal": 1,
+      "sectionName": "Gym and Pre-Gym Routine",
+      "reminders": [],
+      "title": "Medicine and Vitamins",
+      "executionType": "Habit",
+      "group": "Gym and Pre-Gym Routine",
+      "routineId": "body-vitamins-supplements",
+      "bucket": "body",
+      "goalIds": [
+        "physical-vitamins"
+      ],
+      "semanticKind": "action",
+      "primaryGoal": "physical-vitamins",
+      "credit": true
+    },
+    {
+      "id": "69ceeea92fe4d102bc895b75",
+      "name": "Healthy Minds Session-Awareness",
+      "instructions": "Learn to be more present in your daily life",
+      "sectionId": "6a93a165c8311933e19da426",
+      "repeatRule": "RRULE:FREQ=WEEKLY;BYDAY=MO",
+      "status": 0,
+      "goal": 1,
+      "sectionName": "Daytime Items",
+      "reminders": [],
+      "title": "Healthy Minds Session-Awareness",
+      "executionType": "Habit",
+      "group": "Daytime Items",
+      "routineId": "mind-healthy-minds-session",
+      "bucket": "self",
+      "goalIds": [
+        "mental-healthyminds"
+      ],
+      "semanticKind": "action",
+      "primaryGoal": "mental-healthyminds",
+      "credit": true
+    },
+    {
+      "id": "69ceeef031ee1102bc895baa",
+      "name": "Face Washing & Care",
+      "instructions": "",
+      "sectionId": "6a91fb47c61cd1023f28f767",
+      "repeatRule": "RRULE:FREQ=DAILY;INTERVAL=1",
+      "status": 0,
+      "goal": 1,
+      "sectionName": "Night Time Routine",
+      "reminders": [],
+      "title": "Face Washing & Care",
+      "executionType": "Habit",
+      "group": "Night Time Routine",
+      "routineId": "body-washing-face-complexion",
+      "bucket": "body",
+      "goalIds": [
+        "physical-selfcare"
+      ],
+      "semanticKind": "action",
+      "primaryGoal": "physical-selfcare",
+      "credit": true
+    },
+    {
+      "id": "69ceef1f31849102bc895c5f",
+      "name": "Moisturize Body",
+      "instructions": "",
+      "sectionId": "6a91fb47c61cd1023f28f767",
+      "repeatRule": "RRULE:FREQ=WEEKLY;BYDAY=SU,MO,WE,FR",
+      "status": 0,
+      "goal": 1,
+      "sectionName": "Night Time Routine",
+      "reminders": [],
+      "title": "Moisturize Body",
+      "executionType": "Habit",
+      "group": "Night Time Routine",
+      "routineId": "body-moisturize-body",
+      "bucket": "body",
+      "goalIds": [
+        "physical-selfcare"
+      ],
+      "semanticKind": "action",
+      "primaryGoal": "physical-selfcare",
+      "credit": true
+    },
+    {
+      "id": "69cef07abe6e5102bc896025",
+      "name": "Wipe Room Surfaces",
+      "instructions": "",
+      "sectionId": "6a93a165c8311933e19da426",
+      "repeatRule": "RRULE:FREQ=WEEKLY;BYDAY=SU,TU,TH,SA",
+      "status": 0,
+      "goal": 1,
+      "sectionName": "Daytime Items",
+      "reminders": [],
+      "title": "Wipe Room Surfaces",
+      "executionType": "Habit",
+      "group": "Daytime Items",
+      "routineId": "cleaning-wipe-room-surfaces",
+      "bucket": "home",
+      "goalIds": [
+        "upkeep-home",
+        "mental-cleanspaces"
+      ],
+      "semanticKind": "action",
+      "primaryGoal": "upkeep-home",
+      "credit": true
+    },
+    {
+      "id": "69cef0cab8fe5102bc89607c",
+      "name": "Vacuum Room",
+      "instructions": "",
+      "sectionId": "6a93a165c8311933e19da426",
+      "repeatRule": "RRULE:FREQ=WEEKLY;BYDAY=SU,TU,TH,SA",
+      "status": 0,
+      "goal": 1,
+      "sectionName": "Daytime Items",
+      "reminders": [],
+      "title": "Vacuum Room",
+      "executionType": "Habit",
+      "group": "Daytime Items",
+      "routineId": "cleaning-vacuum-room",
+      "bucket": "home",
+      "goalIds": [
+        "upkeep-home",
+        "mental-cleanspaces"
+      ],
+      "semanticKind": "action",
+      "primaryGoal": "upkeep-home",
+      "credit": true
+    },
+    {
+      "id": "69cef7a256f71102bc896e72",
+      "name": "Walk Marvel — Priority",
+      "instructions": "Priority Marvel practice: a walk supports his movement, stimulat",
+      "sectionId": "6a93a165c8311933e19da426",
+      "repeatRule": "RRULE:FREQ=WEEKLY;INTERVAL=1;BYDAY=MO,FR,SA",
+      "status": 0,
+      "goal": 1,
+      "sectionName": "Daytime Items",
+      "reminders": [],
+      "title": "Walk Marvel — Priority",
+      "executionType": "Habit",
+      "group": "Daytime Items",
+      "routineId": "dog-walks",
+      "bucket": "marvel",
+      "goalIds": [
+        "connection-training"
+      ],
+      "semanticKind": "action",
+      "primaryGoal": "connection-training",
+      "credit": true
+    },
+    {
+      "id": "69cfffa0cac5d1026a8d8ebe",
+      "name": "Healthy Minds Session- Connection",
+      "instructions": "Practice the skill of appreciation, kindness, and compassion",
+      "sectionId": "6a93a165c8311933e19da426",
+      "repeatRule": "RRULE:FREQ=WEEKLY;INTERVAL=1;BYDAY=TU",
+      "status": 0,
+      "goal": 1,
+      "sectionName": "Daytime Items",
+      "reminders": [],
+      "title": "Healthy Minds Session- Connection",
+      "executionType": "Habit",
+      "group": "Daytime Items",
+      "routineId": "mind-healthy-minds-session",
+      "bucket": "self",
+      "goalIds": [
+        "mental-healthyminds"
+      ],
+      "semanticKind": "action",
+      "primaryGoal": "mental-healthyminds",
+      "credit": true
+    },
+    {
+      "id": "69d0000b178891026a8d8efa",
+      "name": "Healthy Minds Session- Insight",
+      "instructions": "How ur thoughts,emotions, and beliefs shape the world around u",
+      "sectionId": "6a93a165c8311933e19da426",
+      "repeatRule": "RRULE:FREQ=WEEKLY;INTERVAL=1;BYDAY=WE",
+      "status": 0,
+      "goal": 1,
+      "sectionName": "Daytime Items",
+      "reminders": [],
+      "title": "Healthy Minds Session- Insight",
+      "executionType": "Habit",
+      "group": "Daytime Items",
+      "routineId": "mind-healthy-minds-session",
+      "bucket": "self",
+      "goalIds": [
+        "mental-healthyminds"
+      ],
+      "semanticKind": "action",
+      "primaryGoal": "mental-healthyminds",
+      "credit": true
+    },
+    {
+      "id": "69d00098154891026a8d8f64",
+      "name": "Healthy Minds Session — Purpose",
+      "instructions": "Connect with ur deeper motivations and core values",
+      "sectionId": "6a93a165c8311933e19da426",
+      "repeatRule": "RRULE:FREQ=WEEKLY;INTERVAL=1;BYDAY=TH",
+      "status": 0,
+      "goal": 1,
+      "sectionName": "Daytime Items",
+      "reminders": [],
+      "title": "Healthy Minds Session — Purpose",
+      "executionType": "Habit",
+      "group": "Daytime Items",
+      "routineId": "mind-healthy-minds-session",
+      "bucket": "self",
+      "goalIds": [
+        "mental-healthyminds"
+      ],
+      "semanticKind": "action",
+      "primaryGoal": "mental-healthyminds",
+      "credit": true
+    },
+    {
+      "id": "69d0010c05f211026a8d9016",
+      "name": "Healthy Mind Sessions- Foundations",
+      "instructions": "Foundational Skills for Training ur Mind",
+      "sectionId": "6a93a165c8311933e19da426",
+      "repeatRule": "RRULE:FREQ=WEEKLY;INTERVAL=1;BYDAY=FR",
+      "status": 0,
+      "goal": 1,
+      "sectionName": "Daytime Items",
+      "reminders": [],
+      "title": "Healthy Mind Sessions- Foundations",
+      "executionType": "Habit",
+      "group": "Daytime Items",
+      "routineId": "mind-healthy-minds-session",
+      "bucket": "self",
+      "goalIds": [
+        "mental-healthyminds"
+      ],
+      "semanticKind": "action",
+      "primaryGoal": "mental-healthyminds",
+      "credit": true
+    },
+    {
+      "id": "69d002d0055a11026a8d9251",
+      "name": "Shower or Epsom Salt Bath",
+      "instructions": "Friday: Epsom bath may replace shower. Other days: shower.",
+      "sectionId": "6a91fb47c61cd1023f28f767",
+      "repeatRule": "RRULE:FREQ=DAILY;INTERVAL=1",
+      "status": 0,
+      "goal": 1,
+      "sectionName": "Night Time Routine",
+      "reminders": [],
+      "title": "Shower or Epsom Salt Bath",
+      "executionType": "Habit",
+      "group": "Night Time Routine",
+      "routineId": "body-weekly-bath",
+      "bucket": "body",
+      "goalIds": [
+        "physical-selfcare"
+      ],
+      "semanticKind": "action",
+      "primaryGoal": "physical-selfcare",
+      "credit": true
+    },
+    {
+      "id": "69d0076e237c51026a8d958d",
+      "name": "Vacuum Brush Marvel",
+      "instructions": "",
+      "sectionId": "6a93a165c8311933e19da426",
+      "repeatRule": "RRULE:FREQ=WEEKLY;INTERVAL=1;BYDAY=SU,TU,TH",
+      "status": 0,
+      "goal": 1,
+      "sectionName": "Daytime Items",
+      "reminders": [],
+      "title": "Vacuum Brush Marvel",
+      "executionType": "Habit",
+      "group": "Daytime Items",
+      "routineId": "dog-weekly-vacuum-marvel",
+      "bucket": "marvel",
+      "goalIds": [],
+      "semanticKind": "action",
+      "primaryGoal": null,
+      "credit": true
+    },
+    {
+      "id": "69d0150bb3b091026a8d97ce",
+      "name": "Train/Play with Marvel",
+      "instructions": "Good things take time",
+      "sectionId": "6a93a165c8311933e19da426",
+      "repeatRule": "RRULE:FREQ=WEEKLY;INTERVAL=1;BYDAY=MO,WE,FR",
+      "status": 0,
+      "goal": 1,
+      "sectionName": "Daytime Items",
+      "reminders": [],
+      "title": "Train/Play with Marvel",
+      "executionType": "Habit",
+      "group": "Daytime Items",
+      "routineId": "dog-play-sessions",
+      "bucket": "marvel",
+      "goalIds": [
+        "connection-training"
+      ],
+      "semanticKind": "action",
+      "primaryGoal": "connection-training",
+      "credit": true
+    },
+    {
+      "id": "69db0d127d6151a95e9a5f49",
+      "name": "Put out Gym Clothes",
+      "instructions": "",
+      "sectionId": "6a91fb47c61cd1023f28f767",
+      "repeatRule": "RRULE:FREQ=WEEKLY;BYDAY=SU,MO,TU,WE,TH,FR",
+      "status": 0,
+      "goal": 1,
+      "sectionName": "Night Time Routine",
+      "reminders": [],
+      "title": "Put out Gym Clothes",
+      "executionType": "Habit",
+      "group": "Night Time Routine",
+      "routineId": "body-put-out-gym-clothes",
+      "bucket": "body",
+      "goalIds": [],
+      "semanticKind": "action",
+      "primaryGoal": null,
+      "credit": true
+    },
+    {
+      "id": "69dd725de73dd117249a9837",
+      "name": "Read (Even 3 Pages)",
+      "instructions": "A chapter a day will light your way",
+      "sectionId": "69ffc3291b1f510c1b75d1ff",
+      "repeatRule": "RRULE:FREQ=DAILY;INTERVAL=3",
+      "status": 0,
+      "goal": 1,
+      "sectionName": "Optional",
+      "reminders": [],
+      "title": "Read (Even 3 Pages)",
+      "executionType": "Habit",
+      "group": "Optional",
+      "routineId": "mind-reading",
+      "bucket": "self",
+      "goalIds": [
+        "mental-reading"
+      ],
+      "semanticKind": "action",
+      "primaryGoal": "mental-reading",
+      "credit": true
+    },
+    {
+      "id": "69dd72cff6865117249a9b2d",
+      "name": "Smile to yourself",
+      "instructions": "Good luck comes to you when you smile",
+      "sectionId": "6a93a165c8311933e19da426",
+      "repeatRule": "RRULE:FREQ=DAILY;INTERVAL=1",
+      "status": 0,
+      "goal": 1,
+      "sectionName": "Daytime Items",
+      "reminders": [],
+      "title": "Smile to yourself",
+      "executionType": "Habit",
+      "group": "Daytime Items",
+      "routineId": "mind-smile-to-yourself",
+      "bucket": "self",
+      "goalIds": [],
+      "semanticKind": "action",
+      "primaryGoal": null,
+      "credit": true
+    },
+    {
+      "id": "69ffc3345a86910c1b75d411",
+      "name": "Journal or Self Discovery",
+      "instructions": "",
+      "sectionId": "69ffc3291b1f510c1b75d1ff",
+      "repeatRule": "RRULE:FREQ=DAILY;INTERVAL=1",
+      "status": 0,
+      "goal": 1,
+      "sectionName": "Optional",
+      "reminders": [],
+      "title": "Journal or Self Discovery",
+      "executionType": "Habit",
+      "group": "Optional",
+      "routineId": "mind-journaling",
+      "bucket": "self",
+      "goalIds": [
+        "mental-journaling"
+      ],
+      "semanticKind": "action",
+      "primaryGoal": "mental-journaling",
+      "credit": true
+    },
+    {
+      "id": "6a7e8b2d9a80983d7dae9e59",
+      "name": "Vocal Training / Warm-Ups",
+      "instructions": "",
+      "sectionId": "69dd688ee3cd11016a5fec92",
+      "repeatRule": "RRULE:FREQ=WEEKLY;BYDAY=MO,WE,FR",
+      "status": 0,
+      "goal": 1,
+      "sectionName": "Music & Sound Development",
+      "reminders": [],
+      "title": "Vocal Training / Warm-Ups",
+      "executionType": "Habit",
+      "group": "Music & Sound Development",
+      "routineId": "soul-vocal-training",
+      "bucket": "creative",
+      "goalIds": [
+        "spiritual-vocal"
+      ],
+      "semanticKind": "action",
+      "primaryGoal": "spiritual-vocal",
+      "credit": true
+    },
+    {
+      "id": "6a939b628f087e0df42d25f2",
+      "name": "Teeth Brushing — Night Routine",
+      "instructions": "Includes flossing, mouthwash, and tongue scraping.",
+      "sectionId": "6a91fb47c61cd1023f28f767",
+      "repeatRule": "RRULE:FREQ=DAILY;INTERVAL=1",
+      "status": 0,
+      "goal": 1,
+      "sectionName": "Night Time Routine",
+      "reminders": [
+        "23:00"
+      ],
+      "title": "Teeth Brushing — Night Routine",
+      "executionType": "Habit",
+      "group": "Night Time Routine",
+      "routineId": "body-teeth-night",
+      "bucket": "body",
+      "goalIds": [],
+      "semanticKind": "action",
+      "primaryGoal": null,
+      "credit": true
+    },
+    {
+      "id": "6a939b8e8f087e0df42d2bb6",
+      "name": "Full Gym Session — Complete Flow",
+      "instructions": "Warm up → complete all planned sets and reps → cool down.",
+      "sectionId": "6a93a173c8311933e19da4c9",
+      "repeatRule": "RRULE:FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR,SA",
+      "status": 0,
+      "goal": 1,
+      "sectionName": "Gym and Pre-Gym Routine",
+      "reminders": [],
+      "title": "Full Gym Session — Complete Flow",
+      "executionType": "Habit",
+      "group": "Gym and Pre-Gym Routine",
+      "routineId": "body-full-gym-session",
+      "bucket": "body",
+      "goalIds": [
+        "physical-strength"
+      ],
+      "semanticKind": "action",
+      "primaryGoal": "physical-strength",
+      "credit": true
+    },
+    {
+      "id": "6a939b928f080f71bbb37508",
+      "name": "Active PT — Follow PDF",
+      "instructions": "Open the PT PDF and follow the prescribed plan.",
+      "sectionId": "6a93a173c8311933e19da4c9",
+      "repeatRule": "RRULE:FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR,SA",
+      "status": 0,
+      "goal": 1,
+      "sectionName": "Gym and Pre-Gym Routine",
+      "reminders": [],
+      "title": "Active PT — Follow PDF",
+      "executionType": "Habit",
+      "group": "Gym and Pre-Gym Routine",
+      "routineId": "body-active-pt",
+      "bucket": "body",
+      "goalIds": [
+        "physical-strength"
+      ],
+      "semanticKind": "action",
+      "primaryGoal": "physical-strength",
+      "credit": true
+    },
+    {
+      "id": "6a939b9a8f08defd959116e4",
+      "name": "Drink 5 Bottles of Water",
+      "instructions": "Daily target: at least five bottles.",
+      "sectionId": "6a93a165c8311933e19da426",
+      "repeatRule": "RRULE:FREQ=DAILY;INTERVAL=1",
+      "status": 0,
+      "goal": 1,
+      "sectionName": "Daytime Items",
+      "reminders": [],
+      "title": "Drink 5 Bottles of Water",
+      "executionType": "Habit",
+      "group": "Daytime Items",
+      "routineId": "body-water-intake",
+      "bucket": "body",
+      "goalIds": [
+        "physical-hydration"
+      ],
+      "semanticKind": "action",
+      "primaryGoal": "physical-hydration",
+      "credit": true
+    },
+    {
+      "id": "6a939b9e8f08defd95911710",
+      "name": "Creatine and Fiber Supplements",
+      "instructions": "Taken together; one check covers both supplements.",
+      "sectionId": "6a93a165c8311933e19da426",
+      "repeatRule": "RRULE:FREQ=DAILY;INTERVAL=1",
+      "status": 0,
+      "goal": 1,
+      "sectionName": "Daytime Items",
+      "reminders": [],
+      "title": "Creatine and Fiber Supplements",
+      "executionType": "Habit",
+      "group": "Daytime Items",
+      "routineId": "body-creatine-fiber",
+      "bucket": "body",
+      "goalIds": [
+        "physical-vitamins"
+      ],
+      "semanticKind": "action",
+      "primaryGoal": "physical-vitamins",
+      "credit": true
+    },
+    {
+      "id": "6a939bbb8f0861e0f0e21dcf",
+      "name": "Clean Room Reset",
+      "instructions": "Reset the room for regulation; no backlog if a day is missed.",
+      "sectionId": "6a91fb47c61cd1023f28f767",
+      "repeatRule": "RRULE:FREQ=DAILY;INTERVAL=1",
+      "status": 0,
+      "goal": 1,
+      "sectionName": "Night Time Routine",
+      "reminders": [],
+      "title": "Clean Room Reset",
+      "executionType": "Habit",
+      "group": "Night Time Routine",
+      "routineId": "cleaning-room-reset",
+      "bucket": "home",
+      "goalIds": [
+        "upkeep-home",
+        "mental-cleanspaces"
+      ],
+      "semanticKind": "action",
+      "primaryGoal": "upkeep-home",
+      "credit": true
+    },
+    {
+      "id": "6a939bbe8f08defd95911933",
+      "name": "Make Kitchen Usable",
+      "instructions": "Restore a usable kitchen; reset next cycle without backlog.",
+      "sectionId": "6a93a165c8311933e19da426",
+      "repeatRule": "RRULE:FREQ=DAILY;INTERVAL=1",
+      "status": 0,
+      "goal": 1,
+      "sectionName": "Daytime Items",
+      "reminders": [],
+      "title": "Make Kitchen Usable",
+      "executionType": "Habit",
+      "group": "Daytime Items",
+      "routineId": "cleaning-kitchen-usable",
+      "bucket": "home",
+      "goalIds": [
+        "upkeep-home",
+        "mental-cleanspaces"
+      ],
+      "semanticKind": "action",
+      "primaryGoal": "upkeep-home",
+      "credit": true
+    },
+    {
+      "id": "6a939bc28f08defd95911956",
+      "name": "Daily Marvel Care — Attention + Enrichment",
+      "instructions": "Sniff, move, think; also cuddle, brush, teeth, or supplies.",
+      "sectionId": "6a93a165c8311933e19da426",
+      "repeatRule": "RRULE:FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR",
+      "status": 0,
+      "goal": 1,
+      "sectionName": "Daytime Items",
+      "reminders": [],
+      "title": "Daily Marvel Care — Attention + Enrichment",
+      "executionType": "Habit",
+      "group": "Daytime Items",
+      "routineId": "dog-behavior-training",
+      "bucket": "marvel",
+      "goalIds": [
+        "connection-training"
+      ],
+      "semanticKind": "action",
+      "primaryGoal": "connection-training",
+      "credit": true
+    },
+    {
+      "id": "6a93a46e8f0869c15168d502",
+      "name": "Daytime Rest / Quiet Reset",
+      "instructions": "Rest physically or mentally; meditate or choose a simple task.",
+      "sectionId": "6a93a165c8311933e19da426",
+      "repeatRule": "RRULE:FREQ=DAILY;INTERVAL=1",
+      "status": 0,
+      "goal": 1,
+      "sectionName": "Daytime Items",
+      "reminders": [],
+      "title": "Daytime Rest / Quiet Reset",
+      "executionType": "Habit",
+      "group": "Daytime Items",
+      "routineId": "mind-daytime-rest",
+      "bucket": "self",
+      "goalIds": [
+        "physical-sleep"
+      ],
+      "semanticKind": "action",
+      "primaryGoal": "physical-sleep",
+      "credit": true
+    },
+    {
+      "id": "6a93a4728f08defd9591a2d1",
+      "name": "Eat a Fruit or Vegetable",
+      "instructions": "Include one planned antioxidant-rich serving with a meal.",
+      "sectionId": "6a93a165c8311933e19da426",
+      "repeatRule": "RRULE:FREQ=DAILY;INTERVAL=1",
+      "status": 0,
+      "goal": 1,
+      "sectionName": "Daytime Items",
+      "reminders": [],
+      "title": "Eat a Fruit or Vegetable",
+      "executionType": "Habit",
+      "group": "Daytime Items",
+      "routineId": "body-fruit-vegetable",
+      "bucket": "body",
+      "goalIds": [
+        "physical-nourish"
+      ],
+      "semanticKind": "action",
+      "primaryGoal": "physical-nourish",
+      "credit": true
+    },
+    {
+      "id": "6a93a4788f080f71bbb3fcdf",
+      "name": "Movement Break — Walk, Stretch, or Stand",
+      "instructions": "Move briefly during long sitting; even one minute counts.",
+      "sectionId": "6a93a165c8311933e19da426",
+      "repeatRule": "RRULE:FREQ=DAILY;INTERVAL=1",
+      "status": 0,
+      "goal": 1,
+      "sectionName": "Daytime Items",
+      "reminders": [],
+      "title": "Movement Break — Walk, Stretch, or Stand",
+      "executionType": "Habit",
+      "group": "Daytime Items",
+      "routineId": "body-movement-break",
+      "bucket": "body",
+      "goalIds": [
+        "physical-strength"
+      ],
+      "semanticKind": "action",
+      "primaryGoal": "physical-strength",
+      "credit": true
+    },
+    {
+      "id": "6a93a47b8f080f71bbb3fd1d",
+      "name": "Creative / Tinkering Session",
+      "instructions": "Choose curiosity, intentional learning, or unrestricted making.",
+      "sectionId": "6a93a165c8311933e19da426",
+      "repeatRule": "RRULE:FREQ=DAILY;INTERVAL=1",
+      "status": 0,
+      "goal": 1,
+      "sectionName": "Daytime Items",
+      "reminders": [],
+      "title": "Creative / Tinkering Session",
+      "executionType": "Habit",
+      "group": "Daytime Items",
+      "routineId": "soul-creative-tinkering",
+      "bucket": "creative",
+      "goalIds": [],
+      "semanticKind": "action",
+      "primaryGoal": null,
+      "credit": true
+    },
+    {
+      "id": "6a93a4858f080f71bbb3fdea",
+      "name": "Face Shaving — Every 3 Days",
+      "instructions": "Shave or trim to the preferred standard.",
+      "sectionId": "6a91fb47c61cd1023f28f767",
+      "repeatRule": "RRULE:FREQ=DAILY;INTERVAL=3",
+      "status": 0,
+      "goal": 1,
+      "sectionName": "Night Time Routine",
+      "reminders": [],
+      "title": "Face Shaving — Every 3 Days",
+      "executionType": "Habit",
+      "group": "Night Time Routine",
+      "routineId": "body-face-shaving",
+      "bucket": "body",
+      "goalIds": [
+        "physical-selfcare"
+      ],
+      "semanticKind": "action",
+      "primaryGoal": "physical-selfcare",
+      "credit": true
+    },
+    {
+      "id": "6a93a4888f087e0df42e2033",
+      "name": "Body Shaving — Weekly",
+      "instructions": "Complete the selected areas for this self-care session.",
+      "sectionId": "6a91fb47c61cd1023f28f767",
+      "repeatRule": "RRULE:FREQ=WEEKLY;BYDAY=FR",
+      "status": 0,
+      "goal": 1,
+      "sectionName": "Night Time Routine",
+      "reminders": [],
+      "title": "Body Shaving — Weekly",
+      "executionType": "Habit",
+      "group": "Night Time Routine",
+      "routineId": "body-body-shaving",
+      "bucket": "body",
+      "goalIds": [
+        "physical-selfcare"
+      ],
+      "semanticKind": "action",
+      "primaryGoal": "physical-selfcare",
+      "credit": true
+    },
+    {
+      "id": "6a9fb6ba8f08ecb120d19e23",
+      "name": "Cardio — Gym",
+      "instructions": "Complete the planned cardio session at the gym.",
+      "sectionId": "6a93a173c8311933e19da4c9",
+      "repeatRule": "RRULE:FREQ=WEEKLY;BYDAY=TU,FR",
+      "status": 0,
+      "goal": 1,
+      "sectionName": "Gym and Pre-Gym Routine",
+      "reminders": [],
+      "title": "Cardio — Gym",
+      "executionType": "Habit",
+      "group": "Gym and Pre-Gym Routine",
+      "routineId": "body-cardio-training",
+      "bucket": "body",
+      "goalIds": [
+        "physical-strength"
+      ],
+      "semanticKind": "action",
+      "primaryGoal": "physical-strength",
+      "credit": true
+    },
+    {
+      "id": "6a9fb6d18f0852d54c2d7860",
+      "name": "Recovery: TENS/Massage Gun/Dry Brush/Chair/Stretch-Yoga/Relax",
+      "instructions": "Choose the recovery support your body needs tonight; one option ",
+      "sectionId": "6a91fb47c61cd1023f28f767",
+      "repeatRule": "RRULE:FREQ=DAILY;INTERVAL=1",
+      "status": 0,
+      "goal": 1,
+      "sectionName": "Night Time Routine",
+      "reminders": [
+        "23:00"
+      ],
+      "title": "Recovery: TENS/Massage Gun/Dry Brush/Chair/Stretch-Yoga/Relax",
+      "executionType": "Habit",
+      "group": "Night Time Routine",
+      "routineId": "body-recovery-options",
+      "bucket": "body",
+      "goalIds": [
+        "physical-strength"
+      ],
+      "semanticKind": "action",
+      "primaryGoal": "physical-strength",
+      "credit": true
+    },
+    {
+      "id": "6a9fb6da8f08ea0eca04480d",
+      "name": "Abdominal Training — Gym",
+      "instructions": "Complete the planned abdominal training at the gym.",
+      "sectionId": "6a93a173c8311933e19da4c9",
+      "repeatRule": "RRULE:FREQ=WEEKLY;BYDAY=MO,WE",
+      "status": 0,
+      "goal": 1,
+      "sectionName": "Gym and Pre-Gym Routine",
+      "reminders": [],
+      "title": "Abdominal Training — Gym",
+      "executionType": "Habit",
+      "group": "Gym and Pre-Gym Routine",
+      "routineId": "body-abdominal-training",
+      "bucket": "body",
+      "goalIds": [
+        "physical-strength"
+      ],
+      "semanticKind": "action",
+      "primaryGoal": "physical-strength",
+      "credit": true
+    },
+    {
+      "id": "6a93a4ba8f087e0df42e265c",
+      "projectId": "69dd6ff6d3e8d1a95e9a96ca",
+      "projectName": "Medical",
+      "title": "Nutrition Flow — Use Macro Tracker",
+      "content": "The macro tracker remains authoritative for detailed nutrition.\n\nKeep visible:\n• Protein intake\n• Antioxidant-rich fruit or vegetable\n• Daily fluids\n• Energy snack available before predictable energy drops\n• Spaced meals—notice long gaps and choose the next meal or snack\n\nTickTick actions: Drink 5 Bottles of Water, Eat a Fruit or Vegetable, and Creatine and Fiber Supplements.",
+      "description": "",
+      "items": [],
+      "dueDate": "2026-10-08T00:00:00-0400",
+      "repeatRule": "RRULE:FREQ=DAILY;INTERVAL=1",
+      "status": 0,
+      "reminders": [],
+      "timeZone": "America/New_York",
+      "isAllDay": true,
+      "startDate": "2026-10-08T00:00:00-0400",
+      "tags": [],
+      "columnId": null,
+      "columnName": null,
+      "executionType": "Task",
+      "group": "Medical",
+      "routineId": "body-nutrition-flow-note",
+      "bucket": "body",
+      "goalIds": [
+        "physical-protein",
+        "physical-nourish",
+        "physical-hydration"
+      ],
+      "semanticKind": "orientation",
+      "primaryGoal": "physical-protein",
+      "credit": false
+    },
+    {
+      "id": "6a7f89246b0ed10273275b21",
+      "projectId": "69dd6ff6d3e8d1a95e9a96ca",
+      "projectName": "Medical",
+      "title": "Reset Medicine and Vitamin Holder",
+      "content": "",
+      "description": "",
+      "items": [],
+      "dueDate": "2026-10-05T00:00:00-0400",
+      "repeatRule": "RRULE:FREQ=WEEKLY;INTERVAL=1;BYDAY=FR",
+      "status": 0,
+      "reminders": [],
+      "timeZone": "America/New_York",
+      "isAllDay": true,
+      "startDate": "2026-10-05T00:00:00-0400",
+      "tags": [
+        "friday reset"
+      ],
+      "columnId": "69cefe551b23d102bc8975dd",
+      "columnName": null,
+      "executionType": "Task",
+      "group": "Medical",
+      "routineId": "organizing-reset-medicine-holder",
+      "bucket": "home",
+      "goalIds": [
+        "physical-vitamins"
+      ],
+      "semanticKind": "action",
+      "primaryGoal": "physical-vitamins",
+      "credit": true
+    },
+    {
+      "id": "6a7e8a889a80983d7dae9ca6",
+      "projectId": "69dd701e1ca911a95e9a97c7",
+      "projectName": "Life Planning",
+      "title": "Goal Review",
+      "content": "* Sep 5- Recently Created Goal Site - Will begin next cycle",
+      "description": "",
+      "items": [],
+      "dueDate": "2026-11-07T00:00:00-0500",
+      "repeatRule": "RRULE:FREQ=MONTHLY;INTERVAL=1;BYDAY=1SA",
+      "status": 0,
+      "reminders": [],
+      "timeZone": "America/New_York",
+      "isAllDay": true,
+      "startDate": "2026-11-07T00:00:00-0500",
+      "tags": [
+        "monthly review"
+      ],
+      "columnId": "69cefe551b23d102bc8975dd",
+      "columnName": null,
+      "executionType": "Task",
+      "group": "Life Planning",
+      "routineId": "organizing-goal-effort-review",
+      "bucket": "home",
+      "goalIds": [
+        "upkeep-admin"
+      ],
+      "semanticKind": "action",
+      "primaryGoal": "upkeep-admin",
+      "credit": true
+    },
+    {
+      "id": "69cefe89a8a19102bc8976dc",
+      "projectId": "69dd701e1ca911a95e9a97c7",
+      "projectName": "Life Planning",
+      "title": "Weekly Finances Review",
+      "content": "- [x] **Personal Finance Allocation**\n::-Review upcoming bills and needed expenses and allocate::\n- [x] **Needed/Reoccurring Purchase Review**\n::-Review inventory and sheet to see what is needed::\n- [ ] **Savings Allocation**\n::-After personal allocation move left over to savings:: \n- [x] **Marvel Supply Count**/**Resupply**\n::Check food, treats, chews, toys and plan accordingly::\n\n\nOptional \n- [ ] **Family Finance Review**\n::-Review family finances tracker and update/plan::\n- [ ] **Family Altruism Review**\n::-Review bucket list and see status of action items::\n\n\n\n\n\n\n",
+      "description": "",
+      "items": [],
+      "dueDate": "2026-10-14T00:00:00-0400",
+      "repeatRule": "RRULE:FREQ=WEEKLY;WKST=SU;INTERVAL=1;BYDAY=WE",
+      "status": 0,
+      "reminders": [],
+      "timeZone": "America/New_York",
+      "isAllDay": true,
+      "startDate": "2026-10-14T00:00:00-0400",
+      "tags": [
+        "weekly review"
+      ],
+      "columnId": "69cefe551b23d102bc8975dd",
+      "columnName": null,
+      "executionType": "Task",
+      "group": "Life Planning",
+      "routineId": "organizing-personal-finance-allocation",
+      "bucket": "money",
+      "goalIds": [
+        "financial-credit",
+        "financial-savings"
+      ],
+      "semanticKind": "action",
+      "primaryGoal": "financial-credit",
+      "credit": true
+    },
+    {
+      "id": "69cef5e7a89f9102bc896aa6",
+      "projectId": "69dd701e1ca911a95e9a97c7",
+      "projectName": "Life Planning",
+      "title": "Fill in Planner for Week",
+      "content": "",
+      "description": "",
+      "items": [],
+      "dueDate": "2026-10-11T00:00:00-0400",
+      "repeatRule": "RRULE:FREQ=WEEKLY;WKST=SU;INTERVAL=1;BYDAY=SU",
+      "status": 0,
+      "reminders": [],
+      "timeZone": "America/New_York",
+      "isAllDay": true,
+      "startDate": "2026-10-11T00:00:00-0400",
+      "tags": [
+        "sunday setup",
+        "administrative"
+      ],
+      "columnId": "69cefe551b23d102bc8975dd",
+      "columnName": null,
+      "executionType": "Task",
+      "group": "Life Planning",
+      "routineId": "organizing-week-planner-prep",
+      "bucket": "home",
+      "goalIds": [
+        "upkeep-admin"
+      ],
+      "semanticKind": "action",
+      "primaryGoal": "upkeep-admin",
+      "credit": true
+    },
+    {
+      "id": "6a93a4ba8f08defd9591a81c",
+      "projectId": "69dd701e1ca911a95e9a97c7",
+      "projectName": "Life Planning",
+      "title": "Life Path & Active Project Direction",
+      "content": "SHORT TERM\n• What do I want?\n• What immediate problem does it solve?\n• What method or milestone gets me there?\n• Why am I doing it?\n\nGROWTH STRATEGY\n• Choose one pattern or habit to change.\n• Identify its trigger.\n• Define one replacement response and its next physical action.\n\nLONG TERM\n• Spiritual fulfillment and alignment through concrete actions\n• Move beyond stabilization toward fulfillment-based actions\n• Define what lasting stability looks like and choose the next milestone\n\nKeep outcomes here or in Routine Hub. Schedule only the next physical action.",
+      "description": "",
+      "items": [],
+      "dueDate": "2026-10-11T00:00:00-0400",
+      "repeatRule": "RRULE:FREQ=WEEKLY;BYDAY=SU",
+      "status": 0,
+      "reminders": [],
+      "timeZone": "America/New_York",
+      "isAllDay": true,
+      "startDate": "2026-10-11T00:00:00-0400",
+      "tags": [],
+      "columnId": null,
+      "columnName": null,
+      "executionType": "Task",
+      "group": "Life Planning",
+      "routineId": "organizing-life-path-note",
+      "bucket": "home",
+      "goalIds": [
+        "upkeep-admin"
+      ],
+      "semanticKind": "orientation",
+      "primaryGoal": "upkeep-admin",
+      "credit": false
+    },
+    {
+      "id": "6a93a4ba8f0861e0f0e2ae3b",
+      "projectId": "69dd701e1ca911a95e9a97c7",
+      "projectName": "Life Planning",
+      "title": "Next Step Awareness Review",
+      "content": "Open the next-step guide, choose one active outcome, and identify one concrete physical move. Put only that move in Next Step Actions.\n\n* Sep 6- Yeah idk to much going on- maybe next time",
+      "description": "",
+      "items": [],
+      "dueDate": "2026-10-11T00:00:00-0400",
+      "repeatRule": "RRULE:FREQ=WEEKLY;BYDAY=SU",
+      "status": 0,
+      "reminders": [],
+      "timeZone": "America/New_York",
+      "isAllDay": true,
+      "startDate": "2026-10-11T00:00:00-0400",
+      "tags": [
+        "sunday setup",
+        "weekly review"
+      ],
+      "columnId": null,
+      "columnName": null,
+      "executionType": "Task",
+      "group": "Life Planning",
+      "routineId": "organizing-next-step-awareness-review",
+      "bucket": "home",
+      "goalIds": [
+        "financial-credit",
+        "financial-savings"
+      ],
+      "semanticKind": "action",
+      "primaryGoal": "financial-credit",
+      "credit": true
+    },
+    {
+      "id": "6a9fb6d68f08ecb120d1a125",
+      "projectId": "69dd701e1ca911a95e9a97c7",
+      "projectName": "Life Planning",
+      "title": "Daily Work & Income Flow",
+      "content": "",
+      "description": "Complete the active Job, Resale, and Candle actions. Items marked “when needed” may be skipped when they do not apply.",
+      "items": [
+        {
+          "id": "6a9fbb4f8f08ea0eca04dea1",
+          "status": 0,
+          "title": "Job — Check Automation Pipeline postings and apply",
+          "sortOrder": 0,
+          "startDate": null,
+          "isAllDay": false,
+          "timeZone": "America/New_York",
+          "completedTime": null
+        },
+        {
+          "id": "6a9fbb4f8f08ea0eca04dea2",
+          "status": 0,
+          "title": "Job — Browse and compile personally found postings and roles",
+          "sortOrder": 1,
+          "startDate": null,
+          "isAllDay": false,
+          "timeZone": "America/New_York",
+          "completedTime": null
+        },
+        {
+          "id": "6a9fbb4f8f08ea0eca04dea3",
+          "status": 0,
+          "title": "Job — Check on existing roles and applications",
+          "sortOrder": 2,
+          "startDate": null,
+          "isAllDay": false,
+          "timeZone": "America/New_York",
+          "completedTime": null
+        },
+        {
+          "id": "6a9fbb4f8f08ea0eca04dea4",
+          "status": 0,
+          "title": "Resale — Run agent posting-stats update",
+          "sortOrder": 3,
+          "startDate": null,
+          "isAllDay": false,
+          "timeZone": "America/New_York",
+          "completedTime": null
+        },
+        {
+          "id": "6a9fbb4f8f08ea0eca04dea5",
+          "status": 0,
+          "title": "Resale — List new items (when needed)",
+          "sortOrder": 4,
+          "startDate": null,
+          "isAllDay": false,
+          "timeZone": "America/New_York",
+          "completedTime": null
+        },
+        {
+          "id": "6a9fbb4f8f08ea0eca04dea6",
+          "status": 0,
+          "title": "Resale — Respond to inquiries on selling sites",
+          "sortOrder": 5,
+          "startDate": null,
+          "isAllDay": false,
+          "timeZone": "America/New_York",
+          "completedTime": null
+        },
+        {
+          "id": "6a9fbb4f8f08ea0eca04dea7",
+          "status": 0,
+          "title": "Resale — Lower prices or offer bundles for items needing help to sell",
+          "sortOrder": 6,
+          "startDate": null,
+          "isAllDay": false,
+          "timeZone": "America/New_York",
+          "completedTime": null
+        },
+        {
+          "id": "6a9fbb4f8f08ea0eca04dea8",
+          "status": 0,
+          "title": "Resale — Ship items (when needed)",
+          "sortOrder": 7,
+          "startDate": null,
+          "isAllDay": false,
+          "timeZone": "America/New_York",
+          "completedTime": null
+        },
+        {
+          "id": "6a9fbb4f8f08ea0eca04dea9",
+          "status": 0,
+          "title": "Resale — Run trending-items-to-acquire agent",
+          "sortOrder": 8,
+          "startDate": null,
+          "isAllDay": false,
+          "timeZone": "America/New_York",
+          "completedTime": null
+        },
+        {
+          "id": "6a9fbb4f8f08ea0eca04deaa",
+          "status": 0,
+          "title": "Candles",
+          "sortOrder": 9,
+          "startDate": null,
+          "isAllDay": false,
+          "timeZone": "America/New_York",
+          "completedTime": null
+        }
+      ],
+      "dueDate": "2026-10-08T00:00:00-0400",
+      "repeatRule": "RRULE:FREQ=WEEKLY;INTERVAL=1;BYDAY=MO,TU,WE,TH,FR",
+      "status": 0,
+      "reminders": [],
+      "timeZone": "America/New_York",
+      "isAllDay": true,
+      "startDate": "2026-10-08T00:00:00-0400",
+      "tags": [],
+      "columnId": null,
+      "columnName": null,
+      "executionType": "Task",
+      "group": "Life Planning",
+      "routineId": "mind-open-job-search",
+      "bucket": "work",
+      "goalIds": [
+        "financial-independence"
+      ],
+      "semanticKind": "container",
+      "primaryGoal": "financial-independence",
+      "credit": false
+    },
+    {
+      "id": "6a3b0c00dd26118362fba5bf",
+      "projectId": "69dd705c1bd491a95e9a99ca",
+      "projectName": "Marvel",
+      "title": "Schedule Marvel Monthly Trip to Groomer",
+      "content": "",
+      "description": "",
+      "items": [],
+      "dueDate": "2026-10-13T00:00:00-0400",
+      "repeatRule": "RRULE:FREQ=MONTHLY;INTERVAL=1;BYMONTHDAY=13",
+      "status": 0,
+      "reminders": [],
+      "timeZone": "America/New_York",
+      "isAllDay": true,
+      "startDate": "2026-10-13T00:00:00-0400",
+      "tags": [
+        "out and about"
+      ],
+      "columnId": "6a97adf2443fc5b861dea72f",
+      "columnName": "Not Sectioned",
+      "executionType": "Task",
+      "group": "Marvel",
+      "routineId": "dog-clip-nails",
+      "bucket": "marvel",
+      "goalIds": [],
+      "semanticKind": "action",
+      "primaryGoal": null,
+      "credit": true
+    },
+    {
+      "id": "6a7e9be5f535d1ef72a47920",
+      "projectId": "69dd705c1bd491a95e9a99ca",
+      "projectName": "Marvel",
+      "title": "Marvel Review",
+      "content": "\n[Marvel-August 2026 Review](https://ticktick.com/webapp/#p/69dd705c1bd491a95e9a99ca/tasks/6a97ae00443fc5b861dea735) ",
+      "description": "",
+      "items": [],
+      "dueDate": "2026-10-05T00:00:00-0400",
+      "repeatRule": "RRULE:FREQ=MONTHLY;INTERVAL=1;BYMONTHDAY=30",
+      "status": 0,
+      "reminders": [],
+      "timeZone": "America/New_York",
+      "isAllDay": true,
+      "startDate": "2026-10-05T00:00:00-0400",
+      "tags": [
+        "monthly review"
+      ],
+      "columnId": "6a97adf2443fc5b861dea72f",
+      "columnName": "Not Sectioned",
+      "executionType": "Task",
+      "group": "Marvel",
+      "routineId": "dog-behavior-train-audit",
+      "bucket": "marvel",
+      "goalIds": [
+        "connection-training"
+      ],
+      "semanticKind": "action",
+      "primaryGoal": "connection-training",
+      "credit": true
+    },
+    {
+      "id": "6a7e8ade9a80983d7dae9cb6",
+      "projectId": "69def09b442591a95e9af9db",
+      "projectName": "Creativity",
+      "title": "Pinterest Board Reset",
+      "content": "Sep 5- Skipping for Now ( Still like boards)",
+      "description": "",
+      "items": [],
+      "dueDate": "2026-11-07T00:00:00-0500",
+      "repeatRule": "RRULE:FREQ=MONTHLY;INTERVAL=2;BYDAY=1SA",
+      "status": 0,
+      "reminders": [],
+      "timeZone": "America/New_York",
+      "isAllDay": true,
+      "startDate": "2026-11-07T00:00:00-0500",
+      "tags": [
+        "monthly review",
+        "digital"
+      ],
+      "columnId": "69cefe551b23d102bc8975dd",
+      "columnName": null,
+      "executionType": "Task",
+      "group": "Creativity",
+      "routineId": "soul-pinterest-reset",
+      "bucket": "creative",
+      "goalIds": [],
+      "semanticKind": "action",
+      "primaryGoal": null,
+      "credit": true
+    },
+    {
+      "id": "6a124c4c639b9152c7faa9b4",
+      "projectId": "69def09b442591a95e9af9db",
+      "projectName": "Creativity",
+      "title": "Music Session- Main",
+      "content": "May 19- Short production was done\n---\nMay 26-Small production session done using train horn- good stuff tbh\n---\nJune 2- No session Done\n---\nJune 9- Bonaroo ( No Session Done)\n---\nJune 16- Bonaroo ( No session Done)\n---\nJune 23- Production session done- beat was to slow - good practice , nothing super \nlucrative\n---\nJun 30- No Session Done\n---\nJul 7- No Session Done\n---\nJuly 14- Played guitar for an hour\n---\nJul 21- No session Done\n---\nJul 28- No session Done\n---\nAug 4- No Session Done\n---\nAug 11- No Session Sone\n---\nAug 18-No Session Done\n---\nAug 25- Used mini midi to find a sound and built out a rythm up to verse in abelton\\\n---\nSep 1- I worked on recording vocals and layering editing- just tinkering, but a start.",
+      "description": "",
+      "items": [],
+      "dueDate": "2026-10-13T00:00:00-0400",
+      "repeatRule": "RRULE:FREQ=WEEKLY;INTERVAL=1;BYDAY=TU",
+      "status": 0,
+      "reminders": [],
+      "timeZone": "America/New_York",
+      "isAllDay": true,
+      "startDate": "2026-10-13T00:00:00-0400",
+      "tags": [
+        "music"
+      ],
+      "columnId": null,
+      "columnName": null,
+      "executionType": "Task",
+      "group": "Creativity",
+      "routineId": "soul-main-session",
+      "bucket": "creative",
+      "goalIds": [
+        "spiritual-guitar",
+        "spiritual-vocal",
+        "spiritual-production"
+      ],
+      "semanticKind": "action",
+      "primaryGoal": null,
+      "credit": true
+    },
+    {
+      "id": "69f65979d19c9118d36dcab1",
+      "projectId": "69def09b442591a95e9af9db",
+      "projectName": "Creativity",
+      "title": "Music Session-Support",
+      "content": "---\nMay 21- No Thursday session was done\n---\nMay 28- No session Done\n---\nJune 4- No Session Done\n---\nJul 11- No Session Done (Bonaroo)\n---\nJun 18- No Session Done\n---\nJune 25- no session done \n---\nJul 2 - Downloaded Serum and started a really cool track in b flat minor \n---\nJul 9- Lyrics Recorded \n---\nJul 16- Created new house track\n---\nJuly 23- No session Done\n---\nAug 6- Reviewed old tracks\n---\nAug 13- No Session Done\n---\nAug 20-Did Vocal Warm Ups and Practiced Reocrding Harmoines",
+      "description": "",
+      "items": [],
+      "dueDate": "2026-10-08T00:00:00-0400",
+      "repeatRule": "RRULE:FREQ=WEEKLY;INTERVAL=1;BYDAY=TH",
+      "status": 0,
+      "reminders": [],
+      "timeZone": "America/New_York",
+      "isAllDay": true,
+      "startDate": "2026-10-08T00:00:00-0400",
+      "tags": [
+        "music"
+      ],
+      "columnId": null,
+      "columnName": null,
+      "executionType": "Task",
+      "group": "Creativity",
+      "routineId": "soul-support-session",
+      "bucket": "creative",
+      "goalIds": [
+        "spiritual-guitar",
+        "spiritual-vocal",
+        "spiritual-production"
+      ],
+      "semanticKind": "action",
+      "primaryGoal": null,
+      "credit": true
+    },
+    {
+      "id": "69f65956b6485118d36dca31",
+      "projectId": "69def09b442591a95e9af9db",
+      "projectName": "Creativity",
+      "title": "Music  Session-Maintenance",
+      "content": "Wed- May 20- No music Session Done\n---\nWed May 27- Production/ No session done\n---\nJune 3- No Session Done\n---\nJune 10- No Music Session Done ( Bonaroo)\n---\nJune 17- When it rains, i watch ( produced and created)\n- made baseline first and built rest of the song around it \n---\nJune 24- Made beats on the plane\n---\nJul 8- played around with some track creation- ended up deleting\n---\nJuly 15- Worked on Magic Track\n---\nJuly 22- No Session Done\n---\nJul 29- No session Done\n---\nAug 5- Played Around with Midi Instruments\n---\nAug 12- No Session Done\n---\nAug 19-Fuck ( track idea) created",
+      "description": "",
+      "items": [],
+      "dueDate": "2026-10-07T00:00:00-0400",
+      "repeatRule": "RRULE:FREQ=WEEKLY;INTERVAL=1;BYDAY=WE",
+      "status": 0,
+      "reminders": [],
+      "timeZone": "America/New_York",
+      "isAllDay": true,
+      "startDate": "2026-10-07T00:00:00-0400",
+      "tags": [
+        "music"
+      ],
+      "columnId": null,
+      "columnName": null,
+      "executionType": "Task",
+      "group": "Creativity",
+      "routineId": "soul-maintenance-session",
+      "bucket": "creative",
+      "goalIds": [
+        "spiritual-guitar",
+        "spiritual-vocal",
+        "spiritual-production"
+      ],
+      "semanticKind": "action",
+      "primaryGoal": null,
+      "credit": true
+    },
+    {
+      "id": "6a93a4ba8f0861e0f0e2ae3a",
+      "projectId": "69def09b442591a95e9af9db",
+      "projectName": "Creativity",
+      "title": "Creative / Tinkering & Project Menu",
+      "content": "SESSION OPTIONS\n• Music and singing\n• Curiosity “recess” exploration\n• Intentional learning\n• Unrestricted, non-guided making\n\nACTIVE PROJECT MENUS\n• Deep dives / larger projects\n• Botanicals or lotions exploration\n• Sewing or knitting—Savanna’s baby blanket\n\nKeep outcomes undated. Put only the next physical action in Next Step Actions.",
+      "description": "",
+      "items": [],
+      "dueDate": "2026-10-07T00:00:00-0400",
+      "repeatRule": "RRULE:FREQ=DAILY;INTERVAL=1",
+      "status": 0,
+      "reminders": [],
+      "timeZone": "America/New_York",
+      "isAllDay": true,
+      "startDate": "2026-10-07T00:00:00-0400",
+      "tags": [],
+      "columnId": null,
+      "columnName": null,
+      "executionType": "Task",
+      "group": "Creativity",
+      "routineId": "soul-creative-project-menu-note",
+      "bucket": "creative",
+      "goalIds": [],
+      "semanticKind": "orientation",
+      "primaryGoal": null,
+      "credit": false
+    },
+    {
+      "id": "69cef56677461102bc8969e4",
+      "projectId": "69def09b442591a95e9af9db",
+      "projectName": "Creativity",
+      "title": "Music Month Review",
+      "content": "[Monthly Music Review](https://docs.google.com/document/d/1nxgWIYZ-1jaaYeraiSaXYPbr-58amkJT5ZbuWHTCwgQ/edit?tab=t.0#heading=h.nqhdk9kcwqzo)",
+      "description": "",
+      "items": [],
+      "dueDate": "2026-10-05T00:00:00-0400",
+      "repeatRule": "RRULE:FREQ=MONTHLY;INTERVAL=1;BYDAY=-1MO",
+      "status": 0,
+      "reminders": [],
+      "timeZone": "America/New_York",
+      "isAllDay": true,
+      "startDate": "2026-10-05T00:00:00-0400",
+      "tags": [
+        "monthly review",
+        "music"
+      ],
+      "columnId": "69cefe551b23d102bc8975dd",
+      "columnName": null,
+      "executionType": "Task",
+      "group": "Creativity",
+      "routineId": "soul-monthly-review",
+      "bucket": "creative",
+      "goalIds": [
+        "spiritual-guitar",
+        "spiritual-vocal",
+        "spiritual-production"
+      ],
+      "semanticKind": "action",
+      "primaryGoal": "spiritual-guitar",
+      "credit": true
+    },
+    {
+      "id": "6a717b138eacd1383a95dd19",
+      "projectId": "69eef620b4b19119328b4dff",
+      "projectName": "Maintenance Organization",
+      "title": "Instagram Following Review",
+      "content": "",
+      "description": "",
+      "items": [],
+      "dueDate": "2027-04-01T00:00:00-0400",
+      "repeatRule": "RRULE:FREQ=YEARLY;INTERVAL=1;BYMONTH=4;BYMONTHDAY=1",
+      "status": 0,
+      "reminders": [],
+      "timeZone": "America/New_York",
+      "isAllDay": true,
+      "startDate": "2027-04-01T00:00:00-0400",
+      "tags": [
+        "digital"
+      ],
+      "columnId": "69cefe551b23d102bc8975dd",
+      "columnName": null,
+      "executionType": "Task",
+      "group": "Maintenance Organization",
+      "routineId": "organizing-instagram-review",
+      "bucket": "home",
+      "goalIds": [
+        "upkeep-admin"
+      ],
+      "semanticKind": "action",
+      "primaryGoal": "upkeep-admin",
+      "credit": true
+    },
+    {
+      "id": "69eef692d247911952f511ef",
+      "projectId": "69eef620b4b19119328b4dff",
+      "projectName": "Maintenance Organization",
+      "title": "Monthly Closet Audit",
+      "content": "May 25- removed hoodies but did not audit other clothes\n---\nJune 6-Had to Skip with how much i have going on\n---\nJuly 4- Sorted by type and organized shoes, need to find something for clothes we don't use in the season\n---\nSep 5- Tried on all pants and shirts and sorted items out that dont fit. Moved clothing up to attic on hangers and re organized the closet and dresser to better suit day to day",
+      "description": "",
+      "items": [],
+      "dueDate": "2026-11-07T00:00:00-0500",
+      "repeatRule": "RRULE:FREQ=MONTHLY;INTERVAL=1;BYDAY=1SA",
+      "status": 0,
+      "reminders": [],
+      "timeZone": "America/New_York",
+      "isAllDay": true,
+      "startDate": "2026-11-07T00:00:00-0500",
+      "tags": [
+        "monthly review"
+      ],
+      "columnId": "6a46094803e45143d590c414",
+      "columnName": "Not Sectioned",
+      "executionType": "Task",
+      "group": "Maintenance Organization",
+      "routineId": "mind-clothes-audit",
+      "bucket": "home",
+      "goalIds": [
+        "upkeep-home"
+      ],
+      "semanticKind": "action",
+      "primaryGoal": "upkeep-home",
+      "credit": true
+    },
+    {
+      "id": "6a92084c8f087e0df3ef1721",
+      "projectId": "69eef620b4b19119328b4dff",
+      "projectName": "Maintenance Organization",
+      "title": "Wash Tote Bag",
+      "content": "",
+      "description": "",
+      "items": [],
+      "dueDate": "2026-10-16T23:59:59-0400",
+      "repeatRule": "RRULE:FREQ=WEEKLY;INTERVAL=2;BYDAY=FR",
+      "status": 0,
+      "reminders": [],
+      "timeZone": "America/New_York",
+      "isAllDay": true,
+      "startDate": "2026-10-16T00:00:00-0400",
+      "tags": [
+        "friday reset"
+      ],
+      "columnId": null,
+      "columnName": null,
+      "executionType": "Task",
+      "group": "Maintenance Organization",
+      "routineId": "cleaning-wash-tote-bag",
+      "bucket": "home",
+      "goalIds": [
+        "upkeep-home"
+      ],
+      "semanticKind": "action",
+      "primaryGoal": "upkeep-home",
+      "credit": true
+    },
+    {
+      "id": "69ffbe88cd20d11954046851",
+      "projectId": "69eef620b4b19119328b4dff",
+      "projectName": "Maintenance Organization",
+      "title": "Digital Declutter",
+      "content": "- [ ] Emails \n- [ ] Phone Numbers \n- [ ] Chrome/Safari History\n- [ ] Saved Payment Methods/Emails\n- [ ] Old Pictures ",
+      "description": "",
+      "items": [],
+      "dueDate": "2026-10-11T00:00:00-0400",
+      "repeatRule": "RRULE:FREQ=WEEKLY;INTERVAL=1;BYDAY=SU",
+      "status": 0,
+      "reminders": [],
+      "timeZone": "America/New_York",
+      "isAllDay": true,
+      "startDate": "2026-10-11T00:00:00-0400",
+      "tags": [
+        "sunday setup",
+        "digital"
+      ],
+      "columnId": "6a46094803e45143d590c414",
+      "columnName": "Not Sectioned",
+      "executionType": "Task",
+      "group": "Maintenance Organization",
+      "routineId": "organizing-digital-declutter",
+      "bucket": "home",
+      "goalIds": [
+        "upkeep-digital"
+      ],
+      "semanticKind": "action",
+      "primaryGoal": "upkeep-digital",
+      "credit": true
+    },
+    {
+      "id": "69f3a3bea4d051ee307bdfc3",
+      "projectId": "69eef620b4b19119328b4dff",
+      "projectName": "Maintenance Organization",
+      "title": " Schedule Haircut",
+      "content": "",
+      "description": "",
+      "items": [],
+      "dueDate": "2026-10-10T00:00:00-0400",
+      "repeatRule": "RRULE:FREQ=WEEKLY;WKST=SU;INTERVAL=3;BYDAY=SA",
+      "status": 0,
+      "reminders": [
+        "TRIGGER:-P6DT15H0M0S"
+      ],
+      "timeZone": "America/New_York",
+      "isAllDay": true,
+      "startDate": "2026-10-10T00:00:00-0400",
+      "tags": [
+        "self care",
+        "out and about"
+      ],
+      "columnId": "6a46094803e45143d590c414",
+      "columnName": "Not Sectioned",
+      "executionType": "Task",
+      "group": "Maintenance Organization",
+      "routineId": "body-getting-haircut",
+      "bucket": "body",
+      "goalIds": [
+        "physical-selfcare"
+      ],
+      "semanticKind": "action",
+      "primaryGoal": "physical-selfcare",
+      "credit": true
+    },
+    {
+      "id": "6a92084c8f0869c15148f148",
+      "projectId": "69eef620b4b19119328b4dff",
+      "projectName": "Maintenance Organization",
+      "title": "Vacuum Car",
+      "content": "Aug 29-Skipping\nSep 5- Skipping",
+      "description": "",
+      "items": [],
+      "dueDate": "2026-10-10T00:00:00-0400",
+      "repeatRule": "RRULE:FREQ=WEEKLY;BYDAY=SA",
+      "status": 0,
+      "reminders": [],
+      "timeZone": "America/New_York",
+      "isAllDay": true,
+      "startDate": "2026-10-10T00:00:00-0400",
+      "tags": [],
+      "columnId": null,
+      "columnName": null,
+      "executionType": "Task",
+      "group": "Maintenance Organization",
+      "routineId": "cleaning-vacuum-car",
+      "bucket": "home",
+      "goalIds": [
+        "upkeep-home"
+      ],
+      "semanticKind": "action",
+      "primaryGoal": "upkeep-home",
+      "credit": true
+    },
+    {
+      "id": "6a93a4ba8f080f71bbb4017b",
+      "projectId": "69eef620b4b19119328b4dff",
+      "projectName": "Maintenance Organization",
+      "title": "Clean Bathroom — Weekly",
+      "content": "Clean the toilet, sink, mirror, tub or shower, floor, and remove trash. Complete when the bathroom is reset and usable.",
+      "description": "",
+      "items": [],
+      "dueDate": "2026-10-10T00:00:00-0400",
+      "repeatRule": "RRULE:FREQ=WEEKLY;BYDAY=SA",
+      "status": 0,
+      "reminders": [],
+      "timeZone": "America/New_York",
+      "isAllDay": true,
+      "startDate": "2026-10-10T00:00:00-0400",
+      "tags": [],
+      "columnId": null,
+      "columnName": null,
+      "executionType": "Task",
+      "group": "Maintenance Organization",
+      "routineId": "cleaning-bathroom-weekly",
+      "bucket": "home",
+      "goalIds": [
+        "upkeep-home",
+        "mental-cleanspaces"
+      ],
+      "semanticKind": "action",
+      "primaryGoal": "upkeep-home",
+      "credit": true
+    },
+    {
+      "id": "6a92084c8f0861e0f0c122e6",
+      "projectId": "69eef620b4b19119328b4dff",
+      "projectName": "Maintenance Organization",
+      "title": "Reset Drawers, Closet, and Fireplace",
+      "content": "",
+      "description": "",
+      "items": [],
+      "dueDate": "2026-10-09T00:00:00-0400",
+      "repeatRule": "RRULE:FREQ=WEEKLY;BYDAY=FR",
+      "status": 0,
+      "reminders": [],
+      "timeZone": "America/New_York",
+      "isAllDay": true,
+      "startDate": "2026-10-09T00:00:00-0400",
+      "tags": [
+        "friday reset"
+      ],
+      "columnId": null,
+      "columnName": null,
+      "executionType": "Task",
+      "group": "Maintenance Organization",
+      "routineId": "organizing-organize-drawers",
+      "bucket": "home",
+      "goalIds": [
+        "mental-cleanspaces"
+      ],
+      "semanticKind": "action",
+      "primaryGoal": "mental-cleanspaces",
+      "credit": true
+    },
+    {
+      "id": "6a4de9df868a5143d5911ff6",
+      "projectId": "69eef620b4b19119328b4dff",
+      "projectName": "Maintenance Organization",
+      "title": "Put Grocery Order In",
+      "content": "* Sept 6- Dont need to much so just going to shop for it",
+      "description": "",
+      "items": [],
+      "dueDate": "2026-10-09T00:00:00-0400",
+      "repeatRule": "RRULE:FREQ=WEEKLY;WKST=SU;INTERVAL=1;BYDAY=FR",
+      "status": 0,
+      "reminders": [],
+      "timeZone": "America/New_York",
+      "isAllDay": true,
+      "startDate": "2026-10-09T00:00:00-0400",
+      "tags": [
+        "friday reset"
+      ],
+      "columnId": "69cefe551b23d102bc8975dd",
+      "columnName": null,
+      "executionType": "Task",
+      "group": "Maintenance Organization",
+      "routineId": "organizing-weekly-grocery-shop",
+      "bucket": "home",
+      "goalIds": [
+        "physical-nourish",
+        "physical-protein"
+      ],
+      "semanticKind": "action",
+      "primaryGoal": "physical-nourish",
+      "credit": true
+    },
+    {
+      "id": "6a92084c8f0861e0f0c122e3",
+      "projectId": "69eef620b4b19119328b4dff",
+      "projectName": "Maintenance Organization",
+      "title": "Clean Headphones",
+      "content": "",
+      "description": "",
+      "items": [],
+      "dueDate": "2026-10-09T00:00:00-0400",
+      "repeatRule": "RRULE:FREQ=WEEKLY;BYDAY=MO,FR",
+      "status": 0,
+      "reminders": [],
+      "timeZone": "America/New_York",
+      "isAllDay": true,
+      "startDate": "2026-10-09T00:00:00-0400",
+      "tags": [],
+      "columnId": null,
+      "columnName": null,
+      "executionType": "Task",
+      "group": "Maintenance Organization",
+      "routineId": "cleaning-clean-headphones",
+      "bucket": "home",
+      "goalIds": [
+        "upkeep-home"
+      ],
+      "semanticKind": "action",
+      "primaryGoal": "upkeep-home",
+      "credit": true
+    },
+    {
+      "id": "6a92084c8f080f71bb925fc2",
+      "projectId": "69eef620b4b19119328b4dff",
+      "projectName": "Maintenance Organization",
+      "title": "Wash Clothes",
+      "content": "",
+      "description": "",
+      "items": [],
+      "dueDate": "2026-10-09T00:00:00-0400",
+      "repeatRule": "RRULE:FREQ=WEEKLY;BYDAY=FR",
+      "status": 0,
+      "reminders": [],
+      "timeZone": "America/New_York",
+      "isAllDay": true,
+      "startDate": "2026-10-09T00:00:00-0400",
+      "tags": [
+        "friday reset"
+      ],
+      "columnId": null,
+      "columnName": null,
+      "executionType": "Task",
+      "group": "Maintenance Organization",
+      "routineId": "cleaning-clean-laundry",
+      "bucket": "home",
+      "goalIds": [
+        "upkeep-home",
+        "mental-cleanspaces"
+      ],
+      "semanticKind": "action",
+      "primaryGoal": "upkeep-home",
+      "credit": true
+    },
+    {
+      "id": "6a92084c8f0869c15148f146",
+      "projectId": "69eef620b4b19119328b4dff",
+      "projectName": "Maintenance Organization",
+      "title": "Wash Bedding",
+      "content": "Aug 28- Skipped",
+      "description": "",
+      "items": [],
+      "dueDate": "2026-10-09T00:00:00-0400",
+      "repeatRule": "RRULE:FREQ=WEEKLY;INTERVAL=2;BYDAY=FR",
+      "status": 0,
+      "reminders": [],
+      "timeZone": "America/New_York",
+      "isAllDay": true,
+      "startDate": "2026-10-09T00:00:00-0400",
+      "tags": [
+        "friday reset"
+      ],
+      "columnId": null,
+      "columnName": null,
+      "executionType": "Task",
+      "group": "Maintenance Organization",
+      "routineId": "cleaning-wash-bedding",
+      "bucket": "home",
+      "goalIds": [
+        "upkeep-home",
+        "mental-cleanspaces"
+      ],
+      "semanticKind": "action",
+      "primaryGoal": "upkeep-home",
+      "credit": true
+    },
+    {
+      "id": "6a92084c8f0869c15148f147",
+      "projectId": "69eef620b4b19119328b4dff",
+      "projectName": "Maintenance Organization",
+      "title": "Clean Out Tote",
+      "content": "",
+      "description": "",
+      "items": [],
+      "dueDate": "2026-10-09T00:00:00-0400",
+      "repeatRule": "RRULE:FREQ=WEEKLY;BYDAY=FR",
+      "status": 0,
+      "reminders": [],
+      "timeZone": "America/New_York",
+      "isAllDay": true,
+      "startDate": "2026-10-09T00:00:00-0400",
+      "tags": [
+        "friday reset"
+      ],
+      "columnId": null,
+      "columnName": null,
+      "executionType": "Task",
+      "group": "Maintenance Organization",
+      "routineId": "cleaning-clean-tote-bag",
+      "bucket": "home",
+      "goalIds": [
+        "upkeep-home"
+      ],
+      "semanticKind": "action",
+      "primaryGoal": "upkeep-home",
+      "credit": true
+    },
+    {
+      "id": "6a92084c8f0861e0f0c122e7",
+      "projectId": "69eef620b4b19119328b4dff",
+      "projectName": "Maintenance Organization",
+      "title": "Meal Prep",
+      "content": "",
+      "description": "",
+      "items": [],
+      "dueDate": "2026-10-09T00:00:00-0400",
+      "repeatRule": "RRULE:FREQ=WEEKLY;BYDAY=FR",
+      "status": 0,
+      "reminders": [],
+      "timeZone": "America/New_York",
+      "isAllDay": true,
+      "startDate": "2026-10-09T00:00:00-0400",
+      "tags": [
+        "friday reset"
+      ],
+      "columnId": null,
+      "columnName": null,
+      "executionType": "Task",
+      "group": "Maintenance Organization",
+      "routineId": "organizing-meal-prepping",
+      "bucket": "home",
+      "goalIds": [
+        "physical-nourish",
+        "physical-protein"
+      ],
+      "semanticKind": "action",
+      "primaryGoal": "physical-nourish",
+      "credit": true
+    },
+    {
+      "id": "6a92084c8f0869c15148f149",
+      "projectId": "69eef620b4b19119328b4dff",
+      "projectName": "Maintenance Organization",
+      "title": "Foot Care and Moisturize",
+      "content": "* Sep 6- Skipped ( Returning Home from Motown)",
+      "description": "",
+      "items": [],
+      "dueDate": "2026-10-09T00:00:00-0400",
+      "repeatRule": "RRULE:FREQ=WEEKLY;BYDAY=FR",
+      "status": 0,
+      "reminders": [],
+      "timeZone": "America/New_York",
+      "isAllDay": true,
+      "startDate": "2026-10-09T00:00:00-0400",
+      "tags": [
+        "self care"
+      ],
+      "columnId": null,
+      "columnName": null,
+      "executionType": "Task",
+      "group": "Maintenance Organization",
+      "routineId": "body-feet-care",
+      "bucket": "body",
+      "goalIds": [
+        "physical-selfcare"
+      ],
+      "semanticKind": "action",
+      "primaryGoal": "physical-selfcare",
+      "credit": true
+    },
+    {
+      "id": "6a93a4ba8f0869c15168d8ef",
+      "projectId": "69eef620b4b19119328b4dff",
+      "projectName": "Maintenance Organization",
+      "title": "Wash Towels",
+      "content": "Wash, dry, fold, and put away used towels so clean towels are available.",
+      "description": "",
+      "items": [],
+      "dueDate": "2026-10-09T00:00:00-0400",
+      "repeatRule": "RRULE:FREQ=WEEKLY;BYDAY=FR",
+      "status": 0,
+      "reminders": [],
+      "timeZone": "America/New_York",
+      "isAllDay": true,
+      "startDate": "2026-10-09T00:00:00-0400",
+      "tags": [
+        "friday reset"
+      ],
+      "columnId": null,
+      "columnName": null,
+      "executionType": "Task",
+      "group": "Maintenance Organization",
+      "routineId": "cleaning-wash-towels",
+      "bucket": "home",
+      "goalIds": [
+        "upkeep-home"
+      ],
+      "semanticKind": "action",
+      "primaryGoal": "upkeep-home",
+      "credit": true
+    },
+    {
+      "id": "6a92084c8f087e0df3ef1720",
+      "projectId": "69eef620b4b19119328b4dff",
+      "projectName": "Maintenance Organization",
+      "title": "Wipe Down Phone, Laptop, and Glasses & Sunglasses",
+      "content": "",
+      "description": "",
+      "items": [],
+      "dueDate": "2026-10-08T00:00:00-0400",
+      "repeatRule": "RRULE:FREQ=WEEKLY;BYDAY=TU,TH,SA",
+      "status": 0,
+      "reminders": [],
+      "timeZone": "America/New_York",
+      "isAllDay": true,
+      "startDate": "2026-10-08T00:00:00-0400",
+      "tags": [
+        "digital"
+      ],
+      "columnId": null,
+      "columnName": null,
+      "executionType": "Task",
+      "group": "Maintenance Organization",
+      "routineId": "cleaning-clean-phone-laptop-glasses",
+      "bucket": "home",
+      "goalIds": [
+        "upkeep-home"
+      ],
+      "semanticKind": "action",
+      "primaryGoal": "upkeep-home",
+      "credit": true
+    },
+    {
+      "id": "6a7e9d3c4a4491ef72a47fad",
+      "projectId": "69eef620b4b19119328b4dff",
+      "projectName": "Maintenance Organization",
+      "title": "Nail and Cuticle Care",
+      "content": "",
+      "description": "",
+      "items": [],
+      "dueDate": "2026-10-07T00:00:00-0400",
+      "repeatRule": "RRULE:FREQ=WEEKLY;INTERVAL=1;BYDAY=WE",
+      "status": 0,
+      "reminders": [],
+      "timeZone": "America/New_York",
+      "isAllDay": true,
+      "startDate": "2026-10-07T00:00:00-0400",
+      "tags": [
+        "self care"
+      ],
+      "columnId": "69cefe551b23d102bc8975dd",
+      "columnName": null,
+      "executionType": "Task",
+      "group": "Maintenance Organization",
+      "routineId": "body-nail-cuticle-care",
+      "bucket": "body",
+      "goalIds": [
+        "physical-selfcare"
+      ],
+      "semanticKind": "action",
+      "primaryGoal": "physical-selfcare",
+      "credit": true
+    },
+    {
+      "id": "6a7e99def51a11ef72a47632",
+      "projectId": "69eef620b4b19119328b4dff",
+      "projectName": "Maintenance Organization",
+      "title": "Water Plants 🪴",
+      "content": "",
+      "description": "",
+      "items": [],
+      "dueDate": "2026-10-05T00:00:00-0400",
+      "repeatRule": "RRULE:FREQ=WEEKLY;INTERVAL=1;BYDAY=MO",
+      "status": 0,
+      "reminders": [],
+      "timeZone": "America/New_York",
+      "isAllDay": true,
+      "startDate": "2026-10-05T00:00:00-0400",
+      "tags": [],
+      "columnId": "69cefe551b23d102bc8975dd",
+      "columnName": null,
+      "executionType": "Task",
+      "group": "Maintenance Organization",
+      "routineId": "organizing-water-plants",
+      "bucket": "home",
+      "goalIds": [
+        "upkeep-home"
+      ],
+      "semanticKind": "action",
+      "primaryGoal": "upkeep-home",
+      "credit": true
+    },
+    {
+      "id": "6a4d3200f017d143d59110c7",
+      "projectId": "69f65a3753619118d36dd220",
+      "projectName": "Grounding",
+      "title": "Personal Check In (Bi Weekly)",
+      "content": "- [ ] Routines Check In\n- [ ] Projects and Tasks \n- [ ] Self Grounding\n",
+      "description": "",
+      "items": [],
+      "dueDate": "2026-10-10T00:00:00-0400",
+      "repeatRule": "RRULE:FREQ=WEEKLY;WKST=SU;INTERVAL=2;BYDAY=SA",
+      "status": 0,
+      "reminders": [],
+      "timeZone": "America/New_York",
+      "isAllDay": true,
+      "startDate": "2026-10-10T00:00:00-0400",
+      "tags": [
+        "grounding",
+        "weekly review"
+      ],
+      "columnId": "69cefe551b23d102bc8975dd",
+      "columnName": null,
+      "executionType": "Task",
+      "group": "Grounding",
+      "routineId": "mind-personal-check-in",
+      "bucket": "self",
+      "goalIds": [
+        "upkeep-admin"
+      ],
+      "semanticKind": "action",
+      "primaryGoal": "upkeep-admin",
+      "credit": true
+    },
+    {
+      "id": "6a39ed1a55fe118362fb8887",
+      "projectId": "69f65a3753619118d36dd220",
+      "projectName": "Grounding",
+      "title": "Open Grounding (Reminders)",
+      "content": "# First: Protect Sleep and Rest\n- Sleep is a priority because it protects healing, regulation, and the ability to act.\n- Rest during the day when recovery is the real need; do not fill every open moment.\n- Night Time Routine is the wind-down sequence. Sleep is the outcome, not another checkbox.\n\n# Why\n- Build a life I can feel and live fully.\n- Do the work and make space for love.\n- Create an environment that supports the relationships and experiences I need.\n\n# Remember\n- Nourishing my body supports energy, strength, skin, hair, and mental health.\n\n# Grounding Lens\n- What matters most today?\n- Practice patience.\n- Reconnect with purpose and direction.\n- Make room for joy and curiosity.\n- Act with self-assurance.",
+      "description": "",
+      "items": [],
+      "dueDate": "2026-10-08T00:00:00-0400",
+      "repeatRule": "RRULE:FREQ=WEEKLY;INTERVAL=1;BYDAY=MO,TU,WE,TH,FR",
+      "status": 0,
+      "reminders": [
+        "TRIGGER:P0DT10H0M0S",
+        "TRIGGER:P0DT9H0M0S"
+      ],
+      "timeZone": "America/New_York",
+      "isAllDay": true,
+      "startDate": "2026-10-08T00:00:00-0400",
+      "tags": [
+        "grounding"
+      ],
+      "columnId": "69cefe551b23d102bc8975dd",
+      "columnName": null,
+      "executionType": "Task",
+      "group": "Grounding",
+      "routineId": "mind-weekday-reminders",
+      "bucket": "self",
+      "goalIds": [],
+      "semanticKind": "orientation",
+      "primaryGoal": null,
+      "credit": false
+    },
+    {
+      "id": "6a93a4ba8f080f71bbb40176",
+      "projectId": "69f65a3753619118d36dd220",
+      "projectName": "Grounding",
+      "title": "Rest & Sleep Priorities",
+      "content": "REST WHILE AWAKE\nPause before filling every open moment. Choose physical or mental rest when recovery is the real need.\n\nSLEEP\nProtect sleep as a foundation for healing, regulation, energy, and follow-through.\n\nHOW IT APPEARS IN TICKTICK\n• Daytime Rest / Quiet Reset \\= awake rest, meditation, or a straightforward low-thinking action.\n• Night Time Routine \\= the wind-down sequence.\n• Medicine and Vitamins \\= planned sleep supplements when applicable.\n• Recovery Options — Choose or Skip \\= stretching/yoga and other recovery tools.\n\nSleep is an outcome—not a checkbox.",
+      "description": "",
+      "items": [],
+      "dueDate": "2026-10-08T00:00:00-0400",
+      "repeatRule": "RRULE:FREQ=DAILY;INTERVAL=1",
+      "status": 0,
+      "reminders": [],
+      "timeZone": "America/New_York",
+      "isAllDay": true,
+      "startDate": "2026-10-08T00:00:00-0400",
+      "tags": [
+        "grounding"
+      ],
+      "columnId": null,
+      "columnName": null,
+      "executionType": "Task",
+      "group": "Grounding",
+      "routineId": "mind-rest-sleep-note",
+      "bucket": "self",
+      "goalIds": [
+        "physical-sleep"
+      ],
+      "semanticKind": "orientation",
+      "primaryGoal": "physical-sleep",
+      "credit": false
+    }
+  ],
+  "version": 1,
+  "asOf": "2026-10-08",
+  "buckets": [
+    {
+      "id": "self",
+      "name": "Mind & Grounding",
+      "purpose": "Reflection, learning, emotional regulation and direction. Reminders remain orientation with zero action credit."
+    },
+    {
+      "id": "money",
+      "name": "Money & Financial Independence",
+      "purpose": "Credit, savings, resale and financial administration. The separate goal or upkeep assignment distinguishes advancement from maintenance."
+    },
+    {
+      "id": "body",
+      "name": "Body & Physical Care",
+      "purpose": "Training, physical care, nourishment and recovery."
+    },
+    {
+      "id": "work",
+      "name": "Role & Professional Development",
+      "purpose": "Applications, recruiter work and professional development. Old-role equipment returns can instead use life upkeep."
+    },
+    {
+      "id": "venture",
+      "name": "Ventures & Opportunities",
+      "purpose": "Entrepreneurial experiments and businesses, retaining Candle and other venture/project breakdowns."
+    },
+    {
+      "id": "marvel",
+      "name": "Marvel · Care & Connection",
+      "purpose": "Marvel care, bonding, training and supplies; keep separate from human relationships."
+    },
+    {
+      "id": "home",
+      "name": "Life Care, Organization & Systems",
+      "purpose": "Home, possessions, digital upkeep, communications, administration, planning and personal logistics when that is the action’s practical context."
+    },
+    {
+      "id": "connection",
+      "name": "People, Connection & Experiences",
+      "purpose": "Human relationships, reaching out, shared experiences and memories. Proposed addition."
+    },
+    {
+      "id": "creative",
+      "name": "Music & Creative Expression",
+      "purpose": "Music practice, songwriting, production, Serum and creative exploration. Proposed addition; creative business actions can retain their business bucket and a creative goal."
+    }
+  ],
+  "unbound": [
+    {
+      "id": "organizing-savings-allocations",
+      "title": "Savings Allocations",
+      "frequency": "Task bundle · Wednesday"
+    },
+    {
+      "id": "organizing-needed-purchases",
+      "title": "Needed / Recurring Purchase Review",
+      "frequency": "Task bundle · Wednesday"
+    },
+    {
+      "id": "organizing-family-altruism-review",
+      "title": "Family Altruism Review",
+      "frequency": "Task bundle · Wed (optional)"
+    },
+    {
+      "id": "organizing-family-finance-review",
+      "title": "Family Finance Review",
+      "frequency": "Task bundle · Wed (optional)"
+    },
+    {
+      "id": "dog-supply-inventory-count",
+      "title": "Marvel Supply Count / Resupply",
+      "frequency": "Task bundle · Wednesday"
+    },
+    {
+      "id": "body-gym-standards-note",
+      "title": "Gym Session Standards",
+      "frequency": "Reminder · Mon–Sat"
+    },
+    {
+      "id": "organizing-job-search-map-note",
+      "title": "Job Search Flow — Coverage Map",
+      "frequency": "Reference reminder · Monday"
+    },
+    {
+      "id": "dog-marvel-care-note",
+      "title": "Marvel Care & Attention Menu",
+      "frequency": "Reminder · Mon–Fri"
+    },
+    {
+      "id": "soul-music-log-note",
+      "title": "Music Sessions Log",
+      "frequency": "Reference · Tue, Wed & Thu"
+    }
+  ],
+  "status": "Local integration proposal; source inventory snapshot, not live activity"
+}

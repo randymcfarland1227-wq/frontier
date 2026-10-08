@@ -424,3 +424,19 @@ Design critique + WCAG 2.1 AA + copy + design-system audit, then fixes (last blo
 - Finance types use small, sentence-case tags with bounded width, keeping task titles readable.
 - Doing now / Focus rows and task search show the type after the title.
 - Pinned featured rows hide the inactive critical (!) toggle; explicitly Critical items retain their label and control.
+
+## Flow integration (2026-10-08, from Rock's local branch)
+- **Buckets:** 9 attention buckets. The original 7 IDs are kept; `home` is renamed "Life Care, Organization & Systems", and `connection` and `creative` are new. Flow's sixth category, Life Care & Upkeep, and the supplemental care goals are in `goals.json`.
+- **Rules:** Move OS counts as relocation (`home`), not body. Orientation/container TickTick items earn no credit. The shared manifest is `public/data/flow-map.json` (74 TickTick bindings, 87 routines).
+- **Settings → "Review the homes for your work"** (`FlowSyncReview.tsx`, `lib/flowMigration.ts`):
+  - Runs in Randy's own browser. **Inspect** is read-only. **Apply** writes a backup (localStorage + a downloaded JSON) first, then changes only the reviewed rows.
+  - Never creates or deletes completions; ids, dates and counts are kept.
+  - Covers the 74 TickTick definitions **and every other task in the real history**: every completed task from any site, plus remembered rules. It flags unsorted ones and ones done under more than one bucket.
+- **Merge:** `focusUpdatedAt` lets a reviewed reclassification beat older manual marks in both merge orders.
+- **Worker:** `/api/flow/ticktick/catalog`, a read-only full TickTick catalog, available only once the backup is claimed.
+- **Tests:** `node tests/flow-migration.cjs`.
+- **Not done:**
+  - TickTick write-side sync (only read, compare and export exist).
+  - Music Hub session-ID linkage.
+  - A labeled baseline for workload after the bucket split; old aggregate workload is not split retroactively.
+- `VITE_LOCAL_PREVIEW=true` is only for review builds.
