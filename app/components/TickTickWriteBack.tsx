@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { syncKeyHeader } from '../../lib/cloudSync';
+import flowMap from '../../public/data/flow-map.json';
 
 const WORKER = (import.meta.env.VITE_WORKER_URL || 'https://frontier-work-room.randymcfarland1227.workers.dev').replace(/\/$/, '');
 
@@ -32,24 +33,36 @@ function download(name: string, value: unknown) {
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
-/** Read Flow's "reviewed sync plan" and keep only task name / instructions / repeat changes. */
-function changesFrom(plan: Plan): { changes: Change[]; skipped: number } {
+/** The setup snapshot Flow started from — anything different in the plan is an edit Randy made in Flow. */
+const BASELINE = new Map((flowMap as { records: Array<Record<string, unknown>> }).records.map(r => [String(r.id), r]));
+
+/**
+ * Only fields Randy actually changed in Flow (plan value ≠ setup snapshot) are candidates; each is
+ * then compared with **live** TickTick, so Flow doesn't need its own catalog import first.
+ */
+function editsFrom(plan: Plan, live: Map<string, Record<string, unknown>>): { changes: Change[]; edited: number; alreadyLive: number } {
   const changes: Change[] = [];
-  let skipped = 0;
-  for (const d of plan.differences || []) {
-    const desired = (plan.desired || []).find(r => r.id === d.id) || {};
-    for (const c of d.changes || []) {
-      const f = FIELDS[c.field];
-      const projectId = typeof desired.projectId === 'string' ? desired.projectId : '';
-      // Habits, deletions, checklists, sections, unverified values: never written from here.
-      if (d.executionType !== 'Task' || !f || !projectId || str(c.actual).startsWith('Not supplied') || c.field === 'record') {
-        skipped++;
+  let edited = 0;
+  let alreadyLive = 0;
+  for (const d of plan.desired || []) {
+    if (d.executionType !== 'Task' || typeof d.id !== 'string') continue;
+    const base = BASELINE.get(d.id);
+    const projectId = typeof d.projectId === 'string' ? d.projectId : '';
+    if (!base || !projectId) continue;
+    for (const [field, f] of Object.entries(FIELDS)) {
+      if (!Object.hasOwn(d, field) || str(d[field]) === str(base[field])) continue;
+      edited++;
+      const now = live.get(d.id);
+      if (!now) continue; // not open in TickTick any more
+      const current = str(now[field]);
+      if (current === str(d[field])) {
+        alreadyLive++;
         continue;
       }
-      changes.push({ key: `${d.id}:${f.tt}`, id: d.id, projectId, title: str(desired.title) || d.id, field: f.label, tt: f.tt, from: str(c.actual), to: str(c.expected) });
+      changes.push({ key: `${d.id}:${f.tt}`, id: d.id, projectId, title: str(d.title) || d.id, field: f.label, tt: f.tt, from: current, to: str(d[field]) });
     }
   }
-  return { changes, skipped };
+  return { changes, edited, alreadyLive };
 }
 
 /**
@@ -72,28 +85,38 @@ export function TickTickWriteBack() {
     if (!file) return;
     try {
       const plan = JSON.parse(await file.text()) as Plan & { state?: unknown; rows?: unknown };
-      if (!plan.differences && (plan.state || plan.rows)) {
+      if (!plan.desired && (plan.state || plan.rows)) {
         setChanges([]);
         setNotice(
           `"${file.name}" is Life Hub's own review export, not Flow's plan. In Flow: Review → TickTick sync ⇄ → Export reviewed sync plan (it downloads flow-reviewed-sync-plan.json); load that here.`,
         );
         return;
       }
-      if (!plan.differences) {
+      if (!plan.desired) {
         setChanges([]);
         setNotice(`"${file.name}" isn't a Flow sync plan. Use flow-reviewed-sync-plan.json from Flow's TickTick sync page.`);
         return;
       }
-      const { changes: list, skipped: n } = changesFrom(plan);
+      setNotice('Checking your Flow edits against live TickTick…');
+      const res = await fetch(`${WORKER}/api/flow/ticktick/catalog`, { headers: syncKeyHeader(), cache: 'no-store' });
+      const cat = (await res.json().catch(() => ({}))) as { ok?: boolean; records?: Array<Record<string, unknown>> };
+      if (!res.ok || !cat.ok) {
+        setNotice("Couldn't read live TickTick. This needs this browser's normal backup connection — nothing was written.");
+        return;
+      }
+      const live = new Map((cat.records || []).filter(r => r.executionType === 'Task').map(r => [String(r.id), r]));
+      const { changes: list, edited, alreadyLive } = editsFrom(plan, live);
       setChanges(list);
-      setSkipped(n);
+      setSkipped(0);
       setPicked([]);
       setResults({});
       setUndo([]);
       setNotice(
         list.length
-          ? `${list.length} task changes ready to review.`
-          : "Loaded — this plan has no task name / instructions / repeat changes (everything already matches, or Flow's edits are to habits or checklists).",
+          ? `${list.length} change${list.length === 1 ? '' : 's'} you made in Flow ${list.length === 1 ? 'differs' : 'differ'} from TickTick — tick and write.`
+          : edited
+            ? `Your ${edited} Flow edit${edited === 1 ? ' is' : 's are'} already in TickTick${alreadyLive < edited ? ' (or the task is no longer open)' : ''} — nothing to write.`
+            : "Nothing to write: Flow's tasks still match TickTick — no task name, instructions or repeat has been edited in Flow yet. To change one: Flow → Review → TickTick sync ⇄ → open a task → Review intended definition → edit → Save, then export and load the plan again.",
       );
     } catch {
       setNotice("That file isn't a Flow sync plan.");
