@@ -1,11 +1,12 @@
 'use client';
 
 import type { SourceSnapshot } from '../../lib/types';
-import { setRoleActive } from '../../lib/roleShelves';
+import { setRoleActive, shelfOf } from '../../lib/roleShelves';
 
 /**
- * Lists kept apart from a site's open tasks (Role Hub: Certs to get, Portfolio to add). Each row's
- * Active moves it into the open tasks; the open row's ☆ menu has ↩ to put it back.
+ * Lists kept apart from a site's open tasks. Role Hub (Certs to get, Portfolio to add): Active moves
+ * one into the open tasks and the open row's ☆ menu has ↩ to put it back. Resale (Decisions to make,
+ * Waiting on offers): handled on the Resale site, so rows just open it.
  */
 export function ShelfList({ snapshot, compact = false }: { snapshot: SourceSnapshot; compact?: boolean }) {
   const shelves = (snapshot.shelves || []).filter(s => s.items.length);
@@ -31,15 +32,17 @@ export function ShelfList({ snapshot, compact = false }: { snapshot: SourceSnaps
                     {t.title}
                   </span>
                 )}
-                <button
-                  type="button"
-                  className="row-action shelf-go"
-                  onClick={() => setRoleActive(t.id, true)}
-                  title="Start working on it — moves it to the open tasks"
-                  aria-label={`Make ${t.title} active`}
-                >
-                  Active →
-                </button>
+                {shelfOf(t.id) ? (
+                  <button
+                    type="button"
+                    className="row-action shelf-go"
+                    onClick={() => setRoleActive(t.id, true)}
+                    title="Start working on it — moves it to the open tasks"
+                    aria-label={`Make ${t.title} active`}
+                  >
+                    Active →
+                  </button>
+                ) : null}
               </li>
             ))}
           </ul>

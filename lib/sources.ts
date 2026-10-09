@@ -120,6 +120,8 @@ export const sources: SourceDefinition[] = [
     bridge: 'iframe',
     allowedOrigins: ['https://randymcfarland1227-wq.github.io'],
     metrics: [
+      { key: 'decisions', label: 'Decisions to make' },
+      { key: 'waitingOnOffers', label: 'Waiting on offers' },
       { key: 'listed', label: 'Items listed' },
       { key: 'sold', label: 'Items sold' },
       { key: 'activeListings', label: 'Active listings' },

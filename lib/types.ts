@@ -48,6 +48,8 @@ export type TaskItem = {
   completedAt?: string;
   /** Short task-type label shown before the title, e.g. "Ship", "End Listing · Depop" */
   tag?: string;
+  /** The site asks to keep it off the open count (Resale: 'prep' decision, 'waiting' on an offer) */
+  shelf?: string;
 };
 
 export type SourceSnapshot = {

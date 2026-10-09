@@ -67,3 +67,32 @@ export function withRoleShelves(snap: SourceSnapshot, active: RoleActive): Sourc
     shelves,
   };
 }
+
+/**
+ * Shelves a site asks for itself: a task sent with `shelf` stays off the open count.
+ * Resale Hub: 'prep' = Item prep (a decision to make, maybe not worth fixing), 'waiting' = a planned
+ * price cut on an item with an offer out (it can't happen until the offer ends).
+ */
+export const TAGGED_SHELVES: Record<string, { label: string; metric: string }> = {
+  prep: { label: 'Decisions to make', metric: 'decisions' },
+  waiting: { label: 'Waiting on offers', metric: 'waitingOnOffers' },
+};
+
+export function withTaggedShelves(snap: SourceSnapshot): SourceSnapshot {
+  const tagged = snap.tasks.filter(t => t.shelf && TAGGED_SHELVES[t.shelf] && t.status !== 'done');
+  if (!tagged.length) return snap;
+  const ids = new Set(tagged.map(t => t.id));
+  const metrics = { ...snap.metrics };
+  const shelves = Object.entries(TAGGED_SHELVES).map(([id, s]) => {
+    const items = tagged.filter(t => t.shelf === id);
+    metrics[s.metric] = items.length;
+    return { id, label: s.label, items };
+  });
+  return {
+    ...snap,
+    tasks: snap.tasks.filter(t => !ids.has(t.id)),
+    featured: snap.featured.filter(f => !ids.has(f.id)),
+    metrics,
+    shelves: [...(snap.shelves || []), ...shelves],
+  };
+}

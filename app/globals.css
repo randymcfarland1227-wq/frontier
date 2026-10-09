@@ -3915,3 +3915,7 @@ button.hero-stat.stat-ticktick.has-rings { display: flex; align-items: center; g
 .shelf-title { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13px; color: var(--ink); text-decoration: none; }
 a.shelf-title:hover { text-decoration: underline; }
 .shelf-go { flex: none; font-size: 12px !important; }
+.shelf.shelf-prep { --sh: #c2410c; }
+.shelf.shelf-waiting { --sh: #0e7490; }
+.frontier-shell[data-color-mode="dark"] .shelf.shelf-prep { --sh: #fb923c; }
+.frontier-shell[data-color-mode="dark"] .shelf.shelf-waiting { --sh: #22d3ee; }
