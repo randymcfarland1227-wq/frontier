@@ -564,11 +564,25 @@ function MonthRow({ d, paidAt, onPaid }: { d: BillDue; paidAt: Record<string, st
   );
 }
 
-function MonthView({ dues, paidAt, model, onPaid }: { dues: BillDue[]; paidAt: Record<string, string>; model: MoneyModel; onPaid: (d: BillDue) => void }) {
+function MonthView({
+  dues: allDues,
+  paidAt,
+  model,
+  onPaid,
+  kinds,
+}: {
+  dues: BillDue[];
+  paidAt: Record<string, string>;
+  model: MoneyModel;
+  onPaid: (d: BillDue) => void;
+  /** Only these kinds (the Bills tab shows just bills) */
+  kinds?: string[];
+}) {
   const today = startOfDay(new Date());
+  const dues = kinds ? allDues.filter(d => kinds.includes(d.bill.kind || 'bill')) : allDues;
   // Rows crossed out in the sheet (skipped this month) show too, so the month adds up like the sheet.
   const struck: BillDue[] = model.items
-    .filter(i => i.skipped && i.date && fromDayKey(i.date).getMonth() === today.getMonth() && fromDayKey(i.date).getFullYear() === today.getFullYear())
+    .filter(i => (!kinds || kinds.includes(i.kind)) && i.skipped && i.date && fromDayKey(i.date).getMonth() === today.getMonth() && fromDayKey(i.date).getFullYear() === today.getFullYear())
     .map(i => ({ bill: { id: `${CROSSED}${i.id}`, name: i.name, amount: i.amount, kind: i.kind }, due: i.date!, days: Math.round((fromDayKey(i.date!).getTime() - today.getTime()) / 86_400_000), key: i.id }));
   const all = [...dues, ...struck.filter(s => !dues.some(d => d.key === s.key))].sort((a, b) => a.due.localeCompare(b.due) || a.bill.name.localeCompare(b.bill.name));
   const counted = all.filter(d => !d.skipped);
@@ -996,8 +1010,8 @@ const ordinal = (n: number) => `${n}${n % 10 === 1 && n !== 11 ? 'st' : n % 10 =
 // ---------------------------------------------------------------------------
 
 const NEEDED_OPTIONS = ['Yes', 'Y Low', 'No', 'Ordered'];
-type TabId = 'week' | 'month' | 'cards' | 'subs' | 'plan' | 'accounts' | 'owed' | 'shop' | 'save';
-const TAB_IDS: TabId[] = ['week', 'month', 'cards', 'subs', 'plan', 'accounts', 'owed', 'shop', 'save'];
+type TabId = 'week' | 'month' | 'accounts' | 'cards' | 'bills' | 'subs' | 'plan' | 'owed' | 'shop' | 'save';
+const TAB_IDS: TabId[] = ['week', 'month', 'accounts', 'cards', 'bills', 'subs', 'plan', 'owed', 'shop', 'save'];
 const TAB_KEY = 'lifehub-money-tab';
 
 export function MoneyPage({
@@ -1128,6 +1142,8 @@ export function MoneyPage({
   const crossedThisMonth = model.items.filter(i => i.skipped && i.date && fromDayKey(i.date).getMonth() === today.getMonth() && fromDayKey(i.date).getFullYear() === today.getFullYear()).length;
   const monthPaid = monthCounted.filter(d => paidAt[d.key] || (d.days < 0 && ['sub', 'paylater', 'plan'].includes(d.bill.kind || ''))).length + crossedThisMonth;
   const monthCount = monthCountBase + crossedThisMonth;
+  // Bills still to pay this month (not paid on Life Hub, not crossed off in the sheet).
+  const billsLeft = monthDues.filter(d => (d.bill.kind || 'bill') === 'bill' && !d.skipped && !paidAt[d.key]).length;
   const subsMonthly =
     (model.subs?.rows || []).filter(r => r[1]?.text).reduce((s, r) => s + (amountOf(r[2]?.text || '') || 0), 0) +
     lifeSubs.filter(x => x.status === 'active' && x.cycle === 'monthly').reduce((s, x) => s + (x.amount || 0), 0);
@@ -1135,10 +1151,11 @@ export function MoneyPage({
   const TABS: Array<{ id: TabId; tone: Tone; label: string; figure: string }> = [
     { id: 'week', tone: 'due', label: 'This week', figure: money(dueWeek) },
     { id: 'month', tone: 'due', label: today.toLocaleDateString([], { month: 'long' }), figure: `${monthPaid} of ${monthCount} paid` },
+    { id: 'accounts', tone: 'cash', label: 'Checking / Savings', figure: model.cashOnHand?.text ? `${model.cashOnHand.text} on hand` : '' },
     { id: 'cards', tone: 'card', label: 'Credit cards', figure: model.cards?.total?.[1]?.text ? `${model.cards.total[1].text} owed` : '' },
+    { id: 'bills', tone: 'due', label: 'Bills', figure: `${billsLeft} left` },
     { id: 'subs', tone: 'sub', label: 'Subscriptions', figure: `${money(subsMonthly)}/mo` },
     { id: 'plan', tone: 'plan', label: 'Plan', figure: livePlan ? livePlan.title : 'New' },
-    { id: 'accounts', tone: 'cash', label: 'Cash', figure: model.cashOnHand?.text || '' },
     { id: 'owed', tone: 'owed', label: 'What I owe', figure: money(owedSum) },
     { id: 'shop', tone: 'shop', label: 'Shopping', figure: `${neededNow.length + (openNeeded?.rows.length || 0)} needed` },
     { id: 'save', tone: 'save', label: 'Savings & move', figure: '' },
@@ -1341,6 +1358,19 @@ export function MoneyPage({
           </div>
         ) : null}
 
+        {tab === 'bills' ? (
+          <div className="mny-stack">
+            <Section tone="due" title={`Bills · ${today.toLocaleDateString([], { month: 'long' })}`} href={link('Randy')}>
+              <MonthView dues={monthDues} paidAt={paidAt} model={model} onPaid={onPaid} kinds={['bill']} />
+            </Section>
+            {model.bills ? (
+              <Section tone="due" title="In the sheet" hint="Click any amount or date to change it in the sheet." href={link('Randy')}>
+                <SheetTable table={model.bills} onSave={save} />
+              </Section>
+            ) : null}
+          </div>
+        ) : null}
+
         {tab === 'subs' ? (
           <Section tone="sub" title="Subscriptions" href={link('Randy')}>
             <SubsView model={model} lifeSubs={lifeSubs} paidAt={paidAt} dues={monthDues} onSave={save} />
@@ -1356,7 +1386,7 @@ export function MoneyPage({
         {tab === 'accounts' ? (
           <div className="mny-cols">
             <div className="mny-stack">
-              <Section tone="cash" title="Cash" figure={model.cashOnHand?.text} figureLabel={model.balancedCash?.text ? `on hand · ${model.balancedCash.text} balanced` : 'on hand'} href={link('Randy')}>
+              <Section tone="cash" title="Checking / Savings" figure={model.cashOnHand?.text} figureLabel={model.balancedCash?.text ? `on hand · ${model.balancedCash.text} balanced` : 'on hand'} href={link('Randy')}>
                 <AccountsList model={model} onSave={save} />
                 {model.balancing ? (
                   <Fold title="Balancing" meta="accounts + pending money → cash on hand">

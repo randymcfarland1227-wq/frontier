@@ -3919,3 +3919,11 @@ a.shelf-title:hover { text-decoration: underline; }
 .shelf.shelf-waiting { --sh: #0e7490; }
 .frontier-shell[data-color-mode="dark"] .shelf.shelf-prep { --sh: #fb923c; }
 .frontier-shell[data-color-mode="dark"] .shelf.shelf-waiting { --sh: #22d3ee; }
+
+/* Money tabs: all ten on one row on wide screens (2026-10-09) */
+@media (min-width: 1100px) {
+  .mny-tabs { display: grid !important; grid-template-columns: repeat(10, minmax(0, 1fr)); gap: 6px; }
+  .mny-tabs .mny-tab { min-width: 0; padding-left: 10px; padding-right: 8px; }
+  .mny-tabs .mny-tab-label { display: block; font-size: 13px; line-height: 1.25; overflow-wrap: break-word; }
+  .mny-tabs .mny-tab-fig { max-width: 100%; }
+}
