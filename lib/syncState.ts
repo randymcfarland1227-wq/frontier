@@ -8,6 +8,7 @@ import type { Capture } from './captures';
 import type { SelfItem } from './adapters/self';
 import type { GoalLink } from './goals';
 import type { Plan } from './plans';
+import type { LifeSub } from './lifeSubs';
 import type { PayPlan } from './payPlans';
 import { mergeCandle, normalizeCandle, type CandleBundle } from './candleSync';
 
@@ -48,6 +49,8 @@ export type SyncedState = {
   candle: CandleBundle;
   /** Bill changes per due (skip / move / amount / note); newest change wins */
   billEdits: Record<string, { skip?: boolean; moveTo?: string; amount?: number; note?: string; at: string }>;
+  /** Subscriptions added on Life Hub: union by id, newest edit wins (removed = flagged, never deleted) */
+  subs: LifeSub[];
 };
 
 /**
@@ -113,6 +116,7 @@ export function emptyState(): SyncedState {
     hidden: {},
     candle: { raw: null, at: '' },
     billEdits: {},
+    subs: [],
   };
 }
 
@@ -150,6 +154,7 @@ export function normalizeState(raw: unknown): SyncedState {
     hidden: s.hidden && typeof s.hidden === 'object' ? s.hidden : {},
     candle: normalizeCandle(s.candle),
     billEdits: s.billEdits && typeof s.billEdits === 'object' ? s.billEdits : {},
+    subs: Array.isArray(s.subs) ? s.subs.filter(x => x && typeof x.id === 'string') : [],
   };
 }
 
@@ -238,6 +243,7 @@ export function mergeState(aRaw: unknown, bRaw: unknown): SyncedState {
     hidden: mergeLevels(a.hidden, b.hidden),
     candle: mergeCandle(a.candle, b.candle),
     billEdits: mergeLevels(a.billEdits, b.billEdits),
+    subs: mergeById(a.subs, b.subs),
   };
 }
 
