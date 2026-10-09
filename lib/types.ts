@@ -56,6 +56,8 @@ export type SourceSnapshot = {
   featured: FeaturedItem[];
   tasks: TaskItem[];
   refreshedAt: string;
+  /** Lists kept apart from the open tasks (Role Hub: certs to get, portfolio to add) */
+  shelves?: Array<{ id: string; label: string; items: TaskItem[] }>;
 };
 
 export type FocusItem = {

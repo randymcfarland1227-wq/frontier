@@ -142,6 +142,8 @@ export const sources: SourceDefinition[] = [
     url: 'https://script.google.com/macros/s/AKfycbyYuq1_GDfbLtx1YZwIk7Khvewegl3_xocLnM_gv7zzujapMXxxXDlgWsqaiCiI4a9EIA/exec',
     bridge: 'none',
     metrics: [
+      { key: 'certsToGet', label: 'Certs to get' },
+      { key: 'portfolioToAdd', label: 'Portfolio to add' },
       { key: 'appliedToday', label: 'Applied today' },
       { key: 'applied', label: 'All roles applied' },
       { key: 'pipeline', label: 'In pipeline' },

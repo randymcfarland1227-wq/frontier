@@ -40,6 +40,7 @@ const SYNCED_KEYS: string[] = [
   STORAGE_KEYS.hiddenItems,
   STORAGE_KEYS.billEdits,
   STORAGE_KEYS.lifeSubs,
+  STORAGE_KEYS.roleActive,
 ];
 
 export type SyncStatus = {
@@ -139,6 +140,7 @@ export function readLocalState(): SyncedState {
     candle: readCandle(),
     billEdits: readSaved(STORAGE_KEYS.billEdits, {}),
     subs: readSaved(STORAGE_KEYS.lifeSubs, []),
+    roleActive: readSaved(STORAGE_KEYS.roleActive, {}),
   });
 }
 
@@ -164,6 +166,7 @@ function writeLocalState(next: SyncedState): boolean {
     [STORAGE_KEYS.hiddenItems, current.hidden, next.hidden],
     [STORAGE_KEYS.billEdits, current.billEdits, next.billEdits],
     [STORAGE_KEYS.lifeSubs, current.subs, next.subs],
+    [STORAGE_KEYS.roleActive, current.roleActive, next.roleActive],
   ];
   let changed = false;
   applying = true;

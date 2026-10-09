@@ -82,3 +82,14 @@ console.log('Migration checks pass: immutable input, stable counts/identity/date
   assert.equal(mergeState(old, a).subs.length, 2, 'a device without the field keeps them');
   console.log('Subscription sync checks pass.');
 }
+
+// Role Hub shelves ("roleActive") sync: newest change wins in both orders; missing field never resets it.
+{
+  const a = { ...emptyState(), roleActive: { 'cert:C1': { mark: 'active', at: '2026-10-09T03:00:00.000Z' } } };
+  const b = { ...emptyState(), roleActive: { 'cert:C1': { mark: null, at: '2026-10-09T02:00:00.000Z' } } };
+  for (const [x, y] of [[a, b], [b, a]]) assert.equal(mergeState(x, y).roleActive['cert:C1'].mark, 'active');
+  const old = { ...emptyState() };
+  delete old.roleActive;
+  assert.equal(mergeState(old, a).roleActive['cert:C1'].mark, 'active');
+  console.log('Role shelf sync checks pass.');
+}

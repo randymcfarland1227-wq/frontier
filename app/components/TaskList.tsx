@@ -9,6 +9,7 @@ import { DayMenu, shortDue } from './DayMenu';
 import { setTaskTag, TAG_SUGGESTIONS, TAGGABLE } from '../../lib/taskTags';
 import { setSelfHome } from '../../lib/adapters/self';
 import { moveItem, removeItem } from '../../lib/siteMoves';
+import { setRoleActive, shelfOf } from '../../lib/roleShelves';
 
 /** Rows per column in the side-by-side view before "Show more". */
 const SPLIT_PREVIEW = 6;
@@ -165,6 +166,7 @@ export function TaskList({
                       backToSelf={task.id.startsWith('self:') ? () => setSelfHome(task.id.slice(5), undefined) : undefined}
                     move={sourceId !== 'self' ? { from: sourceId, onMove: to => moveItem(sourceId, task, to) } : undefined}
                     onRemove={sourceId !== 'self' ? () => removeItem(sourceId, task.id) : undefined}
+                    shelf={shelfOf(task.id) ? { label: shelfOf(task.id)!.one, onClick: () => setRoleActive(task.id, false) } : undefined}
                       onClose={() => setMenuFor(null)}
                     />
                   ) : null}

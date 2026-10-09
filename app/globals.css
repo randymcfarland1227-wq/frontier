@@ -3898,3 +3898,20 @@ button.hero-stat.stat-ticktick.has-rings { display: flex; align-items: center; g
 .mm-row.is-crossed .mm-name, .mm-row.is-crossed .mm-amt { color: var(--muted); }
 .mm-row.is-crossed .mm-state { color: #15803d; font-weight: 600; }
 .frontier-shell[data-color-mode="dark"] .mm-row.is-crossed .mm-state { color: #4ade80; }
+
+/* === Shelves: Role Hub certs to get / portfolio to add, kept apart from open tasks (2026-10-09) === */
+.shelves { display: grid; gap: 6px; margin-top: 8px; }
+.shelf { --sh: #946a24; border: 1px solid color-mix(in srgb, var(--sh) 30%, var(--line, var(--row-line))); border-radius: 9px; background: color-mix(in srgb, var(--sh) 6%, var(--surface)); overflow: hidden; }
+.shelf.shelf-portfolio { --sh: #6d5bd0; }
+.frontier-shell[data-color-mode="dark"] .shelf { --sh: #e0b25a; }
+.frontier-shell[data-color-mode="dark"] .shelf.shelf-portfolio { --sh: #a99cf5; }
+.shelf > summary { display: flex; align-items: center; gap: 7px; padding: 6px 10px; cursor: pointer; list-style: none; font-size: 13px; font-weight: 600; color: var(--ink); }
+.shelf > summary::-webkit-details-marker { display: none; }
+.shelf-chev { width: 0; height: 0; border-left: 5px solid currentColor; border-top: 4px solid transparent; border-bottom: 4px solid transparent; opacity: .6; transition: transform .15s; }
+.shelf[open] .shelf-chev { transform: rotate(90deg); }
+.shelf-count { margin-left: auto; min-width: 22px; padding: 0 7px; border-radius: 999px; background: color-mix(in srgb, var(--sh) 22%, var(--surface)); color: var(--ink); font-size: 12px; text-align: center; }
+.shelf ul { margin: 0; padding: 0 6px 6px; list-style: none; display: grid; gap: 3px; }
+.shelf-row { display: flex; align-items: center; gap: 8px; min-height: 32px; padding: 2px 4px 2px 8px; border-radius: 7px; background: var(--surface); }
+.shelf-title { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13px; color: var(--ink); text-decoration: none; }
+a.shelf-title:hover { text-decoration: underline; }
+.shelf-go { flex: none; font-size: 12px !important; }

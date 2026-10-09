@@ -9,6 +9,7 @@ import { DayMenu, shortDue } from './DayMenu';
 import { setTaskTag, TAG_SUGGESTIONS, TAGGABLE } from '../../lib/taskTags';
 import { setSelfHome } from '../../lib/adapters/self';
 import { moveItem, removeItem } from '../../lib/siteMoves';
+import { setRoleActive, shelfOf } from '../../lib/roleShelves';
 import { byLevel, useFeaturedLevels } from '../../lib/featuredLevels';
 import { LevelDot } from './LevelDot';
 import { CriticalFlag } from './CriticalFlag';
@@ -142,6 +143,7 @@ export function FeaturedList({
                   critical={{ on: isCritical(sourceId, item.id), onClick: () => toggleCritical(sourceId, item.id) }}
                   move={sourceId !== 'self' ? { from: sourceId, onMove: to => moveItem(sourceId, item, to) } : undefined}
                   onRemove={sourceId !== 'self' ? () => removeItem(sourceId, item.id) : undefined}
+                  shelf={shelfOf(item.id) ? { label: shelfOf(item.id)!.one, onClick: () => setRoleActive(item.id, false) } : undefined}
                   onClose={() => setMenuFor(null)}
                 />
               ) : null}

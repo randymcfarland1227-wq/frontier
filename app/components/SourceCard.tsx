@@ -8,6 +8,7 @@ import { getActionableMetric } from '../../lib/actionable';
 import { metricValue } from '../../lib/protocol';
 import { FeaturedList } from './FeaturedList';
 import { TaskList } from './TaskList';
+import { ShelfList } from './ShelfList';
 import { SiteIcon } from './SiteIcon';
 
 /** "● live · 9:12 PM" when fresh, otherwise "synced Sep 25, 4:22 AM". */
@@ -56,7 +57,7 @@ export function SourceCard({
   // Only stats that have a value — a row of "— applied today" placeholders is noise.
   const stats = source.metrics
     .filter(m => !consumed.has(m.key) && metricValue(snapshot.metrics, m.key) !== '—')
-    .slice(0, 2);
+    .slice(0, source.id === 'role' ? 4 : 2);
   const sub = [source.label, showSync ? syncText(snapshot.refreshedAt) : ''].filter(Boolean).join(' · ');
 
   return (
@@ -134,6 +135,7 @@ export function SourceCard({
           </>
           )}
           {source.id === 'self' ? null : extra}
+          <ShelfList snapshot={snapshot} compact />
         </div>
       )}
     </article>
