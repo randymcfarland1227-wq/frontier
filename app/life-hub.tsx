@@ -95,7 +95,7 @@ import { ruleFor, saveTaskRule, sourceRuleKey, taskRuleKey, useTaskRules } from 
 import { FlowSyncReview } from './components/FlowSyncReview';
 import { WhyView } from './components/WhyView';
 import { isHidden, useHiddenItems } from '../lib/siteMoves';
-import { useRoleActive, withRoleShelves } from '../lib/roleShelves';
+import { useRoleActive, withRoleShelves, withTaggedShelves } from '../lib/roleShelves';
 import { LogsView } from './components/LogsView';
 import { UpdateNotice } from './components/UpdateNotice';
 import { TaskSorting } from './components/TaskSorting';
@@ -545,6 +545,8 @@ export function LifeHub() {
     }
     // Role Hub: certs and portfolio ideas wait on shelves until marked Active.
     if (out.role) out.role = withRoleShelves(out.role, roleActive);
+    // Resale: Item prep decisions and price cuts waiting on an offer don't count as open.
+    if (out.resale) out.resale = withTaggedShelves(out.resale);
     for (const item of selfItems) {
       const home = item.home as SourceId | undefined;
       if (!home || home === 'self' || !out[home]) continue;
