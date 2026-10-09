@@ -2,15 +2,24 @@
 
 import { useState, type FormEvent } from 'react';
 import { fromDayKey, type BillDue } from '../../lib/schedule';
-import { loadBillEdits, setBillEdit } from '../../lib/billEdits';
+import { billRuleKey, loadBillDays, loadBillEdits, setBillDay, setBillEdit } from '../../lib/billEdits';
 import { pinKey, updatePinDetails, usePriorityPins } from '../../lib/priorityPins';
 
 const shortDay = (k: string) => fromDayKey(k).toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' });
 
 /** "Skipped · shopping for cheaper" / "Moved from Thu, Oct 10" — what was changed on Life Hub. */
 export function billChangeText(d: BillDue): string {
-  return [d.skipped ? 'Skipped' : '', d.orig ? `Moved from ${shortDay(d.orig)}` : '', d.editNote || ''].filter(Boolean).join(' · ');
+  return [
+    d.skipped ? 'Skipped' : '',
+    d.orig ? `Moved from ${shortDay(d.orig)}` : '',
+    d.everyMonth && !d.orig ? `Due the ${ordinal(d.everyMonth)} each month` : '',
+    d.editNote || '',
+  ]
+    .filter(Boolean)
+    .join(' · ');
 }
+
+const ordinal = (n: number) => `${n}${n % 10 === 1 && n !== 11 ? 'st' : n % 10 === 2 && n !== 12 ? 'nd' : n % 10 === 3 && n !== 13 ? 'rd' : 'th'}`;
 
 /** Pin this due date to Priority ("Doing now"). Checking it off there marks it paid. */
 export function BillPinButton({ due, className = 'row-action ghost' }: { due: BillDue; className?: string }) {
@@ -46,14 +55,20 @@ export function BillChangeForm({ due, onDone }: { due: BillDue; onDone: () => vo
   const [moveTo, setMoveTo] = useState(saved?.moveTo || original);
   const [amount, setAmount] = useState(saved?.amount !== undefined ? String(saved.amount) : '');
   const [note, setNote] = useState(saved?.note || '');
+  const ruleKey = billRuleKey(due.bill);
+  const rule = loadBillDays()[ruleKey];
+  const [everyMonth, setEveryMonth] = useState(false);
   const name = due.bill.name;
 
   const submit = (e: FormEvent) => {
     e.preventDefault();
     const n = amount.trim() === '' ? undefined : Number(amount.replace(/[$,]/g, ''));
+    // Every month: the bill's day changes from this month on (not just this one payment).
+    const repeat = mode === 'move' && everyMonth && moveTo;
+    if (repeat) setBillDay(ruleKey, Number(moveTo.slice(8, 10)), original.slice(0, 7));
     setBillEdit(due.key, {
       skip: mode === 'skip',
-      moveTo: mode === 'move' && moveTo && moveTo !== original ? moveTo : undefined,
+      moveTo: mode === 'move' && !repeat && moveTo && moveTo !== original ? moveTo : undefined,
       amount: n !== undefined && Number.isFinite(n) ? n : undefined,
       note,
     });
@@ -89,10 +104,31 @@ export function BillChangeForm({ due, onDone }: { due: BillDue; onDone: () => vo
         ))}
       </div>
       {mode === 'move' ? (
-        <label className="bill-change-field">
-          <span>New day</span>
-          <input type="date" value={moveTo} onChange={e => setMoveTo(e.target.value)} required />
-        </label>
+        <>
+          <label className="bill-change-field">
+            <span>New day</span>
+            <input type="date" value={moveTo} onChange={e => setMoveTo(e.target.value)} required />
+          </label>
+          <label className="bill-change-every">
+            <input type="checkbox" checked={everyMonth} onChange={e => setEveryMonth(e.target.checked)} />
+            Every month from now on{moveTo ? ` — due the ${ordinal(Number(moveTo.slice(8, 10)))}` : ''}
+          </label>
+        </>
+      ) : null}
+      {rule?.day ? (
+        <p className="bill-change-rule">
+          Due the {ordinal(rule.day)} every month (changed on Life Hub).{' '}
+          <button
+            type="button"
+            className="row-action ghost"
+            onClick={() => {
+              setBillDay(ruleKey, null, rule.from);
+              onDone();
+            }}
+          >
+            Back to the sheet’s day
+          </button>
+        </p>
       ) : null}
       {mode !== 'skip' ? (
         <label className="bill-change-field">

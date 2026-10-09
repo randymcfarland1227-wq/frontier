@@ -547,6 +547,7 @@ function MonthRow({ d, paidAt, onPaid }: { d: BillDue; paidAt: Record<string, st
       <span className="mm-name">
         {d.bill.name}
         {installment ? <small> · {installment}</small> : null}
+        {billChangeText(d) ? <small> · {billChangeText(d)}</small> : null}
       </span>
       <span className="mm-amt">{money(d.bill.amount) || '?'}</span>
       <span className="mm-state">
