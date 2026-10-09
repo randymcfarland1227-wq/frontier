@@ -477,3 +477,10 @@ Design critique + WCAG 2.1 AA + copy + design-system audit, then fixes (last blo
   - Upcoming no longer lists past bills.
   - Bills-tab bills with no Paid through now count from 2026-10-08 (was "from today", which meant a missed one could never go overdue).
 - **Fold days** on the Money page's 7-day list: tap a day header. Remembered on this device (`lifehub-money-folded-days`); past days drop out.
+
+## Add Balancing line items (2026-10-09)
+
+- Money → Checking / Savings → Balancing has **+ Add line item** for an account/name, amount, and optional pending amount. Saving uses the existing private money-edit route; errors keep the form values for retry.
+- `insertBalancing` is a guarded Apps Script operation: checks the block/column span and current row, inserts only that block's cells, preserves total ranges and neighboring columns, and logs the insertion. A script lock serializes inserts. Existing script versions reject this operation without writing a cell.
+- Publish the Pages change, then update `LifeHubMoney.gs` in **Life Hub Mail Sync** and redeploy its existing web-app deployment. No Worker change is needed. Until the script is updated the form reports that the sheet connection needs its Balancing update.
+- Validation: `node scripts/test-balancing.mjs` exercises insertions, totals, neighboring columns, stale snapshots, formula cells, invalid values, and a single-item list.

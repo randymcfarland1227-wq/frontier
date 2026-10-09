@@ -86,6 +86,12 @@ function lhMoneyEdit_(edits) {
       if (!e || LH_MONEY.TABS.indexOf(e.tab) < 0) return { ok: false, error: 'tab not allowed' };
       var sh = ss.getSheetByName(e.tab);
       if (!sh) return { ok: false, error: 'no tab' };
+      if (e.insertBalancing === true) {
+        var lock = LockService.getScriptLock();
+        if (!lock.tryLock(5000)) return { ok: false, error: 'busy' };
+        try { return lhInsertBalancing_(ss, sh, e); }
+        finally { SpreadsheetApp.flush(); lock.releaseLock(); }
+      }
       var r = Number(e.r) + 1;
       var c = Number(e.c !== undefined ? e.c : e.c1) + 1;
       if (!(r >= 1 && c >= 1)) return { ok: false, error: 'bad cell' };
@@ -113,6 +119,53 @@ function lhMoneyEdit_(edits) {
   });
   SpreadsheetApp.flush();
   return { ok: true, results: results, snapshot: lhMoneySnapshot_() };
+}
+
+/** Insert only the Balancing columns; neighboring account/bill blocks stay in place. */
+function lhInsertBalancing_(ss, sh, e) {
+  if (e.tab !== 'Randy') return { ok: false, error: 'tab not allowed' };
+  var r = e.r + 1;
+  var c = e.startCol + 1;
+  if (!Number.isInteger(e.r) || !Number.isInteger(e.startCol) || r < 1 || c < 1 ||
+      !Array.isArray(e.values) || !Array.isArray(e.expectRow)) return { ok: false, error: 'bad range' };
+  var heading = sh.getDataRange().createTextFinder('Balancing and Planning').matchEntireCell(true).findNext();
+  if (!heading) return { ok: false, error: 'changed' };
+  var merges = heading.getMergedRanges();
+  var title = merges.length ? merges[0] : heading;
+  var width = title.getNumColumns();
+  var first = title.getRow() + 2;
+  if (c !== title.getColumn() || width < 2 || width > 12 || e.values.length !== width || e.expectRow.length !== width || r < first || r > sh.getLastRow()) return { ok: false, error: 'bad range' };
+  // The anchor must still belong to the contiguous list, not a later block or a summary.
+  var previous = sh.getRange(first, c, r - first + 1, width).getDisplayValues();
+  if (previous.slice(0, -1).some(function (row) { return !row[0].trim() || /^(cash on hand|balanced cash)/i.test(row[0].trim()); })) return { ok: false, error: 'changed' };
+  var target = sh.getRange(r, c, 1, width);
+  var now = target.getDisplayValues()[0];
+  if (now.some(function (v, i) { return v.trim() !== String(e.expectRow[i]); }) || /^(cash on hand|balanced cash)/i.test(now[0].trim())) return { ok: false, error: 'changed' };
+  if (target.getFormulas()[0].some(Boolean) || target.getMergedRanges().length) return { ok: false, error: 'formula' };
+  var values = e.values.map(function (v) { return String(v).trim(); });
+  if (!values[0] || values.some(function (v) { return v.length > 200 || /^[=+@]/.test(v); }) ||
+      values.slice(1).some(function (v) { return v && !/^-?\d+(\.\d+)?$/.test(v); })) return { ok: false, error: 'bad value' };
+  // For an empty or single-item list, insertion is at its first row. Remember local
+  // ranges starting there so their first bound includes the newly inserted item.
+  var formulas = r === first ? sh.getDataRange().getFormulas() : [];
+  var colName = function (n) { var out = ''; for (; n; n = Math.floor((n - 1) / 26)) out = String.fromCharCode(65 + (n - 1) % 26) + out; return out; };
+  var columns = Array.from({ length: width }, function (_, i) { return colName(c + i); }).join('|');
+  var startRange = new RegExp('(^|[^!A-Za-z0-9_])((?:\\$?(?:' + columns + ')\\$?))' + (r + 1) + '(:\\$?(?:' + columns + ')\\$?\\d+)', 'g');
+  target.insertCells(SpreadsheetApp.Dimension.ROWS);
+  target = sh.getRange(r, c, 1, width);
+  target.setValues([values]).setFontLine('none');
+  formulas.forEach(function (row, ri) {
+    row.forEach(function (formula, ci) {
+      if (!formula) return;
+      var shifted = ci + 1 >= c && ci + 1 < c + width && ri + 1 >= r ? ri + 2 : ri + 1;
+      var cell = sh.getRange(shifted, ci + 1);
+      var after = cell.getFormula();
+      var expanded = after.replace(startRange, function (_, prefix, col, end) { return prefix + col + r + end; });
+      if (expanded !== after) cell.setFormula(expanded);
+    });
+  });
+  lhMoneyLog_(ss, e.tab, target.getA1Notation(), '', JSON.stringify(values));
+  return { ok: true };
 }
 
 /** One row per change on the "Life Hub edits" tab, so anything can be undone by hand. */

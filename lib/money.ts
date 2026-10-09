@@ -67,6 +67,8 @@ export async function pullMoneySnapshot(): Promise<MoneySnapshot | null> {
 }
 
 export type CellEdit =
+  /** Insert a Balancing line before an existing row; old script versions reject this safely. */
+  | { tab: string; insertBalancing: true; r: number; startCol: number; expectRow: string[]; values: string[] }
   | { tab: string; r: number; c: number; expect: string; value: string }
   | { tab: string; r: number; c1: number; c2: number; expect: string; strike: boolean }
   /** Move a row segment to a new row inserted under row `moveAfter` (e.g. Needed → Wants) */
@@ -168,6 +170,8 @@ export type Table = {
   total?: Cell[];
   /** Group label per row (from a merged side column), when the block has one */
   groups?: string[];
+  /** First data row, including blank cells, for adding to an empty block. */
+  firstRow?: Cell[];
 };
 
 type BlockOpts = {
@@ -206,6 +210,7 @@ function block(g: Grid | undefined, key: string, title: string | RegExp, o: Bloc
     r += 1;
   }
   const nameCol = o.nameCol ?? 0;
+  const firstRow = Array.from({ length: width }, (_, i) => g.cell(r, c1 + i));
   const rows: Cell[][] = [];
   const groups: string[] = [];
   let total: Cell[] | undefined;
@@ -237,6 +242,7 @@ function block(g: Grid | undefined, key: string, title: string | RegExp, o: Bloc
     rows,
     total,
     groups: o.groupCol !== undefined ? groups : undefined,
+    firstRow,
   };
 }
 
