@@ -459,3 +459,21 @@ Design critique + WCAG 2.1 AA + copy + design-system audit, then fixes (last blo
 - **Why → Goals & work** reads Flow's links from `flow-map.json`:
   - routines (Drives / Enables / Upkeep) and TickTick items per goal count as attached work, and show under "From Flow" with their bucket;
   - completions of those TickTick items this week count toward the goal's momentum.
+
+## Bills: pin, change, overdue, fold days (2026-10-08)
+- **Pin** (`BillControls.tsx` `BillPinButton`) on every bill row:
+  - Where: the Finances card, the Schedule Overdue box / Money due list / day pop-out, and Money page rows.
+  - Pins `radall:<due key>` to Priority. `PriorityBoard` gets `bills` and lists each as "Pay <name>" (tag Bills; detail = amount · due day · countdown · note; link = pay link).
+  - Ticking it in Doing now marks that due paid: `HomeView.payFromPriority` → `onBillPaid` → ledger `radall` / due key. It never goes through the area question.
+- **Change** (`BillChangeForm`, `lib/billEdits.ts`, new synced field **`billEdits`**: due key → `{skip?, moveTo?, amount?, note?, at}`, newest wins):
+  - Options: Pay as usual / Skip this one / Move to another day, plus an amount for this time and a note. **Undo changes** stores an empty, newer entry so other devices clear theirs too.
+  - Applied in `life-hub.tsx` (money + planned dues) and `HomeView` (Bills-tab dues) via `applyBillEdits`.
+  - A skipped due shows dashed and struck through ("Skip" / "Skipped · note") until its day, then drops off. It's left out of totals and the payment planner.
+  - A moved due counts down to the new day and keeps `orig` ("Moved from …"). Keys never change, so Paid and Pin keep working.
+  - The sheet is not written.
+  - **Needs a Worker deploy** (`npm run deploy`) for `billEdits` to sync across devices. Until then, changes stay on the device they were made on.
+- **Overdue** (`isOverdue`): due day passed, not paid, not skipped, not autopay. Kinds sub / paylater / plan never count (they charge themselves). Only dues on or after **`OVERDUE_SINCE` = 2026-10-08** count, so older ones paid without a tap don't flood it.
+  - Shown in: the home **Overdue** box under Upcoming (both Schedule views, hidden when empty), the Finances card ("Overdue · not marked paid"), and the Money page **Overdue** section under "Due in the next 7 days".
+  - Upcoming no longer lists past bills.
+  - Bills-tab bills with no Paid through now count from 2026-10-08 (was "from today", which meant a missed one could never go overdue).
+- **Fold days** on the Money page's 7-day list: tap a day header. Remembered on this device (`lifehub-money-folded-days`); past days drop out.

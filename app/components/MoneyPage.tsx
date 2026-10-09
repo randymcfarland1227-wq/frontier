@@ -17,7 +17,9 @@ import {
 } from '../../lib/money';
 import { dayKey, dayName, fromDayKey, money, startOfDay, startOfWeek, type BillDue } from '../../lib/schedule';
 import { usePayPlans } from '../../lib/payPlans';
-import { readSaved, writeSaved } from '../../lib/storage';
+import { readSaved, writeSaved, STORAGE_KEYS } from '../../lib/storage';
+import { isOverdue } from '../../lib/billEdits';
+import { BillChangeForm, BillPinButton, billChangeText } from './BillControls';
 
 type Save = (edits: CellEdit[]) => Promise<{ ok: boolean; results: EditResult[]; error?: string }>;
 
@@ -330,8 +332,68 @@ function Fold({
 // Due list: dated money items grouped by day (this week) or by week (the next five)
 // ---------------------------------------------------------------------------
 
+/** One payment: kind · name · amount · Paid · Pin · Change (skip / move / amount, logged on Life Hub). */
+function DueRow({ d, onPaid, showDay }: { d: BillDue; onPaid: (d: BillDue) => void; showDay: boolean }) {
+  const [changing, setChanging] = useState(false);
+  const kind = d.bill.kind;
+  const [, provider, installment] = (d.bill.notes || '').split(' · ');
+  const changed = billChangeText(d);
+  return (
+    <>
+      <li className={d.skipped ? 'is-skipped' : d.days < 0 ? 'is-overdue' : ''} style={{ '--ev': kind ? MONEY_KINDS[kind].color : '#a8632a' } as React.CSSProperties}>
+        {showDay ? <span className="mny-due-day">{fromDayKey(d.due).toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' })}</span> : null}
+        <span className="mny-due-kind">{d.skipped ? 'Skipped' : kind === 'paylater' ? provider || 'Pay later' : kind ? MONEY_KINDS[kind].label : 'Bill'}</span>
+        <span className="mny-due-name">
+          {d.bill.name}
+          {installment ? <small> · {installment}</small> : null}
+          {changed ? <small className="mny-due-change"> · {changed}</small> : null}
+        </span>
+        <span className="mny-due-amt">{money(d.bill.amount) || '?'}</span>
+        <span className="mny-due-tools">
+          {d.skipped ? null : (
+            <button type="button" className="mny-btn" onClick={() => onPaid(d)} aria-label={`Mark ${d.bill.name} paid`} title="Mark paid on Life Hub">
+              Paid
+            </button>
+          )}
+          {d.skipped ? null : <BillPinButton due={d} className="mny-btn" />}
+          <button
+            type="button"
+            className="mny-btn"
+            aria-expanded={changing}
+            onClick={() => setChanging(v => !v)}
+            aria-label={`Change ${d.bill.name}: skip, move or amount`}
+            title="Skip, move or change the amount this time"
+          >
+            Change
+          </button>
+        </span>
+      </li>
+      {changing ? (
+        <li className="mny-due-edit">
+          <BillChangeForm due={d} onDone={() => setChanging(false)} />
+        </li>
+      ) : null}
+    </>
+  );
+}
+
+/** Days folded in the 7-day list, remembered on this device (past days drop out). */
+function useFoldedDays(): [Set<string>, (day: string) => void] {
+  const [folded, setFolded] = useState<string[]>(() => readSaved<string[]>(STORAGE_KEYS.moneyFoldedDays, []));
+  const toggle = (day: string) => {
+    const today = dayKey(new Date());
+    setFolded(cur => {
+      const next = (cur.includes(day) ? cur.filter(k => k !== day) : [...cur, day]).filter(k => k >= today);
+      writeSaved(STORAGE_KEYS.moneyFoldedDays, next);
+      return next;
+    });
+  };
+  return [new Set(folded), toggle];
+}
+
 function DueList({ dues, onPaid, by, days }: { dues: BillDue[]; onPaid: (d: BillDue) => void; by: 'day' | 'week'; days: number }) {
   const today = startOfDay(new Date());
+  const [folded, toggleFold] = useFoldedDays();
   const upcoming = dues.filter(d => d.days >= 0 && d.days <= days);
   const groups = new Map<string, BillDue[]>();
   for (const d of upcoming) {
@@ -347,44 +409,53 @@ function DueList({ dues, onPaid, by, days }: { dues: BillDue[]; onPaid: (d: Bill
   return (
     <div className="mny-due">
       {[...groups.entries()].map(([k, list], gi) => {
-        const total = money(list.reduce((s, d) => s + (d.bill.amount || 0), 0));
+        const owed = list.filter(d => !d.skipped);
+        const total = money(owed.reduce((s, d) => s + (d.bill.amount || 0), 0));
         const items = (
           <ul>
-            {list.map(d => {
-              const kind = d.bill.kind;
-              const [, provider, installment] = (d.bill.notes || '').split(' · ');
-              return (
-                <li key={d.key} style={{ '--ev': kind ? MONEY_KINDS[kind].color : '#a8632a' } as React.CSSProperties}>
-                  {by === 'week' ? <span className="mny-due-day">{fromDayKey(d.due).toLocaleDateString([], { weekday: 'short', day: 'numeric' })}</span> : null}
-                  <span className="mny-due-kind">{kind === 'paylater' ? provider || 'Pay later' : kind ? MONEY_KINDS[kind].label : 'Bill'}</span>
-                  <span className="mny-due-name">
-                    {d.bill.name}
-                    {installment ? <small> · {installment}</small> : null}
-                  </span>
-                  <span className="mny-due-amt">{money(d.bill.amount) || '?'}</span>
-                  <button type="button" className="mny-btn" onClick={() => onPaid(d)} aria-label={`Mark ${d.bill.name} paid`} title="Mark paid on Life Hub">
-                    Paid
-                  </button>
-                </li>
-              );
-            })}
+            {list.map(d => (
+              <DueRow key={d.key} d={d} onPaid={onPaid} showDay={by === 'week'} />
+            ))}
           </ul>
         );
-        // By week: each week is a fold (this week open); by day: plain groups.
-        return by === 'week' ? (
-          <Fold key={k} title={label(k)} meta={`${list.length} payments`} total={total} open={gi === 0}>
-            {items}
-          </Fold>
-        ) : (
-          <div key={k} className="mny-due-group">
+        // By week: each week is a fold (this week open). By day: each day folds on its header.
+        if (by === 'week') {
+          return (
+            <Fold key={k} title={label(k)} meta={`${list.length} payments`} total={total} open={gi === 0}>
+              {items}
+            </Fold>
+          );
+        }
+        const isFolded = folded.has(k);
+        return (
+          <div key={k} className={`mny-due-group${isFolded ? ' is-folded' : ''}`}>
             <h3>
-              <span>{label(k)}</span>
+              <button type="button" className="mny-due-fold" aria-expanded={!isFolded} onClick={() => toggleFold(k)}>
+                <span className="mny-fold-chev" aria-hidden="true" />
+                <span>{label(k)}</span>
+                {isFolded ? <small>{list.length} {list.length === 1 ? 'payment' : 'payments'}</small> : null}
+              </button>
               <b>{total}</b>
             </h3>
-            {items}
+            {isFolded ? null : items}
           </div>
         );
       })}
+    </div>
+  );
+}
+
+/** Payments past their day and not marked paid (or skipped). */
+function OverdueList({ dues, onPaid }: { dues: BillDue[]; onPaid: (d: BillDue) => void }) {
+  return (
+    <div className="mny-due mny-overdue">
+      <div className="mny-due-group">
+        <ul>
+          {dues.map(d => (
+            <DueRow key={d.key} d={d} onPaid={onPaid} showDay />
+          ))}
+        </ul>
+      </div>
     </div>
   );
 }
@@ -537,11 +608,14 @@ export function MoneyPage({
     return res;
   };
 
-  const sheetDues = useMemo(() => dues.filter(d => d.bill.kind !== 'plan'), [dues]);
+  // Skipped ones (Change → Skip) are left out of the planner too.
+  const sheetDues = useMemo(() => dues.filter(d => d.bill.kind !== 'plan' && !d.skipped), [dues]);
   const today = startOfDay(new Date());
   const monthEnd = new Date(today.getFullYear(), today.getMonth() + 1, 0);
-  const sum = (list: BillDue[]) => list.reduce((s, d) => s + (d.bill.amount || 0), 0);
+  // Skipped payments (Change → Skip) aren't money going out.
+  const sum = (list: BillDue[]) => list.reduce((s, d) => s + (d.skipped ? 0 : d.bill.amount || 0), 0);
   const next7 = dues.filter(d => d.days >= 0 && d.days <= 7);
+  const overdue = dues.filter(isOverdue);
   const restOfMonth = dues.filter(d => d.days >= 0 && fromDayKey(d.due) <= monthEnd);
 
   if (!model) {
@@ -704,9 +778,16 @@ export function MoneyPage({
       <div className="mny-panel" role="tabpanel">
         {tab === 'week' ? (
           <div className="mny-cols">
-            <Section tone="due" title="Due in the next 7 days" hint="Tap Paid when it’s done — it stays on the calendar, never becomes a task." figure={money(dueWeek)} figureLabel={`${next7.length} payments`}>
-              <DueList dues={dues} onPaid={onPaid} by="day" days={7} />
-            </Section>
+            <div className="mny-stack">
+              <Section tone="due" title="Due in the next 7 days" hint="Tap Paid when it’s done. Tap a day to fold it. Change skips or moves one payment." figure={money(dueWeek)} figureLabel={`${next7.length} payments`}>
+                <DueList dues={dues} onPaid={onPaid} by="day" days={7} />
+              </Section>
+              {overdue.length ? (
+                <Section tone="owed" className="mny-sec-overdue" title="Overdue" hint="Past its day and not marked paid. Paid clears it; Change can skip or move it." figure={money(sum(overdue))} figureLabel={`${overdue.length} ${overdue.length === 1 ? 'payment' : 'payments'}`}>
+                  <OverdueList dues={overdue} onPaid={onPaid} />
+                </Section>
+              ) : null}
+            </div>
             <div className="mny-stack">
               <Section tone="cash" title="Money right now" figure={model.cashOnHand?.text} figureLabel="on hand" href={link('Randy')}>
                 <AccountsList model={model} onSave={save} />

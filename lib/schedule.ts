@@ -226,7 +226,16 @@ export type BillDue = {
   days: number;
   /** Ledger task id for "paid" on Life Hub */
   key: string;
+  /** Original due date, when it was moved on Life Hub (lib/billEdits.ts) */
+  orig?: string;
+  /** Skipped this time on Life Hub */
+  skipped?: boolean;
+  /** Note logged with a Life Hub change ("shopping for cheaper insurance") */
+  editNote?: string;
 };
+
+/** Same day as OVERDUE_SINCE in billEdits.ts (kept here to avoid an import cycle). */
+const BILLS_TRACKED_FROM = '2026-10-08';
 
 export function billKey(bill: Bill, due: string) {
   return `bill:${bill.id}:${due}`;
@@ -246,9 +255,10 @@ export function billDues(bill: Bill, paidOnHub: Set<string>, today = new Date(),
   const dates: Date[] = [];
   if (bill.dueDate) dates.push(fromDayKey(bill.dueDate));
   if (bill.dueDay && bill.dueDay >= 1 && bill.dueDay <= 31) {
-    // No "paid through" yet: start from today, so a freshly filled-in sheet doesn't flag
-    // bills already paid as overdue. Set "Paid through" to see real overdue ones.
-    const from = paidThrough ? addDays(paidThrough, 1) : t;
+    // No "paid through": count from when overdue tracking began (OVERDUE_SINCE in billEdits.ts),
+    // or today if that's later — older months are assumed handled, newer missed ones go overdue.
+    const since = fromDayKey(BILLS_TRACKED_FROM);
+    const from = paidThrough ? addDays(paidThrough, 1) : since < t ? since : t;
     for (let i = 0; i < 24; i++) {
       const d = monthlyDue(from.getFullYear(), from.getMonth() + i, bill.dueDay);
       if (d < from) continue;

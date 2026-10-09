@@ -8,13 +8,14 @@ import type { CompletionLedger, CompletionStats, CompletionEntry } from '../../l
 import type { FocusAreaConfig } from '../../lib/focusAreas';
 import type { EnergyWindow } from '../../lib/energy';
 import { SourceCard } from './SourceCard';
-import { PriorityBoard, billPinId } from './PriorityBoard';
+import { PriorityBoard } from './PriorityBoard';
 import { ReviewPanel } from './ReviewPanel';
 import { Collapsible } from './Collapsible';
 import { getActionableMetric } from '../../lib/actionable';
-import { pinKey, updatePinDetails, usePriorityPins } from '../../lib/priorityPins';
+import { usePriorityPins } from '../../lib/priorityPins';
 import { criticalKeys, useFeaturedLevels } from '../../lib/featuredLevels';
-import { addDays, eventStart, onDay, paidBillKeys, upcomingBills, type BillDue, type CalTask, type ScheduleSnapshot } from '../../lib/schedule';
+import { addDays, billDues, eventStart, onDay, paidBillKeys, type BillDue, type CalTask, type ScheduleSnapshot } from '../../lib/schedule';
+import { applyBillEdits, isOverdue, useBillEdits } from '../../lib/billEdits';
 import { usePlans } from '../../lib/plans';
 import { ScheduleSection } from './ScheduleSection';
 import { BillsList } from './BillsList';
@@ -237,9 +238,18 @@ export function HomeView({
   const openTotal = openBySite.reduce((sum, site) => sum + site.count, 0);
   // Bills: next unpaid due date per bill (paid on Life Hub = a Radall completion in the ledger).
   // Plus the Radall sheet's money items (bills, card mins, subscriptions, pay later) — calendar only, never tasks.
-  const { addPin, removePin, isPinned } = usePriorityPins();
   const paidKeys = paidBillKeys(ledger);
-  const bills = [...upcomingBills(schedule?.bills || [], paidKeys), ...moneyDues].sort((a, b) => a.due.localeCompare(b.due));
+  const billEdits = useBillEdits();
+  // Bills tab: each bill's next due still owed (an unpaid past one first), after Life Hub changes.
+  const tabBills = (schedule?.bills || []).map(b => applyBillEdits(billDues(b, paidKeys), billEdits)[0]).filter((d): d is BillDue => Boolean(d));
+  const bills = [...tabBills, ...moneyDues].sort((a, b) => a.due.localeCompare(b.due));
+  const overdueBills = bills.filter(isOverdue);
+  // Paid from anywhere a bill shows up as a Priority item ("Doing now").
+  const payFromPriority = (source: SourceId, item: FeaturedItem) => {
+    const due = bills.find(b => b.key === item.id);
+    if (source === 'radall' && due) onBillPaid(due);
+    else onCompleteFeatured(source, item);
+  };
   const financeBills = (
     <div className="card-bills">
       <p className="card-bills-label">
@@ -248,22 +258,13 @@ export function HomeView({
           Money page →
         </button>
       </p>
-      <BillsList
-        dues={bills.filter(b => b.days >= 0 && b.days <= 21)}
-        onPaid={onBillPaid}
-        limit={4}
-        empty="Nothing due in the next 3 weeks."
-        pin={{
-          isPinned: d => isPinned('radall', billPinId(d)),
-          toggle: d => {
-            const id = billPinId(d);
-            if (isPinned('radall', id)) return removePin('radall', id);
-            addPin('radall', id);
-            // Its due date becomes the item's day in Doing now (and on the calendar)
-            updatePinDetails(pinKey('radall', id), { due: d.due });
-          },
-        }}
-      />
+      <BillsList dues={bills.filter(b => b.days >= 0 && b.days <= 21)} onPaid={onBillPaid} limit={4} empty="Nothing due in the next 3 weeks." />
+      {overdueBills.length ? (
+        <div className="card-bills-overdue">
+          <p className="card-bills-label">Overdue · not marked paid</p>
+          <BillsList dues={overdueBills} onPaid={onBillPaid} />
+        </div>
+      ) : null}
     </div>
   );
   // TickTick split: tasks (the card's "to do") over habits still to check in today.
@@ -327,9 +328,8 @@ export function HomeView({
           <PriorityBoard
             snapshots={snapshots}
             enter={id => enter(id)}
-            onComplete={(source, item) => onCompleteFeatured(source, item)}
-            bills={bills}
-            onBillPaid={onBillPaid}
+            onComplete={payFromPriority}
+            bills={bills.filter(b => !b.skipped)}
           />
         </Collapsible>
       </section>

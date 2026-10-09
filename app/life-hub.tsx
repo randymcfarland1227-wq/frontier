@@ -104,6 +104,7 @@ import { backfillFocusAreas, loadFocusAreas, type FocusAreaConfig } from '../lib
 import { loadCachedSchedule, paidBillKeys, pullScheduleSnapshot, type BillDue, type CalTask, type ScheduleSnapshot } from '../lib/schedule';
 import { payPlanDues, usePayPlans } from '../lib/payPlans';
 import { usePriorityPins } from '../lib/priorityPins';
+import { applyBillEdits, useBillEdits } from '../lib/billEdits';
 import { loadCachedMoney, moneyBillDues, parseMoney, pullMoneySnapshot, saveMoneyEdits, type CellEdit, type MoneySnapshot } from '../lib/money';
 import { MoneyPage } from './components/MoneyPage';
 
@@ -719,9 +720,11 @@ export function LifeHub() {
   // Money on the calendar: the sheet's items + planned payments, minus what's marked paid.
   const payPlans = usePayPlans();
   const paidKeys = useMemo(() => paidBillKeys(visibleLedger), [visibleLedger]);
+  // Skip / move / amount changes logged on Life Hub apply on top (lib/billEdits.ts).
+  const billEdits = useBillEdits();
   const moneyDues = useMemo(
-    () => [...moneyBillDues(moneyModel, paidKeys), ...payPlanDues(payPlans, paidKeys)].sort((a, b) => a.due.localeCompare(b.due)),
-    [moneyModel, payPlans, paidKeys],
+    () => applyBillEdits([...moneyBillDues(moneyModel, paidKeys), ...payPlanDues(payPlans, paidKeys)], billEdits),
+    [moneyModel, payPlans, paidKeys, billEdits],
   );
 
   // Dated tasks for the calendar: Self tasks with a day, and Priority items given a day there
