@@ -45,6 +45,8 @@ export const STORAGE_KEYS = {
   taskTags: 'lifehub-task-tags',
   /** Items removed from Life Hub (not done) — cloud-synced */
   hiddenItems: 'lifehub-hidden-items',
+  /** Subscriptions added on Life Hub — cloud-synced */
+  lifeSubs: 'lifehub-subs',
   /** Uploaded site pictures (Self photo, brand logos) — cloud-synced */
   siteIcons: 'lifehub-site-icons',
   captures: 'lifehub-captures',

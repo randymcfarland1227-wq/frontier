@@ -63,3 +63,22 @@ console.log('Migration checks pass: immutable input, stable counts/identity/date
   assert.equal(mergeState(old, a).hidden['radall::row-4'].mark, 'hide');
   console.log('Removed-item sync checks pass.');
 }
+
+// Life Hub subscriptions ("subs") sync: union by id, newest edit wins, removed stays removed.
+{
+  const s1 = { id: 'sub-1', name: 'Netflix', day: 20, cycle: 'monthly', status: 'active', createdAt: '2026-10-09T01:00:00.000Z', updatedAt: '2026-10-09T01:00:00.000Z' };
+  const s1b = { ...s1, status: 'paused', updatedAt: '2026-10-09T02:00:00.000Z' };
+  const s2 = { id: 'sub-2', name: 'Hulu', day: 3, cycle: 'monthly', status: 'active', removed: true, createdAt: '2026-10-09T01:30:00.000Z', updatedAt: '2026-10-09T03:00:00.000Z' };
+  const a = { ...emptyState(), subs: [s1, s2] };
+  const b = { ...emptyState(), subs: [s1b] };
+  for (const [x, y] of [[a, b], [b, a]]) {
+    const m = mergeState(x, y).subs;
+    assert.equal(m.length, 2);
+    assert.equal(m.find(s => s.id === 'sub-1').status, 'paused');
+    assert.equal(m.find(s => s.id === 'sub-2').removed, true);
+  }
+  const old = { ...emptyState() };
+  delete old.subs;
+  assert.equal(mergeState(old, a).subs.length, 2, 'a device without the field keeps them');
+  console.log('Subscription sync checks pass.');
+}

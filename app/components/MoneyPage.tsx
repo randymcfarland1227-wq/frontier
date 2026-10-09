@@ -20,6 +20,7 @@ import { usePayPlans } from '../../lib/payPlans';
 import { readSaved, writeSaved, STORAGE_KEYS } from '../../lib/storage';
 import { isOverdue } from '../../lib/billEdits';
 import { BillChangeForm, BillPinButton, billChangeText } from './BillControls';
+import { addLifeSub, updateLifeSub, type LifeSub } from '../../lib/lifeSubs';
 
 type Save = (edits: CellEdit[]) => Promise<{ ok: boolean; results: EditResult[]; error?: string }>;
 
@@ -256,7 +257,7 @@ function SheetTable({ table, onSave, opts = {} }: { table: Table; onSave: Save; 
 // plan, shop, save), and the color means the same thing everywhere on the page.
 // ---------------------------------------------------------------------------
 
-type Tone = 'cash' | 'due' | 'owed' | 'plan' | 'shop' | 'save';
+type Tone = 'cash' | 'due' | 'owed' | 'plan' | 'shop' | 'save' | 'card' | 'sub';
 
 function Section({
   tone,
@@ -492,29 +493,251 @@ function AccountsList({ model, onSave }: { model: MoneyModel; onSave: Save }) {
   );
 }
 
-function CardsList({ model, onSave, detailed = false }: { model: MoneyModel; onSave: Save; detailed?: boolean }) {
+// ---------------------------------------------------------------------------
+// This month: every payment this month — paid ✓, charged, skipped, still to pay — like the sheet
+// ---------------------------------------------------------------------------
+
+/** Kinds that take themselves out (subscriptions, pay later, planned transfers). */
+const AUTO_KINDS = new Set(['sub', 'paylater', 'plan']);
+const shortDate = (k: string) => fromDayKey(k).toLocaleDateString([], { month: 'short', day: 'numeric' });
+
+type MonthState = 'paid' | 'crossed' | 'charged' | 'skipped' | 'late' | 'today' | 'soon' | 'later';
+
+/** Rows crossed out in the sheet — that's how the sheet marks a payment handled. */
+const CROSSED = 'crossed:';
+
+function monthState(d: BillDue, paidAt: Record<string, string>): MonthState {
+  if (d.bill.id.startsWith(CROSSED)) return 'crossed';
+  if (d.skipped) return 'skipped';
+  if (paidAt[d.key]) return 'paid';
+  if (d.days < 0) return AUTO_KINDS.has(d.bill.kind || '') ? 'charged' : 'late';
+  if (d.days === 0) return 'today';
+  return d.days <= 7 ? 'soon' : 'later';
+}
+
+const STATE_TEXT: Record<MonthState, (d: BillDue, paidAt: Record<string, string>) => string> = {
+  paid: (d, p) => `Paid ${new Date(p[d.key]).toLocaleDateString([], { month: 'short', day: 'numeric' })}`,
+  crossed: () => 'Crossed off',
+  charged: () => 'Charged',
+  skipped: () => 'Skipped',
+  late: () => 'Not marked paid',
+  today: () => 'Today',
+  soon: d => (d.days === 1 ? 'Tomorrow' : `In ${d.days} days`),
+  later: d => `In ${d.days} days`,
+};
+
+function kindLabel(d: BillDue): string {
+  const k = d.bill.kind;
+  if (k === 'paylater') return (d.bill.notes || '').split(' · ')[1] || 'Pay later';
+  return k ? MONEY_KINDS[k].label : 'Bill';
+}
+
+function MonthRow({ d, paidAt, onPaid }: { d: BillDue; paidAt: Record<string, string>; onPaid: (d: BillDue) => void }) {
+  const state = monthState(d, paidAt);
+  const day = fromDayKey(d.due);
+  const done = state === 'paid' || state === 'crossed' || state === 'charged' || state === 'skipped';
+  const installment = d.bill.kind === 'paylater' ? (d.bill.notes || '').split(' · ')[2] : '';
+  return (
+    <li className={`mm-row is-${state}`} style={{ '--ev': d.bill.kind ? MONEY_KINDS[d.bill.kind].color : '#a8632a' } as React.CSSProperties}>
+      <span className="mm-day" aria-label={day.toLocaleDateString([], { weekday: 'long', month: 'long', day: 'numeric' })}>
+        <b>{day.getDate()}</b>
+        <small>{day.toLocaleDateString([], { weekday: 'short' })}</small>
+      </span>
+      <span className="mm-kind">{kindLabel(d)}</span>
+      <span className="mm-name">
+        {d.bill.name}
+        {installment ? <small> · {installment}</small> : null}
+      </span>
+      <span className="mm-amt">{money(d.bill.amount) || '?'}</span>
+      <span className="mm-state">
+        {state === 'paid' || state === 'crossed' || state === 'charged' ? '✓ ' : ''}
+        {STATE_TEXT[state](d, paidAt)}
+      </span>
+      <span className="mm-tools">
+        {done || AUTO_KINDS.has(d.bill.kind || '') ? null : (
+          <button type="button" className="mny-btn" onClick={() => onPaid(d)} aria-label={`Mark ${d.bill.name} paid`}>
+            Paid
+          </button>
+        )}
+      </span>
+    </li>
+  );
+}
+
+function MonthView({ dues, paidAt, model, onPaid }: { dues: BillDue[]; paidAt: Record<string, string>; model: MoneyModel; onPaid: (d: BillDue) => void }) {
+  const today = startOfDay(new Date());
+  // Rows crossed out in the sheet (skipped this month) show too, so the month adds up like the sheet.
+  const struck: BillDue[] = model.items
+    .filter(i => i.skipped && i.date && fromDayKey(i.date).getMonth() === today.getMonth() && fromDayKey(i.date).getFullYear() === today.getFullYear())
+    .map(i => ({ bill: { id: `${CROSSED}${i.id}`, name: i.name, amount: i.amount, kind: i.kind }, due: i.date!, days: Math.round((fromDayKey(i.date!).getTime() - today.getTime()) / 86_400_000), key: i.id }));
+  const all = [...dues, ...struck.filter(s => !dues.some(d => d.key === s.key))].sort((a, b) => a.due.localeCompare(b.due) || a.bill.name.localeCompare(b.bill.name));
+  const counted = all.filter(d => !d.skipped);
+  const total = counted.reduce((s, d) => s + (d.bill.amount || 0), 0);
+  const doneList = counted.filter(d => ['paid', 'crossed', 'charged'].includes(monthState(d, paidAt)));
+  const done = doneList.reduce((s, d) => s + (d.bill.amount || 0), 0);
+  const late = counted.filter(d => monthState(d, paidAt) === 'late');
+  const left = total - done;
+  const pct = total ? Math.round((done / total) * 100) : 0;
+  const byKind = (['bill', 'card', 'sub', 'paylater', 'plan'] as const)
+    .map(k => ({ k, sum: counted.filter(d => d.bill.kind === k).reduce((s, d) => s + (d.bill.amount || 0), 0) }))
+    .filter(x => x.sum > 0);
+  // Weeks of the month: 1–7, 8–14, 15–21, 22–28, 29–end.
+  const weeks = new Map<number, BillDue[]>();
+  for (const d of all) {
+    const w = Math.floor((fromDayKey(d.due).getDate() - 1) / 7);
+    weeks.set(w, [...(weeks.get(w) || []), d]);
+  }
+  const monthName = today.toLocaleDateString([], { month: 'long' });
+  const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
+  const thisWeek = Math.floor((today.getDate() - 1) / 7);
+  if (!all.length) return <p className="mny-empty">Nothing in {monthName} yet.</p>;
+  return (
+    <div className="mm">
+      <div className="mm-top">
+        <div className="mm-progress">
+          <div className="mm-progress-figs">
+            <span>
+              <b>{money(done)}</b> paid
+            </span>
+            <span>
+              <b>{money(left)}</b> left of {money(total)}
+            </span>
+          </div>
+          <div className="mm-bar" role="img" aria-label={`${pct}% of ${monthName}'s payments done`}>
+            {byKind.map(x => (
+              <i key={x.k} style={{ width: `${(x.sum / (total || 1)) * 100}%`, background: MONEY_KINDS[x.k].color }} />
+            ))}
+            <em style={{ width: `${pct}%` }} />
+          </div>
+          <div className="mm-legend">
+            {byKind.map(x => (
+              <span key={x.k}>
+                <i style={{ background: MONEY_KINDS[x.k].color }} />
+                {MONEY_KINDS[x.k].plural} {money(x.sum)}
+              </span>
+            ))}
+          </div>
+        </div>
+        <div className="mm-counts">
+          <span className="is-paid">
+            <b>{doneList.length}</b> done
+          </span>
+          <span>
+            <b>{counted.length - doneList.length - late.length}</b> to go
+          </span>
+          {late.length ? (
+            <span className="is-late">
+              <b>{late.length}</b> not marked
+            </span>
+          ) : null}
+        </div>
+      </div>
+      {[...weeks.entries()].map(([w, list]) => {
+        const from = w * 7 + 1;
+        const to = Math.min(from + 6, lastDay);
+        const sum = list.filter(d => !d.skipped).reduce((s, d) => s + (d.bill.amount || 0), 0);
+        const allDone = list.every(d => ['paid', 'crossed', 'charged', 'skipped'].includes(monthState(d, paidAt)));
+        return (
+          <details key={w} className={`mm-week${w === thisWeek ? ' is-now' : ''}${allDone ? ' is-done' : ''}`} open={!allDone || w === thisWeek}>
+            <summary>
+              <span className="mny-fold-chev" aria-hidden="true" />
+              <span className="mm-week-name">
+                {today.toLocaleDateString([], { month: 'short' })} {from}–{to}
+              </span>
+              {w === thisWeek ? <span className="mm-now">This week</span> : allDone ? <span className="mm-donechip">✓ All done</span> : null}
+              <span className="mm-week-sum">{money(sum)}</span>
+            </summary>
+            <ul>
+              {list.map(d => (
+                <MonthRow key={d.key} d={d} paidAt={paidAt} onPaid={onPaid} />
+              ))}
+            </ul>
+          </details>
+        );
+      })}
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Credit cards: one tile per card — balance, how much of the limit is used, this month's minimum
+// ---------------------------------------------------------------------------
+
+function nextMonth(key: string): string {
+  const d = fromDayKey(key);
+  const n = new Date(d.getFullYear(), d.getMonth() + 1, 1);
+  return dayKey(new Date(n.getFullYear(), n.getMonth(), Math.min(d.getDate(), new Date(n.getFullYear(), n.getMonth() + 1, 0).getDate())));
+}
+
+function CardTiles({ model, dues, paidAt, onPaid, onSave }: { model: MoneyModel; dues: BillDue[]; paidAt: Record<string, string>; onPaid: (d: BillDue) => void; onSave: Save }) {
   const cards = cardSummaries(model);
   const [open, setOpen] = useState<string | null>(null);
+  const today = startOfDay(new Date());
   return (
-    <ul className="mny-cards">
+    <ul className="cc-grid">
       {cards.map(c => {
-        const isOpen = open === c.name;
         const bal = amountOf(c.balance?.text || '') || 0;
         const avail = amountOf(c.available?.text || '');
         const limit = amountOf(c.limit?.text || '') ?? (avail !== undefined ? bal + avail : undefined);
         const used = limit ? Math.min(100, Math.round((bal / limit) * 100)) : undefined;
-        const min = c.min?.text && c.min.text !== '$0.00' ? c.min.text : '';
+        const level = used === undefined ? '' : used <= 10 ? 'is-great' : used <= 30 ? 'is-ok' : 'is-high';
+        // This month's minimum, as a payment occurrence (so Paid here is the same Paid everywhere).
+        const item = c.min ? model.items.find(i => i.kind === 'card' && i.cells.amount && i.cells.amount.r === c.min!.r && i.cells.amount.c === c.min!.c) : undefined;
+        const due = item ? dues.find(d => d.key === item.id) : undefined;
+        const paid = item ? paidAt[item.id] : undefined;
+        const minAmt = item?.amount;
+        let status: { text: string; tone: string; sub?: string };
+        if (!item || !minAmt) status = { text: bal > 0 ? 'No minimum listed' : 'Nothing owed', tone: 'is-quiet' };
+        else if (paid)
+          status = {
+            text: `✓ Paid ${new Date(paid).toLocaleDateString([], { month: 'short', day: 'numeric' })}`,
+            tone: 'is-paid',
+            sub: item.date ? `Next about ${shortDate(nextMonth(item.date))}` : undefined,
+          };
+        else if (item.skipped)
+          status = { text: '✓ Crossed off', tone: 'is-paid', sub: item.date ? `Next about ${shortDate(nextMonth(item.date))}` : undefined };
+        else if (item.date) {
+          const days = Math.round((fromDayKey(item.date).getTime() - today.getTime()) / 86_400_000);
+          status =
+            days < 0
+              ? { text: `Was due ${shortDate(item.date)}`, tone: 'is-late', sub: 'Not marked paid' }
+              : { text: days === 0 ? 'Due today' : days === 1 ? 'Due tomorrow' : `Due ${shortDate(item.date)}`, tone: days <= 3 ? 'is-soon' : '', sub: days > 1 ? `in ${days} days` : undefined };
+        } else status = { text: 'Minimum due', tone: '' };
+        const isOpen = open === c.name;
         return (
-          <li key={c.name} className={`mny-card${isOpen ? ' is-open' : ''}`}>
-            <button type="button" className="mny-card-row" onClick={() => setOpen(isOpen ? null : c.name)} aria-expanded={isOpen}>
-              <span className="mny-fold-chev" aria-hidden="true" />
-              <span className="mny-card-name">{c.name}</span>
-              <span className="mny-card-bar" aria-label={used !== undefined ? `${used}% used` : undefined}>
-                <i style={{ width: `${used ?? 0}%` }} className={used !== undefined && used > 30 ? 'is-high' : ''} />
+          <li key={c.name} className={`cc-tile ${level}`}>
+            <div className="cc-head">
+              <strong>{c.name}</strong>
+              {used !== undefined ? <span className="cc-used">{used}% used</span> : null}
+            </div>
+            <div className="cc-bal">
+              <b>{c.balance?.text || '$0'}</b>
+              <span>{limit ? `of ${money(limit)}` : c.available?.text ? `${c.available.text} free` : ''}</span>
+            </div>
+            <div className="cc-bar" aria-hidden="true">
+              <i style={{ width: `${used ?? 0}%` }} />
+              <em />
+            </div>
+            <div className={`cc-min ${status.tone}`}>
+              <span className="cc-min-amt">{minAmt ? `${money(minAmt)} min` : ''}</span>
+              <span className="cc-min-status">
+                {status.text}
+                {status.sub ? <small>{status.sub}</small> : null}
               </span>
-              <span className="mny-card-bal">{c.balance?.text || '—'}</span>
-              {detailed || min ? <span className="mny-card-min">{min ? `${min} min${c.minDate?.text && c.minDate.text !== 'N/a' ? ` · ${c.minDate.text}` : ''}` : ''}</span> : null}
-            </button>
+            </div>
+            <div className="cc-tools">
+              {due && !paid && !due.skipped ? (
+                <>
+                  <button type="button" className="mny-btn is-primary" onClick={() => onPaid(due)}>
+                    Paid
+                  </button>
+                  <BillPinButton due={due} className="mny-btn" />
+                </>
+              ) : null}
+              <button type="button" className="mny-btn" aria-expanded={isOpen} onClick={() => setOpen(isOpen ? null : c.name)}>
+                {isOpen ? 'Close' : 'Edit'}
+              </button>
+            </div>
             {isOpen ? (
               <div className="mny-card-detail">
                 <label>
@@ -537,22 +760,6 @@ function CardsList({ model, onSave, detailed = false }: { model: MoneyModel; onS
                     <EditCell cell={c.minDate} onSave={onSave} />
                   </label>
                 ) : null}
-                {c.matrix
-                  ? c.matrix.header.map((h, i) =>
-                      i > 1 && h && !/^bal$/i.test(h) ? (
-                        <label key={h}>
-                          <span>{h}</span>
-                          <EditCell cell={c.matrix!.row[i]} onSave={onSave} />
-                        </label>
-                      ) : null,
-                    )
-                  : null}
-                {used !== undefined ? (
-                  <p className="mny-card-used">
-                    {used}% used{limit ? ` of ${money(limit)}` : ''}
-                    {used > 30 ? ' · above 30% hurts your score' : ''}
-                  </p>
-                ) : null}
               </div>
             ) : null}
           </li>
@@ -563,16 +770,242 @@ function CardsList({ model, onSave, detailed = false }: { model: MoneyModel; onS
 }
 
 // ---------------------------------------------------------------------------
+// Subscriptions: everything that charges you on its own — the sheet's list plus ones added here
+// ---------------------------------------------------------------------------
+
+type SubRow = {
+  key: string;
+  name: string;
+  amount?: number;
+  /** Day of the month it charges */
+  day?: number;
+  date?: string;
+  status: 'active' | 'trial' | 'paused' | 'skipped' | 'cancelled';
+  from: 'sheet' | 'hub';
+  row?: Cell[];
+  sub?: LifeSub;
+};
+
+function SubAdd({ onDone }: { onDone: () => void }) {
+  const [name, setName] = useState('');
+  const [amount, setAmount] = useState('');
+  const [day, setDay] = useState(String(new Date().getDate()));
+  const [status, setStatus] = useState<'active' | 'trial'>('active');
+  const [cycle, setCycle] = useState<'monthly' | 'yearly'>('monthly');
+  const [month, setMonth] = useState(new Date().getMonth());
+  const [note, setNote] = useState('');
+  const submit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const d = Number(day);
+    if (!name.trim() || !(d >= 1 && d <= 31)) return;
+    const amt = amountOf(amount);
+    addLifeSub({ name, amount: amt, day: d, cycle, month: cycle === 'yearly' ? month : undefined, status, note: note.trim() || undefined });
+    onDone();
+  };
+  return (
+    <form className="sub-form" onSubmit={submit} onKeyDown={e => e.key === 'Escape' && onDone()}>
+      <label className="sub-form-wide">
+        <span>Subscription</span>
+        <input autoFocus value={name} onChange={e => setName(e.target.value)} placeholder="e.g. Netflix" required />
+      </label>
+      <label>
+        <span>Amount</span>
+        <input inputMode="decimal" value={amount} onChange={e => setAmount(e.target.value)} placeholder="$9.99" />
+      </label>
+      <label>
+        <span>Charges on day</span>
+        <input type="number" min={1} max={31} value={day} onChange={e => setDay(e.target.value)} required />
+      </label>
+      <label>
+        <span>Every</span>
+        <select value={cycle} onChange={e => setCycle(e.target.value as 'monthly' | 'yearly')}>
+          <option value="monthly">Month</option>
+          <option value="yearly">Year</option>
+        </select>
+      </label>
+      {cycle === 'yearly' ? (
+        <label>
+          <span>In</span>
+          <select value={month} onChange={e => setMonth(Number(e.target.value))}>
+            {Array.from({ length: 12 }, (_, i) => (
+              <option key={i} value={i}>
+                {new Date(2026, i, 1).toLocaleDateString([], { month: 'long' })}
+              </option>
+            ))}
+          </select>
+        </label>
+      ) : null}
+      <label>
+        <span>Status</span>
+        <select value={status} onChange={e => setStatus(e.target.value as 'active' | 'trial')}>
+          <option value="active">Active</option>
+          <option value="trial">Free trial</option>
+        </select>
+      </label>
+      <label className="sub-form-wide">
+        <span>Note</span>
+        <input value={note} onChange={e => setNote(e.target.value)} placeholder="Optional — e.g. cancel before the trial ends" />
+      </label>
+      <div className="sub-form-actions">
+        <button type="submit" className="mny-btn is-primary">
+          Add subscription
+        </button>
+        <button type="button" className="mny-btn" onClick={onDone}>
+          Cancel
+        </button>
+      </div>
+    </form>
+  );
+}
+
+function SubsView({ model, lifeSubs, paidAt, dues, onSave }: { model: MoneyModel; lifeSubs: LifeSub[]; paidAt: Record<string, string>; dues: BillDue[]; onSave: Save }) {
+  const [adding, setAdding] = useState(false);
+  const today = startOfDay(new Date());
+  const sheetRows: SubRow[] = (model.subs?.rows || [])
+    .filter(r => r[1]?.text)
+    .map(r => {
+      const date = parseSheetDate(r[0]?.text || '', today);
+      return {
+        key: `sheet:${r[1].r}`,
+        name: r[1].text.trim(),
+        amount: amountOf(r[2]?.text || ''),
+        date,
+        day: date ? fromDayKey(date).getDate() : undefined,
+        status: r.some(c => c.struck) ? 'skipped' : 'active',
+        from: 'sheet' as const,
+        row: r,
+      };
+    });
+  const otherRows: SubRow[] = model.subsOther.map(r => ({
+    key: `other:${r[1].r}`,
+    name: r[1].text.trim(),
+    amount: amountOf(r[2]?.text || ''),
+    status: /trial/i.test(r[0].text) ? 'trial' : 'paused',
+    from: 'sheet' as const,
+  }));
+  const hubRows: SubRow[] = lifeSubs.map(s => {
+    const due = dues.find(d => d.key.startsWith(`money:lhsub:${s.id}:`) && fromDayKey(d.due).getMonth() === today.getMonth());
+    return { key: `hub:${s.id}`, name: s.name, amount: s.amount, day: s.day, date: due?.due, status: s.status, from: 'hub' as const, sub: s };
+  });
+  const all = [...sheetRows, ...hubRows, ...otherRows];
+  // Crossed off in the sheet = handled this month; it still costs you every month.
+  const live = (r: SubRow) => r.status === 'active' || r.status === 'skipped';
+  const charging = all.filter(r => live(r) || r.status === 'trial');
+  const monthly = all
+    .filter(r => live(r) && (r.from === 'sheet' || r.sub?.cycle !== 'yearly'))
+    .reduce((s, r) => s + (r.amount || 0), 0);
+  const yearlyOnly = lifeSubs.filter(s => s.status === 'active' && s.cycle === 'yearly').reduce((s, x) => s + (x.amount || 0), 0);
+  const chargedSoFar = all.filter(r => live(r) && r.date && fromDayKey(r.date) <= today).reduce((s, r) => s + (r.amount || 0), 0);
+  const order = (r: SubRow) => (live(r) ? 0 : r.status === 'trial' ? 1 : 2);
+  const sorted = [...all].sort((a, b) => order(a) - order(b) || (a.day ?? 99) - (b.day ?? 99) || a.name.localeCompare(b.name));
+  const stateOf = (r: SubRow) => {
+    if (r.status === 'paused') return { text: 'Paused', tone: 'is-quiet' };
+    if (r.status === 'cancelled') return { text: 'Cancelled', tone: 'is-quiet' };
+    if (r.status === 'skipped') return { text: '✓ Crossed off', tone: 'is-paid' };
+    if (!r.date) return { text: r.status === 'trial' ? 'Free trial' : '—', tone: r.status === 'trial' ? 'is-trial' : '' };
+    const days = Math.round((fromDayKey(r.date).getTime() - today.getTime()) / 86_400_000);
+    if (r.from === 'hub' && paidAt[`money:lhsub:${r.sub!.id}:${r.date}`]) return { text: `✓ Charged ${shortDate(r.date)}`, tone: 'is-paid' };
+    if (days < 0) return { text: `✓ Charged ${shortDate(r.date)}`, tone: 'is-paid' };
+    if (days === 0) return { text: 'Charges today', tone: 'is-soon' };
+    return { text: `Charges ${shortDate(r.date)}`, tone: days <= 3 ? 'is-soon' : '' };
+  };
+  return (
+    <div className="subs">
+      <div className="subs-top">
+        <div className="subs-fig">
+          <b>{money(monthly)}</b>
+          <span>a month</span>
+        </div>
+        <div className="subs-fig">
+          <b>{money(monthly * 12 + yearlyOnly)}</b>
+          <span>a year</span>
+        </div>
+        <div className="subs-fig">
+          <b>{charging.length}</b>
+          <span>charging you</span>
+        </div>
+        <div className="subs-fig">
+          <b>{money(chargedSoFar)}</b>
+          <span>charged so far this month</span>
+        </div>
+        <button type="button" className="mny-btn is-primary subs-add" onClick={() => setAdding(v => !v)} aria-expanded={adding}>
+          + Add subscription
+        </button>
+      </div>
+      {adding ? <SubAdd onDone={() => setAdding(false)} /> : null}
+      <ul className="subs-list">
+        {sorted.map(r => {
+          const st = stateOf(r);
+          return (
+            <li key={r.key} className={`subs-row is-${r.status}`}>
+              <span className="subs-avatar" aria-hidden="true" style={{ '--h': String((r.name.charCodeAt(0) * 37) % 360) } as React.CSSProperties}>
+                {r.name.charAt(0).toUpperCase()}
+              </span>
+              <span className="subs-name">
+                {r.name}
+                {r.from === 'hub' ? <small>added here{r.sub?.note ? ` · ${r.sub.note}` : ''}</small> : null}
+              </span>
+              <span className="subs-day">{r.day ? `the ${ordinal(r.day)}${r.sub?.cycle === 'yearly' ? ` of ${new Date(2026, r.sub.month ?? 0, 1).toLocaleDateString([], { month: 'short' })}` : ''}` : ''}</span>
+              <span className="subs-amt">
+                {money(r.amount) || '?'}
+                <small>{r.sub?.cycle === 'yearly' ? '/yr' : '/mo'}</small>
+              </span>
+              <span className={`subs-state ${st.tone}`}>{st.text}</span>
+              <span className="subs-tools">
+                {r.from === 'sheet' && r.row ? (
+                  <button type="button" className="mny-btn" onClick={() => void onSave([strikeEdit(r.row!, r.status !== 'skipped')])} title="Crosses it out in the sheet (done or skipped this month)">
+                    {r.status === 'skipped' ? 'Uncross' : 'Cross off'}
+                  </button>
+                ) : null}
+                {r.sub ? (
+                  <>
+                    <select
+                      className="mny-btn"
+                      value={r.sub.status}
+                      aria-label={`Status of ${r.name}`}
+                      onChange={e => updateLifeSub(r.sub!.id, { status: e.target.value as LifeSub['status'] })}
+                    >
+                      <option value="active">Active</option>
+                      <option value="trial">Trial</option>
+                      <option value="paused">Paused</option>
+                      <option value="cancelled">Cancelled</option>
+                    </select>
+                    <button
+                      type="button"
+                      className="mny-btn"
+                      onClick={() => window.confirm(`Remove ${r.name} from Life Hub?`) && updateLifeSub(r.sub!.id, { removed: true })}
+                      aria-label={`Remove ${r.name}`}
+                    >
+                      ✕
+                    </button>
+                  </>
+                ) : null}
+              </span>
+            </li>
+          );
+        })}
+      </ul>
+    </div>
+  );
+}
+
+const ordinal = (n: number) => `${n}${n % 10 === 1 && n !== 11 ? 'st' : n % 10 === 2 && n !== 12 ? 'nd' : n % 10 === 3 && n !== 13 ? 'rd' : 'th'}`;
+
+// ---------------------------------------------------------------------------
 // The page
 // ---------------------------------------------------------------------------
 
 const NEEDED_OPTIONS = ['Yes', 'Y Low', 'No', 'Ordered'];
-type TabId = 'week' | 'due' | 'plan' | 'accounts' | 'owed' | 'shop' | 'save';
+type TabId = 'week' | 'month' | 'cards' | 'subs' | 'plan' | 'accounts' | 'owed' | 'shop' | 'save';
+const TAB_IDS: TabId[] = ['week', 'month', 'cards', 'subs', 'plan', 'accounts', 'owed', 'shop', 'save'];
 const TAB_KEY = 'lifehub-money-tab';
 
 export function MoneyPage({
   model,
   dues,
+  monthDues,
+  paidAt,
+  lifeSubs,
   onPaid,
   onSave,
   onRefresh,
@@ -580,6 +1013,11 @@ export function MoneyPage({
 }: {
   model: MoneyModel | null;
   dues: BillDue[];
+  /** Every payment this month, paid ones included */
+  monthDues: BillDue[];
+  /** Payment key → when it was marked paid */
+  paidAt: Record<string, string>;
+  lifeSubs: LifeSub[];
   onPaid: (d: BillDue) => void;
   onSave: (edits: CellEdit[]) => Promise<{ ok: boolean; results: EditResult[]; error?: string }>;
   onRefresh: () => void;
@@ -587,7 +1025,10 @@ export function MoneyPage({
 }) {
   const [note, setNote] = useState<{ text: string; tone: 'ok' | 'bad' } | null>(null);
   const [provider, setProvider] = useState('All');
-  const [tab, setTabState] = useState<TabId>(() => readSaved<TabId>(TAB_KEY, 'week'));
+  const [tab, setTabState] = useState<TabId>(() => {
+    const saved = readSaved<string>(TAB_KEY, 'week');
+    return saved === 'due' ? 'month' : TAB_IDS.includes(saved as TabId) ? (saved as TabId) : 'week';
+  });
   const setTab = (t: TabId) => {
     setTabState(t);
     writeSaved(TAB_KEY, t);
@@ -682,12 +1123,22 @@ export function MoneyPage({
   const monthRe = new RegExp(`^(${today.toLocaleDateString('en-US', { month: 'long' })}|${today.toLocaleDateString('en-US', { month: 'short' })})[- ]?(${today.getFullYear()})?$`, 'i');
   const isNow = (row: Cell[]) => (row.slice(0, 2).some(c => monthRe.test(c.text)) ? 'is-now' : '');
   const livePlan = payPlans.find(p => !p.archived);
+  const monthCounted = monthDues.filter(d => !d.skipped);
+  const monthCountBase = monthCounted.length;
+  const crossedThisMonth = model.items.filter(i => i.skipped && i.date && fromDayKey(i.date).getMonth() === today.getMonth() && fromDayKey(i.date).getFullYear() === today.getFullYear()).length;
+  const monthPaid = monthCounted.filter(d => paidAt[d.key] || (d.days < 0 && ['sub', 'paylater', 'plan'].includes(d.bill.kind || ''))).length + crossedThisMonth;
+  const monthCount = monthCountBase + crossedThisMonth;
+  const subsMonthly =
+    (model.subs?.rows || []).filter(r => r[1]?.text).reduce((s, r) => s + (amountOf(r[2]?.text || '') || 0), 0) +
+    lifeSubs.filter(x => x.status === 'active' && x.cycle === 'monthly').reduce((s, x) => s + (x.amount || 0), 0);
 
   const TABS: Array<{ id: TabId; tone: Tone; label: string; figure: string }> = [
     { id: 'week', tone: 'due', label: 'This week', figure: money(dueWeek) },
-    { id: 'due', tone: 'due', label: 'Due dates', figure: `${restOfMonth.length} left` },
+    { id: 'month', tone: 'due', label: today.toLocaleDateString([], { month: 'long' }), figure: `${monthPaid} of ${monthCount} paid` },
+    { id: 'cards', tone: 'card', label: 'Credit cards', figure: model.cards?.total?.[1]?.text ? `${model.cards.total[1].text} owed` : '' },
+    { id: 'subs', tone: 'sub', label: 'Subscriptions', figure: `${money(subsMonthly)}/mo` },
     { id: 'plan', tone: 'plan', label: 'Plan', figure: livePlan ? livePlan.title : 'New' },
-    { id: 'accounts', tone: 'cash', label: 'Accounts & cards', figure: model.cashOnHand?.text || '' },
+    { id: 'accounts', tone: 'cash', label: 'Cash', figure: model.cashOnHand?.text || '' },
     { id: 'owed', tone: 'owed', label: 'What I owe', figure: money(owedSum) },
     { id: 'shop', tone: 'shop', label: 'Shopping', figure: `${neededNow.length + (openNeeded?.rows.length || 0)} needed` },
     { id: 'save', tone: 'save', label: 'Savings & move', figure: '' },
@@ -734,16 +1185,16 @@ export function MoneyPage({
             <small>{afterWeek !== undefined && afterWeek < 0 ? 'needs income or a plan' : 'before anything new comes in'}</small>
           </div>
           <div className="mny-flow-side">
-            <button type="button" className="mny-mini tone-due" onClick={() => setTab('due')}>
+            <button type="button" className="mny-mini tone-due" onClick={() => setTab('month')}>
               <span>Rest of {today.toLocaleDateString([], { month: 'long' })}</span>
               <b>{money(sum(restOfMonth))}</b>
             </button>
-            <button type="button" className="mny-mini tone-cash" onClick={() => setTab('accounts')}>
+            <button type="button" className="mny-mini tone-card" onClick={() => setTab('cards')}>
               <span>Cards</span>
               <b>{model.cards?.total?.[1]?.text || '—'}</b>
               {cardsUsed !== undefined ? <small>{cardsUsed}% used</small> : null}
             </button>
-            <button type="button" className="mny-mini tone-due" onClick={() => setTab('due')}>
+            <button type="button" className="mny-mini tone-due" onClick={() => setTab('month')}>
               <span>Pay later</span>
               <b>{pay?.total?.[1]?.text || '—'}</b>
             </button>
@@ -752,7 +1203,7 @@ export function MoneyPage({
               <b>{money(owedSum)}</b>
             </button>
             {fico ? (
-              <button type="button" className="mny-mini tone-cash" onClick={() => setTab('accounts')}>
+              <button type="button" className="mny-mini tone-card" onClick={() => setTab('cards')}>
                 <span>Credit score</span>
                 <b>{Math.round(Number(fico)) || fico}</b>
               </button>
@@ -801,31 +1252,23 @@ export function MoneyPage({
           </div>
         ) : null}
 
-        {tab === 'due' ? (
-          <div className="mny-cols">
-            <Section tone="due" title="Next five weeks" hint="Bills, card minimums, subscriptions, pay later and planned payments." figure={money(sum(dues.filter(d => d.days >= 0 && d.days <= 35)))}>
-              <DueList dues={dues} onPaid={onPaid} by="week" days={35} />
+        {tab === 'month' ? (
+          <div className="mny-stack">
+            <Section tone="due" title={`${today.toLocaleDateString([], { month: 'long' })} at a glance`} figure={`${monthPaid} of ${monthCount}`} figureLabel="paid" href={link('Randy')}>
+              <MonthView dues={monthDues} paidAt={paidAt} model={model} onPaid={onPaid} />
             </Section>
-            <Section tone="due" title="This month in the sheet" hint="Click any amount or date to change it in the sheet." href={link('Randy')}>
+            <Section tone="due" title="After this month" figure={money(sum(dues.filter(d => fromDayKey(d.due) > monthEnd && d.days <= 35)))} figureLabel="next few weeks">
+              <DueList dues={dues.filter(d => fromDayKey(d.due) > monthEnd)} onPaid={onPaid} by="week" days={35} />
+            </Section>
+            <Section tone="due" title="In the sheet" hint="Click any amount or date to change it in the sheet." href={link('Randy')}>
               {model.bills ? (
-                <Fold title="Bills" total={model.bills.total?.[2]?.text} meta={`${model.bills.rows.length}`} open>
+                <Fold title="Bills" total={model.bills.total?.[2]?.text} meta={`${model.bills.rows.length}`}>
                   <SheetTable table={model.bills} onSave={save} />
                 </Fold>
               ) : null}
               {model.cardMins ? (
                 <Fold title="Card minimums" total={model.cardMins.total?.[2]?.text} meta={`${model.cardMins.rows.length}`}>
                   <SheetTable table={{ ...model.cardMins, header: ['Date Due', 'Card', 'Amount'] }} onSave={save} />
-                </Fold>
-              ) : null}
-              {model.subs ? (
-                <Fold title="Subscriptions" total={model.subs.total?.[2]?.text} meta={`${model.subs.rows.length} · Skip crosses one out`}>
-                  <SheetTable table={model.subs} onSave={save} opts={{ strike: { on: 'Skip', off: 'Unskip' } }} />
-                  {model.subsOther.length ? (
-                    <SheetTable
-                      table={{ key: 'subsOther', title: 'Trial / paused', tab: 'Randy', header: ['Status', 'Subscription', 'Amount'], rows: model.subsOther }}
-                      onSave={save}
-                    />
-                  ) : null}
                 </Fold>
               ) : null}
               <Fold title="Pay later" total={pay?.total?.[1]?.text} meta="Klarna · Affirm · Afterpay · Zip">
@@ -862,6 +1305,48 @@ export function MoneyPage({
           </div>
         ) : null}
 
+        {tab === 'cards' ? (
+          <div className="mny-stack">
+            <Section
+              tone="card"
+              title="Credit cards"
+              figure={model.cards?.total?.[1]?.text}
+              figureLabel={[cardsUsed !== undefined ? `${cardsUsed}% used` : '', model.cards?.total?.[2]?.text ? `${model.cards.total[2].text} free` : ''].filter(Boolean).join(' · ')}
+              href={link('Randy')}
+            >
+              <CardTiles model={model} dues={dues} paidAt={paidAt} onPaid={onPaid} onSave={save} />
+            </Section>
+            <Section tone="card" title="Credit" figure={fico ? String(Math.round(Number(fico)) || fico) : undefined} figureLabel="FICO" href={link('Credit Matrix')}>
+              {model.scores.length ? (
+                <div className="mny-tiles">
+                  {model.scores.map(sc => (
+                    <span key={sc.label} className="mny-tile">
+                      <span>{sc.label}</span>
+                      <b>{sc.value}</b>
+                    </span>
+                  ))}
+                </div>
+              ) : null}
+              {model.creditAccounts ? (
+                <Fold title="Loans & store credit" meta="Toyota · Fortiva · Nelnet">
+                  <SheetTable table={model.creditAccounts} onSave={save} />
+                </Fold>
+              ) : null}
+              {model.utilEst ? (
+                <Fold title="Utilization estimate">
+                  <SheetTable table={model.utilEst} onSave={save} />
+                </Fold>
+              ) : null}
+            </Section>
+          </div>
+        ) : null}
+
+        {tab === 'subs' ? (
+          <Section tone="sub" title="Subscriptions" href={link('Randy')}>
+            <SubsView model={model} lifeSubs={lifeSubs} paidAt={paidAt} dues={monthDues} onSave={save} />
+          </Section>
+        ) : null}
+
         {tab === 'plan' ? (
           <Section tone="plan" title="Plan payments" hint="Pick the days, start from your cash, see what’s due, add extra payments — saved in Life Hub, not the sheet.">
             <PayPlanner dues={sheetDues} debts={debtOptions(model)} cashOnHand={model.cashOnHand?.text} balancedCash={model.balancedCash?.text} />
@@ -879,39 +1364,7 @@ export function MoneyPage({
                   </Fold>
                 ) : null}
               </Section>
-              <Section tone="cash" title="Credit" figure={fico ? String(Math.round(Number(fico)) || fico) : undefined} figureLabel="FICO" href={link('Credit Matrix')}>
-                {model.scores.length ? (
-                  <div className="mny-tiles">
-                    {model.scores.map(s => (
-                      <span key={s.label} className="mny-tile">
-                        <span>{s.label}</span>
-                        <b>{s.value}</b>
-                      </span>
-                    ))}
-                  </div>
-                ) : null}
-                {model.creditAccounts ? (
-                  <Fold title="Current accounts" meta="Toyota · Fortiva · Nelnet">
-                    <SheetTable table={model.creditAccounts} onSave={save} />
-                  </Fold>
-                ) : null}
-                {model.utilEst ? (
-                  <Fold title="Utilization estimate">
-                    <SheetTable table={model.utilEst} onSave={save} />
-                  </Fold>
-                ) : null}
-              </Section>
             </div>
-            <Section
-              tone="cash"
-              title="Credit cards"
-              figure={model.cards?.total?.[1]?.text}
-              figureLabel={`owed${model.cards?.total?.[2]?.text ? ` · ${model.cards.total[2].text} available` : ''}`}
-              hint="Tap a card for its details. Bars show how much of the limit is used."
-              href={link('Randy')}
-            >
-              <CardsList model={model} onSave={save} detailed />
-            </Section>
           </div>
         ) : null}
 

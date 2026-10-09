@@ -101,7 +101,8 @@ import { TaskSorting } from './components/TaskSorting';
 import { SiteIconSettings } from './components/SiteIconSettings';
 import { NeedsSorting } from './components/NeedsSorting';
 import { backfillFocusAreas, loadFocusAreas, type FocusAreaConfig } from '../lib/focusAreas';
-import { loadCachedSchedule, paidBillKeys, pullScheduleSnapshot, type BillDue, type CalTask, type ScheduleSnapshot } from '../lib/schedule';
+import { billDues, fromDayKey, loadCachedSchedule, paidBillKeys, pullScheduleSnapshot, type BillDue, type CalTask, type ScheduleSnapshot } from '../lib/schedule';
+import { lifeSubDues, useLifeSubs } from '../lib/lifeSubs';
 import { payPlanDues, usePayPlans } from '../lib/payPlans';
 import { usePriorityPins } from '../lib/priorityPins';
 import { applyBillEdits, useBillEdits } from '../lib/billEdits';
@@ -722,10 +723,34 @@ export function LifeHub() {
   const paidKeys = useMemo(() => paidBillKeys(visibleLedger), [visibleLedger]);
   // Skip / move / amount changes logged on Life Hub apply on top (lib/billEdits.ts).
   const billEdits = useBillEdits();
+  const lifeSubs = useLifeSubs();
   const moneyDues = useMemo(
-    () => applyBillEdits([...moneyBillDues(moneyModel, paidKeys), ...payPlanDues(payPlans, paidKeys)], billEdits),
-    [moneyModel, payPlans, paidKeys, billEdits],
+    () => applyBillEdits([...moneyBillDues(moneyModel, paidKeys), ...payPlanDues(payPlans, paidKeys), ...lifeSubDues(lifeSubs, paidKeys)], billEdits),
+    [moneyModel, payPlans, paidKeys, billEdits, lifeSubs],
   );
+  // Money page "This month": every payment this month, paid ones too, and when each was paid.
+  const paidAt = useMemo(() => {
+    const out: Record<string, string> = {};
+    for (const e of Object.values(visibleLedger.entries)) {
+      if (e.source === 'radall' && (e.taskId.startsWith('money:') || e.taskId.startsWith('bill:'))) out[e.taskId] = e.completedAt;
+    }
+    return out;
+  }, [visibleLedger]);
+  const monthDues = useMemo(() => {
+    const none = new Set<string>();
+    const now = new Date();
+    const inMonth = (d: BillDue) => {
+      const day = fromDayKey(d.due);
+      return day.getFullYear() === now.getFullYear() && day.getMonth() === now.getMonth();
+    };
+    const all = [
+      ...moneyBillDues(moneyModel, none),
+      ...payPlanDues(payPlans, none),
+      ...lifeSubDues(lifeSubs, none, now, 45, 120, true),
+      ...(schedule?.bills || []).flatMap(b => billDues(b, none, now, 45)),
+    ];
+    return applyBillEdits(all, billEdits).filter(inMonth);
+  }, [moneyModel, payPlans, lifeSubs, schedule, billEdits]);
 
   // Dated tasks for the calendar: Self tasks with a day, and Priority items given a day there
   // (that day stays in Priority — it never goes back to the task's own site).
@@ -1038,6 +1063,9 @@ goalsData ? (
         <MoneyPage
           model={moneyModel}
           dues={moneyDues}
+          monthDues={monthDues}
+          paidAt={paidAt}
+          lifeSubs={lifeSubs}
           onPaid={(due: BillDue) => setLedger(recordCompletion('radall', due.key, { title: `Paid ${due.bill.name}`, via: 'hub' }))}
           onSave={async (edits: CellEdit[]) => {
             const res = await saveMoneyEdits(edits);
