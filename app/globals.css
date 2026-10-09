@@ -3683,3 +3683,6 @@ button.hero-stat.stat-ticktick.has-rings { display: flex; align-items: center; g
 /* Long names (email subjects) stop before the 📅 / + List tools instead of running under them */
 .pb-v3 .pv-group .pv-title { min-width: 0; overflow: hidden; }
 .pb-v3 .pv-group .pv-text { flex: 0 1 auto !important; min-width: 0; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* === Money due rows: Pin to Doing now (2026-10-09) === */
+.bill-pin.is-on { color: var(--accent-ink); border-color: color-mix(in srgb, var(--accent) 50%, var(--line)); }

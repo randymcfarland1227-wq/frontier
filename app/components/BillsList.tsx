@@ -18,9 +18,12 @@ export function BillsList({
   onPaid,
   limit,
   empty = 'No bills due in the next few weeks.',
+  pin,
 }: {
   dues: BillDue[];
   onPaid: (due: BillDue) => void;
+  /** Pin a payment to Doing now (On deck, under Radall Finances) */
+  pin?: { isPinned: (due: BillDue) => boolean; toggle: (due: BillDue) => void };
   limit?: number;
   empty?: string;
 }) {
@@ -47,6 +50,18 @@ export function BillsList({
                 <a className="row-action bill-pay" href={d.bill.payUrl} target="_blank" rel="noopener noreferrer" aria-label={`Pay ${d.bill.name} (opens the payment site)`}>
                   Pay ↗
                 </a>
+              ) : null}
+              {pin ? (
+                <button
+                  type="button"
+                  className={`row-action ghost bill-pin${pin.isPinned(d) ? ' is-on' : ''}`}
+                  aria-pressed={pin.isPinned(d)}
+                  onClick={() => pin.toggle(d)}
+                  title={pin.isPinned(d) ? 'In Doing now — click to take it off' : 'Pin to Doing now'}
+                  aria-label={`${pin.isPinned(d) ? 'Unpin' : 'Pin'} ${d.bill.name} ${pin.isPinned(d) ? 'from' : 'to'} Doing now`}
+                >
+                  {pin.isPinned(d) ? 'Pinned' : 'Pin'}
+                </button>
               ) : null}
               <button type="button" className="row-action ghost" onClick={() => onPaid(d)} aria-label={`Mark ${d.bill.name} paid for ${date}`} title="Mark paid">
                 Paid
