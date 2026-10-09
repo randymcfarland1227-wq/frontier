@@ -3927,3 +3927,8 @@ a.shelf-title:hover { text-decoration: underline; }
   .mny-tabs .mny-tab-label { display: block; font-size: 13px; line-height: 1.25; overflow-wrap: break-word; }
   .mny-tabs .mny-tab-fig { max-width: 100%; }
 }
+
+/* Change form: "Every month from now on" (2026-10-09) */
+.bill-change-every { grid-column: 1 / -1; display: flex; align-items: center; gap: 7px; font-size: 13px; color: var(--ink); }
+.bill-change-every input { width: 16px; height: 16px; accent-color: var(--accent); }
+.bill-change-rule { grid-column: 1 / -1; margin: 0; font-size: 13px; color: var(--muted); display: flex; align-items: center; flex-wrap: wrap; gap: 6px; }

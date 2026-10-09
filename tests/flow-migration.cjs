@@ -1,7 +1,7 @@
 /* eslint-disable */
 // Node test script (CommonJS on purpose): node tests/flow-migration.cjs
 const fs=require('node:fs'),vm=require('node:vm'),assert=require('node:assert/strict'),ts=require('typescript');
-function load(file){const module={exports:{}};const code=ts.transpileModule(fs.readFileSync(file,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022}}).outputText;vm.runInNewContext(code,{module,exports:module.exports,require:m=>m.startsWith('./')?load(require('node:path').join(require('node:path').dirname(file),m)+'.ts'):require(m),structuredClone,Date,Map,Set,Object,JSON,Number,Error},{filename:file});return module.exports;}
+function load(file){const module={exports:{}};const code=ts.transpileModule(fs.readFileSync(file,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022}}).outputText.replace(/import\.meta/g,'({ env: {} })');vm.runInNewContext(code,{module,exports:module.exports,require:m=>m.startsWith('.')?load(require('node:path').join(require('node:path').dirname(file),m)+'.ts'):require(m),structuredClone,Date,Map,Set,Object,JSON,Number,Error},{filename:file});return module.exports;}
 const {migrateSorting}=load('lib/flowMigration.ts'),{mergeState,emptyState}=load('lib/syncState.ts');
 const time='2026-10-08T12:00:00.000Z';
 const entry={source:'ticktick',taskId:'old-id',title:'Music Session- Main',completedAt:'2026-10-07T17:00:00.000Z',via:'hub',focusAreaId:'self',focusManual:true};
@@ -92,4 +92,28 @@ console.log('Migration checks pass: immutable input, stable counts/identity/date
   delete old.roleActive;
   assert.equal(mergeState(old, a).roleActive['cert:C1'].mark, 'active');
   console.log('Role shelf sync checks pass.');
+}
+
+// A bill's day every month ("billDays") sync: newest change wins; a reset (day null) beats an older rule.
+{
+  const a = { ...emptyState(), billDays: { 'bill:progressive': { day: 20, from: '2026-10', at: '2026-10-09T03:00:00.000Z' } } };
+  const b = { ...emptyState(), billDays: { 'bill:progressive': { day: null, from: '2026-10', at: '2026-10-09T04:00:00.000Z' } } };
+  for (const [x, y] of [[a, b], [b, a]]) assert.equal(mergeState(x, y).billDays['bill:progressive'].day, null);
+  const old = { ...emptyState() };
+  delete old.billDays;
+  assert.equal(mergeState(old, a).billDays['bill:progressive'].day, 20);
+  console.log('Bill day sync checks pass.');
+}
+
+// A bill's new day applies to every month from its start month on, and keeps the payment key.
+{
+  const { applyBillEdits } = load('lib/billEdits.ts');
+  const days = { 'bill:progressive': { day: 20, from: '2026-10', at: '2026-10-09T00:00:00.000Z' } };
+  const mk = (due) => ({ bill: { id: 'p', name: 'Progressive', kind: 'bill' }, due, days: 0, key: `money:bill:progressive:${due}` });
+  const out = applyBillEdits([mk('2026-09-10'), mk('2026-10-10'), mk('2026-11-10'), mk('2027-02-10')], {}, new Date(2026, 9, 1), days);
+  assert.deepEqual(out.map(d => d.due), ['2026-09-10', '2026-10-20', '2026-11-20', '2027-02-20']);
+  assert.equal(out[2].key, 'money:bill:progressive:2026-11-10', 'Paid / Pin keys unchanged');
+  const short = applyBillEdits([mk('2026-11-10')], {}, new Date(2026, 9, 1), { 'bill:progressive': { day: 31, from: '2026-10', at: 'x' } });
+  assert.equal(short[0].due, '2026-11-30', 'the 31st becomes the last day of a short month');
+  console.log('Bill day rule checks pass.');
 }

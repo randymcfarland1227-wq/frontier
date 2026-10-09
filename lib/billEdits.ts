@@ -23,6 +23,39 @@ export type BillEdit = {
 export type BillEdits = Record<string, BillEdit>;
 
 export const BILL_EDITS_EVENT = 'lifehub:bill-edits';
+export const BILL_DAYS_EVENT = 'lifehub:bill-days';
+
+/**
+ * A bill's new day every month ("Progressive is due on the 20th now"), from a month on. Keyed by
+ * kind + name, so it covers the sheet's dates for every month, not just one occurrence. Payment
+ * keys don't change, so Paid / Pin / Change keep working. Cloud-synced as `billDays`.
+ */
+export type BillDay = { day: number | null; /** YYYY-MM it starts */ from: string; at: string };
+export type BillDays = Record<string, BillDay>;
+
+export function billRuleKey(bill: { name: string; kind?: string }): string {
+  return `${bill.kind || 'bill'}:${bill.name.toLowerCase().replace(/[^a-z0-9]+/g, '')}`;
+}
+
+export function loadBillDays(): BillDays {
+  return readSaved<BillDays>(STORAGE_KEYS.billDays, {});
+}
+
+/** Set a bill's day for every month from `from` (YYYY-MM) on; `null` goes back to the sheet's day. */
+export function setBillDay(ruleKey: string, day: number | null, from: string) {
+  const all = loadBillDays();
+  all[ruleKey] = { day, from, at: new Date().toISOString() };
+  writeSaved(STORAGE_KEYS.billDays, all);
+  if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent(BILL_DAYS_EVENT));
+}
+
+/** The bill's due date moved to its new day, within the same month. */
+function withBillDay(due: string, rule?: BillDay): string {
+  if (!rule?.day || due.slice(0, 7) < rule.from) return due;
+  const [y, m] = due.split('-').map(Number);
+  const last = new Date(y, m, 0).getDate();
+  return `${due.slice(0, 8)}${String(Math.min(rule.day, last)).padStart(2, '0')}`;
+}
 
 /**
  * Overdue tracking starts here: anything due earlier was from before Life Hub watched for it
@@ -60,9 +93,11 @@ export function useBillEdits(): BillEdits {
   useEffect(() => {
     const reload = () => setEdits(loadBillEdits());
     window.addEventListener(BILL_EDITS_EVENT, reload);
+    window.addEventListener(BILL_DAYS_EVENT, reload);
     window.addEventListener('lifehub:synced', reload);
     return () => {
       window.removeEventListener(BILL_EDITS_EVENT, reload);
+      window.removeEventListener(BILL_DAYS_EVENT, reload);
       window.removeEventListener('lifehub:synced', reload);
     };
   }, []);
@@ -77,10 +112,14 @@ export function hasEdit(e?: BillEdit): boolean {
  * Dues with Life Hub changes applied: a moved one counts down to its new day (and keeps its
  * original day in `orig`), a skipped one stays visible until its day passes, then drops off.
  */
-export function applyBillEdits(dues: BillDue[], edits: BillEdits, today = new Date()): BillDue[] {
+export function applyBillEdits(dues: BillDue[], edits: BillEdits, today = new Date(), days: BillDays = loadBillDays()): BillDue[] {
   const t = startOfDay(today);
   return dues
     .map(d => {
+      // A new day every month (set on Life Hub) first; a one-off change below still wins.
+      const rule = days[billRuleKey(d.bill)];
+      const ruled = withBillDay(d.due, rule);
+      if (ruled !== d.due) d = { ...d, due: ruled, days: daysBetween(t, fromDayKey(ruled)), everyMonth: rule!.day! };
       const e = edits[d.key];
       if (!hasEdit(e)) return d;
       const due = e!.moveTo || d.due;

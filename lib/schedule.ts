@@ -232,6 +232,8 @@ export type BillDue = {
   skipped?: boolean;
   /** Note logged with a Life Hub change ("shopping for cheaper insurance") */
   editNote?: string;
+  /** Its day every month was changed on Life Hub (lib/billEdits.ts) */
+  everyMonth?: number;
 };
 
 /** Same day as OVERDUE_SINCE in billEdits.ts (kept here to avoid an import cycle). */
