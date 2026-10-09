@@ -1,11 +1,27 @@
 {
   "source": "gmail",
   "metrics": {
-    "starred": 2,
+    "starred": 4,
     "unread": 0,
-    "action": 2
+    "action": 4
   },
   "featured": [
+    {
+      "id": "1a11bd18f3fc50b5",
+      "title": "Final notice for your Poshmark sale,\"Peter Millar Aronimink Golf Club Lava Wash Hoodie Size XL\"",
+      "detail": "Re: Order # 6abee864705826b47bbe4eac Hello Randy, This is a final reminder regarding your sale of “Peter Millar Aronimink Golf Club Lava Wash Hoodie Size XL”. It has been 6 days si",
+      "meta": "From support@poshmark.com",
+      "originUrl": "https://mail.google.com/mail/?authuser=randymcfarland1227@gmail.com#all/thread-f:1878490434460471477",
+      "completable": false
+    },
+    {
+      "id": "1a119421c9d6815c",
+      "title": "creatorofart sent a message about Under Armour Neon Orange Zip Up Jacket Mens XL #407174990969",
+      "detail": "Good evening. The tag says large. Bummer for me. Thank you.",
+      "meta": "From creato_ezwb6258ndta@members.ebay.com",
+      "originUrl": "https://mail.google.com/mail/?authuser=randymcfarland1227@gmail.com#all/thread-f:1878445392431317340",
+      "completable": false
+    },
     {
       "id": "1a0ca8746bd9e24c",
       "title": "AutoPay failed—make your payment now",
@@ -17,13 +33,29 @@
     {
       "id": "1a0b567ce591d78a",
       "title": "RE: Senior Cvent Platform Administrator - REMOTE",
-      "detail": "Hi Randy, please let me know the best time to call Best regards, Armeena Syiemlieh Lead Recruiter https://www.linkedin.com/in/asyiemlieh/ ApTask Global Workforce 📞 Office: 612-614",
+      "detail": "No worries, I just tried to call you. Please call when you can Best regards, Armeena Syiemlieh Lead Recruiter",
       "meta": "From asyiemlieh@agwtalent.com",
       "originUrl": "https://mail.google.com/mail/?authuser=randymcfarland1227@gmail.com#all/thread-f:1876688764157417354",
       "completable": false
     }
   ],
   "tasks": [
+    {
+      "id": "1a11bd18f3fc50b5",
+      "title": "Final notice for your Poshmark sale,\"Peter Millar Aronimink Golf Club Lava Wash Hoodie Size XL\"",
+      "detail": "Re: Order # 6abee864705826b47bbe4eac Hello Randy, This is a final reminder regarding your sale of “Peter Millar Aronimink Golf Club Lava Wash Hoodie Size XL”. It has been 6 days si",
+      "status": "open",
+      "starred": true,
+      "originUrl": "https://mail.google.com/mail/?authuser=randymcfarland1227@gmail.com#all/thread-f:1878490434460471477"
+    },
+    {
+      "id": "1a119421c9d6815c",
+      "title": "creatorofart sent a message about Under Armour Neon Orange Zip Up Jacket Mens XL #407174990969",
+      "detail": "Good evening. The tag says large. Bummer for me. Thank you.",
+      "status": "open",
+      "starred": true,
+      "originUrl": "https://mail.google.com/mail/?authuser=randymcfarland1227@gmail.com#all/thread-f:1878445392431317340"
+    },
     {
       "id": "1a0ca8746bd9e24c",
       "title": "AutoPay failed—make your payment now",
@@ -35,11 +67,11 @@
     {
       "id": "1a0b567ce591d78a",
       "title": "RE: Senior Cvent Platform Administrator - REMOTE",
-      "detail": "Hi Randy, please let me know the best time to call Best regards, Armeena Syiemlieh Lead Recruiter https://www.linkedin.com/in/asyiemlieh/ ApTask Global Workforce 📞 Office: 612-614",
+      "detail": "No worries, I just tried to call you. Please call when you can Best regards, Armeena Syiemlieh Lead Recruiter",
       "status": "open",
       "starred": true,
       "originUrl": "https://mail.google.com/mail/?authuser=randymcfarland1227@gmail.com#all/thread-f:1876688764157417354"
     }
   ],
-  "refreshedAt": "2026-10-08T12:43:03.187Z"
+  "refreshedAt": "2026-10-09T12:56:44.029Z"
 }
