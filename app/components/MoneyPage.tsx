@@ -30,6 +30,7 @@ const ERRORS: Record<string, string> = {
   busy: 'Google was in the middle of a sync — try again in a few seconds.',
   wrong_key: 'This browser isn’t linked to the backup yet, so it can’t save to the sheet.',
   not_configured: 'Saving to the sheet isn’t set up on the Worker yet.',
+  'bad cell': 'The sheet connection needs its Balancing update before new line items can be saved.',
 };
 
 // ---------------------------------------------------------------------------
@@ -145,6 +146,52 @@ function SelectCell({ cell, options, onSave }: { cell: Cell; options: string[]; 
         </option>
       ))}
     </select>
+  );
+}
+
+function BalancingAdd({ table, onSave }: { table: Table; onSave: Save }) {
+  const [open, setOpen] = useState(false);
+  const [name, setName] = useState('');
+  const [amount, setAmount] = useState('');
+  const [pending, setPending] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+  // Inserting inside the existing list keeps the sheet’s total ranges inclusive.
+  const items = table.rows.filter(row => !row.some(cell => cell.formula) && !/^(cash on hand|balanced cash)/i.test(row[0]?.text || ''));
+  const anchor = items.length > 1 ? items[items.length - 1] : table.firstRow;
+  if (!anchor) return null;
+  if (!open) return <button type="button" className="mny-btn" onClick={() => setOpen(true)}>+ Add line item</button>;
+  const cancel = () => {
+    if (busy) return;
+    setOpen(false);
+    setName(''); setAmount(''); setPending(''); setError('');
+  };
+  return (
+    <form className="sub-form" onKeyDown={e => { if (e.key === 'Escape') cancel(); }} onSubmit={async e => {
+      e.preventDefault();
+      if (busy) return;
+      if (!name.trim() || /^[=+@]/.test(name.trim())) return setError('Enter an account or line item name.');
+      if ([amount, pending].some(v => v.trim() && amountOf(v) === undefined)) return setError('Enter a valid amount, such as 12.50.');
+      const values = anchor.map(() => '');
+      values[0] = name.trim();
+      values[1] = String(amountOf(amount) ?? 0);
+      const pendingCol = table.header.findIndex(h => /^pend/i.test(h));
+      if (pendingCol >= 0) values[pendingCol] = pending.trim() ? String(amountOf(pending)) : '';
+      setBusy(true); setError('');
+      try {
+        const result = await onSave([{ tab: table.tab, insertBalancing: true, r: anchor[0].r, startCol: anchor[0].c, expectRow: anchor.map(c => c.text), values }]);
+        const failed = result.results.find(r => !r.ok);
+        if (!result.ok || failed || result.results.length !== 1) setError(ERRORS[failed?.error || result.error || ''] || 'Couldn’t add the line item. Your entries are kept here so you can try again.');
+        else { setOpen(false); setName(''); setAmount(''); setPending(''); }
+      } catch { setError('Couldn’t add the line item. Try again.'); }
+      finally { setBusy(false); }
+    }}>
+      <label className="sub-form-wide"><span>Account / line item</span><input autoFocus required maxLength={200} disabled={busy} value={name} onChange={e => setName(e.target.value)} placeholder="e.g. Cash or marketplace payout" /></label>
+      <label><span>Amount</span><input inputMode="decimal" disabled={busy} value={amount} onChange={e => setAmount(e.target.value)} placeholder="0.00" /></label>
+      {table.header.some(h => /^pend/i.test(h)) ? <label><span>Pending amount</span><input inputMode="decimal" disabled={busy} value={pending} onChange={e => setPending(e.target.value)} placeholder="Optional" /></label> : null}
+      {error ? <p role="alert" className="sub-form-wide">{error}</p> : null}
+      <div className="sub-form-actions"><button type="submit" className="mny-btn" disabled={busy}>{busy ? 'Adding…' : 'Add line item'}</button><button type="button" className="mny-btn" disabled={busy} onClick={cancel}>Cancel</button></div>
+    </form>
   );
 }
 
@@ -1392,6 +1439,7 @@ export function MoneyPage({
                 {model.balancing ? (
                   <Fold title="Balancing" meta="accounts + pending money → cash on hand">
                     <SheetTable table={{ ...model.balancing, header: ['Account', ...model.balancing.header.slice(1)] }} onSave={save} />
+                    <BalancingAdd table={model.balancing} onSave={save} />
                   </Fold>
                 ) : null}
               </Section>
