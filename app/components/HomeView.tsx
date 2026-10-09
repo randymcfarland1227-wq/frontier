@@ -8,11 +8,11 @@ import type { CompletionLedger, CompletionStats, CompletionEntry } from '../../l
 import type { FocusAreaConfig } from '../../lib/focusAreas';
 import type { EnergyWindow } from '../../lib/energy';
 import { SourceCard } from './SourceCard';
-import { PriorityBoard } from './PriorityBoard';
+import { PriorityBoard, billPinId } from './PriorityBoard';
 import { ReviewPanel } from './ReviewPanel';
 import { Collapsible } from './Collapsible';
 import { getActionableMetric } from '../../lib/actionable';
-import { usePriorityPins } from '../../lib/priorityPins';
+import { pinKey, updatePinDetails, usePriorityPins } from '../../lib/priorityPins';
 import { criticalKeys, useFeaturedLevels } from '../../lib/featuredLevels';
 import { addDays, eventStart, onDay, paidBillKeys, upcomingBills, type BillDue, type CalTask, type ScheduleSnapshot } from '../../lib/schedule';
 import { usePlans } from '../../lib/plans';
@@ -237,6 +237,7 @@ export function HomeView({
   const openTotal = openBySite.reduce((sum, site) => sum + site.count, 0);
   // Bills: next unpaid due date per bill (paid on Life Hub = a Radall completion in the ledger).
   // Plus the Radall sheet's money items (bills, card mins, subscriptions, pay later) — calendar only, never tasks.
+  const { addPin, removePin, isPinned } = usePriorityPins();
   const paidKeys = paidBillKeys(ledger);
   const bills = [...upcomingBills(schedule?.bills || [], paidKeys), ...moneyDues].sort((a, b) => a.due.localeCompare(b.due));
   const financeBills = (
@@ -247,7 +248,22 @@ export function HomeView({
           Money page →
         </button>
       </p>
-      <BillsList dues={bills.filter(b => b.days >= 0 && b.days <= 21)} onPaid={onBillPaid} limit={4} empty="Nothing due in the next 3 weeks." />
+      <BillsList
+        dues={bills.filter(b => b.days >= 0 && b.days <= 21)}
+        onPaid={onBillPaid}
+        limit={4}
+        empty="Nothing due in the next 3 weeks."
+        pin={{
+          isPinned: d => isPinned('radall', billPinId(d)),
+          toggle: d => {
+            const id = billPinId(d);
+            if (isPinned('radall', id)) return removePin('radall', id);
+            addPin('radall', id);
+            // Its due date becomes the item's day in Doing now (and on the calendar)
+            updatePinDetails(pinKey('radall', id), { due: d.due });
+          },
+        }}
+      />
     </div>
   );
   // TickTick split: tasks (the card's "to do") over habits still to check in today.
@@ -312,6 +328,8 @@ export function HomeView({
             snapshots={snapshots}
             enter={id => enter(id)}
             onComplete={(source, item) => onCompleteFeatured(source, item)}
+            bills={bills}
+            onBillPaid={onBillPaid}
           />
         </Collapsible>
       </section>
