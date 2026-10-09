@@ -46,6 +46,8 @@ export type SyncedState = {
   hidden: Record<string, { mark: string | null; at: string }>;
   /** Peculiar Command Center's studio data (same-origin localStorage bundle); newest change wins */
   candle: CandleBundle;
+  /** Bill changes per due (skip / move / amount / note); newest change wins */
+  billEdits: Record<string, { skip?: boolean; moveTo?: string; amount?: number; note?: string; at: string }>;
 };
 
 /**
@@ -110,6 +112,7 @@ export function emptyState(): SyncedState {
     tags: {},
     hidden: {},
     candle: { raw: null, at: '' },
+    billEdits: {},
   };
 }
 
@@ -146,6 +149,7 @@ export function normalizeState(raw: unknown): SyncedState {
     tags: s.tags && typeof s.tags === 'object' ? s.tags : {},
     hidden: s.hidden && typeof s.hidden === 'object' ? s.hidden : {},
     candle: normalizeCandle(s.candle),
+    billEdits: s.billEdits && typeof s.billEdits === 'object' ? s.billEdits : {},
   };
 }
 
@@ -233,6 +237,7 @@ export function mergeState(aRaw: unknown, bRaw: unknown): SyncedState {
     tags: mergeLevels(a.tags, b.tags),
     hidden: mergeLevels(a.hidden, b.hidden),
     candle: mergeCandle(a.candle, b.candle),
+    billEdits: mergeLevels(a.billEdits, b.billEdits),
   };
 }
 

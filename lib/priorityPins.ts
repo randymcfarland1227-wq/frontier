@@ -61,6 +61,17 @@ export function loadLanes(): LaneMap {
     writeSaved(STORAGE_KEYS.priorityLanes, map);
     writeSaved(STORAGE_KEYS.priorityPins, []);
   }
+  // One-time (2026-10-09): bills pinned as "radall:bill:<due key>" (due keys start "bill:") now use "radall:<due key>".
+  const old = Object.keys(map).filter(k => k.startsWith('radall:bill:bill:') && map[k]?.lane);
+  if (old.length) {
+    const at = new Date().toISOString();
+    for (const k of old) {
+      const next = `radall:${k.slice('radall:bill:'.length)}`;
+      if (!map[next]?.lane) map[next] = { ...map[k], at };
+      map[k] = { lane: null, order: 0, at };
+    }
+    writeSaved(STORAGE_KEYS.priorityLanes, map);
+  }
   return map;
 }
 

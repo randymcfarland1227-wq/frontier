@@ -9,34 +9,26 @@ import { byLevel, criticalKeys, useFeaturedLevels } from '../../lib/featuredLeve
 import { SiteIcon } from './SiteIcon';
 import { PriorityPanel, type PriorityItem } from './PriorityPanel';
 import { DayMenu } from './DayMenu';
+import { countdown, fromDayKey, money, type BillDue } from '../../lib/schedule';
 
 /** Self's stand-in detail for starred items with no note — not worth a subtext line. */
-import type { BillDue } from '../../lib/schedule';
-import { MONEY_KINDS } from '../../lib/money';
-
-/** Pin id for one payment occurrence (Radall source). */
-export function billPinId(d: BillDue): string {
-  return `bill:${d.key}`;
-}
-const money = (n?: number | null) => (Number.isFinite(n) ? `$${Number(n).toLocaleString(undefined, { maximumFractionDigits: 2 })}` : '');
-
 const FILLER_DETAIL = 'Captured in Self inbox';
 
-/** Every open task and featured item across the hub, by pin key. */
+/** Every open task and featured item across the hub, by pin key — plus bills that are still owed. */
 function buildCatalog(snapshots: Record<SourceId, SourceSnapshot>, bills: BillDue[] = []) {
   const catalog = new Map<string, PriorityItem>();
-  // Money due (bills, card minimums, pay later…) can be pinned too; they sit under Radall Finances.
-  for (const d of bills) {
-    const id = billPinId(d);
-    const key = pinKey('radall', id);
+  // Bills pin as Finances items; checking one off marks that due date paid.
+  for (const b of bills) {
+    const key = pinKey('radall', b.key);
+    const day = fromDayKey(b.due).toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' });
     catalog.set(key, {
-      id,
-      title: d.bill.name,
-      detail: [money(d.bill.amount), d.bill.notes].filter(Boolean).join(' · '),
-      meta: 'Money due',
-      originUrl: d.bill.payUrl,
+      id: b.key,
+      title: `Pay ${b.bill.name}`,
+      detail: [money(b.bill.amount), `due ${day}`, countdown(b.days), b.editNote || ''].filter(Boolean).join(' · '),
+      meta: 'Bill',
+      originUrl: b.bill.payUrl,
       completable: true,
-      tag: d.bill.kind ? MONEY_KINDS[d.bill.kind].label : 'Bill',
+      tag: 'Bills',
       source: 'radall',
       key,
     });
@@ -92,14 +84,12 @@ export function PriorityBoard({
   enter,
   onComplete,
   bills,
-  onBillPaid,
 }: {
   snapshots: Record<SourceId, SourceSnapshot>;
   enter: (id: SourceId) => void;
   onComplete?: (source: SourceId, item: FeaturedItem) => void;
-  /** Upcoming money due — pinnable like tasks; checking one off marks it paid */
+  /** Bills still owed — pinnable like tasks */
   bills?: BillDue[];
-  onBillPaid?: (due: BillDue) => void;
 }) {
   const { lanes, pins } = usePriorityPins();
   const { levels, levelOf, cycle, isCritical, toggleCritical } = useFeaturedLevels();
@@ -150,9 +140,7 @@ export function PriorityBoard({
     : [];
 
   const finish = (item: PriorityItem) => {
-    const bill = item.id.startsWith('bill:') ? bills?.find(d => billPinId(d) === item.id) : undefined;
-    if (bill) onBillPaid?.(bill);
-    else onComplete?.(item.source, item);
+    onComplete?.(item.source, item);
     unpin(item.key);
     if (isCritical(item.source, item.id)) toggleCritical(item.source, item.id);
   };
