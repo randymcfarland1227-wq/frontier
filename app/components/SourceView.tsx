@@ -6,6 +6,7 @@ import type { SelfItem } from '../../lib/adapters/self';
 import { MetricGrid } from './MetricGrid';
 import { FeaturedList } from './FeaturedList';
 import { TaskList } from './TaskList';
+import { ShelfList } from './ShelfList';
 import { SiteIcon } from './SiteIcon';
 import { SelfInbox } from './SelfInbox';
 
@@ -88,6 +89,7 @@ export function SourceView({
                 onComplete={onCompleteTask}
                 onStar={onStarTask}
               />
+              <ShelfList snapshot={snapshot} />
             </>
           )}
         </div>

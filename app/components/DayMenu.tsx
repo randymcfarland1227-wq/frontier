@@ -37,6 +37,7 @@ export function DayMenu({
   move,
   onRemove,
   critical,
+  shelf,
   onClose,
 }: {
   itemKey: string;
@@ -52,6 +53,8 @@ export function DayMenu({
   onRemove?: () => void;
   /** Mark / unmark Critical */
   critical?: { on: boolean; onClick: () => void };
+  /** An Active Role Hub cert / portfolio idea: put it back on its shelf */
+  shelf?: { label: string; onClick: () => void };
   onClose: () => void;
 }) {
   const listId = useId();
@@ -133,6 +136,11 @@ export function DayMenu({
             ))}
           </datalist>
         </span>
+      ) : null}
+      {shelf ? (
+        <button type="button" className="day-menu-btn" onClick={() => { shelf.onClick(); onClose(); }} title="Not working on it right now">
+          ↩ Back to {shelf.label}
+        </button>
       ) : null}
       {backToSelf ? (
         <button type="button" className="day-menu-btn" onClick={backToSelf} title="Move it back to the Self card">

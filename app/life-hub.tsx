@@ -95,6 +95,7 @@ import { ruleFor, saveTaskRule, sourceRuleKey, taskRuleKey, useTaskRules } from 
 import { FlowSyncReview } from './components/FlowSyncReview';
 import { WhyView } from './components/WhyView';
 import { isHidden, useHiddenItems } from '../lib/siteMoves';
+import { useRoleActive, withRoleShelves } from '../lib/roleShelves';
 import { LogsView } from './components/LogsView';
 import { UpdateNotice } from './components/UpdateNotice';
 import { TaskSorting } from './components/TaskSorting';
@@ -514,6 +515,7 @@ export function LifeHub() {
   // labels set on Life Hub ("Items to buy") show as each task's tag.
   const taskTags = useTaskTags();
   const hiddenItems = useHiddenItems();
+  const roleActive = useRoleActive();
   const visibleSnapshots = useMemo(() => {
     const out = { ...baseSnapshots };
     // Removed rows (not done) leave every list and count.
@@ -541,6 +543,8 @@ export function LifeHub() {
         };
       }
     }
+    // Role Hub: certs and portfolio ideas wait on shelves until marked Active.
+    if (out.role) out.role = withRoleShelves(out.role, roleActive);
     for (const item of selfItems) {
       const home = item.home as SourceId | undefined;
       if (!home || home === 'self' || !out[home]) continue;
@@ -574,7 +578,7 @@ export function LifeHub() {
       }
     }
     return out;
-  }, [baseSnapshots, selfItems, taskTags, hiddenItems]);
+  }, [baseSnapshots, selfItems, taskTags, hiddenItems, roleActive]);
 
   // Today's workload per bucket (open items + done today + habits due today), remembered per day.
   const todayAvail = useMemo(
