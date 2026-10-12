@@ -136,7 +136,10 @@ export function applyBillEdits(dues: BillDue[], edits: BillEdits, today = new Da
     .sort((a, b) => a.due.localeCompare(b.due));
 }
 
-/** Past its day, not paid, not skipped, not self-charging, and due since overdue tracking began. */
+/**
+ * Past its day, not paid, not skipped. Sheet rows (money:*) carry their real due date, so they're
+ * overdue whatever the date; hub-made monthly bills only count from when overdue tracking began.
+ */
 export function isOverdue(d: BillDue): boolean {
-  return d.days < 0 && !d.skipped && !d.bill.autopay && (d.orig || d.due) >= OVERDUE_SINCE;
+  return d.days < 0 && !d.skipped && !d.bill.autopay && (d.bill.id.startsWith('money:') || (d.orig || d.due) >= OVERDUE_SINCE);
 }

@@ -748,7 +748,10 @@ function MonthView({
       {[...weeks.entries()].map(([w, list]) => {
         const from = w * 7 + 1;
         const to = Math.min(from + 6, lastDay);
-        const sum = list.filter(d => !d.skipped).reduce((s, d) => s + (d.bill.amount || 0), 0);
+        // Live: what's still unpaid this week (Paid on Life Hub or crossed off in the sheet drops out)
+        const owedAll = list.filter(d => !d.skipped);
+        const sum = owedAll.filter(d => !['paid', 'crossed', 'charged'].includes(monthState(d, paidAt))).reduce((s, d) => s + (d.bill.amount || 0), 0);
+        const weekTotal = owedAll.reduce((s, d) => s + (d.bill.amount || 0), 0);
         const allDone = list.every(d => ['paid', 'crossed', 'charged', 'skipped'].includes(monthState(d, paidAt)));
         return (
           <details key={w} className={`mm-week${w === thisWeek ? ' is-now' : ''}${allDone ? ' is-done' : ''}`} open={!allDone || w === thisWeek}>
@@ -758,7 +761,9 @@ function MonthView({
                 {today.toLocaleDateString([], { month: 'short' })} {from}–{to}
               </span>
               {w === thisWeek ? <span className="mm-now">This week</span> : allDone ? <span className="mm-donechip">✓ All done</span> : null}
-              <span className="mm-week-sum">{money(sum)}</span>
+              <span className="mm-week-sum" title={`${money(weekTotal)} total this week`}>
+                {money(sum)} <small>left</small>
+              </span>
             </summary>
             <ul>
               {list.map(d => (
@@ -1227,7 +1232,7 @@ const TAB_IDS: TabId[] = ['flow', 'accounts', 'spend', 'plan', 'owed', 'save'];
 const LEGACY_TAB: Record<string, TabId> = { week: 'flow', month: 'flow', due: 'flow', cards: 'accounts', bills: 'spend', subs: 'spend', shop: 'spend' };
 const FLOW_IDS = ['week', 'month'] as const;
 const ACCT_IDS = ['checking', 'savings', 'cards'] as const;
-const SPEND_IDS = ['bills', 'paylater', 'subs', 'shop'] as const;
+const SPEND_IDS = ['out', 'bills', 'paylater', 'subs', 'shop'] as const;
 const TAB_KEY = 'lifehub-money-tab';
 
 export function MoneyPage({
@@ -1259,7 +1264,7 @@ export function MoneyPage({
   const [tab, setTabState] = useState<TabId>(() => (TAB_IDS.includes(legacyTab as TabId) ? (legacyTab as TabId) : LEGACY_TAB[legacyTab] || 'flow'));
   const [flowView, setFlowView] = useSavedChoice('lifehub-money-flow', FLOW_IDS, 'week', legacyTab === 'month' || legacyTab === 'due' ? 'month' : undefined);
   const [acctView, setAcctView] = useSavedChoice('lifehub-money-accounts', ACCT_IDS, 'checking', legacyTab === 'cards' ? 'cards' : undefined);
-  const [spendView, setSpendView] = useSavedChoice('lifehub-money-spend', SPEND_IDS, 'bills', legacyTab === 'subs' ? 'subs' : legacyTab === 'shop' ? 'shop' : undefined);
+  const [spendView, setSpendView] = useSavedChoice('lifehub-money-spend', SPEND_IDS, 'out', legacyTab === 'subs' ? 'subs' : legacyTab === 'shop' ? 'shop' : undefined);
   const incomeList = useIncoming();
   const incoming = useMemo(() => incomingDues(incomeList, new Date(), 0, 45), [incomeList]);
   const setTab = (t: TabId) => {
@@ -1372,6 +1377,14 @@ export function MoneyPage({
     lifeSubs.filter(x => x.status === 'active' && x.cycle === 'monthly').reduce((s, x) => s + (x.amount || 0), 0);
 
   const monthName = today.toLocaleDateString([], { month: 'long' });
+  // Live "left this week" (Sun–Sat) per breakdown: unpaid, not crossed off, not skipped.
+  const weekStart = startOfWeek(today);
+  const weekEnd = new Date(weekStart.getFullYear(), weekStart.getMonth(), weekStart.getDate() + 6);
+  const weekLeft = (kinds: string[]) =>
+    monthDues
+      .filter(d => kinds.includes(d.bill.kind || 'bill') && !d.skipped && !paidAt[d.key] && fromDayKey(d.due) >= weekStart && fromDayKey(d.due) <= weekEnd)
+      .reduce((s, d) => s + (d.bill.amount || 0), 0);
+  const OUT_KINDS = ['bill', 'card', 'paylater', 'sub'];
   const TABS: Array<{ id: TabId; tone: Tone; label: string; figure: string }> = [
     { id: 'flow', tone: 'due', label: `This week · ${monthName}`, figure: overdue.length ? `${overdue.length} overdue · ${money(dueWeek)}` : money(dueWeek) },
     { id: 'accounts', tone: 'cash', label: 'Accounts & cards', figure: model.cashOnHand?.text ? `${model.cashOnHand.text} on hand` : '' },
@@ -1478,7 +1491,7 @@ export function MoneyPage({
             label="Spending"
             value={spendView}
             onChange={setSpendView}
-            options={[['bills', 'Bills', `${billsLeft} left`], ['paylater', 'Pay Later', pay?.total?.[1]?.text || ''], ['subs', 'Subscriptions', `${money(subsMonthly)}/mo`], ['shop', 'Shopping', `${neededNow.length + (openNeeded?.rows.length || 0)} needed`]]}
+            options={[['out', 'Outgoing', `${money(weekLeft(OUT_KINDS))} this wk`], ['bills', 'Bills', `${billsLeft} left`], ['paylater', 'Pay Later', pay?.total?.[1]?.text || ''], ['subs', 'Subscriptions', `${money(subsMonthly)}/mo`], ['shop', 'Shopping', `${neededNow.length + (openNeeded?.rows.length || 0)} needed`]]}
           />
         ) : null}
         {tab === 'flow' && flowView === 'week' ? (
@@ -1552,7 +1565,7 @@ export function MoneyPage({
 
         {tab === 'spend' && spendView === 'paylater' ? (
           <div className="mny-stack">
-            <Section tone="due" title={`Pay later · ${monthName}`} hint="Affirm, Afterpay, Klarna, Zip. Nothing counts as paid until you tap Paid." href={link('Randy')}>
+            <Section tone="due" title={`Pay later · ${monthName}`} hint="Affirm, Afterpay, Klarna, Zip. Nothing counts as paid until you tap Paid." figure={money(weekLeft(['paylater']))} figureLabel="left this week" href={link('Randy')}>
               <MonthView dues={monthDues} paidAt={paidAt} model={model} onPaid={onPaid} kinds={['paylater']} />
             </Section>
             <Section tone="due" title="Pay later in the sheet" figure={pay?.total?.[1]?.text} figureLabel="owed" href={link('Randy')}>
@@ -1624,10 +1637,18 @@ export function MoneyPage({
           </div>
         ) : null}
 
+        {tab === 'spend' && spendView === 'out' ? (
+          <div className="mny-stack">
+            <Section tone="due" title={`Outgoing · ${monthName}`} hint="Bills, card minimums, Pay Later and subscriptions together." figure={money(weekLeft(OUT_KINDS))} figureLabel="left this week" href={link('Randy')}>
+              <MonthView dues={monthDues} paidAt={paidAt} model={model} onPaid={onPaid} kinds={OUT_KINDS} />
+            </Section>
+          </div>
+        ) : null}
+
         {tab === 'spend' && spendView === 'bills' ? (
           <div className="mny-stack">
-            <Section tone="due" title={`Bills · ${today.toLocaleDateString([], { month: 'long' })}`} href={link('Randy')}>
-              <MonthView dues={monthDues} paidAt={paidAt} model={model} onPaid={onPaid} kinds={['bill']} />
+            <Section tone="due" title={`Bills · ${monthName}`} hint="Bills and card minimums." figure={money(weekLeft(['bill', 'card']))} figureLabel="left this week" href={link('Randy')}>
+              <MonthView dues={monthDues} paidAt={paidAt} model={model} onPaid={onPaid} kinds={['bill', 'card']} />
             </Section>
             {model.bills ? (
               <Section tone="due" title="In the sheet" hint="Click any amount or date to change it in the sheet." href={link('Randy')}>
@@ -1638,7 +1659,7 @@ export function MoneyPage({
         ) : null}
 
         {tab === 'spend' && spendView === 'subs' ? (
-          <Section tone="sub" title="Subscriptions" href={link('Randy')}>
+          <Section tone="sub" title="Subscriptions" figure={money(weekLeft(['sub']))} figureLabel="left this week" href={link('Randy')}>
             <SubsView model={model} lifeSubs={lifeSubs} paidAt={paidAt} dues={monthDues} onSave={save} />
           </Section>
         ) : null}

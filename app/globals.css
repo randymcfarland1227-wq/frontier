@@ -3965,3 +3965,4 @@ a.shelf-title:hover { text-decoration: underline; }
   .topbar .top-nav { grid-area: nav; display: flex; flex-wrap: nowrap; overflow-x: auto; gap: 6px; min-width: 0; scrollbar-width: none; }
   .topbar .top-nav > * { flex: 0 0 auto; }
 }
+.mm-week-sum small { font-size: 11px; font-weight: 500; opacity: .75; }
