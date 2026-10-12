@@ -3932,3 +3932,27 @@ a.shelf-title:hover { text-decoration: underline; }
 .bill-change-every { grid-column: 1 / -1; display: flex; align-items: center; gap: 7px; font-size: 13px; color: var(--ink); }
 .bill-change-every input { width: 16px; height: 16px; accent-color: var(--accent); }
 .bill-change-rule { grid-column: 1 / -1; margin: 0; font-size: 13px; color: var(--muted); display: flex; align-items: center; flex-wrap: wrap; gap: 6px; }
+
+/* Money: merged containers — sub-tabs, incoming funds, overdue group, balancing total */
+.mny-subtabs { display: flex; gap: 6px; flex-wrap: wrap; margin: 0 0 10px; padding: 4px; border: 1px solid var(--line, var(--row-line)); border-radius: 12px; background: var(--surface); width: fit-content; max-width: 100%; }
+.mny-subtab { display: inline-flex; align-items: baseline; gap: 6px; padding: 5px 12px; border: 0; border-radius: 9px; background: none; color: var(--muted); font: inherit; font-size: 12.5px; font-weight: 600; cursor: pointer; }
+.mny-subtab small { font-size: 11px; font-weight: 500; opacity: .8; }
+.mny-subtab.is-on { background: color-mix(in srgb, #0f9488 18%, var(--surface)); color: var(--ink); box-shadow: inset 0 0 0 1px #0f9488; }
+.mny-due-group.is-overdue-group h3 { color: #be123c; }
+.frontier-shell[data-color-mode="dark"] .mny-due-group.is-overdue-group h3 { color: #fb7185; }
+.mny-due-amt.is-in { color: #0f8a7e; font-weight: 600; }
+.frontier-shell[data-color-mode="dark"] .mny-due-amt.is-in { color: #2dd4bf; }
+.subs-state.is-late { color: #be123c; }
+.frontier-shell[data-color-mode="dark"] .subs-state.is-late { color: #fb7185; }
+.mny-income { display: grid; gap: 8px; font-size: 12.5px; }
+.mny-income-top { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; }
+.mny-income-form { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 8px; align-items: end; }
+.mny-income-form label { display: grid; gap: 3px; }
+.mny-income-form label span { font-size: 11px; color: var(--muted); }
+.mny-income-form input, .mny-income-form select { font: inherit; font-size: 12.5px; padding: 5px 8px; border: 1px solid var(--line, var(--row-line)); border-radius: 8px; background: var(--surface); color: var(--ink); min-width: 0; }
+.mny-income-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+.mny-income-list li { display: grid; grid-template-columns: 1fr auto auto auto; gap: 8px; align-items: center; padding: 5px 8px; border-left: 3px solid #14b8a6; border-radius: 6px; background: color-mix(in srgb, #14b8a6 7%, transparent); }
+.mny-income-when { color: var(--muted); }
+@media (max-width: 560px) { .mny-income-list li { grid-template-columns: 1fr auto auto; } .mny-income-when { grid-column: 1 / -1; order: 3; } }
+.mtable-sum td { font-weight: 700; border-top: 2px solid var(--line, var(--row-line)); }
+.mny-accts.is-single li { grid-template-columns: 1fr auto; }

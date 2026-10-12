@@ -21,6 +21,7 @@ import { readSaved, writeSaved, STORAGE_KEYS } from '../../lib/storage';
 import { isOverdue } from '../../lib/billEdits';
 import { BillChangeForm, BillPinButton, billChangeText } from './BillControls';
 import { addLifeSub, updateLifeSub, type LifeSub } from '../../lib/lifeSubs';
+import { addIncoming, incomingDues, updateIncoming, useIncoming, type Incoming, type IncomingDue } from '../../lib/incoming';
 
 type Save = (edits: CellEdit[]) => Promise<{ ok: boolean; results: EditResult[]; error?: string }>;
 
@@ -112,6 +113,8 @@ type TableOpts = {
   /** Columns to leave out (indexes) */
   hide?: number[];
   numeric?: number[];
+  /** Add a computed Total row summing numeric columns over rows whose label doesn't match this */
+  sumExcept?: RegExp;
 };
 
 const strikeEdit = (row: Cell[], strike: boolean): CellEdit => ({
@@ -293,6 +296,23 @@ function SheetTable({ table, onSave, opts = {} }: { table: Table; onSave: Save; 
             </tr>
           </tfoot>
         ) : null}
+        {opts.sumExcept ? (
+          <tfoot className="mtable-sum">
+            <tr>
+              {opts.check ? <td /> : null}
+              {cols.map((i, ci) => {
+                const items = rows.filter(row => !opts.sumExcept!.test(row[0]?.text || ''));
+                const vals = items.map(row => amountOf(row[i]?.text || '')).filter((v): v is number => v !== undefined);
+                return (
+                  <td key={i} className={numeric.has(i) ? 'is-num' : ''}>
+                    {ci === 0 ? 'Total' : numeric.has(i) && vals.length ? money(vals.reduce((a, b) => a + b, 0)) : ''}
+                  </td>
+                );
+              })}
+              {trailing ? <td /> : null}
+            </tr>
+          </tfoot>
+        ) : null}
       </table>
     </div>
   );
@@ -439,71 +459,101 @@ function useFoldedDays(): [Set<string>, (day: string) => void] {
   return [new Set(folded), toggle];
 }
 
-function DueList({ dues, onPaid, by, days }: { dues: BillDue[]; onPaid: (d: BillDue) => void; by: 'day' | 'week'; days: number }) {
+function IncomingRow({ d, showDay }: { d: IncomingDue; showDay: boolean }) {
+  return (
+    <li className="is-incoming" style={{ '--ev': '#14b8a6' } as React.CSSProperties}>
+      {showDay ? <span className="mny-due-day">{fromDayKey(d.due).toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' })}</span> : null}
+      <span className="mny-due-kind">Incoming</span>
+      <span className="mny-due-name">
+        {d.item.source}
+        {d.item.cycle !== 'once' ? <small> · {d.item.cycle}</small> : null}
+      </span>
+      <span className="mny-due-amt is-in">+{money(d.item.amount) || '?'}</span>
+      <span className="mny-due-tools" />
+    </li>
+  );
+}
+
+function DueList({
+  dues,
+  onPaid,
+  by,
+  days,
+  overdue = [],
+  incoming = [],
+}: {
+  dues: BillDue[];
+  onPaid: (d: BillDue) => void;
+  by: 'day' | 'week';
+  days: number;
+  /** Shown first, as its own "Overdue" group */
+  overdue?: BillDue[];
+  incoming?: IncomingDue[];
+}) {
   const today = startOfDay(new Date());
   const [folded, toggleFold] = useFoldedDays();
   const upcoming = dues.filter(d => d.days >= 0 && d.days <= days);
-  const groups = new Map<string, BillDue[]>();
-  for (const d of upcoming) {
-    const k = by === 'day' ? d.due : dayKey(startOfWeek(fromDayKey(d.due)));
-    groups.set(k, [...(groups.get(k) || []), d]);
-  }
+  const inUpcoming = incoming.filter(d => d.days >= 0 && d.days <= days);
+  const groupKey = (due: string) => (by === 'day' ? due : dayKey(startOfWeek(fromDayKey(due))));
+  const groups = new Map<string, { out: BillDue[]; in: IncomingDue[] }>();
+  const slot = (k: string) => groups.get(k) || (groups.set(k, { out: [], in: [] }), groups.get(k)!);
+  for (const d of upcoming) slot(groupKey(d.due)).out.push(d);
+  for (const d of inUpcoming) slot(groupKey(d.due)).in.push(d);
+  const keys = [...groups.keys()].sort();
   const label = (k: string) => {
     if (by === 'day') return dayName(fromDayKey(k));
     const weeksOut = Math.round((fromDayKey(k).getTime() - startOfWeek(today).getTime()) / (7 * 86_400_000));
     return weeksOut === 0 ? 'This week' : weeksOut === 1 ? 'Next week' : `Week of ${fromDayKey(k).toLocaleDateString([], { month: 'short', day: 'numeric' })}`;
   };
-  if (!upcoming.length) return <p className="mny-empty">Nothing due{by === 'day' ? ' in the next 7 days' : ''}. Nice.</p>;
-  return (
-    <div className="mny-due">
-      {[...groups.entries()].map(([k, list], gi) => {
-        const owed = list.filter(d => !d.skipped);
-        const total = money(owed.reduce((s, d) => s + (d.bill.amount || 0), 0));
-        const items = (
+  if (!keys.length && !overdue.length) return <p className="mny-empty">Nothing due{by === 'day' ? ' in the next 7 days' : ''}. Nice.</p>;
+  const sumOut = (list: BillDue[]) => money(list.filter(d => !d.skipped).reduce((s, d) => s + (d.bill.amount || 0), 0));
+  const dayGroup = (k: string, title: string, out: BillDue[], inc: IncomingDue[], extra = '') => {
+    const isFolded = folded.has(k);
+    const n = out.length + inc.length;
+    return (
+      <div key={k} className={`mny-due-group${isFolded ? ' is-folded' : ''}${extra}`}>
+        <h3>
+          <button type="button" className="mny-due-fold" aria-expanded={!isFolded} onClick={() => toggleFold(k)}>
+            <span className="mny-fold-chev" aria-hidden="true" />
+            <span>{title}</span>
+            {isFolded ? <small>{n} {n === 1 ? 'item' : 'items'}</small> : null}
+          </button>
+          <b>{out.length ? sumOut(out) : ''}</b>
+        </h3>
+        {isFolded ? null : (
           <ul>
-            {list.map(d => (
-              <DueRow key={d.key} d={d} onPaid={onPaid} showDay={by === 'week'} />
+            {out.map(d => (
+              <DueRow key={d.key} d={d} onPaid={onPaid} showDay={extra !== '' || by === 'week'} />
+            ))}
+            {inc.map(d => (
+              <IncomingRow key={d.key} d={d} showDay={by === 'week'} />
             ))}
           </ul>
-        );
-        // By week: each week is a fold (this week open). By day: each day folds on its header.
+        )}
+      </div>
+    );
+  };
+  return (
+    <div className="mny-due">
+      {overdue.length ? dayGroup('overdue', 'Overdue', overdue, [], ' is-overdue-group') : null}
+      {keys.map((k, gi) => {
+        const g = groups.get(k)!;
         if (by === 'week') {
           return (
-            <Fold key={k} title={label(k)} meta={`${list.length} payments`} total={total} open={gi === 0}>
-              {items}
+            <Fold key={k} title={label(k)} meta={`${g.out.length} payments${g.in.length ? ` · ${g.in.length} incoming` : ''}`} total={sumOut(g.out)} open={gi === 0}>
+              <ul>
+                {g.out.map(d => (
+                  <DueRow key={d.key} d={d} onPaid={onPaid} showDay />
+                ))}
+                {g.in.map(d => (
+                  <IncomingRow key={d.key} d={d} showDay />
+                ))}
+              </ul>
             </Fold>
           );
         }
-        const isFolded = folded.has(k);
-        return (
-          <div key={k} className={`mny-due-group${isFolded ? ' is-folded' : ''}`}>
-            <h3>
-              <button type="button" className="mny-due-fold" aria-expanded={!isFolded} onClick={() => toggleFold(k)}>
-                <span className="mny-fold-chev" aria-hidden="true" />
-                <span>{label(k)}</span>
-                {isFolded ? <small>{list.length} {list.length === 1 ? 'payment' : 'payments'}</small> : null}
-              </button>
-              <b>{total}</b>
-            </h3>
-            {isFolded ? null : items}
-          </div>
-        );
+        return dayGroup(k, label(k), g.out, g.in);
       })}
-    </div>
-  );
-}
-
-/** Payments past their day and not marked paid (or skipped). */
-function OverdueList({ dues, onPaid }: { dues: BillDue[]; onPaid: (d: BillDue) => void }) {
-  return (
-    <div className="mny-due mny-overdue">
-      <div className="mny-due-group">
-        <ul>
-          {dues.map(d => (
-            <DueRow key={d.key} d={d} onPaid={onPaid} showDay />
-          ))}
-        </ul>
-      </div>
     </div>
   );
 }
@@ -512,28 +562,29 @@ function OverdueList({ dues, onPaid }: { dues: BillDue[]; onPaid: (d: BillDue) =
 // Accounts + cards
 // ---------------------------------------------------------------------------
 
-function AccountsList({ model, onSave }: { model: MoneyModel; onSave: Save }) {
+function AccountsList({ model, onSave, only }: { model: MoneyModel; onSave: Save; only?: 1 | 2 }) {
   const accts = model.accounts;
   if (!accts) return null;
+  const show = (i: 1 | 2) => !only || only === i;
   return (
-    <ul className="mny-accts">
+    <ul className={`mny-accts${only ? ' is-single' : ''}`}>
       <li className="mny-accts-head">
         <span>Account</span>
-        <span>Checking</span>
-        <span>Savings</span>
+        {show(1) ? <span>Checking</span> : null}
+        {show(2) ? <span>Savings</span> : null}
       </li>
       {accts.rows.map(r => (
         <li key={r[0].r}>
           <span className="mny-accts-name">{r[0].text}</span>
-          <EditCell cell={r[1]} onSave={onSave} className="is-num" placeholder="—" />
-          <EditCell cell={r[2]} onSave={onSave} className="is-num" placeholder="—" />
+          {show(1) ? <EditCell cell={r[1]} onSave={onSave} className="is-num" placeholder="—" /> : null}
+          {show(2) ? <EditCell cell={r[2]} onSave={onSave} className="is-num" placeholder="—" /> : null}
         </li>
       ))}
       {accts.total ? (
         <li className="mny-accts-total">
           <span>All accounts</span>
-          <EditCell cell={accts.total[1]} onSave={onSave} className="is-num" placeholder="" />
-          <EditCell cell={accts.total[2]} onSave={onSave} className="is-num" placeholder="" />
+          {show(1) ? <EditCell cell={accts.total[1]} onSave={onSave} className="is-num" placeholder="" /> : null}
+          {show(2) ? <EditCell cell={accts.total[2]} onSave={onSave} className="is-num" placeholder="" /> : null}
         </li>
       ) : null}
     </ul>
@@ -545,7 +596,6 @@ function AccountsList({ model, onSave }: { model: MoneyModel; onSave: Save }) {
 // ---------------------------------------------------------------------------
 
 /** Kinds that take themselves out (subscriptions, pay later, planned transfers). */
-const AUTO_KINDS = new Set(['sub', 'paylater', 'plan']);
 const shortDate = (k: string) => fromDayKey(k).toLocaleDateString([], { month: 'short', day: 'numeric' });
 
 type MonthState = 'paid' | 'crossed' | 'charged' | 'skipped' | 'late' | 'today' | 'soon' | 'later';
@@ -557,7 +607,8 @@ function monthState(d: BillDue, paidAt: Record<string, string>): MonthState {
   if (d.bill.id.startsWith(CROSSED)) return 'crossed';
   if (d.skipped) return 'skipped';
   if (paidAt[d.key]) return 'paid';
-  if (d.days < 0) return AUTO_KINDS.has(d.bill.kind || '') ? 'charged' : 'late';
+  // Past its day and not marked: overdue. Nothing is ever assumed charged — only a Paid click or the sheet's cross-off counts.
+  if (d.days < 0) return 'late';
   if (d.days === 0) return 'today';
   return d.days <= 7 ? 'soon' : 'later';
 }
@@ -567,7 +618,7 @@ const STATE_TEXT: Record<MonthState, (d: BillDue, paidAt: Record<string, string>
   crossed: () => 'Crossed off',
   charged: () => 'Charged',
   skipped: () => 'Skipped',
-  late: () => 'Not marked paid',
+  late: () => 'Overdue · not marked paid',
   today: () => 'Today',
   soon: d => (d.days === 1 ? 'Tomorrow' : `In ${d.days} days`),
   later: d => `In ${d.days} days`,
@@ -602,7 +653,7 @@ function MonthRow({ d, paidAt, onPaid }: { d: BillDue; paidAt: Record<string, st
         {STATE_TEXT[state](d, paidAt)}
       </span>
       <span className="mm-tools">
-        {done || AUTO_KINDS.has(d.bill.kind || '') ? null : (
+        {done ? null : (
           <button type="button" className="mny-btn" onClick={() => onPaid(d)} aria-label={`Mark ${d.bill.name} paid`}>
             Paid
           </button>
@@ -957,7 +1008,11 @@ function SubsView({ model, lifeSubs, paidAt, dues, onSave }: { model: MoneyModel
     .filter(r => live(r) && (r.from === 'sheet' || r.sub?.cycle !== 'yearly'))
     .reduce((s, r) => s + (r.amount || 0), 0);
   const yearlyOnly = lifeSubs.filter(s => s.status === 'active' && s.cycle === 'yearly').reduce((s, x) => s + (x.amount || 0), 0);
-  const chargedSoFar = all.filter(r => live(r) && r.date && fromDayKey(r.date) <= today).reduce((s, r) => s + (r.amount || 0), 0);
+  // Charged = you marked it (Paid on Life Hub) or crossed it off in the sheet. A passed date alone is not a charge.
+  const paidKeyOf = (r: SubRow) =>
+    r.from === 'hub' ? `money:lhsub:${r.sub!.id}:${r.date}` : dues.find(d => d.due === r.date && d.bill.kind === 'sub' && d.bill.name.trim().toLowerCase() === r.name.toLowerCase())?.key;
+  const isCharged = (r: SubRow) => r.status === 'skipped' || Boolean(r.date && paidAt[paidKeyOf(r) || '']);
+  const chargedSoFar = all.filter(r => live(r) && isCharged(r)).reduce((s, r) => s + (r.amount || 0), 0);
   const order = (r: SubRow) => (live(r) ? 0 : r.status === 'trial' ? 1 : 2);
   const sorted = [...all].sort((a, b) => order(a) - order(b) || (a.day ?? 99) - (b.day ?? 99) || a.name.localeCompare(b.name));
   const stateOf = (r: SubRow) => {
@@ -966,8 +1021,8 @@ function SubsView({ model, lifeSubs, paidAt, dues, onSave }: { model: MoneyModel
     if (r.status === 'skipped') return { text: '✓ Crossed off', tone: 'is-paid' };
     if (!r.date) return { text: r.status === 'trial' ? 'Free trial' : '—', tone: r.status === 'trial' ? 'is-trial' : '' };
     const days = Math.round((fromDayKey(r.date).getTime() - today.getTime()) / 86_400_000);
-    if (r.from === 'hub' && paidAt[`money:lhsub:${r.sub!.id}:${r.date}`]) return { text: `✓ Charged ${shortDate(r.date)}`, tone: 'is-paid' };
-    if (days < 0) return { text: `✓ Charged ${shortDate(r.date)}`, tone: 'is-paid' };
+    if (isCharged(r)) return { text: `✓ Charged ${shortDate(r.date)}`, tone: 'is-paid' };
+    if (days < 0) return { text: `Overdue · ${shortDate(r.date)}`, tone: 'is-late' };
     if (days === 0) return { text: 'Charges today', tone: 'is-soon' };
     return { text: `Charges ${shortDate(r.date)}`, tone: days <= 3 ? 'is-soon' : '' };
   };
@@ -1054,12 +1109,125 @@ function SubsView({ model, lifeSubs, paidAt, dues, onSave }: { model: MoneyModel
 const ordinal = (n: number) => `${n}${n % 10 === 1 && n !== 11 ? 'st' : n % 10 === 2 && n !== 12 ? 'nd' : n % 10 === 3 && n !== 13 ? 'rd' : 'th'}`;
 
 // ---------------------------------------------------------------------------
+// Incoming funds — logged on Life Hub (cloud-synced), shown in Week / Month
+// ---------------------------------------------------------------------------
+
+function IncomeSection({ list, upcoming }: { list: Incoming[]; upcoming: IncomingDue[] }) {
+  const [adding, setAdding] = useState(false);
+  const [source, setSource] = useState('');
+  const [amount, setAmount] = useState('');
+  const [date, setDate] = useState(() => dayKey(new Date()));
+  const [cycle, setCycle] = useState<Incoming['cycle']>('weekly');
+  const submit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!source.trim() || !date) return;
+    addIncoming({ source, amount: amountOf(amount), date, cycle });
+    setSource('');
+    setAmount('');
+    setAdding(false);
+  };
+  const next30 = upcoming.filter(d => d.days >= 0 && d.days <= 30);
+  const nextOf = (it: Incoming) => upcoming.find(d => d.item.id === it.id && d.days >= 0)?.due;
+  return (
+    <div className="mny-income">
+      <div className="mny-income-top">
+        <span>
+          <b>{money(next30.reduce((s, d) => s + (d.item.amount || 0), 0))}</b> coming in the next 30 days
+        </span>
+        <button type="button" className="mny-btn is-primary" onClick={() => setAdding(v => !v)} aria-expanded={adding}>
+          + Log income
+        </button>
+      </div>
+      {adding ? (
+        <form className="mny-income-form" onSubmit={submit}>
+          <label>
+            <span>Source</span>
+            <input value={source} onChange={e => setSource(e.target.value)} placeholder="Unemployment" required />
+          </label>
+          <label>
+            <span>Amount</span>
+            <input inputMode="decimal" value={amount} onChange={e => setAmount(e.target.value)} placeholder="300" />
+          </label>
+          <label>
+            <span>{cycle === 'once' ? 'Date' : 'First date'}</span>
+            <input type="date" value={date} onChange={e => setDate(e.target.value)} required />
+          </label>
+          <label>
+            <span>Repeats</span>
+            <select value={cycle} onChange={e => setCycle(e.target.value as Incoming['cycle'])}>
+              <option value="weekly">Every week</option>
+              <option value="biweekly">Every 2 weeks</option>
+              <option value="monthly">Every month</option>
+              <option value="once">Just once</option>
+            </select>
+          </label>
+          <button type="submit" className="mny-btn is-primary">Save</button>
+        </form>
+      ) : null}
+      {list.length ? (
+        <ul className="mny-income-list">
+          {list.map(it => {
+            const nx = nextOf(it);
+            return (
+              <li key={it.id}>
+                <span className="mny-due-name">{it.source}</span>
+                <span className="mny-income-when">
+                  {it.cycle === 'once' ? shortDate(it.date) : `${it.cycle === 'weekly' ? 'Every' : it.cycle === 'biweekly' ? 'Every other' : 'Monthly ·'} ${it.cycle === 'monthly' ? ordinal(fromDayKey(it.date).getDate()) : fromDayKey(it.date).toLocaleDateString([], { weekday: 'long' })}`}
+                  {nx ? ` · next ${shortDate(nx)}` : ''}
+                </span>
+                <span className="mny-due-amt is-in">+{money(it.amount) || '?'}</span>
+                <button
+                  type="button"
+                  className="mny-btn"
+                  aria-label={`Remove ${it.source}`}
+                  onClick={() => window.confirm(`Remove ${it.source} from incoming funds?`) && updateIncoming(it.id, { removed: true })}
+                >
+                  ✕
+                </button>
+              </li>
+            );
+          })}
+        </ul>
+      ) : (
+        <p className="mny-empty">Nothing logged yet. Add unemployment, paychecks or transfers in.</p>
+      )}
+    </div>
+  );
+}
+
+function SubTabs<T extends string>({ value, options, onChange, label }: { value: T; options: Array<[T, string, string?]>; onChange: (v: T) => void; label: string }) {
+  return (
+    <div className="mny-subtabs" role="tablist" aria-label={label}>
+      {options.map(([id, text, fig]) => (
+        <button key={id} type="button" role="tab" aria-selected={value === id} className={`mny-subtab${value === id ? ' is-on' : ''}`} onClick={() => onChange(id)}>
+          {text}
+          {fig ? <small>{fig}</small> : null}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+function useSavedChoice<T extends string>(key: string, ids: readonly T[], fallback: T, legacy?: T): [T, (v: T) => void] {
+  const [v, setV] = useState<T>(() => {
+    const saved = readSaved<string>(key, '');
+    return ids.includes(saved as T) ? (saved as T) : legacy || fallback;
+  });
+  return [v, (n: T) => (setV(n), writeSaved(key, n))];
+}
+
+// ---------------------------------------------------------------------------
 // The page
 // ---------------------------------------------------------------------------
 
 const NEEDED_OPTIONS = ['Yes', 'Y Low', 'No', 'Ordered'];
-type TabId = 'week' | 'month' | 'accounts' | 'cards' | 'bills' | 'subs' | 'plan' | 'owed' | 'shop' | 'save';
-const TAB_IDS: TabId[] = ['week', 'month', 'accounts', 'cards', 'bills', 'subs', 'plan', 'owed', 'shop', 'save'];
+type TabId = 'flow' | 'accounts' | 'spend' | 'plan' | 'owed' | 'save';
+const TAB_IDS: TabId[] = ['flow', 'accounts', 'spend', 'plan', 'owed', 'save'];
+/** Old saved tabs → the merged container they now live in */
+const LEGACY_TAB: Record<string, TabId> = { week: 'flow', month: 'flow', due: 'flow', cards: 'accounts', bills: 'spend', subs: 'spend', shop: 'spend' };
+const FLOW_IDS = ['week', 'month'] as const;
+const ACCT_IDS = ['checking', 'savings', 'cards'] as const;
+const SPEND_IDS = ['bills', 'paylater', 'subs', 'shop'] as const;
 const TAB_KEY = 'lifehub-money-tab';
 
 export function MoneyPage({
@@ -1087,10 +1255,13 @@ export function MoneyPage({
 }) {
   const [note, setNote] = useState<{ text: string; tone: 'ok' | 'bad' } | null>(null);
   const [provider, setProvider] = useState('All');
-  const [tab, setTabState] = useState<TabId>(() => {
-    const saved = readSaved<string>(TAB_KEY, 'week');
-    return saved === 'due' ? 'month' : TAB_IDS.includes(saved as TabId) ? (saved as TabId) : 'week';
-  });
+  const [legacyTab] = useState(() => readSaved<string>(TAB_KEY, 'flow'));
+  const [tab, setTabState] = useState<TabId>(() => (TAB_IDS.includes(legacyTab as TabId) ? (legacyTab as TabId) : LEGACY_TAB[legacyTab] || 'flow'));
+  const [flowView, setFlowView] = useSavedChoice('lifehub-money-flow', FLOW_IDS, 'week', legacyTab === 'month' || legacyTab === 'due' ? 'month' : undefined);
+  const [acctView, setAcctView] = useSavedChoice('lifehub-money-accounts', ACCT_IDS, 'checking', legacyTab === 'cards' ? 'cards' : undefined);
+  const [spendView, setSpendView] = useSavedChoice('lifehub-money-spend', SPEND_IDS, 'bills', legacyTab === 'subs' ? 'subs' : legacyTab === 'shop' ? 'shop' : undefined);
+  const incomeList = useIncoming();
+  const incoming = useMemo(() => incomingDues(incomeList, new Date(), 0, 45), [incomeList]);
   const setTab = (t: TabId) => {
     setTabState(t);
     writeSaved(TAB_KEY, t);
@@ -1101,6 +1272,10 @@ export function MoneyPage({
     return () => window.clearTimeout(t);
   }, [note]);
   const payPlans = usePayPlans();
+  const go = (t: TabId, sub?: () => void) => {
+    setTab(t);
+    sub?.();
+  };
 
   const save: Save = async edits => {
     setNote({ text: 'Saving to the sheet…', tone: 'ok' });
@@ -1188,7 +1363,7 @@ export function MoneyPage({
   const monthCounted = monthDues.filter(d => !d.skipped);
   const monthCountBase = monthCounted.length;
   const crossedThisMonth = model.items.filter(i => i.skipped && i.date && fromDayKey(i.date).getMonth() === today.getMonth() && fromDayKey(i.date).getFullYear() === today.getFullYear()).length;
-  const monthPaid = monthCounted.filter(d => paidAt[d.key] || (d.days < 0 && ['sub', 'paylater', 'plan'].includes(d.bill.kind || ''))).length + crossedThisMonth;
+  const monthPaid = monthCounted.filter(d => paidAt[d.key]).length + crossedThisMonth;
   const monthCount = monthCountBase + crossedThisMonth;
   // Bills still to pay this month (not paid on Life Hub, not crossed off in the sheet).
   const billsLeft = monthDues.filter(d => (d.bill.kind || 'bill') === 'bill' && !d.skipped && !paidAt[d.key]).length;
@@ -1196,16 +1371,13 @@ export function MoneyPage({
     (model.subs?.rows || []).filter(r => r[1]?.text).reduce((s, r) => s + (amountOf(r[2]?.text || '') || 0), 0) +
     lifeSubs.filter(x => x.status === 'active' && x.cycle === 'monthly').reduce((s, x) => s + (x.amount || 0), 0);
 
+  const monthName = today.toLocaleDateString([], { month: 'long' });
   const TABS: Array<{ id: TabId; tone: Tone; label: string; figure: string }> = [
-    { id: 'week', tone: 'due', label: 'This week', figure: money(dueWeek) },
-    { id: 'month', tone: 'due', label: today.toLocaleDateString([], { month: 'long' }), figure: `${monthPaid} of ${monthCount} paid` },
-    { id: 'accounts', tone: 'cash', label: 'Checking / Savings', figure: model.cashOnHand?.text ? `${model.cashOnHand.text} on hand` : '' },
-    { id: 'cards', tone: 'card', label: 'Credit cards', figure: model.cards?.total?.[1]?.text ? `${model.cards.total[1].text} owed` : '' },
-    { id: 'bills', tone: 'due', label: 'Bills', figure: `${billsLeft} left` },
-    { id: 'subs', tone: 'sub', label: 'Subscriptions', figure: `${money(subsMonthly)}/mo` },
+    { id: 'flow', tone: 'due', label: `This week · ${monthName}`, figure: overdue.length ? `${overdue.length} overdue · ${money(dueWeek)}` : money(dueWeek) },
+    { id: 'accounts', tone: 'cash', label: 'Accounts & cards', figure: model.cashOnHand?.text ? `${model.cashOnHand.text} on hand` : '' },
+    { id: 'spend', tone: 'sub', label: 'Bills & spending', figure: `${billsLeft} bills left` },
     { id: 'plan', tone: 'plan', label: 'Plan', figure: livePlan ? livePlan.title : 'New' },
     { id: 'owed', tone: 'owed', label: 'What I owe', figure: money(owedSum) },
-    { id: 'shop', tone: 'shop', label: 'Shopping', figure: `${neededNow.length + (openNeeded?.rows.length || 0)} needed` },
     { id: 'save', tone: 'save', label: 'Savings & move', figure: '' },
   ];
 
@@ -1236,7 +1408,7 @@ export function MoneyPage({
           <span className="mny-flow-op" aria-hidden="true">
             −
           </span>
-          <button type="button" className="mny-flow-step tone-due is-link" onClick={() => setTab('week')}>
+          <button type="button" className="mny-flow-step tone-due is-link" onClick={() => go('flow', () => setFlowView('week'))}>
             <span>Due next 7 days</span>
             <b>{money(dueWeek)}</b>
             <small>{next7.length} payments</small>
@@ -1250,16 +1422,16 @@ export function MoneyPage({
             <small>{afterWeek !== undefined && afterWeek < 0 ? 'needs income or a plan' : 'before anything new comes in'}</small>
           </div>
           <div className="mny-flow-side">
-            <button type="button" className="mny-mini tone-due" onClick={() => setTab('month')}>
+            <button type="button" className="mny-mini tone-due" onClick={() => go('flow', () => setFlowView('month'))}>
               <span>Rest of {today.toLocaleDateString([], { month: 'long' })}</span>
               <b>{money(sum(restOfMonth))}</b>
             </button>
-            <button type="button" className="mny-mini tone-card" onClick={() => setTab('cards')}>
+            <button type="button" className="mny-mini tone-card" onClick={() => go('accounts', () => setAcctView('cards'))}>
               <span>Cards</span>
               <b>{model.cards?.total?.[1]?.text || '—'}</b>
               {cardsUsed !== undefined ? <small>{cardsUsed}% used</small> : null}
             </button>
-            <button type="button" className="mny-mini tone-due" onClick={() => setTab('month')}>
+            <button type="button" className="mny-mini tone-due" onClick={() => go('spend', () => setSpendView('paylater'))}>
               <span>Pay later</span>
               <b>{pay?.total?.[1]?.text || '—'}</b>
             </button>
@@ -1268,7 +1440,7 @@ export function MoneyPage({
               <b>{money(owedSum)}</b>
             </button>
             {fico ? (
-              <button type="button" className="mny-mini tone-card" onClick={() => setTab('cards')}>
+              <button type="button" className="mny-mini tone-card" onClick={() => go('accounts', () => setAcctView('cards'))}>
                 <span>Credit score</span>
                 <b>{Math.round(Number(fico)) || fico}</b>
               </button>
@@ -1292,21 +1464,42 @@ export function MoneyPage({
       </nav>
 
       <div className="mny-panel" role="tabpanel">
-        {tab === 'week' ? (
+        {tab === 'flow' ? <SubTabs label="Week or month" value={flowView} onChange={setFlowView} options={[['week', 'Week', overdue.length ? `${overdue.length} overdue` : money(dueWeek)], ['month', monthName, `${monthPaid} of ${monthCount} paid`]]} /> : null}
+        {tab === 'accounts' ? (
+          <SubTabs
+            label="Accounts"
+            value={acctView}
+            onChange={setAcctView}
+            options={[['checking', 'Checking', model.accounts?.total?.[1]?.text], ['savings', 'Savings', model.accounts?.total?.[2]?.text], ['cards', 'Credit Cards', model.cards?.total?.[1]?.text ? `${model.cards.total[1].text} owed` : '']]}
+          />
+        ) : null}
+        {tab === 'spend' ? (
+          <SubTabs
+            label="Spending"
+            value={spendView}
+            onChange={setSpendView}
+            options={[['bills', 'Bills', `${billsLeft} left`], ['paylater', 'Pay Later', pay?.total?.[1]?.text || ''], ['subs', 'Subscriptions', `${money(subsMonthly)}/mo`], ['shop', 'Shopping', `${neededNow.length + (openNeeded?.rows.length || 0)} needed`]]}
+          />
+        ) : null}
+        {tab === 'flow' && flowView === 'week' ? (
           <div className="mny-cols">
             <div className="mny-stack">
-              <Section tone="due" title="Due in the next 7 days" hint="Tap Paid when it’s done. Tap a day to fold it. Change skips or moves one payment." figure={money(dueWeek)} figureLabel={`${next7.length} payments`}>
-                <DueList dues={dues} onPaid={onPaid} by="day" days={7} />
+              <Section
+                tone="due"
+                title="This week"
+                hint="Overdue = past its day and not marked paid. Tap Paid when it’s done. Tap a day to fold it. Change skips or moves one payment."
+                figure={money(dueWeek + sum(overdue))}
+                figureLabel={`${next7.length} payments${overdue.length ? ` · ${overdue.length} overdue` : ''}`}
+              >
+                <DueList dues={dues} onPaid={onPaid} by="day" days={7} overdue={overdue} incoming={incoming} />
               </Section>
-              {overdue.length ? (
-                <Section tone="owed" className="mny-sec-overdue" title="Overdue" hint="Past its day and not marked paid. Paid clears it; Change can skip or move it." figure={money(sum(overdue))} figureLabel={`${overdue.length} ${overdue.length === 1 ? 'payment' : 'payments'}`}>
-                  <OverdueList dues={overdue} onPaid={onPaid} />
-                </Section>
-              ) : null}
             </div>
             <div className="mny-stack">
               <Section tone="cash" title="Money right now" figure={model.cashOnHand?.text} figureLabel="on hand" href={link('Randy')}>
                 <AccountsList model={model} onSave={save} />
+              </Section>
+              <Section tone="cash" title="Incoming funds" hint="Logged on Life Hub and synced to your other devices — not written to the sheet.">
+                <IncomeSection list={incomeList} upcoming={incoming} />
               </Section>
               <Section tone="plan" title="Your plan" hint={livePlan ? `Open: ${livePlan.title}` : 'No plan yet for the coming days.'}>
                 <button type="button" className="mny-cta" onClick={() => setTab('plan')}>
@@ -1317,13 +1510,30 @@ export function MoneyPage({
           </div>
         ) : null}
 
-        {tab === 'month' ? (
+        {tab === 'flow' && flowView === 'month' ? (
           <div className="mny-stack">
             <Section tone="due" title={`${today.toLocaleDateString([], { month: 'long' })} at a glance`} figure={`${monthPaid} of ${monthCount}`} figureLabel="paid" href={link('Randy')}>
               <MonthView dues={monthDues} paidAt={paidAt} model={model} onPaid={onPaid} />
             </Section>
+            <Section tone="cash" title={`Incoming in ${monthName}`} figure={money(incoming.filter(d => fromDayKey(d.due) <= monthEnd).reduce((s, d) => s + (d.item.amount || 0), 0))} figureLabel="still to come">
+              {incoming.filter(d => fromDayKey(d.due) <= monthEnd).length ? (
+                <div className="mny-due">
+                  <div className="mny-due-group">
+                    <ul>
+                      {incoming
+                        .filter(d => fromDayKey(d.due) <= monthEnd)
+                        .map(d => (
+                          <IncomingRow key={d.key} d={d} showDay />
+                        ))}
+                    </ul>
+                  </div>
+                </div>
+              ) : (
+                <p className="mny-empty">No incoming funds logged for the rest of the month. Log them under Week → Incoming funds.</p>
+              )}
+            </Section>
             <Section tone="due" title="After this month" figure={money(sum(dues.filter(d => fromDayKey(d.due) > monthEnd && d.days <= 35)))} figureLabel="next few weeks">
-              <DueList dues={dues.filter(d => fromDayKey(d.due) > monthEnd)} onPaid={onPaid} by="week" days={35} />
+              <DueList dues={dues.filter(d => fromDayKey(d.due) > monthEnd)} onPaid={onPaid} by="week" days={35} incoming={incoming.filter(d => fromDayKey(d.due) > monthEnd)} />
             </Section>
             <Section tone="due" title="In the sheet" hint="Click any amount or date to change it in the sheet." href={link('Randy')}>
               {model.bills ? (
@@ -1336,7 +1546,16 @@ export function MoneyPage({
                   <SheetTable table={{ ...model.cardMins, header: ['Date Due', 'Card', 'Amount'] }} onSave={save} />
                 </Fold>
               ) : null}
-              <Fold title="Pay later" total={pay?.total?.[1]?.text} meta="Klarna · Affirm · Afterpay · Zip">
+            </Section>
+          </div>
+        ) : null}
+
+        {tab === 'spend' && spendView === 'paylater' ? (
+          <div className="mny-stack">
+            <Section tone="due" title={`Pay later · ${monthName}`} hint="Affirm, Afterpay, Klarna, Zip. Nothing counts as paid until you tap Paid." href={link('Randy')}>
+              <MonthView dues={monthDues} paidAt={paidAt} model={model} onPaid={onPaid} kinds={['paylater']} />
+            </Section>
+            <Section tone="due" title="Pay later in the sheet" figure={pay?.total?.[1]?.text} figureLabel="owed" href={link('Randy')}>
                 {pay ? (
                   <div className="mny-providers">
                     {pay.rows.map(r => (
@@ -1365,12 +1584,11 @@ export function MoneyPage({
                     <SheetTable table={ledgerAhead} onSave={save} opts={{ limit: 12 }} />
                   </>
                 ) : null}
-              </Fold>
             </Section>
           </div>
         ) : null}
 
-        {tab === 'cards' ? (
+        {tab === 'accounts' && acctView === 'cards' ? (
           <div className="mny-stack">
             <Section
               tone="card"
@@ -1406,7 +1624,7 @@ export function MoneyPage({
           </div>
         ) : null}
 
-        {tab === 'bills' ? (
+        {tab === 'spend' && spendView === 'bills' ? (
           <div className="mny-stack">
             <Section tone="due" title={`Bills · ${today.toLocaleDateString([], { month: 'long' })}`} href={link('Randy')}>
               <MonthView dues={monthDues} paidAt={paidAt} model={model} onPaid={onPaid} kinds={['bill']} />
@@ -1419,7 +1637,7 @@ export function MoneyPage({
           </div>
         ) : null}
 
-        {tab === 'subs' ? (
+        {tab === 'spend' && spendView === 'subs' ? (
           <Section tone="sub" title="Subscriptions" href={link('Randy')}>
             <SubsView model={model} lifeSubs={lifeSubs} paidAt={paidAt} dues={monthDues} onSave={save} />
           </Section>
@@ -1431,14 +1649,27 @@ export function MoneyPage({
           </Section>
         ) : null}
 
-        {tab === 'accounts' ? (
+        {tab === 'accounts' && acctView === 'savings' ? (
+          <div className="mny-stack">
+            <Section tone="save" title="Savings" figure={model.accounts?.total?.[2]?.text} figureLabel="in savings" href={link('Randy')}>
+              <AccountsList model={model} onSave={save} only={2} />
+              {model.savings ? (
+                <Fold title="Savings funds" meta="CC/Savings Planner">
+                  <SheetTable table={{ ...model.savings, header: ['Fund', ...model.savings.header.slice(1)] }} onSave={save} />
+                </Fold>
+              ) : null}
+            </Section>
+          </div>
+        ) : null}
+
+        {tab === 'accounts' && acctView === 'checking' ? (
           <div className="mny-cols">
             <div className="mny-stack">
-              <Section tone="cash" title="Checking / Savings" figure={model.cashOnHand?.text} figureLabel={model.balancedCash?.text ? `on hand · ${model.balancedCash.text} balanced` : 'on hand'} href={link('Randy')}>
-                <AccountsList model={model} onSave={save} />
+              <Section tone="cash" title="Checking" figure={model.cashOnHand?.text} figureLabel={model.balancedCash?.text ? `on hand · ${model.balancedCash.text} balanced` : 'on hand'} href={link('Randy')}>
+                <AccountsList model={model} onSave={save} only={1} />
                 {model.balancing ? (
                   <Fold title="Balancing" meta="accounts + pending money → cash on hand">
-                    <SheetTable table={{ ...model.balancing, header: ['Account', ...model.balancing.header.slice(1)] }} onSave={save} />
+                    <SheetTable table={{ ...model.balancing, header: ['Account', ...model.balancing.header.slice(1)] }} onSave={save} opts={{ sumExcept: /^(cash on hand|balanced cash|total)/i }} />
                     <BalancingAdd table={model.balancing} onSave={save} />
                   </Fold>
                 ) : null}
@@ -1483,7 +1714,7 @@ export function MoneyPage({
           </div>
         ) : null}
 
-        {tab === 'shop' ? (
+        {tab === 'spend' && spendView === 'shop' ? (
           <div className="mny-cols">
             <Section tone="shop" title="Restock" hint="Set Needed? from the dropdown — Yes and Y Low rise to the top list." figure={model.upcomingSpend.rows.find(r => /resupply/i.test(r[0].text))?.[1]?.text} figureLabel="resupply" href={link('Restock/Purchases')}>
               {model.recurring ? (

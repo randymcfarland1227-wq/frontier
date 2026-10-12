@@ -40,6 +40,7 @@ const SYNCED_KEYS: string[] = [
   STORAGE_KEYS.hiddenItems,
   STORAGE_KEYS.billEdits,
   STORAGE_KEYS.lifeSubs,
+  STORAGE_KEYS.incoming,
   STORAGE_KEYS.roleActive,
   STORAGE_KEYS.billDays,
 ];
@@ -141,6 +142,7 @@ export function readLocalState(): SyncedState {
     candle: readCandle(),
     billEdits: readSaved(STORAGE_KEYS.billEdits, {}),
     subs: readSaved(STORAGE_KEYS.lifeSubs, []),
+    incoming: readSaved(STORAGE_KEYS.incoming, []),
     roleActive: readSaved(STORAGE_KEYS.roleActive, {}),
     billDays: readSaved(STORAGE_KEYS.billDays, {}),
   });
@@ -168,6 +170,7 @@ function writeLocalState(next: SyncedState): boolean {
     [STORAGE_KEYS.hiddenItems, current.hidden, next.hidden],
     [STORAGE_KEYS.billEdits, current.billEdits, next.billEdits],
     [STORAGE_KEYS.lifeSubs, current.subs, next.subs],
+    [STORAGE_KEYS.incoming, current.incoming, next.incoming],
     [STORAGE_KEYS.roleActive, current.roleActive, next.roleActive],
     [STORAGE_KEYS.billDays, current.billDays, next.billDays],
   ];

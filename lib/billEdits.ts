@@ -64,7 +64,6 @@ function withBillDay(due: string, rule?: BillDay): string {
 export const OVERDUE_SINCE = '2026-10-08';
 
 /** Kinds that charge themselves (subscriptions, pay later) never go overdue. */
-const SELF_CHARGING = new Set(['sub', 'paylater', 'plan']);
 
 export function loadBillEdits(): BillEdits {
   return readSaved<BillEdits>(STORAGE_KEYS.billEdits, {});
@@ -139,5 +138,5 @@ export function applyBillEdits(dues: BillDue[], edits: BillEdits, today = new Da
 
 /** Past its day, not paid, not skipped, not self-charging, and due since overdue tracking began. */
 export function isOverdue(d: BillDue): boolean {
-  return d.days < 0 && !d.skipped && !d.bill.autopay && !(d.bill.kind && SELF_CHARGING.has(d.bill.kind)) && (d.orig || d.due) >= OVERDUE_SINCE;
+  return d.days < 0 && !d.skipped && !d.bill.autopay && (d.orig || d.due) >= OVERDUE_SINCE;
 }

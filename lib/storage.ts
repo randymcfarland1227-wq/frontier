@@ -47,6 +47,8 @@ export const STORAGE_KEYS = {
   hiddenItems: 'lifehub-hidden-items',
   /** Subscriptions added on Life Hub — cloud-synced */
   lifeSubs: 'lifehub-subs',
+  /** Incoming funds logged on Life Hub — cloud-synced */
+  incoming: 'lifehub-incoming',
   /** Role Hub certs / portfolio ideas marked Active — cloud-synced */
   roleActive: 'lifehub-role-active',
   /** A bill's new day every month — cloud-synced */
