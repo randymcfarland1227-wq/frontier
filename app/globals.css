@@ -3956,3 +3956,12 @@ a.shelf-title:hover { text-decoration: underline; }
 @media (max-width: 560px) { .mny-income-list li { grid-template-columns: 1fr auto auto; } .mny-income-when { grid-column: 1 / -1; order: 3; } }
 .mtable-sum td { font-weight: 700; border-top: 2px solid var(--line, var(--row-line)); }
 .mny-accts.is-single li { grid-template-columns: 1fr auto; }
+
+/* Phones: nav gets its own row so Money isn't hidden under the action buttons */
+@media (max-width: 560px) {
+  .topbar { grid-template-columns: auto minmax(0, 1fr); grid-template-areas: "mark actions" "nav nav"; row-gap: 6px; }
+  .topbar .wordmark { grid-area: mark; }
+  .topbar .topbar-actions { grid-area: actions; justify-self: end; }
+  .topbar .top-nav { grid-area: nav; display: flex; flex-wrap: nowrap; overflow-x: auto; gap: 6px; min-width: 0; scrollbar-width: none; }
+  .topbar .top-nav > * { flex: 0 0 auto; }
+}
