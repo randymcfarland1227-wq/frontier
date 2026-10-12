@@ -1377,9 +1377,10 @@ export function MoneyPage({
     lifeSubs.filter(x => x.status === 'active' && x.cycle === 'monthly').reduce((s, x) => s + (x.amount || 0), 0);
 
   const monthName = today.toLocaleDateString([], { month: 'long' });
-  // Live "left this week" (Sun–Sat) per breakdown: unpaid, not crossed off, not skipped.
-  const weekStart = startOfWeek(today);
-  const weekEnd = new Date(weekStart.getFullYear(), weekStart.getMonth(), weekStart.getDate() + 6);
+  // Live "left this week" per breakdown — same weeks as the month list (1–7, 8–14, …): unpaid, not crossed off, not skipped.
+  const blockFrom = Math.floor((today.getDate() - 1) / 7) * 7 + 1;
+  const weekStart = new Date(today.getFullYear(), today.getMonth(), blockFrom);
+  const weekEnd = new Date(today.getFullYear(), today.getMonth(), Math.min(blockFrom + 6, monthEnd.getDate()));
   const weekLeft = (kinds: string[]) =>
     monthDues
       .filter(d => kinds.includes(d.bill.kind || 'bill') && !d.skipped && !paidAt[d.key] && fromDayKey(d.due) >= weekStart && fromDayKey(d.due) <= weekEnd)
