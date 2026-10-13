@@ -1,5 +1,6 @@
 import handler from "vinext/server/app-router-entry";
 import { mergeState, normalizeState, stateCounts } from "../lib/syncState";
+import { nextRepeat } from "../lib/ticktickRepeat";
 
 interface Env {
   ASSETS: Fetcher;
@@ -529,9 +530,9 @@ async function handleHabitCheckin(request: Request, env: Env): Promise<Response>
   if (!env.TICKTICK_ACCESS_TOKEN) return jsonResponse({ ok: false, error: "token_not_configured" }, 503, origin);
   if (!(await syncKeyAllowed(request, env))) return jsonResponse({ ok: false, error: "wrong_key" }, 401, origin);
 
-  let body: { habitId?: unknown; stamp?: unknown };
+  let body: { habitId?: unknown; stamp?: unknown; status?: unknown };
   try {
-    body = (await request.json()) as { habitId?: unknown; stamp?: unknown };
+    body = (await request.json()) as { habitId?: unknown; stamp?: unknown; status?: unknown };
   } catch {
     return jsonResponse({ ok: false, error: "invalid_json" }, 400, origin);
   }
@@ -544,11 +545,110 @@ async function handleHabitCheckin(request: Request, env: Env): Promise<Response>
     // Count habits ("Drink 5 bottles") need value = goal to register as complete.
     const habit = (await ttFetch(env, `/habit/${habitId}`)) as { goal?: number } | null;
     const goal = Number(habit?.goal) || 1;
+    // status 2 = done (default); 1 = not completed (TickTick's "unachieved", from Life Hub's menu).
+    const missed = body.status === 1;
     await ttFetch(env, `/habit/${habitId}/checkin`, {
       method: "POST",
-      body: JSON.stringify({ stamp: Number(stamp), value: goal, goal, status: 2 }),
+      body: JSON.stringify(missed ? { stamp: Number(stamp), value: 0, goal, status: 1 } : { stamp: Number(stamp), value: goal, goal, status: 2 }),
     });
     return jsonResponse({ ok: true }, 200, origin);
+  } catch (e) {
+    return jsonResponse({ ok: false, error: (e as Error).message }, 502, origin);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// TickTick "won't do" from Life Hub: POST /api/ticktick/wontdo { taskId, projectId }.
+// One-off task → closed as won't do (status -1). Repeating task → like TickTick's own app: a closed
+// won't-do copy for this occurrence, and the series moves to its next date (setting -1 on the
+// series itself would end it). Repeat rules this can't step safely are refused, never guessed.
+// ---------------------------------------------------------------------------
+
+type TTTask = { id: string; projectId: string; title?: string; content?: string; desc?: string; startDate?: string; dueDate?: string; timeZone?: string; isAllDay?: boolean; repeatFlag?: string | null; repeatFrom?: string | null; status?: number; kind?: string };
+
+/** A TickTick time ("2026-10-13T04:00:00+0000") as its local calendar parts in the task's time zone. */
+function localParts(value: string | undefined, tz: string) {
+  if (!value) return null;
+  const t = Date.parse(value.replace(/([+-]\d{2})(\d{2})$/, "$1:$2"));
+  if (Number.isNaN(t)) return null;
+  const parts = Object.fromEntries(
+    new Intl.DateTimeFormat("en-US", { timeZone: tz, year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit", hourCycle: "h23" })
+      .formatToParts(new Date(t))
+      .map(p => [p.type, p.value]),
+  );
+  return { y: +parts.year, m: +parts.month, d: +parts.day, time: `${parts.hour}:${parts.minute}:${parts.second}` };
+}
+/** UTC offset of a zone on a given local day, as "-0500". */
+function tzOffset(y: number, m: number, d: number, tz: string): string {
+  const name = new Intl.DateTimeFormat("en-US", { timeZone: tz, timeZoneName: "longOffset" })
+    .formatToParts(new Date(Date.UTC(y, m - 1, d, 12)))
+    .find(p => p.type === "timeZoneName")?.value || "GMT";
+  const m2 = name.match(/GMT([+-])(\d{2}):?(\d{2})?/);
+  return m2 ? `${m2[1]}${m2[2]}${m2[3] || "00"}` : "+0000";
+}
+const ttDay = (y: number, m: number, d: number) => new Date(Date.UTC(y, m - 1, d));
+/** The same local time, `days` later, written with that day's offset (keeps all-day tasks on midnight across DST). */
+function shiftLocal(value: string | undefined, days: number, tz: string): string | undefined {
+  const p = localParts(value, tz);
+  if (!p) return undefined;
+  const dt = new Date(ttDay(p.y, p.m, p.d).getTime() + days * 86400000);
+  const y = dt.getUTCFullYear(), m = dt.getUTCMonth() + 1, d = dt.getUTCDate();
+  return `${y}-${String(m).padStart(2, "0")}-${String(d).padStart(2, "0")}T${p.time}${tzOffset(y, m, d, tz)}`;
+}
+
+async function handleTickTickWontDo(request: Request, env: Env): Promise<Response> {
+  const origin = request.headers.get("Origin");
+  if (request.method === "OPTIONS") return new Response(null, { status: 204, headers: corsHeaders(origin) });
+  if (origin && !CORS_ALLOW_ORIGINS.has(origin)) return jsonResponse({ ok: false, error: "cors_denied" }, 403, origin);
+  if (request.method !== "POST") return jsonResponse({ ok: false, error: "method_not_allowed" }, 405, origin);
+  if (!env.TICKTICK_ACCESS_TOKEN) return jsonResponse({ ok: false, error: "token_not_configured" }, 503, origin);
+  if (!(await syncKeyAllowed(request, env))) return jsonResponse({ ok: false, error: "wrong_key" }, 401, origin);
+  let body: { taskId?: unknown; projectId?: unknown; today?: unknown };
+  try {
+    body = (await request.json()) as typeof body;
+  } catch {
+    return jsonResponse({ ok: false, error: "invalid_json" }, 400, origin);
+  }
+  const taskId = typeof body.taskId === "string" ? body.taskId.trim() : "";
+  const projectId = typeof body.projectId === "string" ? body.projectId.trim() : "";
+  const today = typeof body.today === "string" && /^\d{4}-\d{2}-\d{2}$/.test(body.today) ? body.today : "";
+  if (!/^[0-9a-f]{12,40}$/i.test(taskId) || !projectId) return jsonResponse({ ok: false, error: "bad_input" }, 400, origin);
+  try {
+    const task = (await ttFetch(env, `/project/${encodeURIComponent(projectId)}/task/${encodeURIComponent(taskId)}`)) as TTTask | null;
+    if (!task || task.status !== 0) return jsonResponse({ ok: false, error: "not_open" }, 409, origin);
+    if (!task.repeatFlag) {
+      await ttFetch(env, `/task/${taskId}`, { method: "POST", body: JSON.stringify({ id: taskId, projectId, status: -1 }) });
+      return jsonResponse({ ok: true, repeating: false }, 200, origin);
+    }
+    const tz = task.timeZone || "America/New_York";
+    const due = localParts(task.dueDate || task.startDate, tz);
+    if (!due) return jsonResponse({ ok: false, error: "no_date" }, 409, origin);
+    const base = ttDay(due.y, due.m, due.d);
+    let next = nextRepeat(task.repeatFlag, base);
+    if (!next) return jsonResponse({ ok: false, error: "repeat_rule_unsupported" }, 409, origin);
+    // An overdue series lands on the next occurrence from today on, not another past day.
+    if (today) {
+      const [ty, tm, td] = today.split("-").map(Number);
+      const t0 = ttDay(ty, tm, td);
+      for (let i = 0; next && next < t0 && i < 400; i++) next = nextRepeat(task.repeatFlag, next);
+      if (!next) return jsonResponse({ ok: false, error: "repeat_rule_unsupported" }, 409, origin);
+    }
+    const shift = Math.round((next.getTime() - base.getTime()) / 86400000);
+    // 1) This occurrence, closed as won't do (history, like TickTick's app keeps).
+    const copy = (await ttFetch(env, "/task", {
+      method: "POST",
+      body: JSON.stringify({
+        projectId, title: task.title, content: task.content, desc: task.desc, kind: task.kind,
+        startDate: task.startDate, dueDate: task.dueDate, timeZone: task.timeZone, isAllDay: task.isAllDay,
+      }),
+    })) as { id?: string } | null;
+    if (copy?.id) await ttFetch(env, `/task/${copy.id}`, { method: "POST", body: JSON.stringify({ id: copy.id, projectId, status: -1 }) });
+    // 2) The series moves to its next date.
+    await ttFetch(env, `/task/${taskId}`, {
+      method: "POST",
+      body: JSON.stringify({ id: taskId, projectId, startDate: shiftLocal(task.startDate, shift, tz), dueDate: shiftLocal(task.dueDate, shift, tz) }),
+    });
+    return jsonResponse({ ok: true, repeating: true, next: next.toISOString().slice(0, 10) }, 200, origin);
   } catch (e) {
     return jsonResponse({ ok: false, error: (e as Error).message }, 502, origin);
   }
@@ -879,6 +979,10 @@ export default {
 
     if (pathname === "/api/ticktick/open") {
       return handleTickTickOpen(request, env);
+    }
+
+    if (pathname === "/api/ticktick/wontdo") {
+      return handleTickTickWontDo(request, env);
     }
 
     if (pathname === "/api/ticktick/habit-checkin") {

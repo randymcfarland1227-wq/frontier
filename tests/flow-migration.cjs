@@ -128,3 +128,20 @@ console.log('Migration checks pass: immutable input, stable counts/identity/date
   assert.equal(mergeState(old, a).goalModes['mental-cleanspaces'].mode, 'active');
   console.log('Goal mode sync checks pass.');
 }
+
+// TickTick "won't do" on a repeating task steps the series to its next date (simple rules only).
+{
+  const { nextRepeat } = load('lib/ticktickRepeat.ts');
+  const d = (s) => new Date(s + 'T00:00:00Z');
+  const k = (x) => (x ? x.toISOString().slice(0, 10) : null);
+  assert.equal(k(nextRepeat('RRULE:FREQ=DAILY;INTERVAL=1', d('2026-10-13'))), '2026-10-14');
+  assert.equal(k(nextRepeat('RRULE:FREQ=DAILY;INTERVAL=3', d('2026-10-13'))), '2026-10-16');
+  assert.equal(k(nextRepeat('RRULE:FREQ=WEEKLY;INTERVAL=1;BYDAY=MO,TU,WE,TH,FR', d('2026-10-16'))), '2026-10-19', 'Friday → Monday');
+  assert.equal(k(nextRepeat('RRULE:FREQ=WEEKLY;INTERVAL=1;BYDAY=TU', d('2026-10-13'))), '2026-10-20');
+  assert.equal(k(nextRepeat('RRULE:FREQ=MONTHLY;INTERVAL=1;BYMONTHDAY=30', d('2026-09-30'))), '2026-10-30');
+  assert.equal(k(nextRepeat('RRULE:FREQ=MONTHLY;INTERVAL=1;BYMONTHDAY=31', d('2026-10-31'))), '2026-11-30', 'short month');
+  assert.equal(nextRepeat('RRULE:FREQ=WEEKLY;INTERVAL=2;BYDAY=MO', d('2026-10-13')), null, 'every other week with days: refused');
+  assert.equal(nextRepeat('RRULE:FREQ=DAILY;COUNT=5', d('2026-10-13')), null, 'counted series: refused');
+  assert.equal(nextRepeat('ERULE:NAME=CUSTOM;BYDATE=20261020', d('2026-10-13')), null, 'custom dates: refused');
+  console.log('TickTick repeat checks pass.');
+}
