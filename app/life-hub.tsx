@@ -94,6 +94,7 @@ import {
 import { ruleFor, saveTaskRule, sourceRuleKey, taskRuleKey, useTaskRules } from '../lib/taskRules';
 import { FlowSyncReview } from './components/FlowSyncReview';
 import { WhyView } from './components/WhyView';
+import { DailyGrounding } from './components/DailyGrounding';
 import { isHidden, useHiddenItems } from '../lib/siteMoves';
 import { useRoleActive, withRoleShelves, withTaggedShelves } from '../lib/roleShelves';
 import { LogsView } from './components/LogsView';
@@ -1009,6 +1010,7 @@ goalsData ? (
             else completeOnHub('self', t.selfId);
           }}
           onAddPrep={(target, title, due) => syncSelf(addSelfItem(title, '', { due, forEvent: target }))}
+          grounding={<DailyGrounding move={visibleSnapshots.move} goals={goalsData} enter={enter} />}
           onBillPaid={(due: BillDue) =>
             setLedger(recordCompletion('radall', due.key, { title: `Paid ${due.bill.name}`, via: 'hub' }))
           }

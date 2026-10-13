@@ -202,6 +202,7 @@ export function HomeView({
   calTasks,
   onTaskDone,
   onAddPrep,
+  grounding,
 }: {
   snapshots: Record<SourceId, SourceSnapshot>;
   enter: (id: SpaceId) => void;
@@ -222,6 +223,8 @@ export function HomeView({
   calTasks: CalTask[];
   onTaskDone: (t: CalTask) => void;
   onAddPrep: (target: { id: string; title: string; date: string }, title: string, due?: string) => void;
+  /** Daily grounding: reminder guides + directions (rendered by the page) */
+  grounding?: ReactNode;
 }) {
   const latest =
     Object.values(snapshots)
@@ -316,6 +319,14 @@ export function HomeView({
         </p>
       </section>
 
+
+      {grounding ? (
+        <section className="source-row" aria-label="Daily grounding">
+          <Collapsible id="grounding" label="Grounding" title="Daily grounding" tone="grounding" icon="🌱">
+            {grounding}
+          </Collapsible>
+        </section>
+      ) : null}
 
       <section className="source-row" aria-label="Schedule">
         <Collapsible id="schedule" label="Schedule" title="Calendar" tone="schedule" icon="▦" summary={<ScheduleSummary schedule={schedule} bills={bills} />}>

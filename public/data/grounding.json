@@ -1,0 +1,97 @@
+{
+  "note": "Daily grounding guides (moved off TickTick 2026-10-13). Text is Randy's own, word for word from the TickTick tasks. Edit here to change what Life Hub shows.",
+  "guides": [
+    {
+      "id": "open-grounding",
+      "title": "Open Grounding",
+      "icon": "🌱",
+      "when": "Weekdays",
+      "from": "TickTick · Grounding · Open Grounding (Reminders)",
+      "sections": [
+        { "heading": "First: Protect Sleep and Rest", "lines": [
+          "Sleep is a priority because it protects healing, regulation, and the ability to act.",
+          "Rest during the day when recovery is the real need; do not fill every open moment.",
+          "Night Time Routine is the wind-down sequence. Sleep is the outcome, not another checkbox."
+        ] },
+        { "heading": "Why", "lines": [
+          "Build a life I can feel and live fully.",
+          "Do the work and make space for love.",
+          "Create an environment that supports the relationships and experiences I need."
+        ] },
+        { "heading": "Remember", "lines": [
+          "Nourishing my body supports energy, strength, skin, hair, and mental health."
+        ] },
+        { "heading": "Grounding Lens", "lines": [
+          "What matters most today?",
+          "Practice patience.",
+          "Reconnect with purpose and direction.",
+          "Make room for joy and curiosity.",
+          "Act with self-assurance."
+        ] }
+      ]
+    },
+    {
+      "id": "nutrition-flow",
+      "title": "Nutrition Flow",
+      "icon": "🥗",
+      "when": "Daily",
+      "from": "TickTick · Medical · Nutrition Flow — Use Macro Tracker",
+      "intro": "The macro tracker remains authoritative for detailed nutrition.",
+      "sections": [
+        { "heading": "Keep visible", "lines": [
+          "Protein intake",
+          "Antioxidant-rich fruit or vegetable",
+          "Daily fluids",
+          "Energy snack available before predictable energy drops",
+          "Spaced meals—notice long gaps and choose the next meal or snack"
+        ] }
+      ],
+      "outro": "TickTick actions: Drink 5 Bottles of Water, Eat a Fruit or Vegetable, and Creatine and Fiber Supplements.",
+      "link": { "label": "Open the macro tracker", "space": "logs" }
+    },
+    {
+      "id": "creative-menu",
+      "title": "Creative / Tinkering & Project Menu",
+      "icon": "🎨",
+      "when": "Daily",
+      "from": "TickTick · Creativity · Creative / Tinkering & Project Menu",
+      "sections": [
+        { "heading": "Session options", "lines": [
+          "Music and singing",
+          "Curiosity “recess” exploration",
+          "Intentional learning",
+          "Unrestricted, non-guided making"
+        ] },
+        { "heading": "Active project menus", "lines": [
+          "Deep dives / larger projects",
+          "Botanicals or lotions exploration",
+          "Sewing or knitting—Savanna’s baby blanket"
+        ] }
+      ],
+      "outro": "Keep outcomes undated. Put only the next physical action in Next Step Actions.",
+      "link": { "label": "Open Music Hub", "url": "https://my-music-hub.randymcfarland1227.workers.dev/" }
+    },
+    {
+      "id": "rest-sleep",
+      "title": "Rest & Sleep Priorities",
+      "icon": "🌙",
+      "when": "Daily",
+      "from": "TickTick · Grounding · Rest & Sleep Priorities",
+      "sections": [
+        { "heading": "Rest while awake", "lines": [
+          "Pause before filling every open moment. Choose physical or mental rest when recovery is the real need."
+        ] },
+        { "heading": "Sleep", "lines": [
+          "Protect sleep as a foundation for healing, regulation, energy, and follow-through."
+        ] },
+        { "heading": "How it appears in TickTick", "lines": [
+          "Daytime Rest / Quiet Reset = awake rest, meditation, or a straightforward low-thinking action.",
+          "Night Time Routine = the wind-down sequence.",
+          "Medicine and Vitamins = planned sleep supplements when applicable.",
+          "Recovery Options — Choose or Skip = stretching/yoga and other recovery tools."
+        ] }
+      ],
+      "outro": "Sleep is an outcome—not a checkbox."
+    }
+  ]
+}
