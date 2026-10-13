@@ -11,6 +11,8 @@ type Guide = {
   icon: string;
   when: 'Daily' | 'Weekdays';
   from: string;
+  /** One line of Randy's own words shown on the card */
+  key?: string;
   intro?: string;
   outro?: string;
   sections: Array<{ heading: string; lines: string[] }>;
@@ -18,6 +20,7 @@ type Guide = {
 };
 
 const READ_KEY = 'lifehub-grounding-read';
+const OPEN_KEY = 'lifehub-grounding-open';
 const dayKey = (d = new Date()) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 
 /** Which guides were read today, on this device. Reading is a check-in — never a completed task. */
@@ -37,14 +40,18 @@ function useReadToday(): [Set<string>, (id: string) => void] {
 }
 
 /**
- * Daily grounding: the guides that used to be TickTick "tasks" (they're reminders, not to-dos),
- * blended with the directions you're moving toward — Move OS's goals and your current goals.
- * Nothing here counts as a completion.
+ * Daily grounding, top to bottom: today's guides as four equal cards → the one you open, in a
+ * single reading panel → the directions you're moving toward (Move OS goals, current goals by
+ * area) in two matching columns. Nothing here counts as a completion.
  */
 export function DailyGrounding({ move, goals, enter }: { move?: SourceSnapshot; goals: GoalsData | null; enter: (space: SpaceId) => void }) {
   const [guides, setGuides] = useState<Guide[] | null>(null);
-  const [open, setOpen] = useState<string | null>(null);
+  const [open, setOpenState] = useState<string | null>(() => readSaved<string | null>(OPEN_KEY, null));
   const [read, toggleRead] = useReadToday();
+  const setOpen = (id: string | null) => {
+    setOpenState(id);
+    writeSaved(OPEN_KEY, id);
+  };
   useEffect(() => {
     fetch(`${import.meta.env.BASE_URL}data/grounding.json?t=${Date.now()}`, { cache: 'no-store' })
       .then(r => (r.ok ? (r.json() as Promise<{ guides?: Guide[] }>) : null))
@@ -54,82 +61,117 @@ export function DailyGrounding({ move, goals, enter }: { move?: SourceSnapshot; 
 
   const weekday = ![0, 6].includes(new Date().getDay());
   const today = (guides || []).filter(g => g.when === 'Daily' || weekday);
+  const readCount = today.filter(g => read.has(g.id)).length;
+  const current = today.find(g => g.id === open) || null;
   const moveGoals = (move?.featured || []).filter(f => f.completable === false);
   const goalAreas = (goals?.categories || [])
     .map(c => ({ c, list: goals!.goals.filter(g => g.status === 'active' && g.categoryId === c.id) }))
     .filter(x => x.list.length);
+  const goalCount = goalAreas.reduce((n, a) => n + a.list.length, 0);
 
   return (
-    <div className="grounding">
-      <section className="gr-guides" aria-labelledby="gr-today">
-        <h3 id="gr-today">
-          Today’s grounding <span>· {read.size ? `${[...read].filter(id => today.some(g => g.id === id)).length} of ${today.length} read` : 'read, don’t check off'}</span>
-        </h3>
-        {guides === null ? <p className="gr-empty">Loading…</p> : null}
-        <ul className="gr-list">
-          {today.map(g => {
-            const isOpen = open === g.id;
-            const isRead = read.has(g.id);
-            return (
-              <li key={g.id} className={`gr-guide${isOpen ? ' is-open' : ''}${isRead ? ' is-read' : ''}`}>
-                <button type="button" className="gr-guide-head" aria-expanded={isOpen} onClick={() => setOpen(isOpen ? null : g.id)}>
-                  <span className="gr-icon" aria-hidden="true">
-                    {g.icon}
-                  </span>
-                  <span className="gr-title">{g.title}</span>
-                  <span className="gr-when">{g.when}</span>
-                  <span className="gr-chev" aria-hidden="true" />
-                </button>
-                {isOpen ? (
-                  <div className="gr-body">
-                    {g.intro ? <p className="gr-intro">{g.intro}</p> : null}
-                    {g.sections.map(s => (
-                      <div key={s.heading} className="gr-sec">
-                        <h4>{s.heading}</h4>
-                        <ul>
-                          {s.lines.map(l => (
-                            <li key={l}>{l}</li>
-                          ))}
-                        </ul>
-                      </div>
-                    ))}
-                    {g.outro ? <p className="gr-outro">{g.outro}</p> : null}
-                    <div className="gr-tools">
-                      <button type="button" className={`row-action${isRead ? ' ghost' : ''}`} aria-pressed={isRead} onClick={() => toggleRead(g.id)}>
-                        {isRead ? '✓ Read today' : 'Mark read today'}
-                      </button>
-                      {g.link?.url ? (
-                        <a className="row-action ghost" href={g.link.url} target="_blank" rel="noopener noreferrer">
-                          {g.link.label} ↗
-                        </a>
-                      ) : g.link?.space ? (
-                        <button type="button" className="row-action ghost" onClick={() => enter(g.link!.space!)}>
-                          {g.link.label} →
-                        </button>
-                      ) : null}
-                    </div>
-                  </div>
-                ) : null}
-              </li>
-            );
-          })}
-        </ul>
-      </section>
+    <section className="grounding glass-panel" aria-label="Daily grounding">
+      <header className="gr-head">
+        <p className="section-label">Grounding</p>
+        <h2>Today</h2>
+        <p className="gr-sub">{new Date().toLocaleDateString([], { weekday: 'long', month: 'long', day: 'numeric' })} · read, don’t check off</p>
+        <span className="gr-progress" aria-label={`${readCount} of ${today.length} guides read today`}>
+          {today.map(g => (
+            <i key={g.id} className={read.has(g.id) ? 'is-read' : ''} />
+          ))}
+          <b>
+            {readCount}/{today.length}
+          </b>{' '}
+          read
+        </span>
+      </header>
 
-      <section className="gr-dirs" aria-labelledby="gr-dirs">
-        <h3 id="gr-dirs">
-          Directions <span>· not one-time tasks — what you’re moving toward</span>
-        </h3>
-        <div className="gr-dir-block tone-move">
-          <p className="gr-dir-label">
-            Move <button type="button" className="gr-dir-link" onClick={() => enter('move')}>Open →</button>
-          </p>
+      {/* 1 · Today's guides: four equal cards */}
+      <div className="gr-cards" role="tablist" aria-label="Today's guides">
+        {guides === null ? <p className="gr-empty">Loading…</p> : null}
+        {today.map(g => {
+          const isOpen = current?.id === g.id;
+          const isRead = read.has(g.id);
+          return (
+            <button
+              key={g.id}
+              type="button"
+              role="tab"
+              aria-selected={isOpen}
+              className={`gr-card${isOpen ? ' is-open' : ''}${isRead ? ' is-read' : ''}`}
+              onClick={() => setOpen(isOpen ? null : g.id)}
+            >
+              <span className="gr-card-top">
+                <span className="gr-card-icon" aria-hidden="true">
+                  {g.icon}
+                </span>
+                <span className="gr-card-when">{isRead ? '✓ Read' : g.when}</span>
+              </span>
+              <span className="gr-card-title">{g.title}</span>
+              {g.key ? <span className="gr-card-key">“{g.key}”</span> : null}
+              <span className="gr-card-cta">{isOpen ? 'Close' : 'Read'}</span>
+            </button>
+          );
+        })}
+      </div>
+
+      {/* 2 · The open guide, always in the same place */}
+      {current ? (
+        <article className="gr-reader" role="tabpanel" aria-label={current.title}>
+          <header className="gr-reader-head">
+            <span className="gr-card-icon" aria-hidden="true">
+              {current.icon}
+            </span>
+            <h3>{current.title}</h3>
+            {current.intro ? <p>{current.intro}</p> : null}
+          </header>
+          <div className="gr-reader-grid">
+            {current.sections.map(s => (
+              <div key={s.heading} className="gr-block">
+                <h4>{s.heading}</h4>
+                <ul>
+                  {s.lines.map(l => (
+                    <li key={l}>{l}</li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
+          {current.outro ? <p className="gr-outro">{current.outro}</p> : null}
+          <footer className="gr-reader-foot">
+            <button type="button" className={`gr-btn${read.has(current.id) ? ' is-on' : ' is-primary'}`} aria-pressed={read.has(current.id)} onClick={() => toggleRead(current.id)}>
+              {read.has(current.id) ? '✓ Read today' : 'Mark read today'}
+            </button>
+            {current.link?.url ? (
+              <a className="gr-btn" href={current.link.url} target="_blank" rel="noopener noreferrer">
+                {current.link.label} ↗
+              </a>
+            ) : current.link?.space ? (
+              <button type="button" className="gr-btn" onClick={() => enter(current.link!.space!)}>
+                {current.link.label} →
+              </button>
+            ) : null}
+          </footer>
+        </article>
+      ) : null}
+
+      {/* 3 · Directions: two matching columns */}
+      <div className="gr-dirs">
+        <div className="gr-col tone-move">
+          <header className="gr-col-head">
+            <h3>Move</h3>
+            <span className="gr-count">{moveGoals.length}</span>
+            <span className="gr-col-sub">goals that unlock the move</span>
+            <button type="button" className="gr-link" onClick={() => enter('move')}>
+              Open Move OS →
+            </button>
+          </header>
           {moveGoals.length ? (
-            <ul className="gr-dir-list">
+            <ul className="gr-rows">
               {moveGoals.map(g => (
-                <li key={g.id}>
-                  <strong>{g.title}</strong>
-                  {g.detail ? <small>{g.detail}</small> : null}
+                <li key={g.id} className="gr-row">
+                  <span className="gr-row-title">{g.title}</span>
+                  {g.detail ? <span className="gr-row-text">{g.detail}</span> : null}
                 </li>
               ))}
             </ul>
@@ -137,11 +179,14 @@ export function DailyGrounding({ move, goals, enter }: { move?: SourceSnapshot; 
             <p className="gr-empty">Open Move OS once and its goals show here.</p>
           )}
         </div>
-        <div className="gr-dir-block tone-flow">
-          <p className="gr-dir-label">
-            Flow · current goals <button
+        <div className="gr-col tone-flow">
+          <header className="gr-col-head">
+            <h3>Current goals</h3>
+            <span className="gr-count">{goalCount}</span>
+            <span className="gr-col-sub">from Flow, by area</span>
+            <button
               type="button"
-              className="gr-dir-link"
+              className="gr-link"
               onClick={() => {
                 writeSaved('lifehub-why-tab', 'flow');
                 enter('why');
@@ -149,29 +194,26 @@ export function DailyGrounding({ move, goals, enter }: { move?: SourceSnapshot; 
             >
               Open Flow →
             </button>
-          </p>
+          </header>
           {goalAreas.length ? (
-            <div className="gr-areas">
+            <ul className="gr-rows">
               {goalAreas.map(({ c, list }) => (
-                <div key={c.id} className="gr-area">
-                  <span className="gr-area-name">
-                    <span aria-hidden="true">{c.icon}</span> {c.label}
+                <li key={c.id} className="gr-row">
+                  <span className="gr-row-title">
+                    <span className="gr-row-icon" aria-hidden="true">
+                      {c.icon}
+                    </span>
+                    {c.label}
                   </span>
-                  <span className="gr-chips">
-                    {list.map(g => (
-                      <span key={g.id} className={`gr-chip${g.review ? ' has-review' : ''}`} title={[g.why, g.review ? `Last review: ${g.review.momentum}` : ''].filter(Boolean).join(' — ')}>
-                        {g.title}
-                      </span>
-                    ))}
-                  </span>
-                </div>
+                  <span className="gr-row-text">{list.map(g => g.title).join(' · ')}</span>
+                </li>
               ))}
-            </div>
+            </ul>
           ) : (
             <p className="gr-empty">Loading goals…</p>
           )}
         </div>
-      </section>
-    </div>
+      </div>
+    </section>
   );
 }
