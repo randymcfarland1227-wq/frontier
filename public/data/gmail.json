@@ -1,11 +1,19 @@
 {
   "source": "gmail",
   "metrics": {
-    "starred": 5,
+    "starred": 3,
     "unread": 1,
-    "action": 5
+    "action": 3
   },
   "featured": [
+    {
+      "id": "1a123eb4cfde0195",
+      "title": "How was your support experience?",
+      "detail": "This message was sent to randymcfarland1227@gmail.com. Please visit notification settings to manage your email alerts. Copyright © 2026 Poshmark, Inc. 203 Redwood Shores Pkwy, 8th ",
+      "meta": "From noreply@poshmark.com",
+      "originUrl": "https://mail.google.com/mail/?authuser=randymcfarland1227@gmail.com#all/thread-f:1878632940869386645",
+      "completable": false
+    },
     {
       "id": "1a122c2b24909a50",
       "title": "You made the sale for Louis Vuitton Fashion Coffee Table Book Hardcover E...",
@@ -21,33 +29,17 @@
       "meta": "From support@poshmark.com",
       "originUrl": "https://mail.google.com/mail/?authuser=randymcfarland1227@gmail.com#all/thread-f:1878490434460471477",
       "completable": false
-    },
-    {
-      "id": "1a119421c9d6815c",
-      "title": "creatorofart sent a message about Under Armour Neon Orange Zip Up Jacket Mens XL #407174990969",
-      "detail": "Good evening. The tag says large. Bummer for me. Thank you. ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏",
-      "meta": "From creato_ezwb6258ndta@members.ebay.com",
-      "originUrl": "https://mail.google.com/mail/?authuser=randymcfarland1227@gmail.com#all/thread-f:1878445392431317340",
-      "completable": false
-    },
-    {
-      "id": "1a0ca8746bd9e24c",
-      "title": "AutoPay failed—make your payment now",
-      "detail": "We weren't able to process your scheduled payment. Please make this payment today. Affirm AutoPay failed for your Shotgun plan We couldn't process your $7.12 payment due Sep 22, 20",
-      "meta": "From affirm-confirmation@affirm.com",
-      "originUrl": "https://mail.google.com/mail/?authuser=randymcfarland1227@gmail.com#all/thread-f:1877060362685768268",
-      "completable": false
-    },
-    {
-      "id": "1a0b567ce591d78a",
-      "title": "RE: Senior Cvent Platform Administrator - REMOTE",
-      "detail": "Hi Randy, please let me know the best time to call Best regards, Armeena Syiemlieh Lead Recruiter https://www.linkedin.com/in/asyiemlieh/ ApTask Global Workforce 📞 Office: 612-614",
-      "meta": "From asyiemlieh@agwtalent.com",
-      "originUrl": "https://mail.google.com/mail/?authuser=randymcfarland1227@gmail.com#all/thread-f:1876688764157417354",
-      "completable": false
     }
   ],
   "tasks": [
+    {
+      "id": "1a123eb4cfde0195",
+      "title": "How was your support experience?",
+      "detail": "This message was sent to randymcfarland1227@gmail.com. Please visit notification settings to manage your email alerts. Copyright © 2026 Poshmark, Inc. 203 Redwood Shores Pkwy, 8th ",
+      "status": "open",
+      "starred": true,
+      "originUrl": "https://mail.google.com/mail/?authuser=randymcfarland1227@gmail.com#all/thread-f:1878632940869386645"
+    },
     {
       "id": "1a122c2b24909a50",
       "title": "You made the sale for Louis Vuitton Fashion Coffee Table Book Hardcover E...",
@@ -63,31 +55,7 @@
       "status": "open",
       "starred": true,
       "originUrl": "https://mail.google.com/mail/?authuser=randymcfarland1227@gmail.com#all/thread-f:1878490434460471477"
-    },
-    {
-      "id": "1a119421c9d6815c",
-      "title": "creatorofart sent a message about Under Armour Neon Orange Zip Up Jacket Mens XL #407174990969",
-      "detail": "Good evening. The tag says large. Bummer for me. Thank you. ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏",
-      "status": "open",
-      "starred": true,
-      "originUrl": "https://mail.google.com/mail/?authuser=randymcfarland1227@gmail.com#all/thread-f:1878445392431317340"
-    },
-    {
-      "id": "1a0ca8746bd9e24c",
-      "title": "AutoPay failed—make your payment now",
-      "detail": "We weren't able to process your scheduled payment. Please make this payment today. Affirm AutoPay failed for your Shotgun plan We couldn't process your $7.12 payment due Sep 22, 20",
-      "status": "open",
-      "starred": true,
-      "originUrl": "https://mail.google.com/mail/?authuser=randymcfarland1227@gmail.com#all/thread-f:1877060362685768268"
-    },
-    {
-      "id": "1a0b567ce591d78a",
-      "title": "RE: Senior Cvent Platform Administrator - REMOTE",
-      "detail": "Hi Randy, please let me know the best time to call Best regards, Armeena Syiemlieh Lead Recruiter https://www.linkedin.com/in/asyiemlieh/ ApTask Global Workforce 📞 Office: 612-614",
-      "status": "open",
-      "starred": true,
-      "originUrl": "https://mail.google.com/mail/?authuser=randymcfarland1227@gmail.com#all/thread-f:1876688764157417354"
     }
   ],
-  "refreshedAt": "2026-10-12T12:57:42.371Z"
+  "refreshedAt": "2026-10-13T12:55:28.869Z"
 }
