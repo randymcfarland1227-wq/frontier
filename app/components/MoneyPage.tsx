@@ -1755,6 +1755,11 @@ export function MoneyPage({
               ) : null}
             </Section>
             <Section tone="shop" title="Purchases" hint="Tick when bought (crosses it out in the sheet). Move items between lists." href={link('Restock/Purchases')}>
+              {model.toPurchase ? (
+                <Fold title="To purchase" meta={`${model.toPurchase.rows.filter(r => !r.some(c => c.struck)).length} open`} open>
+                  <SheetTable table={model.toPurchase} onSave={save} opts={{ check: 'Bought' }} />
+                </Fold>
+              ) : null}
               {openNeeded ? (
                 <Fold title="Needed" meta={`${openNeeded.rows.length} open`} open={openNeeded.rows.length > 0}>
                   {openNeeded.rows.length ? (

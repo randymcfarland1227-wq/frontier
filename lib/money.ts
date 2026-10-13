@@ -352,6 +352,8 @@ export type MoneyModel = {
   restockNeeded: Table | null;
   wants: Table | null;
   recurring: Table | null;
+  /** Un-headed list under the re-occurring items (Restock/Purchases) */
+  toPurchase: Table | null;
   scores: Array<{ label: string; value: string }>;
   creditAccounts: Table | null;
   creditCards: Table | null;
@@ -484,6 +486,25 @@ export function parseMoney(snap: MoneySnapshot, today = new Date()): MoneyModel 
   const restockNeeded = block(restock, 'needed', 'Needed Purchases', { nameCol: 1 });
   const wants = block(restock, 'wants', 'Wants', { nameCol: 1, gaps: 0 });
   const recurring = need('Needed Re-Occurring/Restock', block(restock, 'recurring', /^needed re-?occurring/i, { nameCol: 1 }));
+  // The un-headed "to purchase" list under the re-occurring list's "Sum of Yes and Low" row
+  // (item · why · cost · where · … · priority). block() stops at that total row, so read it here.
+  let toPurchase: Table | null = null;
+  if (restock && recurring?.total) {
+    const c1 = recurring.total[0].c;
+    const rows: Cell[][] = [];
+    let gaps = 0;
+    for (let r = recurring.total[0].r + 1; r < restock.rows && gaps < 3; r++) {
+      const cells = Array.from({ length: 7 }, (_, i) => restock.cell(r, c1 + i));
+      if (cells.every(c => !c.text)) {
+        gaps++;
+        continue;
+      }
+      gaps = 0;
+      // "N/a" in the Needed? column: the item sits one column over
+      rows.push(/^n\/?a$/i.test(cells[0].text) ? [...cells.slice(1), restock.cell(r, c1 + 7)] : cells);
+    }
+    if (rows.length) toPurchase = { key: 'toPurchase', title: 'To purchase', tab: restock.tab, header: ['Item', 'Why', 'Cost', 'Where / note', '', '', 'Priority'], rows, firstRow: rows[0] };
+  }
 
   const scores: MoneyModel['scores'] = [];
   const scoreAt = credit?.find(/^current scores/i);
@@ -606,6 +627,7 @@ export function parseMoney(snap: MoneySnapshot, today = new Date()): MoneyModel 
     restockNeeded,
     wants,
     recurring,
+    toPurchase,
     scores,
     creditAccounts,
     creditCards,
