@@ -4,7 +4,7 @@ import { useMemo, useState, type DragEvent } from 'react';
 import { tagTone } from '../../lib/tagTone';
 import type { FeaturedItem, SourceId, SourceSnapshot } from '../../lib/types';
 import { SOURCE_IDS, sourceById } from '../../lib/sources';
-import { DECK, PLAN, openBefore, pinKey, placePin, unpin, usePriorityPins, type Lane } from '../../lib/priorityPins';
+import { DECK, PLAN, arrangeDeck, deckSlotKey, openBefore, pinKey, placePin, setDeckSlot, unpin, usePriorityPins, type Lane } from '../../lib/priorityPins';
 import { byLevel, criticalKeys, useFeaturedLevels } from '../../lib/featuredLevels';
 import { SiteIcon } from './SiteIcon';
 import { PriorityPanel, type PriorityItem } from './PriorityPanel';
@@ -110,7 +110,9 @@ export function PriorityBoard({
   );
 
   // On deck: one group per site; critical first, then red/yellow/green, then pin order.
-  const groups = useMemo(() => {
+  // Moved this visit but not locked: forgotten on refresh (back to auto sort).
+  const [movedSlots, setMovedSlots] = useState<Record<string, number>>({});
+  const autoGroups = useMemo(() => {
     const inPlan = new Set(plan.map(i => i.key));
     const keys = [...criticals.filter(k => !pins.includes(k)), ...pins.filter(k => lanes[k]?.lane !== PLAN)];
     const bySite = new Map<SourceId, PriorityItem[]>();
@@ -129,6 +131,28 @@ export function PriorityBoard({
       }))
       .sort((a, b) => Number(b.critical) - Number(a.critical) || b.items.length - a.items.length);
   }, [pins, lanes, plan, criticals, catalog, levelOf, isCritical]);
+  const lockedSlots = useMemo(() => {
+    const out: Record<string, { pos: number; at: string }> = {};
+    for (const g of autoGroups) {
+      const e = lanes[deckSlotKey(g.source)];
+      if (e && !e.lane && e.order > 0) out[g.source] = { pos: e.order, at: e.at };
+    }
+    return out;
+  }, [autoGroups, lanes]);
+  const groups = useMemo(() => {
+    const order = arrangeDeck(autoGroups.map(g => g.source), lockedSlots, movedSlots);
+    return order.map(id => autoGroups.find(g => g.source === id)!);
+  }, [autoGroups, lockedSlots, movedSlots]);
+  const setPosition = (source: SourceId, pos: number) => {
+    if (lockedSlots[source]) setDeckSlot(source, pos);
+    else setMovedSlots(m => ({ ...m, [source]: pos }));
+  };
+  const toggleLock = (source: SourceId, pos: number) => {
+    if (lockedSlots[source]) {
+      setDeckSlot(source, null);
+      setMovedSlots(m => ({ ...m, [source]: pos }));
+    } else setDeckSlot(source, pos);
+  };
 
   const deckCount = groups.reduce((n, g) => n + g.items.length, 0);
   const placed = new Set([...plan.map(i => i.key), ...groups.flatMap(g => g.items.map(i => i.key))]);
@@ -348,15 +372,40 @@ export function PriorityBoard({
           {groups.length ? (
             // A grid of site boxes that grows with the number of sites: 2 → 2×1, 3 → 3×1, 4+ → 3 across.
             <div className="pv-groups" style={{ '--cols': Math.min(groups.length, 3) } as React.CSSProperties}>
-              {groups.map(group => {
+              {groups.map((group, gi) => {
                 const def = sourceById[group.source];
+                const isLocked = Boolean(lockedSlots[group.source]);
                 return (
                   <section key={group.source} className={`pv-group src-${group.source}`} aria-label={def.name}>
-                    <button type="button" className="pv-group-head" onClick={() => enter(group.source)} title={`Open ${def.name} page`}>
-                      <SiteIcon source={group.source} className="pv-site" />
-                      <span>{def.name}</span>
-                      <b>{group.items.length}</b>
-                    </button>
+                    <div className="pv-group-headrow">
+                      <button type="button" className="pv-group-head" onClick={() => enter(group.source)} title={`Open ${def.name} page · ${group.items.length} on deck`}>
+                        <SiteIcon source={group.source} className="pv-site" />
+                        <span>{def.name}</span>
+                      </button>
+                      <select
+                        className="pv-pos"
+                        value={gi + 1}
+                        onChange={e => setPosition(group.source, Number(e.target.value))}
+                        aria-label={`Position of ${def.name}`}
+                        title={isLocked ? 'Position (locked)' : 'Position — lock it to keep it after a refresh'}
+                      >
+                        {groups.map((_, i) => (
+                          <option key={i} value={i + 1}>
+                            {i + 1}
+                          </option>
+                        ))}
+                      </select>
+                      <button
+                        type="button"
+                        className={`pv-lock${isLocked ? ' is-on' : ''}`}
+                        aria-pressed={isLocked}
+                        onClick={() => toggleLock(group.source, gi + 1)}
+                        aria-label={`${isLocked ? 'Unlock' : 'Lock'} ${def.name} at position ${gi + 1}`}
+                        title={isLocked ? 'Locked here — click to go back to auto sort' : 'Lock it at this position'}
+                      >
+                        {isLocked ? '🔒' : '🔓'}
+                      </button>
+                    </div>
                     <ul className="pv-list">
                       {group.items.map(item => (
                         <li key={item.key} className={`pv-row${levelClass(item)}${dragging === item.key ? ' is-dragging' : ''}`} {...dragProps(item, DECK)}>

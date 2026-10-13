@@ -164,3 +164,39 @@ export function usePriorityPins() {
 
   return { pins, lanes, addPin, removePin, isPinned, laneOf };
 }
+
+/**
+ * On deck site boxes: a site locked to a position. Stored in the same synced map as pins, under
+ * `deckslot:<source>` with lane null (so nothing treats it as a pin); order = position (1-based),
+ * 0 = unlocked. Newest change wins across devices, like everything else here.
+ */
+export const deckSlotKey = (source: string) => `deckslot:${source}`;
+
+export function setDeckSlot(source: string, position: number | null) {
+  const map = loadLanes();
+  map[deckSlotKey(source)] = { lane: null, order: position && position > 0 ? Math.round(position) : 0, at: new Date().toISOString() };
+  saveLanes(map);
+}
+
+/** Final order: locked first (by position, older lock wins a tie), then moved-but-unlocked, then auto order. */
+export function arrangeDeck<T extends string>(auto: T[], locked: Record<string, { pos: number; at: string }>, moved: Record<string, number>): T[] {
+  const n = auto.length;
+  const slots: Array<T | null> = Array(n).fill(null);
+  const place = (id: T, want: number) => {
+    const p = Math.min(Math.max(1, want), n) - 1;
+    for (let d = 0; d < n; d++) {
+      for (const i of [p + d, p - d]) {
+        if (i >= 0 && i < n && slots[i] === null) {
+          slots[i] = id;
+          return;
+        }
+      }
+    }
+  };
+  const lockedIds = auto.filter(id => locked[id]).sort((a, b) => locked[a].pos - locked[b].pos || locked[a].at.localeCompare(locked[b].at));
+  lockedIds.forEach(id => place(id, locked[id].pos));
+  const movedIds = auto.filter(id => !locked[id] && moved[id]);
+  movedIds.forEach(id => place(id, moved[id]));
+  const rest = auto.filter(id => !slots.includes(id));
+  return slots.map(s => s ?? rest.shift()!) as T[];
+}
