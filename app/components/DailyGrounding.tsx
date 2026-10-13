@@ -4,6 +4,8 @@ import { useEffect, useState } from 'react';
 import type { GoalsData } from '../../lib/goals';
 import type { SourceSnapshot, SpaceId } from '../../lib/types';
 import { readSaved, writeSaved } from '../../lib/storage';
+import type { Goal } from '../../lib/goals';
+import { modeOf, routinesFor, setGoalMode, useGoalModes, type GoalModes } from '../../lib/goalModes';
 
 type Guide = {
   id: string;
@@ -68,6 +70,10 @@ export function DailyGrounding({ move, goals, enter }: { move?: SourceSnapshot; 
     .map(c => ({ c, list: goals!.goals.filter(g => g.status === 'active' && g.categoryId === c.id) }))
     .filter(x => x.list.length);
   const goalCount = goalAreas.reduce((n, a) => n + a.list.length, 0);
+  const goalModes = useGoalModes();
+  const [goalOpen, setGoalOpen] = useState<string | null>(null);
+  const modeCounts = { active: 0, passive: 0, none: 0 };
+  for (const { list } of goalAreas) for (const g of list) modeCounts[modeOf(g.id, goalModes).mode || 'none']++;
 
   return (
     <section className="grounding glass-panel" aria-label="Daily grounding">
@@ -183,7 +189,11 @@ export function DailyGrounding({ move, goals, enter }: { move?: SourceSnapshot; 
           <header className="gr-col-head">
             <h3>Current goals</h3>
             <span className="gr-count">{goalCount}</span>
-            <span className="gr-col-sub">from Flow, by area</span>
+            <span className="gr-legend" aria-label="Key">
+              <span className="gr-key is-active">Active {modeCounts.active}</span>
+              <span className="gr-key is-passive">Passive {modeCounts.passive}</span>
+              {modeCounts.none ? <span className="gr-key is-none">No routine yet {modeCounts.none}</span> : null}
+            </span>
             <button
               type="button"
               className="gr-link"
@@ -196,24 +206,89 @@ export function DailyGrounding({ move, goals, enter }: { move?: SourceSnapshot; 
             </button>
           </header>
           {goalAreas.length ? (
-            <ul className="gr-rows">
-              {goalAreas.map(({ c, list }) => (
-                <li key={c.id} className="gr-row">
-                  <span className="gr-row-title">
-                    <span className="gr-row-icon" aria-hidden="true">
-                      {c.icon}
+            <div className="gr-areas">
+              {goalAreas.map(({ c, list }) => {
+                const picked = list.find(g => g.id === goalOpen);
+                return (
+                  <div key={c.id} className={`gr-area area-${c.id}`}>
+                    <span className="gr-area-name">
+                      <span aria-hidden="true">{c.icon}</span> {c.label}
                     </span>
-                    {c.label}
-                  </span>
-                  <span className="gr-row-text">{list.map(g => g.title).join(' · ')}</span>
-                </li>
-              ))}
-            </ul>
+                    <span className="gr-chips">
+                      {list.map(g => {
+                        const { mode } = modeOf(g.id, goalModes);
+                        return (
+                          <button
+                            key={g.id}
+                            type="button"
+                            className={`gr-chip is-${mode || 'none'}${goalOpen === g.id ? ' is-open' : ''}`}
+                            aria-expanded={goalOpen === g.id}
+                            onClick={() => setGoalOpen(goalOpen === g.id ? null : g.id)}
+                            title={`${g.title} — ${mode === 'active' ? 'Active' : mode === 'passive' ? 'Passive' : 'No routine yet'}`}
+                          >
+                            {g.title}
+                          </button>
+                        );
+                      })}
+                    </span>
+                    {picked ? <GoalDetail goal={picked} modes={goalModes} /> : null}
+                  </div>
+                );
+              })}
+            </div>
           ) : (
             <p className="gr-empty">Loading goals…</p>
           )}
         </div>
       </div>
     </section>
+  );
+}
+
+const TIER_LABEL: Record<string, string> = { drive: 'Drives it', enable: 'Makes it easier', upkeep: 'Keeps it up' };
+
+/** One goal opened: your why, how it's set (active / passive), and the routines that actually drive it. */
+function GoalDetail({ goal, modes }: { goal: Goal; modes: GoalModes }) {
+  const { mode, mine } = modeOf(goal.id, modes);
+  const routines = routinesFor(goal.id);
+  const tiers = ['drive', 'enable', 'upkeep'].map(t => ({ t, list: routines.filter(r => r.tier === t) })).filter(x => x.list.length);
+  return (
+    <div className="gr-goal">
+      <div className="gr-goal-head">
+        <strong>{goal.title}</strong>
+        <span className="gr-mode" role="group" aria-label={`${goal.title}: active or passive`}>
+          {(['active', 'passive'] as const).map(m => (
+            <button key={m} type="button" className={mode === m ? 'is-on' : ''} aria-pressed={mode === m} onClick={() => setGoalMode(goal.id, mode === m && mine ? null : m)}>
+              {m === 'active' ? 'Active' : 'Passive'}
+            </button>
+          ))}
+        </span>
+        <small className="gr-mode-src">{mine ? 'your call' : mode ? 'from Flow' : 'no routine yet — pick one'}</small>
+      </div>
+      {goal.why ? <p className="gr-goal-why">{goal.why}</p> : null}
+      {goal.how ? (
+        <p className="gr-goal-how">
+          <b>How:</b> {goal.how}
+        </p>
+      ) : null}
+      {tiers.length ? (
+        <div className="gr-goal-tiers">
+          {tiers.map(({ t, list }) => (
+            <div key={t} className={`gr-tier tier-${t}`}>
+              <span className="gr-tier-name">{TIER_LABEL[t] || t}</span>
+              <span className="gr-tier-list">
+                {list.map(r => (
+                  <span key={r.id} className="gr-routine" title={r.when}>
+                    {r.title}
+                  </span>
+                ))}
+              </span>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <p className="gr-goal-how">Nothing in Flow drives this yet — link a routine to it in Flow, or mark it yourself.</p>
+      )}
+    </div>
   );
 }

@@ -117,3 +117,14 @@ console.log('Migration checks pass: immutable input, stable counts/identity/date
   assert.equal(short[0].due, '2026-11-30', 'the 31st becomes the last day of a short month');
   console.log('Bill day rule checks pass.');
 }
+
+// Goal modes ("goalModes") sync: newest change wins; clearing (null) goes back to Flow's suggestion.
+{
+  const a = { ...emptyState(), goalModes: { 'mental-cleanspaces': { mode: 'active', at: '2026-10-13T19:00:00.000Z' } } };
+  const b = { ...emptyState(), goalModes: { 'mental-cleanspaces': { mode: null, at: '2026-10-13T20:00:00.000Z' } } };
+  for (const [x, y] of [[a, b], [b, a]]) assert.equal(mergeState(x, y).goalModes['mental-cleanspaces'].mode, null);
+  const old = { ...emptyState() };
+  delete old.goalModes;
+  assert.equal(mergeState(old, a).goalModes['mental-cleanspaces'].mode, 'active');
+  console.log('Goal mode sync checks pass.');
+}
