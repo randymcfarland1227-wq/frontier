@@ -5,7 +5,7 @@ import { createPortal } from 'react-dom';
 import type { FeaturedItem, SourceId } from '../../lib/types';
 import { sourceById } from '../../lib/sources';
 import { DECK, PLAN, updatePinDetails, type BeforeStep, type Lane, type LaneEntry } from '../../lib/priorityPins';
-import type { Level } from '../../lib/featuredLevels';
+import { LEVEL_LABEL, type Level } from '../../lib/featuredLevels';
 import { LevelDot } from './LevelDot';
 import { CriticalFlag } from './CriticalFlag';
 import { SiteIcon } from './SiteIcon';
@@ -24,6 +24,7 @@ export function PriorityPanel({
   level,
   critical,
   onCycleLevel,
+  onSetLevel,
   onToggleCritical,
   onMove,
   onDone,
@@ -37,6 +38,8 @@ export function PriorityPanel({
   level: Level | null;
   critical: boolean;
   onCycleLevel: () => void;
+  /** Pick red / yellow / green directly (null clears) */
+  onSetLevel?: (level: Level | null) => void;
   onToggleCritical: () => void;
   onMove: (lane: Lane) => void;
   onDone?: () => void;
@@ -114,7 +117,26 @@ export function PriorityPanel({
 
         <h2 id="plan-panel-title">{item.title}</h2>
         <div className="plan-panel-marks">
-          <LevelDot level={level} title={item.title} onCycle={onCycleLevel} />
+          {onSetLevel ? (
+            <span className="plan-levels" role="radiogroup" aria-label="Priority">
+              {(['red', 'yellow', 'green'] as const).map(l => (
+                <button
+                  key={l}
+                  type="button"
+                  role="radio"
+                  aria-checked={level === l}
+                  className={`plan-level is-${l}${level === l ? ' is-on' : ''}`}
+                  onClick={() => onSetLevel(level === l ? null : l)}
+                  title={level === l ? `${LEVEL_LABEL[l]} — click to clear` : LEVEL_LABEL[l]}
+                >
+                  <i aria-hidden="true" />
+                  {l === 'red' ? 'High' : l === 'yellow' ? 'Med' : 'Low'}
+                </button>
+              ))}
+            </span>
+          ) : (
+            <LevelDot level={level} title={item.title} onCycle={onCycleLevel} />
+          )}
           <CriticalFlag on={critical} title={item.title} onToggle={onToggleCritical} />
           <span className="plan-panel-where">{lane === PLAN ? 'On your action list' : lane === DECK ? 'On deck' : ''}</span>
         </div>

@@ -76,5 +76,13 @@ export function useFeaturedLevels() {
     window.dispatchEvent(new CustomEvent(LEVELS_EVENT));
   }, []);
 
-  return { levels, levelOf, cycle, isCritical, toggleCritical };
+  /** Set one level directly (null clears it). */
+  const setLevel = useCallback((source: SourceId, id: string, level: Level | null) => {
+    const all = loadLevels();
+    all[levelKey(source, id)] = { level, at: new Date().toISOString() };
+    writeSaved(STORAGE_KEYS.featuredLevels, all);
+    window.dispatchEvent(new CustomEvent(LEVELS_EVENT));
+  }, []);
+
+  return { levels, levelOf, cycle, setLevel, isCritical, toggleCritical };
 }

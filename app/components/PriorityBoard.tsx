@@ -92,7 +92,7 @@ export function PriorityBoard({
   bills?: BillDue[];
 }) {
   const { lanes, pins } = usePriorityPins();
-  const { levels, levelOf, cycle, isCritical, toggleCritical } = useFeaturedLevels();
+  const { levels, levelOf, cycle, setLevel, isCritical, toggleCritical } = useFeaturedLevels();
   const [query, setQuery] = useState('');
   const [dragging, setDragging] = useState<string | null>(null);
   const [over, setOver] = useState<string | null>(null);
@@ -458,6 +458,7 @@ export function PriorityBoard({
           level={levelOf(openItem.source, openItem.id)}
           critical={isCritical(openItem.source, openItem.id)}
           onCycleLevel={() => cycle(openItem.source, openItem.id)}
+          onSetLevel={l => setLevel(openItem.source, openItem.id, l)}
           onToggleCritical={() => toggleCritical(openItem.source, openItem.id)}
           onMove={lane => move(openItem, lane)}
           onDone={
