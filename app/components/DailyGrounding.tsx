@@ -1,10 +1,9 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import type { GoalsData } from '../../lib/goals';
+import type { Goal, GoalsData, GoalCategory } from '../../lib/goals';
 import type { SourceSnapshot, SpaceId } from '../../lib/types';
 import { readSaved, writeSaved } from '../../lib/storage';
-import type { Goal } from '../../lib/goals';
 import { modeOf, routinesFor, setGoalMode, useGoalModes, type GoalModes } from '../../lib/goalModes';
 
 type Guide = {
@@ -13,7 +12,6 @@ type Guide = {
   icon: string;
   when: 'Daily' | 'Weekdays';
   from: string;
-  /** One line of Randy's own words shown on the card */
   key?: string;
   intro?: string;
   outro?: string;
@@ -25,270 +23,176 @@ const READ_KEY = 'lifehub-grounding-read';
 const OPEN_KEY = 'lifehub-grounding-open';
 const dayKey = (d = new Date()) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 
-/** Which guides were read today, on this device. Reading is a check-in — never a completed task. */
+/** A reading check-in stays separate from the task completion ledger. */
 function useReadToday(): [Set<string>, (id: string) => void] {
   const today = dayKey();
-  const [read, setRead] = useState<string[]>(() => {
-    const saved = readSaved<{ day: string; ids: string[] }>(READ_KEY, { day: '', ids: [] });
-    return saved.day === today ? saved.ids : [];
+  const [saved, setSaved] = useState(() => readSaved<{ day: string; ids: string[] }>(READ_KEY, { day: '', ids: [] }));
+  const read = new Set(saved.day === today ? saved.ids : []);
+  const toggle = (id: string) => setSaved(cur => {
+    const ids = cur.day === today ? cur.ids : [];
+    const next = { day: today, ids: ids.includes(id) ? ids.filter(x => x !== id) : [...ids, id] };
+    writeSaved(READ_KEY, next);
+    return next;
   });
-  const toggle = (id: string) =>
-    setRead(cur => {
-      const next = cur.includes(id) ? cur.filter(x => x !== id) : [...cur, id];
-      writeSaved(READ_KEY, { day: today, ids: next });
-      return next;
-    });
-  return [new Set(read), toggle];
+  return [read, toggle];
 }
 
-/**
- * Daily grounding, top to bottom: today's guides as four equal cards → the one you open, in a
- * single reading panel → the directions you're moving toward (Move OS goals, current goals by
- * area) in two matching columns. Nothing here counts as a completion.
- */
+/** Reminders → active focuses / passive mindsets → compact relocation context. */
 export function DailyGrounding({ move, goals, enter }: { move?: SourceSnapshot; goals: GoalsData | null; enter: (space: SpaceId) => void }) {
   const [guides, setGuides] = useState<Guide[] | null>(null);
   const [open, setOpenState] = useState<string | null>(() => readSaved<string | null>(OPEN_KEY, null));
   const [read, toggleRead] = useReadToday();
+  const modes = useGoalModes();
   const setOpen = (id: string | null) => {
     setOpenState(id);
     writeSaved(OPEN_KEY, id);
   };
   useEffect(() => {
-    fetch(`${import.meta.env.BASE_URL}data/grounding.json?t=${Date.now()}`, { cache: 'no-store' })
+    const controller = new AbortController();
+    fetch(`${import.meta.env.BASE_URL}data/grounding.json?t=${Date.now()}`, { cache: 'no-store', signal: controller.signal })
       .then(r => (r.ok ? (r.json() as Promise<{ guides?: Guide[] }>) : null))
       .then(d => setGuides(Array.isArray(d?.guides) ? d.guides : []))
-      .catch(() => setGuides([]));
+      .catch(() => { if (!controller.signal.aborted) setGuides([]); });
+    return () => controller.abort();
   }, []);
 
   const weekday = ![0, 6].includes(new Date().getDay());
   const today = (guides || []).filter(g => g.when === 'Daily' || weekday);
+  const current = today.find(g => g.id === open);
   const readCount = today.filter(g => read.has(g.id)).length;
-  const current = today.find(g => g.id === open) || null;
   const moveGoals = (move?.featured || []).filter(f => f.completable === false);
-  const goalAreas = (goals?.categories || [])
-    .map(c => ({ c, list: goals!.goals.filter(g => g.status === 'active' && g.categoryId === c.id) }))
-    .filter(x => x.list.length);
-  const goalCount = goalAreas.reduce((n, a) => n + a.list.length, 0);
-  const goalModes = useGoalModes();
-  const [goalOpen, setGoalOpen] = useState<string | null>(null);
-  const modeCounts = { active: 0, passive: 0, none: 0 };
-  for (const { list } of goalAreas) for (const g of list) modeCounts[modeOf(g.id, goalModes).mode || 'none']++;
+  const currentGoals = (goals?.goals || []).filter(g => g.status === 'active');
+  const active = currentGoals.filter(g => modeOf(g.id, modes).mode === 'active');
+  const passive = currentGoals.filter(g => modeOf(g.id, modes).mode === 'passive');
+  const unlinked = currentGoals.filter(g => modeOf(g.id, modes).mode === null);
+  const openFlow = () => {
+    writeSaved('lifehub-why-tab', 'flow');
+    enter('why');
+  };
 
   return (
     <section className="grounding glass-panel" aria-label="Daily grounding">
       <header className="gr-head">
-        <p className="section-label">Grounding</p>
-        <h2>Today</h2>
-        <p className="gr-sub">{new Date().toLocaleDateString([], { weekday: 'long', month: 'long', day: 'numeric' })} · read, don’t check off</p>
-        <span className="gr-progress" aria-label={`${readCount} of ${today.length} guides read today`}>
-          {today.map(g => (
-            <i key={g.id} className={read.has(g.id) ? 'is-read' : ''} />
-          ))}
-          <b>
-            {readCount}/{today.length}
-          </b>{' '}
-          read
-        </span>
+        <div>
+          <p className="section-label">Grounding</p>
+          <h2>Pause. Find your direction.</h2>
+          <p className="gr-sub">{new Date().toLocaleDateString([], { weekday: 'long', month: 'long', day: 'numeric' })}</p>
+        </div>
+        <button type="button" className="gr-btn" onClick={openFlow}>Open Flow →</button>
       </header>
 
-      {/* 1 · Today's guides: four equal cards */}
-      <div className="gr-cards" role="tablist" aria-label="Today's guides">
-        {guides === null ? <p className="gr-empty">Loading…</p> : null}
-        {today.map(g => {
-          const isOpen = current?.id === g.id;
-          const isRead = read.has(g.id);
-          return (
-            <button
-              key={g.id}
-              type="button"
-              role="tab"
-              aria-selected={isOpen}
-              className={`gr-card${isOpen ? ' is-open' : ''}${isRead ? ' is-read' : ''}`}
-              onClick={() => setOpen(isOpen ? null : g.id)}
-            >
-              <span className="gr-card-top">
-                <span className="gr-card-icon" aria-hidden="true">
-                  {g.icon}
-                </span>
-                <span className="gr-card-when">{isRead ? '✓ Read' : g.when}</span>
+      <section className="gr-reminders" aria-labelledby="gr-reminders-title">
+        <header className="gr-section-head">
+          <h3 id="gr-reminders-title">Reminders</h3>
+          <p>Read and reconnect</p>
+          <span className="gr-read-count" aria-live="polite">{readCount}/{today.length} read today</span>
+        </header>
+        <div className="gr-cards" aria-label="Today's reminders">
+          {guides === null ? <p className="gr-empty">Loading reminders…</p> : null}
+          {guides?.length === 0 ? <p className="gr-empty">Reminders couldn’t load. Refresh to try again.</p> : null}
+          {today.map(g => (
+            <button key={g.id} type="button" className={`gr-card${current?.id === g.id ? ' is-open' : ''}${read.has(g.id) ? ' is-read' : ''}`}
+              aria-expanded={current?.id === g.id} aria-controls={current?.id === g.id ? 'gr-reader' : undefined} onClick={() => setOpen(current?.id === g.id ? null : g.id)}>
+              <span className="gr-card-icon" aria-hidden="true">{g.icon}</span>
+              <span className="gr-card-copy">
+                <span className="gr-card-title">{g.title}</span>
+                {g.key ? <span className="gr-card-key">{g.key}</span> : null}
               </span>
-              <span className="gr-card-title">{g.title}</span>
-              {g.key ? <span className="gr-card-key">“{g.key}”</span> : null}
-              <span className="gr-card-cta">{isOpen ? 'Close' : 'Read'}</span>
+              <span className="gr-card-when">{read.has(g.id) ? '✓ Read' : current?.id === g.id ? 'Close' : 'Read'}</span>
             </button>
-          );
-        })}
-      </div>
-
-      {/* 2 · The open guide, always in the same place */}
-      {current ? (
-        <article className="gr-reader" role="tabpanel" aria-label={current.title}>
-          <header className="gr-reader-head">
-            <span className="gr-card-icon" aria-hidden="true">
-              {current.icon}
-            </span>
-            <h3>{current.title}</h3>
-            {current.intro ? <p>{current.intro}</p> : null}
-          </header>
-          <div className="gr-reader-grid">
-            {current.sections.map(s => (
-              <div key={s.heading} className="gr-block">
-                <h4>{s.heading}</h4>
-                <ul>
-                  {s.lines.map(l => (
-                    <li key={l}>{l}</li>
-                  ))}
-                </ul>
-              </div>
-            ))}
-          </div>
-          {current.outro ? <p className="gr-outro">{current.outro}</p> : null}
-          <footer className="gr-reader-foot">
-            <button type="button" className={`gr-btn${read.has(current.id) ? ' is-on' : ' is-primary'}`} aria-pressed={read.has(current.id)} onClick={() => toggleRead(current.id)}>
-              {read.has(current.id) ? '✓ Read today' : 'Mark read today'}
-            </button>
-            {current.link?.url ? (
-              <a className="gr-btn" href={current.link.url} target="_blank" rel="noopener noreferrer">
-                {current.link.label} ↗
-              </a>
-            ) : current.link?.space ? (
-              <button type="button" className="gr-btn" onClick={() => enter(current.link!.space!)}>
-                {current.link.label} →
-              </button>
-            ) : null}
-          </footer>
-        </article>
-      ) : null}
-
-      {/* 3 · Directions: two matching columns */}
-      <div className="gr-dirs">
-        <div className="gr-col tone-move">
-          <header className="gr-col-head">
-            <h3>Move</h3>
-            <span className="gr-count">{moveGoals.length}</span>
-            <span className="gr-col-sub">goals that unlock the move</span>
-            <button type="button" className="gr-link" onClick={() => enter('move')}>
-              Open Move OS →
-            </button>
-          </header>
-          {moveGoals.length ? (
-            <ul className="gr-rows">
-              {moveGoals.map(g => (
-                <li key={g.id} className="gr-row">
-                  <span className="gr-row-title">{g.title}</span>
-                  {g.detail ? <span className="gr-row-text">{g.detail}</span> : null}
-                </li>
+          ))}
+        </div>
+        {current ? (
+          <article id="gr-reader" className="gr-reader" aria-label={current.title}>
+            <header className="gr-reader-head">
+              <h4>{current.title}</h4>
+              <button type="button" className="gr-link" onClick={() => setOpen(null)}>Close reminder</button>
+              {current.intro ? <p>{current.intro}</p> : null}
+            </header>
+            <div className="gr-reader-grid">
+              {current.sections.map(s => (
+                <div key={s.heading} className="gr-block">
+                  <h5>{s.heading}</h5>
+                  <ul>{s.lines.map(l => <li key={l}>{l}</li>)}</ul>
+                </div>
               ))}
-            </ul>
-          ) : (
-            <p className="gr-empty">Open Move OS once and its goals show here.</p>
-          )}
-        </div>
-        <div className="gr-col tone-flow">
-          <header className="gr-col-head">
-            <h3>Current goals</h3>
-            <span className="gr-count">{goalCount}</span>
-            <span className="gr-legend" aria-label="Key">
-              <span className="gr-key is-active">Active {modeCounts.active}</span>
-              <span className="gr-key is-passive">Passive {modeCounts.passive}</span>
-              {modeCounts.none ? <span className="gr-key is-none">No routine yet {modeCounts.none}</span> : null}
-            </span>
-            <button
-              type="button"
-              className="gr-link"
-              onClick={() => {
-                writeSaved('lifehub-why-tab', 'flow');
-                enter('why');
-              }}
-            >
-              Open Flow →
-            </button>
-          </header>
-          {goalAreas.length ? (
-            <div className="gr-areas">
-              {goalAreas.map(({ c, list }) => {
-                const picked = list.find(g => g.id === goalOpen);
-                return (
-                  <div key={c.id} className={`gr-area area-${c.id}`}>
-                    <span className="gr-area-name">
-                      <span aria-hidden="true">{c.icon}</span> {c.label}
-                    </span>
-                    <span className="gr-chips">
-                      {list.map(g => {
-                        const { mode } = modeOf(g.id, goalModes);
-                        return (
-                          <button
-                            key={g.id}
-                            type="button"
-                            className={`gr-chip is-${mode || 'none'}${goalOpen === g.id ? ' is-open' : ''}`}
-                            aria-expanded={goalOpen === g.id}
-                            onClick={() => setGoalOpen(goalOpen === g.id ? null : g.id)}
-                            title={`${g.title} — ${mode === 'active' ? 'Active' : mode === 'passive' ? 'Passive' : 'No routine yet'}`}
-                          >
-                            {g.title}
-                          </button>
-                        );
-                      })}
-                    </span>
-                    {picked ? <GoalDetail goal={picked} modes={goalModes} /> : null}
-                  </div>
-                );
-              })}
             </div>
-          ) : (
-            <p className="gr-empty">Loading goals…</p>
-          )}
-        </div>
-      </div>
+            {current.outro ? <p className="gr-outro">{current.outro}</p> : null}
+            <footer className="gr-reader-foot">
+              <button type="button" className={`gr-btn${read.has(current.id) ? ' is-on' : ' is-primary'}`} aria-pressed={read.has(current.id)} onClick={() => toggleRead(current.id)}>
+                {read.has(current.id) ? '✓ Read today' : 'Mark read today'}
+              </button>
+              {current.link?.url ? <a className="gr-btn" href={current.link.url} target="_blank" rel="noopener noreferrer">{current.link.label} ↗</a>
+                : current.link?.space ? <button type="button" className="gr-btn" onClick={() => enter(current.link!.space!)}>{current.link.label} →</button> : null}
+            </footer>
+          </article>
+        ) : null}
+      </section>
+
+      <section className="gr-focuses" aria-labelledby="gr-focuses-title">
+        <header className="gr-section-head">
+          <h3 id="gr-focuses-title">Current goals</h3>
+          <p>Flow connects the practices. Doing now holds today’s tasks.</p>
+        </header>
+        {goals === null ? <p className="gr-empty">Loading goals…</p> : (
+          <>
+            <div className="gr-focus-grid">
+              <GoalLane title="Active focuses" hint="Put into practice through actions and routines." list={active} categories={goals.categories} modes={modes} kind="active" />
+              <GoalLane title="Passive mindsets" hint="Keep in mind, or maintain through supporting routines." list={passive} categories={goals.categories} modes={modes} kind="passive" />
+            </div>
+            {unlinked.length ? (
+              <section className="gr-unlinked" aria-label="Goals without a Flow routine">
+                <header className="gr-section-head"><h4>Not linked yet <span>{unlinked.length}</span></h4><p>Choose a mode or connect a routine in Flow.</p></header>
+                <div className="gr-unlinked-list">{unlinked.map(g => <GoalRow key={g.id} goal={g} category={goals.categories.find(c => c.id === g.categoryId)} modes={modes} />)}</div>
+              </section>
+            ) : null}
+          </>
+        )}
+      </section>
+
+      <section className="gr-move" aria-labelledby="gr-move-title">
+        <header className="gr-section-head"><h3 id="gr-move-title">Move</h3><p>What unlocks the move</p><button type="button" className="gr-link" onClick={() => enter('move')}>Open Move OS →</button></header>
+        {moveGoals.length ? <ul className="gr-move-list">{moveGoals.map(g => (
+          <li key={g.id}>{g.detail ? <details><summary>{g.title}</summary><p>{g.detail}</p></details> : <span>{g.title}</span>}</li>
+        ))}</ul> : <p className="gr-empty">Open Move OS once and its goals show here.</p>}
+      </section>
     </section>
   );
 }
 
+function GoalLane({ title, hint, list, categories, modes, kind }: { title: string; hint: string; list: Goal[]; categories: GoalCategory[]; modes: GoalModes; kind: string }) {
+  return <section className={`gr-lane is-${kind}`} aria-label={title}>
+    <header className="gr-lane-head"><h4>{title} <span>{list.length}</span></h4><p>{hint}</p></header>
+    <div className="gr-goal-list">{list.map(g => <GoalRow key={g.id} goal={g} category={categories.find(c => c.id === g.categoryId)} modes={modes} />)}</div>
+    {!list.length ? <p className="gr-empty">No {title.toLowerCase()} selected.</p> : null}
+  </section>;
+}
+
 const TIER_LABEL: Record<string, string> = { drive: 'Drives it', enable: 'Makes it easier', upkeep: 'Keeps it up' };
 
-/** One goal opened: your why, how it's set (active / passive), and the routines that actually drive it. */
-function GoalDetail({ goal, modes }: { goal: Goal; modes: GoalModes }) {
+/** The linked practice is visible immediately; full context and mode controls are one click away. */
+function GoalRow({ goal, category, modes }: { goal: Goal; category?: GoalCategory; modes: GoalModes }) {
   const { mode, mine } = modeOf(goal.id, modes);
   const routines = routinesFor(goal.id);
-  const tiers = ['drive', 'enable', 'upkeep'].map(t => ({ t, list: routines.filter(r => r.tier === t) })).filter(x => x.list.length);
-  return (
-    <div className="gr-goal">
-      <div className="gr-goal-head">
-        <strong>{goal.title}</strong>
-        <span className="gr-mode" role="group" aria-label={`${goal.title}: active or passive`}>
-          {(['active', 'passive'] as const).map(m => (
-            <button key={m} type="button" className={mode === m ? 'is-on' : ''} aria-pressed={mode === m} onClick={() => setGoalMode(goal.id, mode === m && mine ? null : m)}>
-              {m === 'active' ? 'Active' : 'Passive'}
-            </button>
-          ))}
-        </span>
-        <small className="gr-mode-src">{mine ? 'your call' : mode ? 'from Flow' : 'no routine yet — pick one'}</small>
-      </div>
-      {goal.why ? <p className="gr-goal-why">{goal.why}</p> : null}
-      {goal.how ? (
-        <p className="gr-goal-how">
-          <b>How:</b> {goal.how}
-        </p>
-      ) : null}
-      {tiers.length ? (
-        <div className="gr-goal-tiers">
-          {tiers.map(({ t, list }) => (
-            <div key={t} className={`gr-tier tier-${t}`}>
-              <span className="gr-tier-name">{TIER_LABEL[t] || t}</span>
-              <span className="gr-tier-list">
-                {list.map(r => (
-                  <span key={r.id} className="gr-routine" title={r.when}>
-                    {r.title}
-                  </span>
-                ))}
-              </span>
-            </div>
-          ))}
+  const preview = routines.slice(0, 2);
+  return <article className={`gr-focus-row area-${goal.categoryId}`}>
+    <div className="gr-focus-top"><h5>{goal.title}</h5><span className="gr-focus-area">{category?.label || goal.categoryId}</span></div>
+    {mode === 'passive' && goal.why ? <p className="gr-mindset">{goal.why}</p> : null}
+    {preview.length ? <p className="gr-practice"><b>{mode === 'passive' ? 'Supported by' : 'Practice'}:</b> {preview.map(r => r.title).join(' · ')}{routines.length > preview.length ? ` · +${routines.length - preview.length} more` : ''}</p>
+      : goal.how ? <p className="gr-practice">{goal.how}</p> : <p className="gr-practice">No linked routine in Flow yet.</p>}
+    <details className="gr-focus-detail">
+      <summary>Why & how <span>· {mine ? 'your choice' : mode ? 'from Flow' : 'not linked'}</span></summary>
+      <div className="gr-goal">
+        {mode !== 'passive' && goal.why ? <p className="gr-goal-why">{goal.why}</p> : null}
+        {goal.how ? <p className="gr-goal-how"><b>How:</b> {goal.how}</p> : null}
+        {routines.length ? <ul className="gr-routine-list">{routines.map(r => <li key={r.id}><span>{r.title}</span><small>{TIER_LABEL[r.tier] || r.tier}{r.when ? ` · ${r.when}` : ''}</small></li>)}</ul> : null}
+        <div className="gr-mode-controls">
+          <span className="gr-mode" role="group" aria-label={`${goal.title}: active or passive`}>
+            {(['active', 'passive'] as const).map(m => <button key={m} type="button" className={mode === m ? 'is-on' : ''} aria-pressed={mode === m} onClick={() => setGoalMode(goal.id, m)}>{m === 'active' ? 'Active focus' : 'Passive mindset'}</button>)}
+          </span>
+          {mine ? <button type="button" className="gr-link" onClick={() => setGoalMode(goal.id, null)}>Use Flow’s suggestion</button> : null}
         </div>
-      ) : (
-        <p className="gr-goal-how">Nothing in Flow drives this yet — link a routine to it in Flow, or mark it yourself.</p>
-      )}
-    </div>
-  );
+      </div>
+    </details>
+  </article>;
 }
