@@ -53,6 +53,8 @@ export const STORAGE_KEYS = {
   roleActive: 'lifehub-role-active',
   /** A bill's new day every month — cloud-synced */
   billDays: 'lifehub-bill-days',
+  /** Goals marked active / passive — cloud-synced */
+  goalModes: 'lifehub-goal-modes',
   /** Uploaded site pictures (Self photo, brand logos) — cloud-synced */
   siteIcons: 'lifehub-site-icons',
   captures: 'lifehub-captures',
