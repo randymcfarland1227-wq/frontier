@@ -25,16 +25,22 @@ export function setBalancePicks(keys: string[], on: boolean) {
   if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent(BALANCE_PICKS_EVENT));
 }
 
-/** Which account a sheet line is paid from ('' = not chosen). */
-export function setPickAccount(key: string, acct: string) {
+/**
+ * Which account a sheet line is paid from / goes into ('' = not chosen). With `remember` (e.g.
+ * 'in:Unemployment'), that source keeps the account for its later dates too — saved as a
+ * `src:` entry (never "on the sheet") so it syncs with the picks.
+ */
+export function setPickAccount(key: string, acct: string, remember?: string) {
   const all = loadBalancePicks();
-  all[key] = { mark: 'in', ...(acct ? { acct } : {}), at: new Date().toISOString() };
+  const at = new Date().toISOString();
+  all[key] = { mark: 'in', ...(acct ? { acct } : {}), at };
+  if (remember) all[`src:${remember}`] = { mark: null, ...(acct ? { acct } : {}), at };
   writeSaved(STORAGE_KEYS.balancePicks, all);
   if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent(BALANCE_PICKS_EVENT));
 }
 
-/** Picked keys → the account each is paid from ('' when not chosen). */
-export function useBalancePicks(): Map<string, string> {
+/** Picked keys → the account each is paid from ('' when not chosen); `src:` keys → remembered accounts. */
+export function useBalancePicks(): { picks: Map<string, string>; remembered: Map<string, string> } {
   const [picks, setPicks] = useState<BalancePicks>(() => loadBalancePicks());
   useEffect(() => {
     const reload = () => setPicks(loadBalancePicks());
@@ -45,7 +51,11 @@ export function useBalancePicks(): Map<string, string> {
       window.removeEventListener('lifehub:synced', reload);
     };
   }, []);
-  return new Map(Object.entries(picks).filter(([, v]) => v?.mark === 'in').map(([k, v]) => [k, v.acct || '']));
+  const entries = Object.entries(picks);
+  return {
+    picks: new Map(entries.filter(([k, v]) => v?.mark === 'in' && !k.startsWith('src:')).map(([k, v]) => [k, v.acct || ''])),
+    remembered: new Map(entries.filter(([k, v]) => k.startsWith('src:') && v?.acct).map(([k, v]) => [k.slice(4), v.acct as string])),
+  };
 }
 
 /** Monday of the week `d` is in (weeks run Monday–Sunday). */
