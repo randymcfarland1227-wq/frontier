@@ -9,6 +9,7 @@ import type { FocusAreaConfig } from '../../lib/focusAreas';
 import type { EnergyWindow } from '../../lib/energy';
 import { SourceCard } from './SourceCard';
 import { PriorityBoard } from './PriorityBoard';
+import { GroundingSummary } from './DailyGrounding';
 import { ReviewPanel } from './ReviewPanel';
 import { Collapsible } from './Collapsible';
 import { getActionableMetric } from '../../lib/actionable';
@@ -322,7 +323,9 @@ export function HomeView({
 
       {grounding ? (
         <section className="source-row" aria-label="Daily grounding">
-          <div className="sec tone-grounding">{grounding}</div>
+          <Collapsible id="grounding" label="Grounding" title="Daily grounding" tone="grounding" icon="🌱" summary={<GroundingSummary />}>
+            {grounding}
+          </Collapsible>
         </section>
       ) : null}
 

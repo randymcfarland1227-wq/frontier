@@ -59,52 +59,106 @@ function useAffirmations() {
   return { day, entries: saved?.day === day ? saved.entries || {} : {}, submit };
 }
 
+/** The affirmation for one reminder: put it in your own words, press Enter. Required daily to count as reviewed. */
 function AffirmationForm({ guide, reviewed, submit }: { guide: Guide; reviewed?: string; submit: (id: string, text: string) => boolean }) {
   const [draft, setDraft] = useState(reviewed || '');
   const [error, setError] = useState('');
-  return <form className="gr-affirmation" aria-label={`${guide.title} affirmation`} onSubmit={event => {
-    event.preventDefault();
-    if (!draft.trim()) { setError('Write an affirmation in your own words first.'); return; }
-    if (submit(guide.id, draft)) { setDraft(draft.trim()); setError(''); }
-    else setError('Your affirmation couldn’t be saved. Please try again.');
-  }}>
-    <label htmlFor={`affirmation-${guide.id}`}>My affirmation · press Enter</label>
-    <p id={`affirmation-help-${guide.id}`} className="gr-affirmation-help sr-only">Put this reminder into your own words, then press Enter.</p>
-    <div className="gr-affirmation-entry">
-      <input id={`affirmation-${guide.id}`} value={draft} maxLength={1000} autoComplete="off"
-        placeholder="Today, I…" aria-describedby={`affirmation-help-${guide.id}${error ? ` affirmation-error-${guide.id}` : ''}`}
-        aria-invalid={!!error} onChange={event => { setDraft(event.target.value); setError(''); }}
-        onKeyDown={event => { if (event.key === 'Enter' && event.nativeEvent.isComposing) event.preventDefault(); }} />
-      <button type="submit" className="gr-btn is-primary" disabled={!draft.trim() || draft.trim() === reviewed}>{reviewed ? 'Save changes' : 'Affirm'}</button>
-    </div>
-    <p className="gr-affirmation-status" role="status">{reviewed ? '✓ Reviewed today' : 'Not reviewed yet'}</p>
-    {error ? <p id={`affirmation-error-${guide.id}`} className="gr-affirmation-error" role="alert">{error}</p> : null}
-  </form>;
+  return (
+    <form
+      className="gr-affirm"
+      aria-label={`${guide.title} affirmation`}
+      onSubmit={event => {
+        event.preventDefault();
+        if (!draft.trim()) {
+          setError('Write an affirmation in your own words first.');
+          return;
+        }
+        if (submit(guide.id, draft)) {
+          setDraft(draft.trim());
+          setError('');
+        } else setError('Your affirmation couldn’t be saved. Please try again.');
+      }}
+    >
+      <label htmlFor={`affirmation-${guide.id}`}>{reviewed ? '✓ Your affirmation today' : 'Put it in your own words'}</label>
+      <div className="gr-affirm-row">
+        <input
+          id={`affirmation-${guide.id}`}
+          value={draft}
+          maxLength={1000}
+          autoComplete="off"
+          placeholder="Today, I…"
+          aria-invalid={!!error}
+          aria-describedby={error ? `affirmation-error-${guide.id}` : undefined}
+          onChange={event => {
+            setDraft(event.target.value);
+            setError('');
+          }}
+          onKeyDown={event => {
+            if (event.key === 'Enter' && event.nativeEvent.isComposing) event.preventDefault();
+          }}
+        />
+        <button type="submit" className="gr-btn is-primary" disabled={!draft.trim() || draft.trim() === reviewed}>
+          {reviewed ? 'Update' : 'Affirm'}
+        </button>
+      </div>
+      {error ? (
+        <p id={`affirmation-error-${guide.id}`} className="gr-affirm-error" role="alert">
+          {error}
+        </p>
+      ) : null}
+    </form>
+  );
 }
 
-/** Reminders → active focuses / passive mindsets → compact relocation context. */
+const OPEN_KEY = 'lifehub-grounding-open';
+
+/** Collapsed-bar summary: how many reminders are affirmed today. */
+export function GroundingSummary() {
+  const { entries } = useAffirmations();
+  const weekday = ![0, 6].includes(new Date().getDay());
+  const total = weekday ? 4 : 3;
+  const done = Object.values(entries).filter(v => v?.trim()).length;
+  return (
+    <span className={`sum-chip${done >= total ? ' is-done' : ''}`}>
+      <b>{Math.min(done, total)}</b>/{total} affirmed
+    </span>
+  );
+}
+
+/**
+ * Daily grounding, top to bottom: reminders as four cards → the one you open, with its affirmation
+ * right under it → current goals by area (active / passive) → what unlocks the move.
+ */
 export function DailyGrounding({ move, goals, enter }: { move?: SourceSnapshot; goals: GoalsData | null; enter: (space: SpaceId) => void }) {
   const [guides, setGuides] = useState<Guide[] | null>(null);
   const { day, entries, submit } = useAffirmations();
   const modes = useGoalModes();
   const [selectedGoal, selectGoal] = useState<string | null>(null);
+  const [open, setOpenState] = useState<string | null>(() => readSaved<string | null>(OPEN_KEY, null));
+  const setOpen = (id: string | null) => {
+    setOpenState(id);
+    writeSaved(OPEN_KEY, id);
+  };
   useEffect(() => {
     const controller = new AbortController();
     fetch(`${import.meta.env.BASE_URL}data/grounding.json?t=${Date.now()}`, { cache: 'no-store', signal: controller.signal })
       .then(r => (r.ok ? (r.json() as Promise<{ guides?: Guide[] }>) : null))
       .then(d => setGuides(Array.isArray(d?.guides) ? d.guides : []))
-      .catch(() => { if (!controller.signal.aborted) setGuides([]); });
+      .catch(() => {
+        if (!controller.signal.aborted) setGuides([]);
+      });
     return () => controller.abort();
   }, []);
 
   const weekday = ![0, 6].includes(new Date().getDay());
   const today = (guides || []).filter(g => g.when === 'Daily' || weekday);
-  const readCount = today.filter(g => entries[g.id]?.trim()).length;
+  const affirmed = today.filter(g => entries[g.id]?.trim()).length;
+  const current = today.find(g => g.id === open) || null;
   const moveGoals = (move?.featured || []).filter(f => f.completable === false);
   const currentGoals = (goals?.goals || []).filter(g => g.status === 'active');
-  const active = currentGoals.filter(g => modeOf(g.id, modes).mode === 'active');
-  const passive = currentGoals.filter(g => modeOf(g.id, modes).mode === 'passive');
-  const unlinked = currentGoals.filter(g => modeOf(g.id, modes).mode === null);
+  const counts = { active: 0, passive: 0, none: 0 };
+  for (const g of currentGoals) counts[modeOf(g.id, modes).mode || 'none']++;
+  const selected = currentGoals.find(g => g.id === selectedGoal) || null;
   const openFlow = () => {
     writeSaved('lifehub-why-tab', 'flow');
     enter('why');
@@ -113,110 +167,222 @@ export function DailyGrounding({ move, goals, enter }: { move?: SourceSnapshot; 
   return (
     <section className="grounding glass-panel" aria-label="Daily grounding">
       <header className="gr-head">
-        <div>
-          <p className="section-label">Grounding</p>
-          <h2>Daily grounding</h2>
-          <p className="gr-sub">{new Date().toLocaleDateString([], { weekday: 'long', month: 'long', day: 'numeric' })}</p>
-        </div>
-        <button type="button" className="gr-btn" onClick={openFlow}>Open Flow →</button>
+        <p className="section-label">Grounding</p>
+        <h2>Today</h2>
+        <p className="gr-sub">{new Date().toLocaleDateString([], { weekday: 'long', month: 'long', day: 'numeric' })}</p>
+        <span className="gr-progress" aria-live="polite" aria-label={`${affirmed} of ${today.length} reminders affirmed today`}>
+          {today.map(g => (
+            <i key={g.id} className={entries[g.id]?.trim() ? 'is-done' : ''} />
+          ))}
+          <b>
+            {affirmed}/{today.length}
+          </b>{' '}
+          affirmed
+        </span>
       </header>
 
-      <section className="gr-reminders" aria-labelledby="gr-reminders-title">
-        <header className="gr-section-head">
-          <h3 id="gr-reminders-title">Reminders</h3>
-          <p>Read and reconnect</p>
-          <span className="gr-read-count" aria-live="polite">{readCount}/{today.length} reviewed today</span>
-        </header>
-        <div className="gr-guides" aria-label="Today's reminders">
-          {guides === null ? <p className="gr-empty">Loading reminders…</p> : null}
-          {guides?.length === 0 ? <p className="gr-empty">Reminders couldn’t load. Refresh to try again.</p> : null}
-          {today.map(g => <article key={g.id} className="gr-guide" aria-label={g.title}>
-            <header className="gr-guide-head">
-              <h4><span aria-hidden="true">{g.icon}</span> {g.title}</h4>
-              {g.key ? <p className="gr-guide-key">{g.key}</p> : null}
-            </header>
-            <div className="gr-guide-body">
-              {g.intro ? <p className="gr-outro">{g.intro}</p> : null}
-              <div className={`gr-guide-sections${g.sections.length === 1 ? ' is-single' : ''}`}>{g.sections.map(s => <div key={s.heading} className="gr-block">
-                <h5>{s.heading}</h5>
-                <ul>{s.lines.map(l => <li key={l}>{l}</li>)}</ul>
-              </div>)}</div>
-              {g.outro ? <p className="gr-outro">{g.outro}</p> : null}
-              {g.link?.url ? <a className="gr-link" href={g.link.url} target="_blank" rel="noopener noreferrer">{g.link.label} ↗</a>
-                : g.link?.space ? <button type="button" className="gr-link" onClick={() => enter(g.link!.space!)}>{g.link.label} →</button> : null}
-            </div>
-            <AffirmationForm key={`${day}:${g.id}`} guide={g} reviewed={entries[g.id]} submit={submit} />
-          </article>)}
+      {/* 1 · Reminders */}
+      <div className="gr-part">
+        <h3 className="gr-part-title">
+          Reminders <span>· read one, then put it in your own words</span>
+        </h3>
+        {guides === null ? <p className="gr-empty">Loading reminders…</p> : null}
+        {guides?.length === 0 ? <p className="gr-empty">Reminders couldn’t load. Refresh to try again.</p> : null}
+        <div className="gr-cards" role="tablist" aria-label="Today's reminders">
+          {today.map(g => {
+            const isOpen = current?.id === g.id;
+            const mine = entries[g.id]?.trim();
+            return (
+              <button
+                key={g.id}
+                type="button"
+                role="tab"
+                aria-selected={isOpen}
+                className={`gr-card${isOpen ? ' is-open' : ''}${mine ? ' is-done' : ''}`}
+                onClick={() => setOpen(isOpen ? null : g.id)}
+              >
+                <span className="gr-card-top">
+                  <span className="gr-card-icon" aria-hidden="true">
+                    {g.icon}
+                  </span>
+                  <span className="gr-card-state">{mine ? '✓ Affirmed' : g.when}</span>
+                </span>
+                <span className="gr-card-title">{g.title}</span>
+                {mine ? <span className="gr-card-mine">“{mine}”</span> : g.key ? <span className="gr-card-key">{g.key}</span> : null}
+                <span className="gr-card-cta">{isOpen ? 'Close' : mine ? 'Read again' : 'Read & affirm'}</span>
+              </button>
+            );
+          })}
         </div>
-      </section>
 
-      <section className="gr-focuses" aria-labelledby="gr-focuses-title">
-        <header className="gr-section-head">
-          <h3 id="gr-focuses-title">Current goals</h3>
-          <p>Select a focus to see its why and practices.</p>
-        </header>
-        {goals === null ? <p className="gr-empty">Loading goals…</p> : (
-          <>
-            <div className="gr-key" aria-label="Goal modes">
-              <span className="is-active">● Active {active.length}</span>
-              <span className="is-passive">○ Passive / upkeep {passive.length}</span>
-              {unlinked.length ? <span>· Unassigned {unlinked.length}</span> : null}
+        {current ? (
+          <article className="gr-reader" role="tabpanel" aria-label={current.title}>
+            <header className="gr-reader-head">
+              <span className="gr-card-icon" aria-hidden="true">
+                {current.icon}
+              </span>
+              <h4>{current.title}</h4>
+              {current.link?.url ? (
+                <a className="gr-link" href={current.link.url} target="_blank" rel="noopener noreferrer">
+                  {current.link.label} ↗
+                </a>
+              ) : current.link?.space ? (
+                <button type="button" className="gr-link" onClick={() => enter(current.link!.space!)}>
+                  {current.link.label} →
+                </button>
+              ) : null}
+            </header>
+            {current.intro ? <p className="gr-note">{current.intro}</p> : null}
+            <div className="gr-blocks">
+              {current.sections.map(s => (
+                <div key={s.heading} className="gr-block">
+                  <h5>{s.heading}</h5>
+                  <ul>
+                    {s.lines.map(l => (
+                      <li key={l}>{l}</li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
             </div>
-            <div className="gr-overview">
-              {[...goals.categories, ...Array.from(new Set(currentGoals.filter(g => !goals.categories.some(c => c.id === g.categoryId)).map(g => g.categoryId))).map(id => ({id, label: id, icon: ''}))].map(category => {
-                const list = currentGoals.filter(g => g.categoryId === category.id);
-                if (!list.length) return null;
-                return <div className="gr-area-row" key={category.id}>
-                  <h4><span aria-hidden="true">{category.icon}</span> {category.label}</h4>
-                  <div className="gr-goal-buttons">{list.map(g => {
-                    const { mode } = modeOf(g.id, modes);
-                    return <button type="button" key={g.id} className={`gr-focus-button is-${mode || 'none'}`} aria-pressed={selectedGoal === g.id}
-                      aria-label={`${g.title}: ${mode === 'active' ? 'active' : mode === 'passive' ? 'passive / upkeep' : 'unassigned'}`}
-                      onClick={() => selectGoal(selectedGoal === g.id ? null : g.id)}>
-                      <span aria-hidden="true">{mode === 'active' ? '●' : mode === 'passive' ? '○' : '·'}</span>{g.title}
-                    </button>;
-                  })}</div>
-                </div>;
-              })}
-            </div>
-            {currentGoals.find(g => g.id === selectedGoal) ? <GoalDetail goal={currentGoals.find(g => g.id === selectedGoal)!} modes={modes} close={() => selectGoal(null)} openFlow={openFlow} /> : null}
-          </>
+            {current.outro ? <p className="gr-note is-quote">{current.outro}</p> : null}
+            <AffirmationForm key={`${day}:${current.id}`} guide={current} reviewed={entries[current.id]} submit={submit} />
+          </article>
+        ) : null}
+      </div>
+
+      {/* 2 · Current goals */}
+      <div className="gr-part">
+        <h3 className="gr-part-title">
+          Current goals <span>· tap one for its why and practices</span>
+          <span className="gr-legend" aria-label="Key">
+            <span className="gr-key is-active">Active {counts.active}</span>
+            <span className="gr-key is-passive">Passive {counts.passive}</span>
+            {counts.none ? <span className="gr-key is-none">No routine yet {counts.none}</span> : null}
+          </span>
+          <button type="button" className="gr-link" onClick={openFlow}>
+            Open Flow →
+          </button>
+        </h3>
+        {goals === null ? (
+          <p className="gr-empty">Loading goals…</p>
+        ) : (
+          <div className="gr-areas">
+            {goals.categories.map(c => {
+              const list = currentGoals.filter(g => g.categoryId === c.id);
+              if (!list.length) return null;
+              return (
+                <div key={c.id} className={`gr-area area-${c.id}`}>
+                  <span className="gr-area-name">
+                    <span aria-hidden="true">{c.icon}</span> {c.label}
+                  </span>
+                  <span className="gr-chips">
+                    {list.map(g => {
+                      const { mode } = modeOf(g.id, modes);
+                      return (
+                        <button
+                          key={g.id}
+                          type="button"
+                          className={`gr-chip is-${mode || 'none'}${selectedGoal === g.id ? ' is-open' : ''}`}
+                          aria-expanded={selectedGoal === g.id}
+                          aria-label={`${g.title}: ${mode === 'active' ? 'active' : mode === 'passive' ? 'passive' : 'no routine yet'}`}
+                          onClick={() => selectGoal(selectedGoal === g.id ? null : g.id)}
+                        >
+                          {g.title}
+                        </button>
+                      );
+                    })}
+                  </span>
+                  {selected && selected.categoryId === c.id ? <GoalDetail goal={selected} modes={modes} close={() => selectGoal(null)} openFlow={openFlow} /> : null}
+                </div>
+              );
+            })}
+          </div>
         )}
-      </section>
+      </div>
 
-      <section className="gr-move" aria-labelledby="gr-move-title">
-        <header className="gr-section-head"><h3 id="gr-move-title">Move</h3><p>What unlocks the move</p><button type="button" className="gr-link" onClick={() => enter('move')}>Open Move OS →</button></header>
-        {moveGoals.length ? <ul className="gr-move-list">{moveGoals.map(g => (
-          <li key={g.id}>{g.detail ? <details><summary>{g.title}</summary><p>{g.detail}</p></details> : <span>{g.title}</span>}</li>
-        ))}</ul> : <p className="gr-empty">Open Move OS once and its goals show here.</p>}
-      </section>
+      {/* 3 · Move */}
+      <div className="gr-part">
+        <h3 className="gr-part-title">
+          Move <span>· what unlocks the move</span>
+          <button type="button" className="gr-link" onClick={() => enter('move')}>
+            Open Move OS →
+          </button>
+        </h3>
+        {moveGoals.length ? (
+          <ul className="gr-move">
+            {moveGoals.map(g => (
+              <li key={g.id}>
+                <strong>{g.title}</strong>
+                {g.detail ? <small>{g.detail}</small> : null}
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="gr-empty">Open Move OS once and its goals show here.</p>
+        )}
+      </div>
     </section>
   );
 }
 
 const TIER_LABEL: Record<string, string> = { drive: 'Drives it', enable: 'Makes it easier', upkeep: 'Keeps it up' };
 
-/** One shared panel keeps the overview short and every goal one click away. */
+/** The opened goal, under its area row: your why and how, active or passive, and the Flow routines behind it. */
 function GoalDetail({ goal, modes, close, openFlow }: { goal: Goal; modes: GoalModes; close: () => void; openFlow: () => void }) {
   const { mode, mine } = modeOf(goal.id, modes);
   const routines = routinesFor(goal.id);
-  return <article className="gr-selection" aria-label={goal.title}>
-    <header className="gr-section-head"><h4>{goal.title}</h4><button type="button" className="gr-link" onClick={close}>Close details</button></header>
-    <div className="gr-selection-body">
-      <div className="gr-selection-context">
-        {goal.why ? <p className="gr-goal-why">{goal.why}</p> : null}
-        {goal.how ? <p className="gr-goal-how"><b>How:</b> {goal.how}</p> : null}
-        <div className="gr-mode-controls">
-          <span className="gr-mode" role="group" aria-label={`${goal.title}: active or passive`}>
-            {(['active', 'passive'] as const).map(m => <button key={m} type="button" className={mode === m ? 'is-on' : ''} aria-pressed={mode === m} onClick={() => setGoalMode(goal.id, m)}>{m === 'active' ? 'Active' : 'Passive / upkeep'}</button>)}
-          </span>
-          {mine ? <button type="button" className="gr-link" onClick={() => setGoalMode(goal.id, null)}>Use Flow’s suggestion</button> : null}
+  const tiers = ['drive', 'enable', 'upkeep'].map(t => ({ t, list: routines.filter(r => r.tier === t) })).filter(x => x.list.length);
+  return (
+    <div className="gr-goal">
+      <div className="gr-goal-head">
+        <strong>{goal.title}</strong>
+        <span className="gr-mode" role="group" aria-label={`${goal.title}: active or passive`}>
+          {(['active', 'passive'] as const).map(m => (
+            <button key={m} type="button" className={mode === m ? 'is-on' : ''} aria-pressed={mode === m} onClick={() => setGoalMode(goal.id, m)}>
+              {m === 'active' ? 'Active' : 'Passive'}
+            </button>
+          ))}
+        </span>
+        <small className="gr-mode-src">{mine ? 'your call' : mode ? 'from Flow' : 'no routine yet — pick one'}</small>
+        {mine ? (
+          <button type="button" className="gr-link" onClick={() => setGoalMode(goal.id, null)}>
+            Use Flow’s
+          </button>
+        ) : null}
+        <button type="button" className="gr-link gr-goal-close" onClick={close} aria-label={`Close ${goal.title}`}>
+          ✕
+        </button>
+      </div>
+      {goal.why ? <p className="gr-goal-why">{goal.why}</p> : null}
+      {goal.how ? (
+        <p className="gr-goal-how">
+          <b>How:</b> {goal.how}
+        </p>
+      ) : null}
+      {tiers.length ? (
+        <div className="gr-goal-tiers">
+          {tiers.map(({ t, list }) => (
+            <div key={t} className={`gr-tier tier-${t}`}>
+              <span className="gr-tier-name">{TIER_LABEL[t] || t}</span>
+              <span className="gr-tier-list">
+                {list.map(r => (
+                  <span key={r.id} className="gr-routine" title={r.when}>
+                    {r.title}
+                  </span>
+                ))}
+              </span>
+            </div>
+          ))}
         </div>
-      </div>
-      <div><p className="gr-practice-label">Practices from Flow</p>
-        {routines.length ? <ul className="gr-routine-list">{routines.map(r => <li key={r.id}><span>{r.title}</span><small>{TIER_LABEL[r.tier] || r.tier}{r.when ? ` · ${r.when}` : ''}</small></li>)}</ul> : <p className="gr-empty">No linked routine yet.</p>}
-        <button type="button" className="gr-link" onClick={openFlow}>Open Flow →</button>
-      </div>
+      ) : (
+        <p className="gr-goal-how">
+          Nothing in Flow drives this yet.{' '}
+          <button type="button" className="gr-link" onClick={openFlow}>
+            Link a routine in Flow →
+          </button>
+        </p>
+      )}
     </div>
-  </article>;
+  );
 }
