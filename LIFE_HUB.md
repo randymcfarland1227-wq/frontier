@@ -496,3 +496,10 @@ Design critique + WCAG 2.1 AA + copy + design-system audit, then fixes (last blo
 - Replace the long active/passive columns with six compact life-area rows. All goal titles remain visible with active, passive/upkeep or unassigned markers.
 - Selecting a goal opens one shared detail panel with the original why/how, all Flow practices, and existing mode controls. Close returns to the compact overview.
 - Browser verification: 627px desktop overview at 1280px, down from approximately 1503px; goal selection, classification/reset and 390px layout passed. Source content and completion behavior are unchanged.
+
+## Grounding affirmations (2026-10-14)
+- All four reminder guides show their original content directly, in two columns on desktop and one on phones. The reminder buttons and shared expandable reader are removed.
+- Each reminder ends with an affirmation field. A nonblank, trimmed affirmation submitted with Enter or Affirm marks that reminder reviewed for the local calendar day; saved wording stays editable. Old read-today checkmarks do not qualify.
+- Affirmations use device-local `lifehub-grounding-affirmations` storage, separate from the completion ledger and cloud backup. Failed storage writes do not mark a reminder reviewed. The next local day clears the displayed review state and fields, including when the page stays open.
+- Current goals, Flow links, mode overrides, and Move context retain their existing behavior.
+- Verified Enter and button submission, whitespace rejection, reload persistence, a simulated day rollover, and a 390px mobile layout. TypeScript and Pages build pass; full lint reports only the documented existing errors in life-hub.tsx and Worker warning.

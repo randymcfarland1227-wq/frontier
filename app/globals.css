@@ -3981,29 +3981,31 @@ a.shelf-title:hover { text-decoration: underline; }
 .grounding .gr-section-head h3 { font-size: 14px; font-weight: 650; }
 .gr-section-head p, .gr-read-count { font-size: 12px; color: var(--muted); }
 .gr-read-count { margin-left: auto; }
-.gr-cards { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
-.gr-card { display: flex; align-items: flex-start; gap: 8px; min-width: 0; padding: 10px; border: 1px solid var(--line); border-radius: 9px; background: var(--surface); color: var(--ink); font: inherit; text-align: left; cursor: pointer; }
-.gr-card:hover, .gr-card.is-open { border-color: var(--g); background: color-mix(in srgb, var(--g) 7%, var(--surface)); }
-.gr-card-icon { flex: 0 0 auto; font-size: 18px; }
-.gr-card-copy { display: grid; gap: 4px; min-width: 0; }
-.gr-card-title { font-size: 12.5px; font-weight: 650; line-height: 1.35; }
-.gr-card-key { font-size: 11.5px; line-height: 1.4; color: var(--muted); }
-.gr-card-when { margin-left: auto; flex: 0 0 auto; font-size: 11px; color: var(--g); }
-.gr-reader { display: grid; gap: 12px; margin-top: 10px; padding: 14px; border-left: 2px solid var(--g); background: color-mix(in srgb, var(--g) 5%, var(--surface)); }
-.gr-reader-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px; }
-.grounding .gr-reader-head h4 { font-size: 14px; }
-.gr-reader-head p { flex-basis: 100%; font-size: 12.5px; color: var(--muted); }
-.gr-reader-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr)); gap: 16px; }
+.gr-guides { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; }
+.gr-guide { display: flex; flex-direction: column; gap: 16px; min-width: 0; padding: 18px 0; border-top: 1px solid var(--line); }
+.gr-guide-head { display: grid; gap: 7px; }
+.grounding .gr-guide-head h4 { font-size: 15px; line-height: 1.4; }
+.gr-guide-head p { font-size: 13px; line-height: 1.5; color: var(--muted); }
+.gr-guide-head .gr-guide-key { color: var(--g); font-weight: 600; }
+.gr-guide-body { display: grid; gap: 14px; justify-items: start; }
 .grounding .gr-block h5 { font-size: 12px; color: var(--g); margin-bottom: 6px; }
-.gr-block ul { padding-left: 16px; margin: 0; display: grid; gap: 5px; }
-.gr-block li, .gr-outro { font-size: 12.5px; line-height: 1.5; }
-.gr-reader-foot { display: flex; flex-wrap: wrap; gap: 8px; }
+.gr-block ul { padding-left: 17px; margin: 0; display: grid; gap: 5px; }
+.gr-block li, .gr-outro { font-size: 13px; line-height: 1.55; }
+.gr-affirmation { display: grid; gap: 7px; margin-top: auto; padding-top: 16px; }
+.gr-affirmation label { font-size: 12px; font-weight: 650; }
+.gr-affirmation-help, .gr-affirmation-status { font-size: 12px; color: var(--muted); line-height: 1.4; }
+.gr-affirmation-entry { display: flex; gap: 8px; }
+.gr-affirmation input { width: 100%; min-width: 0; min-height: 42px; padding: 9px 11px; border: 1px solid var(--line); border-radius: 7px; background: var(--surface); color: var(--ink); font: inherit; font-size: 14px; }
+.gr-affirmation input:focus-visible { outline: 2px solid var(--g); outline-offset: 2px; }
+.gr-affirmation .gr-btn { flex-shrink: 0; }
+.gr-affirmation .gr-btn:disabled { opacity: .5; cursor: default; }
+.gr-affirmation-error { font-size: 12px; color: var(--ink); }
 .gr-btn { display: inline-flex; align-items: center; min-height: 34px; padding: 6px 10px; border: 1px solid var(--line); border-radius: 7px; background: var(--surface); color: var(--ink); font: inherit; font-size: 12px; font-weight: 600; text-decoration: none; cursor: pointer; }
 .gr-btn.is-primary { background: var(--g); border-color: var(--g); color: white; }
 .frontier-shell[data-color-mode="dark"] .gr-btn.is-primary { color: #0d1a12; }
 .gr-btn.is-on { color: var(--g); border-color: var(--g); }
 .gr-link { padding: 4px 0; border: 0; background: none; color: var(--accent-ink); font: inherit; font-size: 12px; cursor: pointer; }
-.gr-section-head .gr-link, .gr-reader-head .gr-link { margin-left: auto; }
+.gr-section-head .gr-link { margin-left: auto; }
 .gr-key { display: flex; flex-wrap: wrap; gap: 12px; color: var(--muted); font-size: 11px; margin-bottom: 8px; }
 .gr-key .is-active { color: var(--g); }
 .gr-overview { display: grid; }
@@ -4035,19 +4037,13 @@ a.shelf-title:hover { text-decoration: underline; }
 .gr-move-list summary { cursor: pointer; color: var(--ink); font-weight: 550; padding: 5px 0; }
 .gr-move-list p { padding: 5px 0; font-size: 12px; line-height: 1.5; color: var(--muted); }
 .grounding button:focus-visible, .grounding a:focus-visible, .grounding summary:focus-visible { outline: 2px solid var(--g); outline-offset: 3px; }
-@media (max-width: 1050px) {
-  .gr-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-
-}
 @media (max-width: 680px) {
   .grounding { padding: 14px; gap: 16px; }
   .grounding .gr-head { align-items: flex-start; }
   .grounding .gr-head h2 { font-size: 17px; }
   .gr-area-row, .gr-selection-body { grid-template-columns: 1fr; gap: 7px; }
-  .gr-card { display: grid; grid-template-columns: 18px minmax(0, 1fr); gap: 4px 6px; }
-  .gr-card-icon { font-size: 16px; }
-  .gr-card-key { display: none; }
-  .gr-card-when { grid-column: 2; margin-left: 0; }
+  .gr-guides { grid-template-columns: 1fr; gap: 0; }
+  .gr-affirmation input { font-size: 16px; }
   .gr-read-count { margin-left: 0; }
   .gr-move-list { gap: 4px 12px; }
 }
