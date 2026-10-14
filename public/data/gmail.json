@@ -1,11 +1,27 @@
 {
   "source": "gmail",
   "metrics": {
-    "starred": 3,
-    "unread": 1,
-    "action": 3
+    "starred": 5,
+    "unread": 2,
+    "action": 5
   },
   "featured": [
+    {
+      "id": "1a13796465e18a3b",
+      "title": "You made the sale for Nespresso VertuoLine GCA1 Coffee and Espresso Pod M...",
+      "detail": "Next, pack it up and ship it out. ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏",
+      "meta": "From ebay@ebay.com",
+      "originUrl": "https://mail.google.com/mail/?authuser=randymcfarland1227@gmail.com#all/thread-f:1878978941656599099",
+      "completable": false
+    },
+    {
+      "id": "1a1355280073a1f1",
+      "title": "New message from @hbutler09",
+      "detail": "Order Number 6abee864705826b47bbe4eac Hi Randy, @hbutler09 has sent you a message about your recent sale Peter Millar Aronimink Golf Club Lava Wash Hoodie Size XL. View Message Pri",
+      "meta": "From support@poshmark.com",
+      "originUrl": "https://mail.google.com/mail/?authuser=randymcfarland1227@gmail.com#all/thread-f:1878939099838259697",
+      "completable": false
+    },
     {
       "id": "1a123eb4cfde0195",
       "title": "How was your support experience?",
@@ -33,6 +49,22 @@
   ],
   "tasks": [
     {
+      "id": "1a13796465e18a3b",
+      "title": "You made the sale for Nespresso VertuoLine GCA1 Coffee and Espresso Pod M...",
+      "detail": "Next, pack it up and ship it out. ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏",
+      "status": "open",
+      "starred": true,
+      "originUrl": "https://mail.google.com/mail/?authuser=randymcfarland1227@gmail.com#all/thread-f:1878978941656599099"
+    },
+    {
+      "id": "1a1355280073a1f1",
+      "title": "New message from @hbutler09",
+      "detail": "Order Number 6abee864705826b47bbe4eac Hi Randy, @hbutler09 has sent you a message about your recent sale Peter Millar Aronimink Golf Club Lava Wash Hoodie Size XL. View Message Pri",
+      "status": "open",
+      "starred": true,
+      "originUrl": "https://mail.google.com/mail/?authuser=randymcfarland1227@gmail.com#all/thread-f:1878939099838259697"
+    },
+    {
       "id": "1a123eb4cfde0195",
       "title": "How was your support experience?",
       "detail": "This message was sent to randymcfarland1227@gmail.com. Please visit notification settings to manage your email alerts. Copyright © 2026 Poshmark, Inc. 203 Redwood Shores Pkwy, 8th ",
@@ -57,5 +89,5 @@
       "originUrl": "https://mail.google.com/mail/?authuser=randymcfarland1227@gmail.com#all/thread-f:1878490434460471477"
     }
   ],
-  "refreshedAt": "2026-10-13T12:55:28.869Z"
+  "refreshedAt": "2026-10-14T12:45:21.214Z"
 }
