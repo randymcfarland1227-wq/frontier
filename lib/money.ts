@@ -438,8 +438,15 @@ export function parseMoney(snap: MoneySnapshot, today = new Date()): MoneyModel 
   const outstanding = need('Outstanding', block(randy, 'outstanding', 'Outstanding', { header: ['Owed', 'Amount', 'Note'] }));
   const balancing = need('Balancing and Planning', block(randy, 'balancing', 'Balancing and Planning'));
   const findRow = (t: Table | null, name: RegExp) => t?.rows.find(r => name.test(r[0].text));
-  const cashRow = findRow(balancing, /^cash on hand/i);
-  const balancedRow = findRow(balancing, /^balanced cash/i);
+  // Blank rows above the totals end the block early, so look the total rows up directly when needed.
+  const totalRow = (name: RegExp) => {
+    const inBlock = findRow(balancing, name);
+    if (inBlock || !randy) return inBlock;
+    const at = randy.find(name);
+    return at ? [randy.cell(at.r, at.c), randy.cell(at.r, at.c + 1)] : undefined;
+  };
+  const cashRow = totalRow(/^cash on hand$/i);
+  const balancedRow = totalRow(/^balanced cash$/i);
 
   const bills = need('Bills', block(randy, 'bills', 'Bills', { nameCol: 1 }));
   const cardMins = need('Card Mins/Paylater', block(randy, 'cardMins', /^card mins/i, { nameCol: 1 }));
