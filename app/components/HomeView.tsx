@@ -322,9 +322,7 @@ export function HomeView({
 
       {grounding ? (
         <section className="source-row" aria-label="Daily grounding">
-          <Collapsible id="grounding" label="Grounding" title="Daily grounding" tone="grounding" icon="🌱">
-            {grounding}
-          </Collapsible>
+          <div className="sec tone-grounding">{grounding}</div>
         </section>
       ) : null}
 
