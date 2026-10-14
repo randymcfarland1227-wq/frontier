@@ -4,6 +4,7 @@ import { Fragment, useEffect, useMemo, useRef, useState, type ReactNode } from '
 import { PayPlanner } from './PayPlanner';
 import {
   amountOf,
+  balanceTwin,
   cardSummaries,
   debtOptions,
   MONEY_KINDS,
@@ -1335,10 +1336,11 @@ function BalancingSheet({
     for (const a of keys) {
       const row = rows.find(r => r[0].text === a);
       const start = wi === 0 ? (row ? amt(row[1]) : 0) : roll[wi - 1][a].end;
-      const pend = wi === 0 && row && pendCol >= 0 ? amt(row[pendCol]) : 0;
+      // Pending stays pending (every week) until it's moved into Now on the sheet — never counted in End of week.
+      const pend = row && pendCol >= 0 ? amt(row[pendCol]) : 0;
       const inn = flow(wi, a, 'in');
       const out = flow(wi, a, 'pay');
-      rec[a] = { start, pend, inn, out, end: start + pend + inn - out };
+      rec[a] = { start, pend, inn, out, end: start + inn - out };
     }
     roll.push(rec);
   });
@@ -1479,14 +1481,14 @@ function BalancingSheet({
               ·{' '}
               {firstWeek
                 ? 'from the sheet · click Now or Pending to change it'
-                : `carried from the week before (its end of week) · pending already landed`}
+                : 'carried from the week before (its end of week) · pending stays pending until you move it into Now'}
             </span>
           </p>
           <div className="bal-balances is-five">
             <span className="bal-col-h">Account</span>
             <span className="bal-col-h is-num">{firstWeek ? 'Now' : 'Start'}</span>
             <span className="bal-col-h is-num">Outgoing</span>
-            <span className="bal-col-h is-num">{firstWeek ? 'Pending · in' : 'Coming in'}</span>
+            <span className="bal-col-h is-num">Pending · in</span>
             <span className="bal-col-h is-num">{period === 'month' ? 'End of month' : 'End of week'}</span>
             {rows.map(r => {
               const v = view(r[0].text);
@@ -1512,7 +1514,7 @@ function BalancingSheet({
                       </button>
                     )}
                   </span>
-                  {firstWeek ? <EditCell cell={r[1]} onSave={onSave} className="bal-num is-now" /> : <span className="bal-num is-now">{sign(v.start)}</span>}
+                  {firstWeek ? <EditCell cell={r[1]?.formula ? balanceTwin(model, r[1]) || r[1] : r[1]} onSave={onSave} className="bal-num is-now" /> : <span className="bal-num is-now">{sign(v.start)}</span>}
                   <span className="bal-num is-out">{v.out ? `−${money(v.out)}` : ''}</span>
                   {firstWeek && pendCol >= 0 ? (
                     <span className="bal-num is-pend bal-pendcell">
@@ -1520,7 +1522,10 @@ function BalancingSheet({
                       {v.inn ? <small className="is-in">+{money(v.inn)}</small> : null}
                     </span>
                   ) : (
-                    <span className="bal-num is-pend">{v.inn ? `+${money(v.inn)}` : ''}</span>
+                    <span className="bal-num is-pend bal-pendcell">
+                      {v.pend ? <span title="Still pending — counts once you move it into Now">{money(v.pend)}</span> : null}
+                      {v.inn ? <small className="is-in">+{money(v.inn)}</small> : null}
+                    </span>
                   )}
                   <span className={`bal-num is-end${v.end < 0 ? ' is-neg' : ''}`}>{sign(v.end)}</span>
                 </Fragment>
@@ -1538,7 +1543,10 @@ function BalancingSheet({
             <span className="bal-acct is-total">Total</span>
             <span className="bal-num is-total is-now">{sign(tot.start)}</span>
             <span className="bal-num is-total is-out">{tot.out ? `−${money(tot.out)}` : ''}</span>
-            <span className="bal-num is-total is-pend">{tot.pend || tot.inn ? `+${money(tot.pend + tot.inn)}` : ''}</span>
+            <span className="bal-num is-total is-pend bal-pendcell">
+              {tot.pend ? <span>{money(tot.pend)}</span> : null}
+              {tot.inn ? <small className="is-in">+{money(tot.inn)}</small> : null}
+            </span>
             <span className={`bal-num is-total is-end${tot.end < 0 ? ' is-neg' : ''}`}>{sign(tot.end)}</span>
           </div>
           {firstWeek && t ? <BalancingAdd table={t} onSave={onSave} /> : null}
@@ -1559,24 +1567,14 @@ function BalancingSheet({
             <span>{tot.end < 0 ? 'Short' : period === 'month' ? 'End of month' : 'End of week'}</span>
             <b>{money(Math.abs(tot.end))}</b>
             <small>
-              {sign(tot.start)} {tot.pend ? `+ ${money(tot.pend)} pending ` : ''}
-              {tot.inn ? `+ ${money(tot.inn)} in ` : ''}− {money(tot.out)} out
+              {sign(tot.start)} {tot.inn ? `+ ${money(tot.inn)} in ` : ''}− {money(tot.out)} out · pending not counted
+              {period === 'week' && next ? ` · carries into ${next.label}` : ''}
             </small>
           </div>
-          <div className={tot.end - tot.pend < 0 ? 'is-short' : 'is-ok'}>
-            {period === 'week' && next ? (
-              <>
-                <span>Carries into</span>
-                <b>{next.label}</b>
-                <small>each account starts next week at its end of week</small>
-              </>
-            ) : (
-              <>
-                <span>Before pending lands</span>
-                <b>{sign(tot.end - tot.pend)}</b>
-                <small>if the {money(tot.pend)} pending is late</small>
-              </>
-            )}
+          <div className={tot.end + tot.pend < 0 ? 'is-short' : 'is-ok'}>
+            <span>If pending clears</span>
+            <b>{sign(tot.end + tot.pend)}</b>
+            <small>{tot.pend ? `+ the ${money(tot.pend)} still pending, once you move it into Now` : 'nothing pending right now'}</small>
           </div>
         </div>
       </section>
@@ -1765,8 +1763,23 @@ export function MoneyPage({
 
   const save: Save = async edits => {
     setNote({ text: 'Saving to the sheet…', tone: 'ok' });
-    const res = await onSave(edits);
-    const bad = res.results.find(r => !r.ok);
+    // An account balance typed in one place (Checking or the balancing sheet) is written to its twin too.
+    const twins: CellEdit[] = [];
+    for (const e of edits) {
+      if (!('value' in e) || !model) continue;
+      const twin = balanceTwin(model, e);
+      if (twin && twin.text !== e.value && !edits.some(x => 'value' in x && x.r === twin.r && x.c === twin.c && x.tab === twin.tab)) {
+        twins.push({ tab: twin.tab, r: twin.r, c: twin.c, expect: twin.text, value: e.value });
+      }
+    }
+    const res = await onSave([...edits, ...twins]);
+    const mainBad = res.results.slice(0, edits.length).find(r => !r.ok);
+    const twinBad = res.results.slice(edits.length).some(r => !r.ok);
+    if (res.ok && !mainBad && twinBad) {
+      setNote({ text: 'Saved ✓ — but the matching balance in the other table changed in the sheet, so it wasn’t updated. Check Accounts & cards → Checking.', tone: 'bad' });
+      return res;
+    }
+    const bad = mainBad;
     if (!res.ok || bad) setNote({ text: ERRORS[bad?.error || res.error || ''] || `Couldn’t save: ${bad?.error || res.error || 'unknown error'}`, tone: 'bad' });
     else setNote({ text: 'Saved to the sheet ✓', tone: 'ok' });
     return res;
