@@ -8,8 +8,16 @@
 import { useEffect, useState } from 'react';
 import { readSaved, writeSaved, STORAGE_KEYS } from './storage';
 
-/** acct = the balance line it's paid from (its name), when chosen */
-export type BalancePicks = Record<string, { mark: string | null; acct?: string; at: string }>;
+/**
+ * acct = the balance line it's paid from / into (its name), when chosen.
+ * landed = the day incoming money was added to that account in the sheet (so it's never added twice).
+ */
+export type BalancePicks = Record<string, { mark: string | null; acct?: string; landed?: string; at: string }>;
+
+/** Key that remembers the account for every date of one bill / income source. */
+export const srcKey = (kind: 'pay' | 'in', name: string) => `${kind}:${name.trim().toLowerCase()}`;
+
+const keep = (p?: BalancePicks[string]) => ({ ...(p?.acct ? { acct: p.acct } : {}), ...(p?.landed ? { landed: p.landed } : {}) });
 export const BALANCE_PICKS_EVENT = 'lifehub:balance-picks';
 
 export function loadBalancePicks(): BalancePicks {
@@ -20,7 +28,7 @@ export function loadBalancePicks(): BalancePicks {
 export function setBalancePicks(keys: string[], on: boolean) {
   const all = loadBalancePicks();
   const at = new Date().toISOString();
-  for (const k of keys) all[k] = { mark: on ? 'in' : null, ...(on && all[k]?.acct ? { acct: all[k].acct } : {}), at };
+  for (const k of keys) all[k] = { mark: on ? 'in' : null, ...keep(all[k]), at };
   writeSaved(STORAGE_KEYS.balancePicks, all);
   if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent(BALANCE_PICKS_EVENT));
 }
@@ -33,14 +41,25 @@ export function setBalancePicks(keys: string[], on: boolean) {
 export function setPickAccount(key: string, acct: string, remember?: string) {
   const all = loadBalancePicks();
   const at = new Date().toISOString();
-  all[key] = { mark: 'in', ...(acct ? { acct } : {}), at };
+  all[key] = { mark: 'in', ...(all[key]?.landed ? { landed: all[key].landed } : {}), ...(acct ? { acct } : {}), at };
   if (remember) all[`src:${remember}`] = { mark: null, ...(acct ? { acct } : {}), at };
   writeSaved(STORAGE_KEYS.balancePicks, all);
   if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent(BALANCE_PICKS_EVENT));
 }
 
-/** Picked keys → the account each is paid from ('' when not chosen); `src:` keys → remembered accounts. */
-export function useBalancePicks(): { picks: Map<string, string>; remembered: Map<string, string> } {
+/** Mark incoming money as added to its account in the sheet (day) — or clear it (null) if that write failed. */
+export function setPickLanded(key: string, day: string | null) {
+  const all = loadBalancePicks();
+  const cur = all[key] || { mark: 'in', at: '' };
+  const { landed: _old, ...rest } = cur;
+  void _old;
+  all[key] = { ...rest, ...(day ? { landed: day } : {}), at: new Date().toISOString() };
+  writeSaved(STORAGE_KEYS.balancePicks, all);
+  if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent(BALANCE_PICKS_EVENT));
+}
+
+/** Picked keys → the account each is paid from ('' when not chosen); `src:` keys → remembered accounts; landed incoming → day. */
+export function useBalancePicks(): { picks: Map<string, string>; remembered: Map<string, string>; landed: Map<string, string> } {
   const [picks, setPicks] = useState<BalancePicks>(() => loadBalancePicks());
   useEffect(() => {
     const reload = () => setPicks(loadBalancePicks());
@@ -55,6 +74,7 @@ export function useBalancePicks(): { picks: Map<string, string>; remembered: Map
   return {
     picks: new Map(entries.filter(([k, v]) => v?.mark === 'in' && !k.startsWith('src:')).map(([k, v]) => [k, v.acct || ''])),
     remembered: new Map(entries.filter(([k, v]) => k.startsWith('src:') && v?.acct).map(([k, v]) => [k.slice(4), v.acct as string])),
+    landed: new Map(entries.filter(([, v]) => v?.landed).map(([k, v]) => [k, v.landed as string])),
   };
 }
 
