@@ -8,7 +8,8 @@
 import { useEffect, useState } from 'react';
 import { readSaved, writeSaved, STORAGE_KEYS } from './storage';
 
-export type BalancePicks = Record<string, { mark: string | null; at: string }>;
+/** acct = the balance line it's paid from (its name), when chosen */
+export type BalancePicks = Record<string, { mark: string | null; acct?: string; at: string }>;
 export const BALANCE_PICKS_EVENT = 'lifehub:balance-picks';
 
 export function loadBalancePicks(): BalancePicks {
@@ -19,12 +20,21 @@ export function loadBalancePicks(): BalancePicks {
 export function setBalancePicks(keys: string[], on: boolean) {
   const all = loadBalancePicks();
   const at = new Date().toISOString();
-  for (const k of keys) all[k] = { mark: on ? 'in' : null, at };
+  for (const k of keys) all[k] = { mark: on ? 'in' : null, ...(on && all[k]?.acct ? { acct: all[k].acct } : {}), at };
   writeSaved(STORAGE_KEYS.balancePicks, all);
   if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent(BALANCE_PICKS_EVENT));
 }
 
-export function useBalancePicks(): Set<string> {
+/** Which account a sheet line is paid from ('' = not chosen). */
+export function setPickAccount(key: string, acct: string) {
+  const all = loadBalancePicks();
+  all[key] = { mark: 'in', ...(acct ? { acct } : {}), at: new Date().toISOString() };
+  writeSaved(STORAGE_KEYS.balancePicks, all);
+  if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent(BALANCE_PICKS_EVENT));
+}
+
+/** Picked keys → the account each is paid from ('' when not chosen). */
+export function useBalancePicks(): Map<string, string> {
   const [picks, setPicks] = useState<BalancePicks>(() => loadBalancePicks());
   useEffect(() => {
     const reload = () => setPicks(loadBalancePicks());
@@ -35,7 +45,7 @@ export function useBalancePicks(): Set<string> {
       window.removeEventListener('lifehub:synced', reload);
     };
   }, []);
-  return new Set(Object.entries(picks).filter(([, v]) => v?.mark === 'in').map(([k]) => k));
+  return new Map(Object.entries(picks).filter(([, v]) => v?.mark === 'in').map(([k, v]) => [k, v.acct || '']));
 }
 
 /** Monday of the week `d` is in (weeks run Monday–Sunday). */

@@ -61,7 +61,7 @@ export type SyncedState = {
   /** Goals marked active / passive (goal id → mode / null = Flow's suggestion); newest change wins */
   goalModes: Record<string, { mode: string | null; at: string }>;
   /** Balancing sheet picks: payment / incoming key → 'in' / null; newest change wins */
-  balancePicks: Record<string, { mark: string | null; at: string }>;
+  balancePicks: Record<string, { mark: string | null; acct?: string; at: string }>;
 };
 
 /**
