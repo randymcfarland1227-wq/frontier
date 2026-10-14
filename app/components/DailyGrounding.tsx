@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import type { Goal, GoalsData } from '../../lib/goals';
 import type { SourceSnapshot, SpaceId } from '../../lib/types';
-import { readSaved, writeSaved } from '../../lib/storage';
+import { LOCAL_WRITE_EVENT, readSaved, writeSaved } from '../../lib/storage';
 import { modeOf, routinesFor, setGoalMode, useGoalModes, type GoalModes } from '../../lib/goalModes';
 
 type Guide = {
@@ -19,35 +19,75 @@ type Guide = {
   link?: { label: string; url?: string; space?: SpaceId };
 };
 
-const READ_KEY = 'lifehub-grounding-read';
-const OPEN_KEY = 'lifehub-grounding-open';
+const AFFIRMATIONS_KEY = 'lifehub-grounding-affirmations';
 const dayKey = (d = new Date()) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+type Affirmations = { day: string; entries: Record<string, string> };
+const emptyAffirmations: Affirmations = { day: '', entries: {} };
 
-/** A reading check-in stays separate from the task completion ledger. */
-function useReadToday(): [Set<string>, (id: string) => void] {
-  const today = dayKey();
-  const [saved, setSaved] = useState(() => readSaved<{ day: string; ids: string[] }>(READ_KEY, { day: '', ids: [] }));
-  const read = new Set(saved.day === today ? saved.ids : []);
-  const toggle = (id: string) => setSaved(cur => {
-    const ids = cur.day === today ? cur.ids : [];
-    const next = { day: today, ids: ids.includes(id) ? ids.filter(x => x !== id) : [...ids, id] };
-    writeSaved(READ_KEY, next);
-    return next;
-  });
-  return [read, toggle];
+/** Affirmations are daily reflections, separate from the task completion ledger. */
+function useAffirmations() {
+  const [day, setDay] = useState(dayKey);
+  const [saved, setSaved] = useState(() => readSaved<Affirmations>(AFFIRMATIONS_KEY, emptyAffirmations));
+  useEffect(() => {
+    const refresh = () => {
+      setDay(dayKey());
+      setSaved(readSaved<Affirmations>(AFFIRMATIONS_KEY, emptyAffirmations));
+    };
+    const interval = window.setInterval(refresh, 30_000);
+    window.addEventListener('focus', refresh);
+    window.addEventListener('storage', refresh);
+    return () => {
+      window.clearInterval(interval);
+      window.removeEventListener('focus', refresh);
+      window.removeEventListener('storage', refresh);
+    };
+  }, []);
+  const submit = (id: string, text: string): boolean => {
+    const affirmation = text.trim();
+    if (!affirmation) return false;
+    const currentDay = dayKey();
+    if (day !== currentDay) { setDay(currentDay); return false; }
+    const current = readSaved<Affirmations>(AFFIRMATIONS_KEY, emptyAffirmations);
+    const next = { day, entries: { ...(current?.day === day ? current.entries : {}), [id]: affirmation } };
+    try {
+      window.localStorage.setItem(AFFIRMATIONS_KEY, JSON.stringify(next));
+    } catch { return false; }
+    setSaved(next);
+    window.dispatchEvent(new CustomEvent(LOCAL_WRITE_EVENT, { detail: AFFIRMATIONS_KEY }));
+    return true;
+  };
+  return { day, entries: saved?.day === day ? saved.entries || {} : {}, submit };
+}
+
+function AffirmationForm({ guide, reviewed, submit }: { guide: Guide; reviewed?: string; submit: (id: string, text: string) => boolean }) {
+  const [draft, setDraft] = useState(reviewed || '');
+  const [error, setError] = useState('');
+  return <form className="gr-affirmation" aria-label={`${guide.title} affirmation`} onSubmit={event => {
+    event.preventDefault();
+    if (!draft.trim()) { setError('Write an affirmation in your own words first.'); return; }
+    if (submit(guide.id, draft)) { setDraft(draft.trim()); setError(''); }
+    else setError('Your affirmation couldn’t be saved. Please try again.');
+  }}>
+    <label htmlFor={`affirmation-${guide.id}`}>My affirmation for today</label>
+    <p id={`affirmation-help-${guide.id}`} className="gr-affirmation-help">Put this reminder into your own words, then press Enter.</p>
+    <div className="gr-affirmation-entry">
+      <input id={`affirmation-${guide.id}`} value={draft} maxLength={1000} autoComplete="off"
+        placeholder="Today, I…" aria-describedby={`affirmation-help-${guide.id}${error ? ` affirmation-error-${guide.id}` : ''}`}
+        aria-invalid={!!error} onChange={event => { setDraft(event.target.value); setError(''); }}
+        onKeyDown={event => { if (event.key === 'Enter' && event.nativeEvent.isComposing) event.preventDefault(); }} />
+      <button type="submit" className="gr-btn is-primary" disabled={!draft.trim() || draft.trim() === reviewed}>{reviewed ? 'Save changes' : 'Affirm'}</button>
+    </div>
+    <p className="gr-affirmation-status" role="status">{reviewed ? '✓ Reviewed today' : 'Not reviewed yet'}</p>
+    {error ? <p id={`affirmation-error-${guide.id}`} className="gr-affirmation-error" role="alert">{error}</p> : null}
+  </form>;
 }
 
 /** Reminders → active focuses / passive mindsets → compact relocation context. */
 export function DailyGrounding({ move, goals, enter }: { move?: SourceSnapshot; goals: GoalsData | null; enter: (space: SpaceId) => void }) {
   const [guides, setGuides] = useState<Guide[] | null>(null);
-  const [open, setOpenState] = useState<string | null>(() => readSaved<string | null>(OPEN_KEY, null));
-  const [read, toggleRead] = useReadToday();
+  const { day, entries, submit } = useAffirmations();
   const modes = useGoalModes();
   const [selectedGoal, selectGoal] = useState<string | null>(null);
-  const setOpen = (id: string | null) => {
-    setOpenState(id);
-    writeSaved(OPEN_KEY, id);
-  };
   useEffect(() => {
     const controller = new AbortController();
     fetch(`${import.meta.env.BASE_URL}data/grounding.json?t=${Date.now()}`, { cache: 'no-store', signal: controller.signal })
@@ -59,8 +99,7 @@ export function DailyGrounding({ move, goals, enter }: { move?: SourceSnapshot; 
 
   const weekday = ![0, 6].includes(new Date().getDay());
   const today = (guides || []).filter(g => g.when === 'Daily' || weekday);
-  const current = today.find(g => g.id === open);
-  const readCount = today.filter(g => read.has(g.id)).length;
+  const readCount = today.filter(g => entries[g.id]?.trim()).length;
   const moveGoals = (move?.featured || []).filter(f => f.completable === false);
   const currentGoals = (goals?.goals || []).filter(g => g.status === 'active');
   const active = currentGoals.filter(g => modeOf(g.id, modes).mode === 'active');
@@ -86,48 +125,29 @@ export function DailyGrounding({ move, goals, enter }: { move?: SourceSnapshot; 
         <header className="gr-section-head">
           <h3 id="gr-reminders-title">Reminders</h3>
           <p>Read and reconnect</p>
-          <span className="gr-read-count" aria-live="polite">{readCount}/{today.length} read today</span>
+          <span className="gr-read-count" aria-live="polite">{readCount}/{today.length} reviewed today</span>
         </header>
-        <div className="gr-cards" aria-label="Today's reminders">
+        <div className="gr-guides" aria-label="Today's reminders">
           {guides === null ? <p className="gr-empty">Loading reminders…</p> : null}
           {guides?.length === 0 ? <p className="gr-empty">Reminders couldn’t load. Refresh to try again.</p> : null}
-          {today.map(g => (
-            <button key={g.id} type="button" className={`gr-card${current?.id === g.id ? ' is-open' : ''}${read.has(g.id) ? ' is-read' : ''}`}
-              aria-expanded={current?.id === g.id} aria-controls={current?.id === g.id ? 'gr-reader' : undefined} onClick={() => setOpen(current?.id === g.id ? null : g.id)}>
-              <span className="gr-card-icon" aria-hidden="true">{g.icon}</span>
-              <span className="gr-card-copy">
-                <span className="gr-card-title">{g.title}</span>
-                {g.key ? <span className="gr-card-key">{g.key}</span> : null}
-              </span>
-              <span className="gr-card-when">{read.has(g.id) ? '✓ Read' : current?.id === g.id ? 'Close' : 'Read'}</span>
-            </button>
-          ))}
-        </div>
-        {current ? (
-          <article id="gr-reader" className="gr-reader" aria-label={current.title}>
-            <header className="gr-reader-head">
-              <h4>{current.title}</h4>
-              <button type="button" className="gr-link" onClick={() => setOpen(null)}>Close reminder</button>
-              {current.intro ? <p>{current.intro}</p> : null}
+          {today.map(g => <article key={g.id} className="gr-guide" aria-label={g.title}>
+            <header className="gr-guide-head">
+              <h4><span aria-hidden="true">{g.icon}</span> {g.title}</h4>
+              {g.key ? <p className="gr-guide-key">{g.key}</p> : null}
+              {g.intro ? <p>{g.intro}</p> : null}
             </header>
-            <div className="gr-reader-grid">
-              {current.sections.map(s => (
-                <div key={s.heading} className="gr-block">
-                  <h5>{s.heading}</h5>
-                  <ul>{s.lines.map(l => <li key={l}>{l}</li>)}</ul>
-                </div>
-              ))}
+            <div className="gr-guide-body">
+              {g.sections.map(s => <div key={s.heading} className="gr-block">
+                <h5>{s.heading}</h5>
+                <ul>{s.lines.map(l => <li key={l}>{l}</li>)}</ul>
+              </div>)}
+              {g.outro ? <p className="gr-outro">{g.outro}</p> : null}
+              {g.link?.url ? <a className="gr-link" href={g.link.url} target="_blank" rel="noopener noreferrer">{g.link.label} ↗</a>
+                : g.link?.space ? <button type="button" className="gr-link" onClick={() => enter(g.link!.space!)}>{g.link.label} →</button> : null}
             </div>
-            {current.outro ? <p className="gr-outro">{current.outro}</p> : null}
-            <footer className="gr-reader-foot">
-              <button type="button" className={`gr-btn${read.has(current.id) ? ' is-on' : ' is-primary'}`} aria-pressed={read.has(current.id)} onClick={() => toggleRead(current.id)}>
-                {read.has(current.id) ? '✓ Read today' : 'Mark read today'}
-              </button>
-              {current.link?.url ? <a className="gr-btn" href={current.link.url} target="_blank" rel="noopener noreferrer">{current.link.label} ↗</a>
-                : current.link?.space ? <button type="button" className="gr-btn" onClick={() => enter(current.link!.space!)}>{current.link.label} →</button> : null}
-            </footer>
-          </article>
-        ) : null}
+            <AffirmationForm key={`${day}:${g.id}`} guide={g} reviewed={entries[g.id]} submit={submit} />
+          </article>)}
+        </div>
       </section>
 
       <section className="gr-focuses" aria-labelledby="gr-focuses-title">
