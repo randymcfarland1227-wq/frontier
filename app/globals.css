@@ -4503,3 +4503,22 @@ li.bal-wk em.is-neg { color: #b91c1c; }
 }
 .bal-form .bal-from { max-width: none; width: 100%; min-height: 34px; font-size: 14px; }
 .bal-split small { white-space: nowrap; }
+
+/* Balancing sheet — Account · Now · Outgoing · Incoming · Pending · End (2026-10-14) */
+.bal-regs.is-six .bal-reg-row { grid-template-columns: minmax(0, 1.35fr) repeat(5, minmax(0, 1fr)); }
+.bal-reg-row .bal-num.is-out { color: #b91c1c; font-weight: 650; }
+.bal-reg-row .bal-num.is-inc { color: color-mix(in srgb, #0f766e 55%, var(--muted)); font-weight: 600; font-style: italic; }
+.frontier-shell[data-color-mode="dark"] .bal-reg-row .bal-num.is-out { color: #f87171; }
+.frontier-shell[data-color-mode="dark"] .bal-reg-row .bal-num.is-inc { color: color-mix(in srgb, #2dd4bf 55%, #8a8f98); }
+.bal-reg-row .bal-open { flex-direction: column; align-items: flex-end !important; justify-content: center; gap: 0; }
+.bal-reg-row .bal-open small { font-size: 12px; font-weight: 500; font-style: normal; color: var(--muted); }
+.bal-reg-row .bal-open:disabled { cursor: default; text-decoration: none; }
+.bal-pay { display: grid; gap: 4px; padding: 12px; border-radius: 12px; border: 1px solid color-mix(in srgb, #0f8a7e 40%, var(--line)); background: color-mix(in srgb, #0f8a7e 7%, var(--surface)); }
+.bal-pay small { font-size: 12.5px; color: var(--muted); }
+.bal-btn.is-pay { min-height: 42px; background: #0f8a7e; border-color: #0f8a7e; color: #fff; font-size: 15px; }
+.bal-btn.is-pay:disabled { opacity: .6; }
+@media (max-width: 640px) {
+  .bal-regs.is-six .bal-reg-row { grid-template-columns: minmax(0, 1.1fr) repeat(5, minmax(0, 1fr)); }
+  .bal-regs.is-six .bal-reg-row > * { padding: 4px 3px; font-size: 12px; }
+  .bal-reg-row .bal-open small { display: none; }
+}
