@@ -142,4 +142,19 @@ console.log('Migration checks pass: immutable input, stable counts/identity/date
   assert.equal(mondayOf(new Date(2026, 9, 18)).getDate(), 12, 'Sun Oct 18 → Mon Oct 12');
   assert.equal(mondayOf(new Date(2026, 9, 19)).getDate(), 19, 'Mon Oct 19 starts a new week');
   console.log('Balancing sheet checks pass.');
+  const { balanceTwin } = load('lib/money.ts');
+  const cell = (r, c, text, formula = false) => ({ tab: 'Randy', r, c, text, formula, struck: false });
+  const row = (r, c, name, amt, f) => [cell(r, c, name), cell(r, c + 1, amt, f)];
+  const twinModel = {
+    accounts: { rows: [row(3, 2, 'Chase', '$1.00'), row(4, 2, 'Bofa', '$48.85'), row(6, 2, 'Capital  1', '0.69')] },
+    balancing: { rows: [row(13, 2, 'Chase', '$1.00'), row(14, 2, 'BOFA', '$49'), row(16, 2, 'Ebay (PEND)', '0'), row(23, 2, 'Cash On Hand', '$59', true)] },
+  };
+  assert.equal(balanceTwin(twinModel, { tab: 'Randy', r: 13, c: 3 })?.r, 3, 'balancing Chase → Checking Chase');
+  assert.equal(balanceTwin(twinModel, { tab: 'Randy', r: 3, c: 3 })?.r, 13, 'Checking Chase → balancing Chase');
+  assert.equal(balanceTwin(twinModel, { tab: 'Randy', r: 4, c: 3 })?.r, 14, 'Bofa matches BOFA');
+  assert.equal(balanceTwin(twinModel, { tab: 'Randy', r: 3, c: 4 }), undefined, 'savings column has no twin');
+  assert.equal(balanceTwin(twinModel, { tab: 'Randy', r: 6, c: 3 }), undefined, 'Capital 1 only in Checking');
+  assert.equal(balanceTwin(twinModel, { tab: 'Randy', r: 16, c: 3 }), undefined, 'Ebay only on the balancing sheet');
+  assert.equal(balanceTwin(twinModel, { tab: 'Randy', r: 13, c: 2 }), undefined, 'the name cell has no twin');
+  console.log('Account twin checks pass.');
 }

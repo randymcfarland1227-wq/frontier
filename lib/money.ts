@@ -78,6 +78,28 @@ export type CellEdit =
 
 export type EditResult = { ok: boolean; error?: string; now?: string };
 
+/**
+ * The same account's balance lives twice on the Randy tab: Debit Accounts (Chk column) and the
+ * Balancing and Planning list (its amount column). Given one of those cells, find the other one,
+ * matched by account name ignoring case / spaces ("Bofa" = "BOFA"). Savings, totals and accounts
+ * that only appear in one table have no twin.
+ */
+export function balanceTwin(model: Pick<MoneyModel, 'accounts' | 'balancing'>, cell: { tab: string; r: number; c: number }): Cell | undefined {
+  const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, '');
+  const pairs: Array<[Table | null, Table | null]> = [
+    [model.accounts, model.balancing],
+    [model.balancing, model.accounts],
+  ];
+  for (const [from, to] of pairs) {
+    const row = from?.rows.find(r => r[1] && r[1].tab === cell.tab && r[1].r === cell.r && r[1].c === cell.c);
+    if (!row || !norm(row[0]?.text || '')) continue;
+    const match = to?.rows.filter(r => norm(r[0]?.text || '') === norm(row[0].text)) || [];
+    const twin = match.length === 1 ? match[0][1] : undefined;
+    return twin && !twin.formula ? twin : undefined;
+  }
+  return undefined;
+}
+
 /** Write edits to the sheet (through the Worker + script). Returns the fresh snapshot on success. */
 export async function saveMoneyEdits(edits: CellEdit[]): Promise<{ ok: boolean; results: EditResult[]; snapshot?: MoneySnapshot; error?: string }> {
   try {
