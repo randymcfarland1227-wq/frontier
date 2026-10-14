@@ -503,3 +503,9 @@ Design critique + WCAG 2.1 AA + copy + design-system audit, then fixes (last blo
 - Affirmations use device-local `lifehub-grounding-affirmations` storage, separate from the completion ledger and cloud backup. Failed storage writes do not mark a reminder reviewed. The next local day clears the displayed review state and fields, including when the page stays open.
 - Current goals, Flow links, mode overrides, and Move context retain their existing behavior.
 - Verified Enter and button submission, whitespace rejection, reload persistence, a simulated day rollover, and a 390px mobile layout. TypeScript and Pages build pass; full lint reports only the documented existing errors in life-hub.tsx and Worker warning.
+
+## Grounding dashboard density (2026-10-14)
+- Reminder guides are compact horizontal rows: title and key on the left, original content wrapping across the middle, and the affirmation field on the right. Short reminders no longer inherit a neighboring guide’s height.
+- Section headings and reminder lists flow as labeled text with dot separators. Goal rows and padding are tighter. Content remains fully visible; no additional disclosures, clipping, or internal scrolling.
+- Tablet moves affirmations below each reminder; phone stacks each row and wraps the original text. Affirmation persistence and review behavior are unchanged.
+- Browser checks: 996px section at 1280px versus approximately 1760px previously, no overflow at 390px or 900px, and Enter submission passed. TypeScript, component lint, and Pages build pass. Full lint retains the documented existing issues.
