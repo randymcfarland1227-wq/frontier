@@ -1301,6 +1301,8 @@ const OFFER_VIEW_KEY = 'lifehub-balance-offer-view';
 const DRAG_KEY = 'text/lifehub-balance';
 const shortDay = (k: string) => fromDayKey(k).toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' });
 const dayNum = (k: string) => `${fromDayKey(k).toLocaleDateString([], { weekday: 'short' })} ${fromDayKey(k).getDate()}`;
+/** How a balance is typed into the sheet: $12.50 / -$48.00 */
+const cellMoney = (n: number) => (n < 0 ? `-$${(-n).toFixed(2)}` : `$${n.toFixed(2)}`);
 const signed = (n: number) => (n < 0 ? `−${money(-n)}` : money(n));
 const normName = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, '');
 
@@ -1360,6 +1362,8 @@ type Book = {
   keys: string[];
   universe: BalanceLine[];
   line: (key: string) => BalanceLine | undefined;
+  /** The payment behind a line (for marking it paid) */
+  due: (key: string) => BillDue | undefined;
   plan: BalancePlan;
   acctOf: (l: BalanceLine) => string;
   methodOf: (l: BalanceLine) => PayMethod | undefined;
@@ -1421,6 +1425,7 @@ function useBalanceBook(model: MoneyModel | null, dues: BillDue[], monthDues: Bi
   incoming.forEach(d => push(inLine(d)));
   for (const [k, v] of Object.entries(plan.entries)) if (k.startsWith('custom:') && v.item && v.mark === 'in') push(customLine(k, v.item));
   const line = (key: string) => universe.find(l => l.key === key);
+  const due = (key: string) => dues.find(d => d.key === key) || monthDues.find(d => d.key === key);
 
   const acctOf = (l: BalanceLine) => {
     const a = plan.entries[l.key]?.acct || plan.remembered.get(l.src)?.acct || '';
@@ -1481,7 +1486,7 @@ function useBalanceBook(model: MoneyModel | null, dues: BillDue[], monthDues: Bi
     const e = regs[regs.length - 1][a];
     return { ...f, lines: regs.flatMap(r => r[a].lines), end: e.end, endChk: e.endChk, endSav: e.endSav };
   };
-  return { today, todayKey, weeks, accounts, acct, keys, universe, line, plan, acctOf, methodOf, payOnOf, whenOf, weekOf, month, regs, regLine, monthReg };
+  return { today, todayKey, weeks, accounts, acct, keys, universe, line, due, plan, acctOf, methodOf, payOnOf, whenOf, weekOf, month, regs, regLine, monthReg };
 }
 
 /**
@@ -1507,7 +1512,7 @@ function useIncomingLanding(model: MoneyModel | null, book: Book, save: Save) {
     tried.current.add(ready.key);
     busy.current = true;
     setPickLanded(ready.key, book.todayKey);
-    void save([{ tab: cell.tab, r: cell.r, c: cell.c, expect: cell.text, value: `$${next.toFixed(2)}` }])
+    void save([{ tab: cell.tab, r: cell.r, c: cell.c, expect: cell.text, value: cellMoney(next) }])
       .then(res => {
         if (!res.ok || !res.results[0]?.ok) setPickLanded(ready.key, null);
       })
@@ -1672,6 +1677,26 @@ function BalancingSheet({ period, book, model, onSave }: { period: 'week' | 'mon
     );
   };
 
+  /** That account's money out and (grey, still counted) money in for the period — the items themselves live in its panel. */
+  const flowCells = (a: string, v: Reg) => {
+    const o = v.lines.filter(l => l.kind === 'pay').reduce((s, l) => s + (l.amount || 0), 0);
+    const n = v.lines.filter(l => l.kind === 'in' && !l.landed).reduce((s, l) => s + (l.amount || 0), 0);
+    const nOut = v.lines.filter(l => l.kind === 'pay').length;
+    const nIn = v.lines.filter(l => l.kind === 'in' && !l.landed).length;
+    const open = () => (a ? panels.openAccount(a) : undefined);
+    return (
+      <>
+        <button type="button" className="bal-num is-out bal-open" onClick={open} disabled={!a} title={a ? `${nOut} going out · details` : undefined}>
+          {o ? `−${money(o)}` : ''}
+          {nOut > 1 ? <small>{nOut} items</small> : null}
+        </button>
+        <button type="button" className="bal-num is-inc bal-open" onClick={open} disabled={!a} title={a ? `${nIn} coming in · counted · details` : undefined}>
+          {n ? `+${money(n)}` : ''}
+          {nIn > 1 ? <small>{nIn} items</small> : null}
+        </button>
+      </>
+    );
+  };
   const unassigned = view('');
   return (
     <div className="bal">
@@ -1728,11 +1753,13 @@ function BalancingSheet({ period, book, model, onSave }: { period: 'week' | 'mon
           </div>
         ) : null}
 
-        <div className="bal-regs">
+        <div className="bal-regs is-six">
           <div className="bal-reg-row is-head">
             <span>Account</span>
             <span className="is-num">{firstWeek ? 'Now' : 'Start'}</span>
             <span className="is-num">Pending</span>
+            <span className="is-num">Outgoing</span>
+            <span className="is-num">Incoming</span>
             <span className="is-num">{period === 'month' ? 'End of month' : 'End of week'}</span>
           </div>
           {book.accounts.map(ac => {
@@ -1770,18 +1797,35 @@ function BalancingSheet({ period, book, model, onSave }: { period: 'week' | 'mon
                       {v.pend ? money(v.pend) : ''}
                     </button>
                   )}
+                  {flowCells(ac.name, v)}
                   <button type="button" className={`bal-num is-end bal-open${v.end < 0 ? ' is-neg' : ''}`} onClick={() => panels.openAccount(ac.name)} title="Details">
                     {signed(v.end)}
                   </button>
                 </div>
-                {v.lines.length ? <ol className="bal-reg-lines">{linesOf(ac.name, v)}</ol> : null}
               </div>
             );
           })}
+          {unassigned.lines.length ? (
+            <div className="bal-reg is-unset">
+              <div className="bal-reg-row">
+                <span className="bal-acct">
+                  <span className="bal-acct-name">
+                    Needs an account<small>listed above</small>
+                  </span>
+                </span>
+                <span className="bal-num" />
+                <span className="bal-num" />
+                {flowCells('', unassigned)}
+                <span className={`bal-num is-end${unassigned.end < 0 ? ' is-neg' : ''}`}>{signed(unassigned.end)}</span>
+              </div>
+            </div>
+          ) : null}
           <div className="bal-reg-row is-total">
             <span>Total</span>
             <span className="bal-num is-now">{signed(tot.start)}</span>
             <span className="bal-num is-pend">{tot.pend ? money(tot.pend) : ''}</span>
+            <span className="bal-num is-out">{outSum ? `−${money(outSum)}` : ''}</span>
+            <span className="bal-num is-inc">{inSum ? `+${money(inSum)}` : ''}</span>
             <span className={`bal-num is-end${tot.end < 0 ? ' is-neg' : ''}`}>{signed(tot.end)}</span>
           </div>
         </div>
@@ -1936,8 +1980,25 @@ const daysText = (days: number, kind: 'pay' | 'in') =>
  * One bill / deposit as its own item: amount, due day, days to go, the day you plan to pay it, the
  * account and how — plus its effect on that account and its other dates.
  */
-function LinePanel({ id, book, model, onBack, onClose }: { id: string; book: Book; model: MoneyModel; onBack?: () => void; onClose: () => void }) {
+function LinePanel({
+  id,
+  book,
+  model,
+  onSave,
+  onPaid,
+  onBack,
+  onClose,
+}: {
+  id: string;
+  book: Book;
+  model: MoneyModel;
+  onSave: Save;
+  onPaid: (d: BillDue) => void;
+  onBack?: () => void;
+  onClose: () => void;
+}) {
   const panels = useMoneyPanels();
+  const [paying, setPaying] = useState(false);
   const l = book.line(id);
   if (!l)
     return (
@@ -1962,6 +2023,35 @@ function LinePanel({ id, book, model, onBack, onClose }: { id: string; book: Boo
     .filter(x => x.src === l.src && x.key !== l.key && !x.paid && x.due >= book.todayKey)
     .sort((a, b) => a.due.localeCompare(b.due))
     .slice(0, 4);
+  // Pay (or receive) it now: the account's balance changes in the sheet, it's marked paid everywhere
+  // on Life Hub, and it leaves the balancing sheet.
+  const potCell = ac ? (method === 'savings' && ac.sav ? ac.sav : ac.chk) : undefined;
+  const canWrite = !!potCell && !potCell.formula && l.amount !== undefined;
+  const nowAmt = amountOf(potCell?.text || '') || 0;
+  const afterAmt = nowAmt + (isIn ? 1 : -1) * (l.amount || 0);
+  const pay = async () => {
+    const what = isIn ? `Mark ${l.name} received` : `Pay ${l.name}`;
+    const msg = canWrite
+      ? `${what}${l.amount !== undefined ? ` (${money(l.amount)})` : ''}?\n\n${acctName}${method === 'savings' ? ' savings' : ''} goes ${money(nowAmt)} → ${signed(afterAmt)} in your sheet, ${isIn ? 'it' : 'it’s marked paid everywhere on Life Hub and'} comes off the balancing sheet.`
+      : `${what}?\n\nNo account${acctName ? ' amount Life Hub can change' : ' chosen'}, so no balance changes — ${isIn ? 'it' : 'it’s marked paid everywhere on Life Hub and'} comes off the balancing sheet.`;
+    if (!window.confirm(msg)) return;
+    setPaying(true);
+    if (canWrite) {
+      const res = await onSave([{ tab: potCell!.tab, r: potCell!.r, c: potCell!.c, expect: potCell!.text, value: cellMoney(afterAmt) }]);
+      if (!res.ok || !res.results[0]?.ok) {
+        setPaying(false);
+        return;
+      }
+    }
+    if (isIn) setPickLanded(l.key, book.todayKey);
+    else {
+      const d = book.due(l.key);
+      if (d) onPaid(d);
+    }
+    setBalancePicks([l.key], false);
+    setPaying(false);
+    onClose();
+  };
   const methods: PayMethod[] = isIn ? ['ach', ...(ac?.sav ? (['savings'] as const) : [])] : ['debit', 'ach', ...(ac?.sav ? (['savings'] as const) : [])];
   return (
     <Modal label={`${l.name} details`} onClose={onClose} onBack={onBack}>
@@ -2003,6 +2093,21 @@ function LinePanel({ id, book, model, onBack, onClose }: { id: string; book: Boo
           <small>{method ? METHOD_LABEL[method] : acctName ? '' : 'not set'}</small>
         </div>
       </div>
+
+      {!l.paid && !reg?.landed ? (
+        <div className="bal-pay">
+          <button type="button" className="bal-btn is-pay" disabled={paying} onClick={() => void pay()}>
+            {paying ? 'Saving…' : isIn ? `Mark received${acctName ? ` into ${acctName}` : ''}` : `Pay${l.amount !== undefined ? ` ${money(l.amount)}` : ''}${acctName ? ` from ${acctName}` : ''}`}
+          </button>
+          <small>
+            {canWrite
+              ? `${acctName}${method === 'savings' ? ' savings' : ''} ${money(nowAmt)} → ${signed(afterAmt)} in your sheet · ${isIn ? 'comes off the sheet' : 'marked paid everywhere'}`
+              : acctName
+                ? 'Marks it paid; this account’s amount isn’t one Life Hub can change'
+                : 'No account chosen — marks it paid without changing a balance'}
+          </small>
+        </div>
+      ) : null}
 
       <section className="bal-drw-sec">
         <h4>Plan</h4>
@@ -2262,7 +2367,7 @@ function AccountPanel({ name, book, model, onSave, onBack, onClose }: { name: st
                 const next = (amountOf(ac.chk!.text) || 0) + pend;
                 if (!window.confirm(`Move ${money(pend)} from Pending into Now for ${ac.name}?\n\nNow becomes ${money(next)} and Pending is cleared, in your sheet.`)) return;
                 void onSave([
-                  { tab: ac.chk!.tab, r: ac.chk!.r, c: ac.chk!.c, expect: ac.chk!.text, value: `$${next.toFixed(2)}` },
+                  { tab: ac.chk!.tab, r: ac.chk!.r, c: ac.chk!.c, expect: ac.chk!.text, value: cellMoney(next) },
                   { tab: ac.pend!.tab, r: ac.pend!.r, c: ac.pend!.c, expect: ac.pend!.text, value: '' },
                 ]);
               }}
@@ -2998,7 +3103,7 @@ export function MoneyPage({
       <p className="money-foot">Every change from Life Hub is logged on the sheet’s “Life Hub edits” tab.</p>
     </div>
       {panel?.type === 'line' ? (
-        <LinePanel key={panel.id} id={panel.id} book={book} model={model} onBack={panel.back ? () => setPanel(panel.back!) : undefined} onClose={() => setPanel(null)} />
+        <LinePanel key={panel.id} id={panel.id} book={book} model={model} onSave={save} onPaid={onPaid} onBack={panel.back ? () => setPanel(panel.back!) : undefined} onClose={() => setPanel(null)} />
       ) : panel?.type === 'acct' ? (
         <AccountPanel key={panel.id} name={panel.id} book={book} model={model} onSave={save} onBack={panel.back ? () => setPanel(panel.back!) : undefined} onClose={() => setPanel(null)} />
       ) : null}
