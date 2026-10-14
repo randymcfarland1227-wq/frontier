@@ -1622,43 +1622,6 @@ function BalancingSheet({ period, book, model, onSave }: { period: 'week' | 'mon
   const inSum = shown.filter(l => l.kind === 'in' && !l.landed).reduce((s, l) => s + (l.amount || 0), 0);
   const add = (ks: string[]) => setBalancePicks(ks, true);
 
-  const lineItem = (l: RegLine) => (
-    <li key={l.key}>
-      <button
-        type="button"
-        className={`bal-rl is-${l.kind}${l.kind === 'in' && !l.landed ? ' is-coming' : ''}${l.landed ? ' is-landed' : ''}${l.overdue ? ' is-overdue' : ''}`}
-        style={{ '--ev': l.color } as React.CSSProperties}
-        onClick={() => panels.openLine(l.key)}
-        title="Details"
-      >
-        <span className="bal-day">{l.overdue && !book.payOnOf(l) ? 'Late' : dayNum(l.when)}</span>
-        <span className="bal-name">
-          {l.name}
-          <small>
-            {l.tag}
-            {book.payOnOf(l) && book.payOnOf(l) !== l.due ? ` · due ${shortDay(l.due).replace(/^\w+, /, '')}` : ''}
-            {l.method ? ` · ${l.method === 'ach' ? 'Checking 1–3d' : METHOD_LABEL[l.method]}` : ''}
-          </small>
-        </span>
-        <span className={`bal-amt${l.kind === 'in' ? ' is-in' : ''}`}>{l.amount === undefined ? '?' : `${l.kind === 'in' ? '+' : '−'}${money(l.amount)}`}</span>
-        {l.acct ? <span className={`bal-after${l.after < 0 ? ' is-neg' : ''}`}>{l.landed ? 'in Now ✓' : signed(l.after)}</span> : <span className="bal-need">Choose account</span>}
-      </button>
-    </li>
-  );
-  const linesOf = (a: string, v: Reg) => {
-    if (period === 'week') return v.lines.map(lineItem);
-    return weeks.flatMap(w => {
-      const ls = v.lines.filter(l => l.week === w.i);
-      if (!ls.length) return [];
-      return [
-        <li key={`wk-${w.key}`} className="bal-wk">
-          <span>{w.i === 0 ? 'This week' : w.label}</span>
-          {a ? <em className={regs[w.i][a].end < 0 ? 'is-neg' : ''}>ends {signed(regs[w.i][a].end)}</em> : null}
-        </li>,
-        ...ls.map(lineItem),
-      ];
-    });
-  };
   const amountCell = (ac: BookAcct, v: Reg) => {
     if (!firstWeek)
       return (
@@ -1677,7 +1640,6 @@ function BalancingSheet({ period, book, model, onSave }: { period: 'week' | 'mon
     );
   };
 
-  const unassigned = view('');
   return (
     <div className="bal">
       <section
@@ -1723,169 +1685,125 @@ function BalancingSheet({ period, book, model, onSave }: { period: 'week' | 'mon
           {firstWeek ? 'Click an amount to change it · double-click it, or click any item, for its details' : 'Each account starts where last week ended · pending stays pending until you move it into Now'}
         </p>
 
-        {unassigned.lines.length ? (
-          <div className="bal-inbox">
-            <p className="bal-inbox-head">
-              <b>Needs an account</b> <span>{unassigned.lines.length}</span>
-              <em>{signed(unassigned.end)}</em>
-            </p>
-            <ol className="bal-reg-lines">{linesOf('', unassigned)}</ol>
-          </div>
-        ) : null}
-
         {(() => {
-          // Top to bottom: money you have (checking + other sources, money coming in grey but counted),
-          // then pending (not counted), then outgoing — each account's total; its items are in its panel.
-          const pendNamed = (n: string) => /\(pend\)|pending/i.test(n);
-          const sums = (v: Reg) => ({
-            out: v.lines.filter(l => l.kind === 'pay').reduce((s, l) => s + (l.amount || 0), 0),
-            nOut: v.lines.filter(l => l.kind === 'pay').length,
-            inn: v.lines.filter(l => l.kind === 'in' && !l.landed).reduce((s, l) => s + (l.amount || 0), 0),
-          });
-          const sources = book.accounts.filter(ac => {
-            const v = view(ac.name);
-            return (ac.bal || v.lines.length || v.start) && (!pendNamed(ac.name) || v.start || v.lines.length);
-          });
-          const pending = book.accounts.filter(ac => ac.pend && (pendNamed(ac.name) || view(ac.name).pend));
-          const outs = [...book.accounts.map(ac => ac.name), ''].map(a => ({ a, ...sums(view(a)) })).filter(x => x.out);
-          const delBtn = (ac: BookAcct) =>
-            ac.bal && firstWeek && !ac.bal.some(c => c.formula) ? (
-              <button
-                type="button"
-                className="bal-del"
-                title="Remove this line from the sheet"
-                aria-label={`Remove ${ac.name} from the balancing sheet`}
-                onClick={() => {
-                  const row = ac.bal!;
-                  if (!window.confirm(`Remove “${ac.name}” from the Balancing list in your sheet?\n\nOnly this line goes; the rest moves up and the totals update.`)) return;
-                  void onSave([{ tab: row[0].tab, deleteBalancing: true, r: row[0].r, startCol: row[0].c, expectRow: row.map(c => c.text) }]);
-                }}
-              >
-                ✕
-              </button>
-            ) : null;
-          const nameCell = (ac: BookAcct) => (
-            <span className="bal-acct">
-              <button type="button" className="bal-acct-name" onClick={() => panels.openAccount(ac.name)} title="Account details">
-                {ac.name}
-                {ac.note ? <small>{ac.note}</small> : null}
-              </button>
-              {delBtn(ac)}
-            </span>
+          // A plain balance sheet: credits (each account's Now + Pending on one row, then money coming in,
+          // grey but counted), then outgoing as negative lines, then credits − outgoing = balanced.
+          const byWhen = (a: RegLine, b: RegLine) => a.when.localeCompare(b.when) || a.name.localeCompare(b.name);
+          const ins = shown.filter(l => l.kind === 'in').sort(byWhen);
+          const outs = shown.filter(l => l.kind === 'pay').sort(byWhen);
+          const credits = book.accounts.filter(ac => ac.bal || view(ac.name).start);
+          const itemRow = (l: RegLine) => (
+            <button
+              key={l.key}
+              type="button"
+              className={`bal-led-row is-item is-${l.kind}${l.kind === 'in' && !l.landed ? ' is-coming' : ''}${l.landed ? ' is-landed' : ''}${l.overdue ? ' is-overdue' : ''}`}
+              style={{ '--ev': l.color } as React.CSSProperties}
+              onClick={() => panels.openLine(l.key)}
+              title="Details"
+            >
+              <span className="bal-led-day">{l.overdue && !book.payOnOf(l) ? 'Late' : dayNum(l.when)}</span>
+              <span className="bal-led-name">
+                {l.name}
+                <small>
+                  {l.tag}
+                  {l.acct ? (
+                    <>
+                      {' · '}
+                      {l.kind === 'in' ? 'into' : 'from'} {l.acct}
+                    </>
+                  ) : (
+                    <em className="bal-need">Choose account</em>
+                  )}
+                </small>
+              </span>
+              <span className={`bal-led-amt ${l.kind === 'in' ? 'is-inc' : 'is-out'}`}>{l.amount === undefined ? '?' : `${l.kind === 'in' ? '+' : '−'}${money(l.amount)}`}</span>
+              <span />
+            </button>
           );
           return (
-            <div className="bal-stack">
-              <section className="bal-blk is-money" aria-label="Money now">
-                <div className="bal-blk-row is-head">
-                  <span>Checking &amp; money sources</span>
-                  <span className="is-num">{firstWeek ? 'Now' : 'Start'}</span>
-                  <span className="is-num">Coming in</span>
-                  <span className="is-num">{period === 'month' ? 'End of month' : 'End of week'}</span>
-                </div>
-                {sources.map(ac => {
-                  const v = view(ac.name);
-                  const x = sums(v);
-                  return (
-                    <div key={ac.name} className="bal-blk-row">
-                      {nameCell(ac)}
-                      {amountCell(ac, v)}
-                      <button type="button" className="bal-num is-inc bal-open" onClick={() => panels.openAccount(ac.name)} title="Coming in · counted · details">
-                        {x.inn ? `+${money(x.inn)}` : ''}
+            <div className="bal-led">
+              <div className="bal-led-row is-head">
+                <span />
+                <span>Credits · checking &amp; money sources</span>
+                <span className="is-num">{firstWeek ? 'Now' : 'Start'}</span>
+                <span className="is-num">Pending</span>
+              </div>
+              {credits.map(ac => {
+                const v = view(ac.name);
+                return (
+                  <div key={ac.name} className="bal-led-row is-acct">
+                    <span />
+                    <span className="bal-led-name bal-acct">
+                      <button type="button" className="bal-acct-name" onClick={() => panels.openAccount(ac.name)} title="Its outgoing, incoming and end of week">
+                        {ac.name}
+                        {ac.note ? <small>{ac.note}</small> : null}
                       </button>
-                      <button type="button" className={`bal-num is-end bal-open${v.end < 0 ? ' is-neg' : ''}`} onClick={() => panels.openAccount(ac.name)} title="After what comes in and goes out · details">
-                        {signed(v.end)}
-                      </button>
-                    </div>
-                  );
-                })}
-                {unassigned.lines.length ? (
-                  <div className="bal-blk-row is-unset">
-                    <span className="bal-acct">
-                      <span className="bal-acct-name">
-                        Needs an account<small>its items are listed at the top</small>
-                      </span>
-                    </span>
-                    <span className="bal-num" />
-                    <span className="bal-num is-inc">{sums(unassigned).inn ? `+${money(sums(unassigned).inn)}` : ''}</span>
-                    <span className={`bal-num is-end${unassigned.end < 0 ? ' is-neg' : ''}`}>{signed(unassigned.end)}</span>
-                  </div>
-                ) : null}
-                <div className="bal-blk-row is-total">
-                  <span>Total</span>
-                  <span className="bal-num is-now">{signed(tot.start)}</span>
-                  <span className="bal-num is-inc">{inSum ? `+${money(inSum)}` : ''}</span>
-                  <span className={`bal-num is-end${tot.end < 0 ? ' is-neg' : ''}`}>{signed(tot.end)}</span>
-                </div>
-              </section>
-
-              {pending.length ? (
-                <section className="bal-blk is-pending" aria-label="Pending">
-                  <div className="bal-blk-row is-head">
-                    <span>Pending · not counted until it’s in Now</span>
-                    <span className="is-num">Pending</span>
-                  </div>
-                  {pending.map(ac => (
-                    <div key={ac.name} className="bal-blk-row">
-                      {nameCell(ac)}
-                      {firstWeek ? (
-                        <EditCell cell={ac.pend} onSave={onSave} className="bal-num is-pend" placeholder="—" onOpen={() => panels.openAccount(ac.name)} />
-                      ) : (
-                        <button type="button" className="bal-num is-pend bal-open" onClick={() => panels.openAccount(ac.name)}>
-                          {view(ac.name).pend ? money(view(ac.name).pend) : '—'}
+                      {ac.bal && firstWeek && !ac.bal.some(c => c.formula) ? (
+                        <button
+                          type="button"
+                          className="bal-del"
+                          title="Remove this line from the sheet"
+                          aria-label={`Remove ${ac.name} from the balancing sheet`}
+                          onClick={() => {
+                            const row = ac.bal!;
+                            if (!window.confirm(`Remove “${ac.name}” from the Balancing list in your sheet?\n\nOnly this line goes; the rest moves up and the totals update.`)) return;
+                            void onSave([{ tab: row[0].tab, deleteBalancing: true, r: row[0].r, startCol: row[0].c, expectRow: row.map(c => c.text) }]);
+                          }}
+                        >
+                          ✕
                         </button>
-                      )}
-                    </div>
-                  ))}
-                  <div className="bal-blk-row is-total">
-                    <span>Total pending</span>
-                    <span className="bal-num is-pend">{tot.pend ? money(tot.pend) : '—'}</span>
+                      ) : null}
+                    </span>
+                    {amountCell(ac, v)}
+                    {firstWeek && ac.pend ? (
+                      <EditCell cell={ac.pend} onSave={onSave} className="bal-num is-pend" placeholder="" onOpen={() => panels.openAccount(ac.name)} />
+                    ) : (
+                      <span className="bal-num is-pend">{v.pend ? money(v.pend) : ''}</span>
+                    )}
                   </div>
-                </section>
-              ) : null}
+                );
+              })}
+              {ins.map(itemRow)}
+              <div className="bal-led-row is-sub">
+                <span />
+                <span>Total credits</span>
+                <span className="bal-num is-now">{signed(tot.start + inSum)}</span>
+                <span className="bal-num is-pend">{tot.pend ? money(tot.pend) : ''}</span>
+              </div>
 
-              <section className="bal-blk is-outgoing" aria-label="Outgoing">
-                <div className="bal-blk-row is-head">
-                  <span>Outgoing · {period === 'month' ? 'this month' : week.i === 0 ? 'this week' : week.label}</span>
-                  <span className="is-num">Items</span>
-                  <span className="is-num">Out</span>
-                </div>
-                {outs.length ? (
-                  outs.map(o => (
-                    <div key={o.a || '_none'} className={`bal-blk-row${o.a ? '' : ' is-unset'}`}>
-                      {o.a ? (
-                        <span className="bal-acct">
-                          <button type="button" className="bal-acct-name" onClick={() => panels.openAccount(o.a)} title="What’s going out of it">
-                            From {o.a}
-                          </button>
-                        </span>
-                      ) : (
-                        <span className="bal-acct">
-                          <span className="bal-acct-name">
-                            Needs an account<small>listed at the top</small>
-                          </span>
-                        </span>
-                      )}
-                      <span className="bal-num bal-count">{o.nOut}</span>
-                      <button type="button" className="bal-num is-out bal-open" disabled={!o.a} onClick={() => o.a && panels.openAccount(o.a)}>
-                        −{money(o.out)}
-                      </button>
-                    </div>
-                  ))
-                ) : (
-                  <p className="bal-blk-empty">Nothing going out yet — add bills from the right.</p>
-                )}
-                {outs.length ? (
-                  <div className="bal-blk-row is-total">
-                    <span>Total out</span>
-                    <span className="bal-num bal-count">{outs.reduce((s, o) => s + o.nOut, 0)}</span>
-                    <span className="bal-num is-out">−{money(outSum)}</span>
-                  </div>
-                ) : null}
-              </section>
+              <div className="bal-led-row is-head is-debits">
+                <span />
+                <span>Outgoing</span>
+                <span className="is-num" />
+                <span />
+              </div>
+              {outs.length ? outs.map(itemRow) : <p className="bal-led-empty">Nothing yet — add bills from Upcoming on the right, or + New item.</p>}
+              <div className="bal-led-row is-sub">
+                <span />
+                <span>Total outgoing</span>
+                <span className="bal-num is-out">{outSum ? `−${money(outSum)}` : '$0'}</span>
+                <span />
+              </div>
+
+              <div className={`bal-led-row is-balanced${tot.end < 0 ? ' is-short' : ''}`}>
+                <span />
+                <span>
+                  Balanced
+                  <small>credits − outgoing{period === 'week' && next ? ` · carries into ${next.label}` : ''}</small>
+                </span>
+                <span className={`bal-num${tot.end < 0 ? ' is-neg' : ''}`}>{signed(tot.end)}</span>
+                <span className="bal-num is-pend">
+                  {tot.pend ? (
+                    <>
+                      {signed(tot.end + tot.pend)}
+                      <small>with pending</small>
+                    </>
+                  ) : null}
+                </span>
+              </div>
             </div>
           );
         })()}
-        {!shown.length ? <p className="bal-drop-hint">Add this {period === 'week' ? 'week’s' : 'month’s'} bills and incoming money from the right (or drag them here), then give each one an account.</p> : null}
         <div className="bal-adds">
           {adding ? (
             <NewItemForm book={book} onDone={() => setAdding(false)} />
@@ -1895,22 +1813,6 @@ function BalancingSheet({ period, book, model, onSave }: { period: 'week' | 'mon
             </button>
           )}
           {firstWeek && model.balancing && !adding ? <BalancingAdd table={model.balancing} onSave={onSave} /> : null}
-        </div>
-
-        <div className="bal-totals">
-          <div className={tot.end < 0 ? 'is-short' : 'is-ok'}>
-            <span>{tot.end < 0 ? 'Short' : period === 'month' ? 'End of month' : 'End of week'}</span>
-            <b>{money(Math.abs(tot.end))}</b>
-            <small>
-              {signed(tot.start)} {inSum ? `+ ${money(inSum)} coming in ` : ''}− {money(outSum)} out · pending not counted
-              {period === 'week' && next ? ` · carries into ${next.label}` : ''}
-            </small>
-          </div>
-          <div className={tot.end + tot.pend < 0 ? 'is-short' : 'is-ok'}>
-            <span>If pending clears</span>
-            <b>{signed(tot.end + tot.pend)}</b>
-            <small>{tot.pend ? `+ the ${money(tot.pend)} still pending, once you move it into Now` : 'nothing pending right now'}</small>
-          </div>
         </div>
       </section>
 

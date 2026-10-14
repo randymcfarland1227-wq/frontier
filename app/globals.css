@@ -4558,3 +4558,52 @@ li.bal-wk em.is-neg { color: #b91c1c; }
   .bal-blk-row > * { padding: 4px 6px; font-size: 12.5px; }
   .bal-blk-row { grid-template-columns: minmax(0, 1.3fr) repeat(3, minmax(0, 1fr)); }
 }
+
+/* Balancing sheet as a plain ledger: credits (Now · Pending) → outgoing → balanced (2026-10-14) */
+.bal-led { display: grid; border: 1px solid var(--line, var(--row-line)); border-radius: 10px; overflow: hidden; }
+.bal-led-row { display: grid; grid-template-columns: 58px minmax(0, 1fr) 120px 110px; align-items: center; min-height: 34px; border-top: 1px solid var(--line, var(--row-line)); }
+.bal-led-row > * { padding: 4px 10px; font-size: 13.5px; min-width: 0; }
+.bal-led-row .is-num, .bal-led-row .bal-num, .bal-led-amt { justify-self: stretch; display: flex; flex-direction: column; justify-content: center; align-items: flex-end; text-align: right; font-variant-numeric: tabular-nums; font-weight: 650; }
+.bal-led-row.is-head { border-top: 0; min-height: 30px; background: var(--surface-2); }
+.bal-led-row.is-head > * { font-size: 12px; font-weight: 700; color: var(--muted); }
+.bal-led-row.is-head > :nth-child(2) { letter-spacing: .05em; text-transform: uppercase; color: var(--ink); }
+.bal-led-row.is-head.is-debits { border-top: 2px solid var(--line, var(--row-line)); }
+.bal-led-row.is-acct .bal-acct { display: flex; flex-direction: row !important; align-items: center !important; justify-content: space-between; gap: 4px; }
+button.bal-led-row { width: 100%; border: 0; border-top: 1px solid var(--line, var(--row-line)); background: none; color: var(--ink); font: inherit; text-align: left; cursor: pointer; }
+button.bal-led-row:hover { background: color-mix(in srgb, var(--ev, #0f8a7e) 8%, transparent); }
+.bal-led-row.is-item { box-shadow: inset 4px 0 0 var(--ev); }
+.bal-led-day { font-size: 12.5px; font-weight: 650; color: var(--muted); white-space: nowrap; }
+.bal-led-row.is-overdue .bal-led-day { color: #b91c1c; }
+.bal-led-name { display: grid; font-weight: 600; line-height: 1.25; }
+.bal-led-name small { display: flex; flex-wrap: wrap; align-items: center; gap: 0 4px; font-size: 12px; font-weight: 400; color: var(--muted); }
+.bal-led-name small .bal-need { margin-left: 6px; font-style: normal; }
+.bal-led-amt.is-out { color: #b91c1c; }
+.bal-led-amt.is-inc { color: color-mix(in srgb, #0f766e 55%, var(--muted)); font-style: italic; }
+.bal-led-row.is-coming .bal-led-name { color: var(--muted); }
+.bal-led-row.is-landed { opacity: .6; }
+.bal-led-row.is-landed .bal-led-name, .bal-led-row.is-landed .bal-led-amt { text-decoration: line-through; }
+.bal-led-row .is-now, .bal-led-row .is-now .mcell { color: #15803d; font-weight: 700; }
+.bal-led-row .is-pend, .bal-led-row .is-pend .mcell { color: #a16207; font-weight: 650; }
+.bal-led-row .bal-num.is-out { color: #b91c1c; }
+.bal-led-row.is-sub { background: var(--surface-2); font-weight: 700; }
+.bal-led-row.is-sub > :nth-child(2) { font-size: 13px; }
+.bal-led-row.is-balanced { min-height: 48px; border-top: 2px solid var(--ink); background: color-mix(in srgb, #16a34a 9%, var(--surface)); }
+.bal-led-row.is-balanced.is-short { background: color-mix(in srgb, #dc2626 9%, var(--surface)); }
+.bal-led-row.is-balanced > :nth-child(2) { display: grid; font-size: 14px; font-weight: 750; letter-spacing: .05em; text-transform: uppercase; }
+.bal-led-row.is-balanced > :nth-child(2) small { font-size: 12px; font-weight: 500; letter-spacing: 0; text-transform: none; color: var(--muted); }
+.bal-led-row.is-balanced .bal-num { font-size: 19px; font-weight: 750; color: #15803d; }
+.bal-led-row.is-balanced .bal-num.is-neg { color: #b91c1c; }
+.bal-led-row.is-balanced .bal-num.is-pend { font-size: 15px; color: #a16207; }
+.bal-led-row.is-balanced .bal-num small { font-size: 12px; font-weight: 500; color: var(--muted); }
+.bal-led-empty { margin: 0; padding: 8px 10px 8px 68px; border-top: 1px solid var(--line, var(--row-line)); font-size: 13px; color: var(--muted); }
+.frontier-shell[data-color-mode="dark"] .bal-led-row .is-now, .frontier-shell[data-color-mode="dark"] .bal-led-row .is-now .mcell, .frontier-shell[data-color-mode="dark"] .bal-led-row.is-balanced .bal-num { color: #39ff6a; }
+.frontier-shell[data-color-mode="dark"] .bal-led-row .is-pend, .frontier-shell[data-color-mode="dark"] .bal-led-row .is-pend .mcell, .frontier-shell[data-color-mode="dark"] .bal-led-row.is-balanced .bal-num.is-pend { color: #facc15; }
+.frontier-shell[data-color-mode="dark"] .bal-led-amt.is-out, .frontier-shell[data-color-mode="dark"] .bal-led-row .bal-num.is-out, .frontier-shell[data-color-mode="dark"] .bal-led-row.is-balanced .bal-num.is-neg, .frontier-shell[data-color-mode="dark"] .bal-led-row.is-overdue .bal-led-day { color: #f87171; }
+.frontier-shell[data-color-mode="dark"] .bal-led-amt.is-inc { color: color-mix(in srgb, #2dd4bf 55%, #8a8f98); }
+@media (max-width: 640px) {
+  .bal-led-row { grid-template-columns: 44px minmax(0, 1fr) 84px 72px; }
+  .bal-led-row > * { padding: 4px 5px; font-size: 12.5px; }
+  .bal-led-empty { padding-left: 10px; }
+}
+.bal-led-row:not(.is-item) > :first-child { display: none; }
+.bal-led-row:not(.is-item) > :nth-child(2) { grid-column: 1 / 3; }
