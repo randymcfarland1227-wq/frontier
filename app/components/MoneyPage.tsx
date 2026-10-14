@@ -1408,8 +1408,24 @@ function BalancingSheet({
               return (
                 <Fragment key={r[0].r}>
                   <span className="bal-acct">
-                    {r[0].text}
-                    {noteCol >= 0 && r[noteCol]?.text ? <small>{r[noteCol].text}</small> : null}
+                    <span className="bal-acct-name">
+                      {r[0].text}
+                      {noteCol >= 0 && r[noteCol]?.text ? <small>{r[noteCol].text}</small> : null}
+                    </span>
+                    {r.some(c => c.formula) ? null : (
+                      <button
+                        type="button"
+                        className="bal-del"
+                        title="Remove this line from the sheet"
+                        aria-label={`Remove ${r[0].text} from the balancing sheet`}
+                        onClick={() => {
+                          if (!window.confirm(`Remove “${r[0].text}” from the Balancing list in your sheet?\n\nOnly this line goes; the rest moves up and the totals update.`)) return;
+                          void onSave([{ tab: r[0].tab, deleteBalancing: true, r: r[0].r, startCol: r[0].c, expectRow: r.map(c => c.text) }]);
+                        }}
+                      >
+                        ✕
+                      </button>
+                    )}
                   </span>
                   <EditCell cell={r[1]} onSave={onSave} className="bal-num is-now" />
                   <span className="bal-num is-out">{out ? `−${money(out)}` : ''}</span>

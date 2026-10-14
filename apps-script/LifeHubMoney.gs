@@ -92,6 +92,12 @@ function lhMoneyEdit_(edits) {
         try { return lhInsertBalancing_(ss, sh, e); }
         finally { SpreadsheetApp.flush(); lock.releaseLock(); }
       }
+      if (e.deleteBalancing === true) {
+        var lockD = LockService.getScriptLock();
+        if (!lockD.tryLock(5000)) return { ok: false, error: 'busy' };
+        try { return lhDeleteBalancing_(ss, sh, e); }
+        finally { SpreadsheetApp.flush(); lockD.releaseLock(); }
+      }
       var r = Number(e.r) + 1;
       var c = Number(e.c !== undefined ? e.c : e.c1) + 1;
       if (!(r >= 1 && c >= 1)) return { ok: false, error: 'bad cell' };
@@ -122,6 +128,36 @@ function lhMoneyEdit_(edits) {
 }
 
 /** Insert only the Balancing columns; neighboring account/bill blocks stay in place. */
+/**
+ * Remove one line item from the Balancing and Planning list: only that block's cells move up
+ * (other blocks on the same rows stay put). Guarded like the insert: the row must still show what
+ * Life Hub showed, sit inside the contiguous list, and hold no formulas; the Cash On Hand /
+ * Balanced Cash totals can't be removed. Formulas that sum the list shrink with it.
+ */
+function lhDeleteBalancing_(ss, sh, e) {
+  if (e.tab !== 'Randy') return { ok: false, error: 'tab not allowed' };
+  var r = e.r + 1;
+  var c = e.startCol + 1;
+  if (!Number.isInteger(e.r) || !Number.isInteger(e.startCol) || r < 1 || c < 1 || !Array.isArray(e.expectRow)) return { ok: false, error: 'bad range' };
+  var heading = sh.getDataRange().createTextFinder('Balancing and Planning').matchEntireCell(true).findNext();
+  if (!heading) return { ok: false, error: 'changed' };
+  var merges = heading.getMergedRanges();
+  var title = merges.length ? merges[0] : heading;
+  var width = title.getNumColumns();
+  var first = title.getRow() + 2;
+  if (c !== title.getColumn() || width < 2 || width > 12 || e.expectRow.length !== width || r < first || r > sh.getLastRow()) return { ok: false, error: 'bad range' };
+  var above = sh.getRange(first, c, r - first + 1, width).getDisplayValues();
+  if (above.some(function (row) { return !row[0].trim() || /^(cash on hand|balanced cash)/i.test(row[0].trim()); })) return { ok: false, error: 'changed' };
+  var target = sh.getRange(r, c, 1, width);
+  var now = target.getDisplayValues()[0];
+  if (now.some(function (v, i) { return v.trim() !== String(e.expectRow[i]).trim(); })) return { ok: false, error: 'changed' };
+  if (target.getFormulas()[0].some(Boolean) || target.getMergedRanges().length) return { ok: false, error: 'formula' };
+  var a1 = target.getA1Notation();
+  target.deleteCells(SpreadsheetApp.Dimension.ROWS);
+  lhMoneyLog_(ss, e.tab, a1, JSON.stringify(now), 'deleted');
+  return { ok: true };
+}
+
 function lhInsertBalancing_(ss, sh, e) {
   if (e.tab !== 'Randy') return { ok: false, error: 'tab not allowed' };
   var r = e.r + 1;
