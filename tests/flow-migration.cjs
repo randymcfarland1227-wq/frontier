@@ -128,3 +128,18 @@ console.log('Migration checks pass: immutable input, stable counts/identity/date
   assert.equal(mergeState(old, a).goalModes['mental-cleanspaces'].mode, 'active');
   console.log('Goal mode sync checks pass.');
 }
+
+// Balancing sheet picks ("balancePicks") sync: newest change wins; taking one off beats an older add.
+{
+  const a = { ...emptyState(), balancePicks: { 'money:bill:verizon:2026-10-09': { mark: 'in', at: '2026-10-14T10:00:00.000Z' } } };
+  const b = { ...emptyState(), balancePicks: { 'money:bill:verizon:2026-10-09': { mark: null, at: '2026-10-14T11:00:00.000Z' } } };
+  for (const [x, y] of [[a, b], [b, a]]) assert.equal(mergeState(x, y).balancePicks['money:bill:verizon:2026-10-09'].mark, null);
+  const old = { ...emptyState() };
+  delete old.balancePicks;
+  assert.equal(mergeState(old, a).balancePicks['money:bill:verizon:2026-10-09'].mark, 'in');
+  const { mondayOf } = load('lib/balancePicks.ts');
+  assert.equal(mondayOf(new Date(2026, 9, 14)).getDate(), 12, 'Wed Oct 14 → Mon Oct 12');
+  assert.equal(mondayOf(new Date(2026, 9, 18)).getDate(), 12, 'Sun Oct 18 → Mon Oct 12');
+  assert.equal(mondayOf(new Date(2026, 9, 19)).getDate(), 19, 'Mon Oct 19 starts a new week');
+  console.log('Balancing sheet checks pass.');
+}

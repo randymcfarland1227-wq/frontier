@@ -60,6 +60,8 @@ export type SyncedState = {
   billDays: Record<string, { day: number | null; from: string; at: string }>;
   /** Goals marked active / passive (goal id → mode / null = Flow's suggestion); newest change wins */
   goalModes: Record<string, { mode: string | null; at: string }>;
+  /** Balancing sheet picks: payment / incoming key → 'in' / null; newest change wins */
+  balancePicks: Record<string, { mark: string | null; at: string }>;
 };
 
 /**
@@ -130,6 +132,7 @@ export function emptyState(): SyncedState {
     roleActive: {},
     billDays: {},
     goalModes: {},
+    balancePicks: {},
   };
 }
 
@@ -172,6 +175,7 @@ export function normalizeState(raw: unknown): SyncedState {
     roleActive: s.roleActive && typeof s.roleActive === 'object' ? s.roleActive : {},
     billDays: s.billDays && typeof s.billDays === 'object' ? s.billDays : {},
     goalModes: s.goalModes && typeof s.goalModes === 'object' ? s.goalModes : {},
+    balancePicks: s.balancePicks && typeof s.balancePicks === 'object' ? s.balancePicks : {},
   };
 }
 
@@ -265,6 +269,7 @@ export function mergeState(aRaw: unknown, bRaw: unknown): SyncedState {
     roleActive: mergeLevels(a.roleActive, b.roleActive),
     billDays: mergeLevels(a.billDays, b.billDays),
     goalModes: mergeLevels(a.goalModes, b.goalModes),
+    balancePicks: mergeLevels(a.balancePicks, b.balancePicks),
   };
 }
 

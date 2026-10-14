@@ -15,12 +15,13 @@ import {
   type MoneyModel,
   type Table,
 } from '../../lib/money';
-import { dayKey, dayName, fromDayKey, money, startOfDay, startOfWeek, type BillDue } from '../../lib/schedule';
+import { addDays, dayKey, dayName, fromDayKey, money, startOfDay, startOfWeek, type BillDue } from '../../lib/schedule';
 import { usePayPlans } from '../../lib/payPlans';
 import { readSaved, writeSaved, STORAGE_KEYS } from '../../lib/storage';
 import { isOverdue } from '../../lib/billEdits';
 import { BillChangeForm, BillPinButton, billChangeText } from './BillControls';
 import { addLifeSub, updateLifeSub, type LifeSub } from '../../lib/lifeSubs';
+import { mondayOf, setBalancePicks, useBalancePicks } from '../../lib/balancePicks';
 import { addIncoming, incomingDues, updateIncoming, useIncoming, type Incoming, type IncomingDue } from '../../lib/incoming';
 
 type Save = (edits: CellEdit[]) => Promise<{ ok: boolean; results: EditResult[]; error?: string }>;
@@ -1225,12 +1226,288 @@ function useSavedChoice<T extends string>(key: string, ids: readonly T[], fallba
 // The page
 // ---------------------------------------------------------------------------
 
+// ---------------------------------------------------------------------------
+// Balancing sheet: your balances (from the sheet's Balancing block) → money coming in → what you
+// choose to pay → what's left. Upcoming items are added by tap or drag; paid ones are never offered.
+// ---------------------------------------------------------------------------
+
+type BalanceLine = { key: string; kind: 'pay' | 'in'; due: string; name: string; amount?: number; tag: string; color: string; overdue?: boolean };
+const DRAG_KEY = 'text/lifehub-balance';
+const shortDay = (k: string) => fromDayKey(k).toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' });
+
+function payLine(d: BillDue): BalanceLine {
+  return { key: d.key, kind: 'pay', due: d.due, name: d.bill.name, amount: d.bill.amount, tag: kindLabel(d), color: d.bill.kind ? MONEY_KINDS[d.bill.kind].color : '#a8632a', overdue: d.days < 0 };
+}
+function inLine(d: IncomingDue): BalanceLine {
+  return { key: d.key, kind: 'in', due: d.due, name: d.item.source, amount: d.item.amount, tag: 'Coming in', color: '#0f766e' };
+}
+
+function BalancingSheet({
+  period,
+  model,
+  dues,
+  incoming,
+  onSave,
+}: {
+  period: 'week' | 'month';
+  model: MoneyModel;
+  /** Unpaid payments (paid / crossed-off ones are already left out) */
+  dues: BillDue[];
+  incoming: IncomingDue[];
+  onSave: Save;
+}) {
+  const picks = useBalancePicks();
+  const [dropping, setDropping] = useState(false);
+  const today = startOfDay(new Date());
+  const monday = mondayOf(today);
+  const sunday = addDays(monday, 6);
+  const monthEnd = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+  const end = period === 'week' ? sunday : monthEnd > sunday ? monthEnd : sunday;
+  const inPeriod = (k: string) => fromDayKey(k) <= end;
+  const thisWeek = (k: string) => fromDayKey(k) <= sunday;
+  // Overdue ones (past their day, not paid) are always on offer; self-charging past ones aren't.
+  const payable = dues.filter(d => !d.skipped && inPeriod(d.due) && (d.days >= 0 || isOverdue(d))).map(payLine);
+  const coming = incoming.filter(d => inPeriod(d.due) && fromDayKey(d.due) >= monday).map(inLine);
+  const all = [...coming, ...payable].sort((a, b) => a.due.localeCompare(b.due) || a.name.localeCompare(b.name));
+  const onSheet = all.filter(l => picks.has(l.key));
+  const offered = all.filter(l => !picks.has(l.key));
+
+  // Balances from the sheet (its own total rows — Cash on hand, Balanced cash — are left out).
+  const t = model.balancing;
+  const pendCol = t ? t.header.findIndex(h => /^pend/i.test(h)) : -1;
+  const noteCol = t ? t.header.findIndex(h => /^note/i.test(h)) : -1;
+  const rows = (t?.rows || []).filter(r => r[0]?.text && !/^(cash on hand|balanced cash|total)/i.test(r[0].text));
+  const amt = (c?: Cell) => amountOf(c?.text || '') || 0;
+  const available = rows.reduce((s, r) => s + amt(r[1]), 0);
+  const pending = pendCol >= 0 ? rows.reduce((s, r) => s + amt(r[pendCol]), 0) : 0;
+  const inSum = onSheet.filter(l => l.kind === 'in').reduce((s, l) => s + (l.amount || 0), 0);
+  const paySum = onSheet.filter(l => l.kind === 'pay').reduce((s, l) => s + (l.amount || 0), 0);
+  const left = available + inSum - paySum;
+  const leftPending = left + pending;
+  const sign = (n: number) => (n < 0 ? `−${money(-n)}` : money(n));
+
+  const add = (keys: string[]) => setBalancePicks(keys, true);
+  const range = period === 'week' ? `${shortDay(dayKey(monday))} – ${shortDay(dayKey(sunday))}` : `this week, then the rest of ${today.toLocaleDateString([], { month: 'long' })}`;
+
+  const lineRow = (l: BalanceLine, onSheetRow: boolean) => (
+    <li
+      key={l.key}
+      className={`bal-line is-${l.kind}${l.overdue ? ' is-overdue' : ''}`}
+      style={{ '--ev': l.color } as React.CSSProperties}
+      draggable={!onSheetRow}
+      onDragStart={e => {
+        e.dataTransfer.setData(DRAG_KEY, l.key);
+        e.dataTransfer.effectAllowed = 'copy';
+      }}
+    >
+      <span className="bal-day">{l.overdue ? 'Late' : shortDay(l.due).replace(/,.*/, '')}</span>
+      <span className="bal-name">
+        {l.name}
+        <small>
+          {l.tag}
+          {l.overdue ? ` · was due ${shortDay(l.due)}` : ` · ${shortDay(l.due)}`}
+        </small>
+      </span>
+      <span className={`bal-amt${l.kind === 'in' ? ' is-in' : ''}`}>{l.amount === undefined ? '?' : `${l.kind === 'in' ? '+' : '−'}${money(l.amount)}`}</span>
+      {onSheetRow ? (
+        <button type="button" className="bal-x" onClick={() => setBalancePicks([l.key], false)} aria-label={`Take ${l.name} off the balancing sheet`} title="Take it off the sheet">
+          ✕
+        </button>
+      ) : (
+        <button type="button" className="bal-add" onClick={() => add([l.key])} aria-label={`Add ${l.name} to the balancing sheet`}>
+          + Add
+        </button>
+      )}
+    </li>
+  );
+  // Month: this week's lines, then a "Past this week" line, then the rest of the month.
+  const withWeekBreak = (list: BalanceLine[], onSheetRow: boolean) => {
+    const now = list.filter(l => thisWeek(l.due));
+    const later = list.filter(l => !thisWeek(l.due));
+    return (
+      <>
+        {now.map(l => lineRow(l, onSheetRow))}
+        {period === 'month' && later.length ? (
+          <li className="bal-break" aria-hidden="true">
+            <span>Past this week</span>
+          </li>
+        ) : null}
+        {period === 'month' ? later.map(l => lineRow(l, onSheetRow)) : null}
+      </>
+    );
+  };
+
+  return (
+    <div className="bal">
+      <section
+        className={`bal-sheet${dropping ? ' is-drop' : ''}`}
+        aria-label="Balancing sheet"
+        onDragOver={e => {
+          if (!e.dataTransfer.types.includes(DRAG_KEY)) return;
+          e.preventDefault();
+          setDropping(true);
+        }}
+        onDragLeave={() => setDropping(false)}
+        onDrop={e => {
+          const key = e.dataTransfer.getData(DRAG_KEY);
+          setDropping(false);
+          if (key) add([key]);
+        }}
+      >
+        <header className="bal-head">
+          <h3>Balancing sheet</h3>
+          <span>{range}</span>
+          {model.sheetUrl ? (
+            <a className="bal-link" href={sheetLink(model, 'Randy')} target="_blank" rel="noopener noreferrer">
+              Sheet ↗
+            </a>
+          ) : null}
+        </header>
+
+        <div className="bal-group">
+          <p className="bal-group-name">
+            Balances <span>· from the sheet · click an amount to change it</span>
+          </p>
+          <div className="bal-balances">
+            <span className="bal-col-h">Account</span>
+            <span className="bal-col-h is-num">Now</span>
+            <span className="bal-col-h is-num">Pending</span>
+            {rows.map(r => (
+              <Fragment key={r[0].r}>
+                <span className="bal-acct">
+                  {r[0].text}
+                  {noteCol >= 0 && r[noteCol]?.text ? <small>{r[noteCol].text}</small> : null}
+                </span>
+                <EditCell cell={r[1]} onSave={onSave} className="bal-num" />
+                {pendCol >= 0 ? <EditCell cell={r[pendCol]} onSave={onSave} className="bal-num is-pend" placeholder="" /> : <span />}
+              </Fragment>
+            ))}
+            <span className="bal-acct is-total">Available</span>
+            <span className="bal-num is-total">{sign(available)}</span>
+            <span className="bal-num is-total is-pend">{pending ? `+${money(pending)}` : ''}</span>
+          </div>
+          {t ? <BalancingAdd table={t} onSave={onSave} /> : null}
+        </div>
+
+        <div className="bal-group">
+          <p className="bal-group-name">
+            On the sheet <span>· {onSheet.length ? `${onSheet.length} item${onSheet.length === 1 ? '' : 's'}` : 'add upcoming items from the right, or drag them here'}</span>
+          </p>
+          {onSheet.length ? <ul className="bal-lines">{withWeekBreak(onSheet, true)}</ul> : <p className="bal-drop-hint">Drop bills and incoming money here.</p>}
+        </div>
+
+        <div className="bal-totals">
+          <div className={left < 0 ? 'is-short' : 'is-ok'}>
+            <span>{left < 0 ? 'Short' : 'Left after'}</span>
+            <b>{money(Math.abs(left))}</b>
+            <small>
+              {money(available)} {inSum ? `+ ${money(inSum)} coming in ` : ''}− {money(paySum)} paying
+            </small>
+          </div>
+          <div className={leftPending < 0 ? 'is-short' : 'is-ok'}>
+            <span>With pending</span>
+            <b>{sign(leftPending)}</b>
+            <small>once {money(pending)} pending lands</small>
+          </div>
+        </div>
+      </section>
+
+      <aside className="bal-offer" aria-label="Upcoming — add to the sheet">
+        <header className="bal-head">
+          <h3>Upcoming</h3>
+          <span>{period === 'week' ? 'this week · unpaid' : 'through the month · unpaid'}</span>
+          {offered.length ? (
+            <button type="button" className="bal-link" onClick={() => add(offered.filter(l => thisWeek(l.due)).map(l => l.key))}>
+              Add all this week
+            </button>
+          ) : null}
+        </header>
+        {offered.length ? <ul className="bal-lines">{withWeekBreak(offered, false)}</ul> : <p className="mny-empty">Everything this {period === 'week' ? 'week' : 'month'} is on the sheet or paid.</p>}
+      </aside>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Ledger by category: Bills · Credit cards · Pay later · Subscriptions — is everything paid?
+// ---------------------------------------------------------------------------
+
+const LEDGER_KINDS: Array<[string, string]> = [
+  ['bill', 'Bills'],
+  ['card', 'Credit card payments'],
+  ['paylater', 'Pay later'],
+  ['sub', 'Subscriptions'],
+];
+
+function LedgerByCategory({ dues, paidAt, model, onPaid }: { dues: BillDue[]; paidAt: Record<string, string>; model: MoneyModel; onPaid: (d: BillDue) => void }) {
+  const today = startOfDay(new Date());
+  const struck: BillDue[] = model.items
+    .filter(i => i.skipped && i.date && fromDayKey(i.date).getMonth() === today.getMonth() && fromDayKey(i.date).getFullYear() === today.getFullYear())
+    .map(i => ({ bill: { id: `${CROSSED}${i.id}`, name: i.name, amount: i.amount, kind: i.kind }, due: i.date!, days: Math.round((fromDayKey(i.date!).getTime() - today.getTime()) / 86_400_000), key: i.id }));
+  const all = [...dues, ...struck.filter(s => !dues.some(d => d.key === s.key))];
+  return (
+    <div className="ledger-cats">
+      {LEDGER_KINDS.map(([kind, label]) => {
+        const list = all.filter(d => (d.bill.kind || 'bill') === kind && !d.skipped).sort((a, b) => a.due.localeCompare(b.due));
+        const done = list.filter(d => ['paid', 'crossed', 'charged'].includes(monthState(d, paidAt)));
+        const leftAmt = list.filter(d => !done.includes(d)).reduce((s, d) => s + (d.bill.amount || 0), 0);
+        const all_done = list.length > 0 && done.length === list.length;
+        return (
+          <section key={kind} className={`ledger-cat${all_done ? ' is-done' : ''}`} style={{ '--ev': MONEY_KINDS[kind as keyof typeof MONEY_KINDS].color } as React.CSSProperties}>
+            <header>
+              <h3>{label}</h3>
+              <span className="ledger-cat-count">
+                {all_done ? '✓ All paid' : `${done.length} of ${list.length} paid`}
+              </span>
+              {!all_done && leftAmt ? <span className="ledger-cat-left">{money(leftAmt)} left</span> : null}
+            </header>
+            <div className="ledger-cat-bar" aria-hidden="true">
+              <i style={{ width: `${list.length ? (done.length / list.length) * 100 : 0}%` }} />
+            </div>
+            {list.length ? (
+              <ul>
+                {list.map(d => {
+                  const st = monthState(d, paidAt);
+                  const isDone = ['paid', 'crossed', 'charged'].includes(st);
+                  return (
+                    <li key={d.key} className={`ledger-row is-${st}`}>
+                      <span className="ledger-day">{fromDayKey(d.due).getDate()}</span>
+                      <span className="ledger-name">{d.bill.name}</span>
+                      <span className="ledger-amt">{money(d.bill.amount) || '?'}</span>
+                      {isDone ? (
+                        <span className="ledger-state">✓</span>
+                      ) : st === 'late' ? (
+                        <button type="button" className="ledger-paid is-late" onClick={() => onPaid(d)} title="Past its day — mark paid">
+                          Paid
+                        </button>
+                      ) : kind === 'sub' || kind === 'paylater' ? (
+                        <span className="ledger-state is-soon">{STATE_TEXT[st](d, paidAt).replace(/^In /, '')}</span>
+                      ) : (
+                        <button type="button" className="ledger-paid" onClick={() => onPaid(d)}>
+                          Paid
+                        </button>
+                      )}
+                    </li>
+                  );
+                })}
+              </ul>
+            ) : (
+              <p className="mny-empty">None this month.</p>
+            )}
+          </section>
+        );
+      })}
+    </div>
+  );
+}
+
 const NEEDED_OPTIONS = ['Yes', 'Y Low', 'No', 'Ordered'];
 type TabId = 'flow' | 'accounts' | 'spend' | 'plan' | 'owed' | 'save';
 const TAB_IDS: TabId[] = ['flow', 'accounts', 'spend', 'plan', 'owed', 'save'];
 /** Old saved tabs → the merged container they now live in */
 const LEGACY_TAB: Record<string, TabId> = { week: 'flow', month: 'flow', due: 'flow', cards: 'accounts', bills: 'spend', subs: 'spend', shop: 'spend' };
-const FLOW_IDS = ['week', 'month'] as const;
+const FLOW_IDS = ['week', 'month', 'ledger'] as const;
+const LEDGER_IDS = ['date', 'category'] as const;
 const ACCT_IDS = ['checking', 'savings', 'cards'] as const;
 const SPEND_IDS = ['out', 'bills', 'paylater', 'subs', 'shop'] as const;
 const TAB_KEY = 'lifehub-money-tab';
@@ -1263,6 +1540,7 @@ export function MoneyPage({
   const [legacyTab] = useState(() => readSaved<string>(TAB_KEY, 'flow'));
   const [tab, setTabState] = useState<TabId>(() => (TAB_IDS.includes(legacyTab as TabId) ? (legacyTab as TabId) : LEGACY_TAB[legacyTab] || 'flow'));
   const [flowView, setFlowView] = useSavedChoice('lifehub-money-flow', FLOW_IDS, 'week', legacyTab === 'month' || legacyTab === 'due' ? 'month' : undefined);
+  const [ledgerView, setLedgerView] = useSavedChoice('lifehub-money-ledger', LEDGER_IDS, 'date');
   const [acctView, setAcctView] = useSavedChoice('lifehub-money-accounts', ACCT_IDS, 'checking', legacyTab === 'cards' ? 'cards' : undefined);
   const [spendView, setSpendView] = useSavedChoice('lifehub-money-spend', SPEND_IDS, 'out', legacyTab === 'subs' ? 'subs' : legacyTab === 'shop' ? 'shop' : undefined);
   const incomeList = useIncoming();
@@ -1297,7 +1575,9 @@ export function MoneyPage({
   const monthEnd = new Date(today.getFullYear(), today.getMonth() + 1, 0);
   // Skipped payments (Change → Skip) aren't money going out.
   const sum = (list: BillDue[]) => list.reduce((s, d) => s + (d.skipped ? 0 : d.bill.amount || 0), 0);
-  const next7 = dues.filter(d => d.days >= 0 && d.days <= 7);
+  // This week = Monday–Sunday (it turns over each Monday), not a rolling 7 days.
+  const sunday = addDays(mondayOf(today), 6);
+  const next7 = dues.filter(d => d.days >= 0 && fromDayKey(d.due) <= sunday && !d.skipped);
   const overdue = dues.filter(isOverdue);
   const restOfMonth = dues.filter(d => d.days >= 0 && fromDayKey(d.due) <= monthEnd);
 
@@ -1387,7 +1667,7 @@ export function MoneyPage({
       .reduce((s, d) => s + (d.bill.amount || 0), 0);
   const OUT_KINDS = ['bill', 'card', 'paylater', 'sub'];
   const TABS: Array<{ id: TabId; tone: Tone; label: string; figure: string }> = [
-    { id: 'flow', tone: 'due', label: `This week · ${monthName}`, figure: overdue.length ? `${overdue.length} overdue · ${money(dueWeek)}` : money(dueWeek) },
+    { id: 'flow', tone: 'due', label: `Week · ${monthName} · Ledger`, figure: overdue.length ? `${overdue.length} overdue · ${money(dueWeek)}` : money(dueWeek) },
     { id: 'accounts', tone: 'cash', label: 'Accounts & cards', figure: model.cashOnHand?.text ? `${model.cashOnHand.text} on hand` : '' },
     { id: 'spend', tone: 'sub', label: 'Bills & spending', figure: `${billsLeft} bills left` },
     { id: 'plan', tone: 'plan', label: 'Plan', figure: livePlan ? livePlan.title : 'New' },
@@ -1423,7 +1703,7 @@ export function MoneyPage({
             −
           </span>
           <button type="button" className="mny-flow-step tone-due is-link" onClick={() => go('flow', () => setFlowView('week'))}>
-            <span>Due next 7 days</span>
+            <span>Due this week</span>
             <b>{money(dueWeek)}</b>
             <small>{next7.length} payments</small>
           </button>
@@ -1478,7 +1758,21 @@ export function MoneyPage({
       </nav>
 
       <div className="mny-panel" role="tabpanel">
-        {tab === 'flow' ? <SubTabs label="Week or month" value={flowView} onChange={setFlowView} options={[['week', 'Week', overdue.length ? `${overdue.length} overdue` : money(dueWeek)], ['month', monthName, `${monthPaid} of ${monthCount} paid`]]} /> : null}
+        {tab === 'flow' ? (
+          <SubTabs
+            label="Week, month or ledger"
+            value={flowView}
+            onChange={setFlowView}
+            options={[
+              ['week', 'Week', overdue.length ? `${overdue.length} overdue · ${money(dueWeek)}` : money(dueWeek)],
+              ['month', monthName, money(sum(restOfMonth))],
+              ['ledger', 'Ledger', `${monthPaid} of ${monthCount} paid`],
+            ]}
+          />
+        ) : null}
+        {tab === 'flow' && flowView === 'ledger' ? (
+          <SubTabs label="Ledger view" value={ledgerView} onChange={setLedgerView} options={[['date', 'By date'], ['category', 'By category']]} />
+        ) : null}
         {tab === 'accounts' ? (
           <SubTabs
             label="Accounts"
@@ -1496,59 +1790,17 @@ export function MoneyPage({
           />
         ) : null}
         {tab === 'flow' && flowView === 'week' ? (
-          <div className="mny-cols">
-            <div className="mny-stack">
-              <Section
-                tone="due"
-                title="This week"
-                hint="Overdue = past its day and not marked paid. Tap Paid when it’s done. Tap a day to fold it. Change skips or moves one payment."
-                figure={money(dueWeek + sum(overdue))}
-                figureLabel={`${next7.length} payments${overdue.length ? ` · ${overdue.length} overdue` : ''}`}
-              >
-                <DueList dues={dues} onPaid={onPaid} by="day" days={7} overdue={overdue} incoming={incoming} />
-              </Section>
-            </div>
-            <div className="mny-stack">
-              <Section tone="cash" title="Money right now" figure={model.cashOnHand?.text} figureLabel="on hand" href={link('Randy')}>
-                <AccountsList model={model} onSave={save} />
-              </Section>
-              <Section tone="cash" title="Incoming funds" hint="Logged on Life Hub and synced to your other devices — not written to the sheet.">
-                <IncomeSection list={incomeList} upcoming={incoming} />
-              </Section>
-              <Section tone="plan" title="Your plan" hint={livePlan ? `Open: ${livePlan.title}` : 'No plan yet for the coming days.'}>
-                <button type="button" className="mny-cta" onClick={() => setTab('plan')}>
-                  {livePlan ? 'Open the plan →' : 'Make a plan →'}
-                </button>
-              </Section>
-            </div>
+          <div className="mny-stack">
+            <BalancingSheet period="week" model={model} dues={dues} incoming={incoming} onSave={save} />
+            <Section tone="cash" title="Incoming funds" hint="Log money you expect; it shows up on the right to add to the sheet. Synced, not written to the sheet.">
+              <IncomeSection list={incomeList} upcoming={incoming} />
+            </Section>
           </div>
         ) : null}
 
         {tab === 'flow' && flowView === 'month' ? (
           <div className="mny-stack">
-            <Section tone="due" title={`${today.toLocaleDateString([], { month: 'long' })} at a glance`} figure={`${monthPaid} of ${monthCount}`} figureLabel="paid" href={link('Randy')}>
-              <MonthView dues={monthDues} paidAt={paidAt} model={model} onPaid={onPaid} />
-            </Section>
-            <Section tone="cash" title={`Incoming in ${monthName}`} figure={money(incoming.filter(d => fromDayKey(d.due) <= monthEnd).reduce((s, d) => s + (d.item.amount || 0), 0))} figureLabel="still to come">
-              {incoming.filter(d => fromDayKey(d.due) <= monthEnd).length ? (
-                <div className="mny-due">
-                  <div className="mny-due-group">
-                    <ul>
-                      {incoming
-                        .filter(d => fromDayKey(d.due) <= monthEnd)
-                        .map(d => (
-                          <IncomingRow key={d.key} d={d} showDay />
-                        ))}
-                    </ul>
-                  </div>
-                </div>
-              ) : (
-                <p className="mny-empty">No incoming funds logged for the rest of the month. Log them under Week → Incoming funds.</p>
-              )}
-            </Section>
-            <Section tone="due" title="After this month" figure={money(sum(dues.filter(d => fromDayKey(d.due) > monthEnd && d.days <= 35)))} figureLabel="next few weeks">
-              <DueList dues={dues.filter(d => fromDayKey(d.due) > monthEnd)} onPaid={onPaid} by="week" days={35} incoming={incoming.filter(d => fromDayKey(d.due) > monthEnd)} />
-            </Section>
+            <BalancingSheet period="month" model={model} dues={dues} incoming={incoming} onSave={save} />
             <Section tone="due" title="In the sheet" hint="Click any amount or date to change it in the sheet." href={link('Randy')}>
               {model.bills ? (
                 <Fold title="Bills" total={model.bills.total?.[2]?.text} meta={`${model.bills.rows.length}`}>
@@ -1562,6 +1814,23 @@ export function MoneyPage({
               ) : null}
             </Section>
           </div>
+        ) : null}
+
+        {tab === 'flow' && flowView === 'ledger' && ledgerView === 'date' ? (
+          <div className="mny-stack">
+            <Section tone="due" title={`${monthName} ledger`} figure={`${monthPaid} of ${monthCount}`} figureLabel="paid" href={link('Randy')}>
+              <MonthView dues={monthDues} paidAt={paidAt} model={model} onPaid={onPaid} />
+            </Section>
+            <Section tone="due" title="After this month" figure={money(sum(dues.filter(d => fromDayKey(d.due) > monthEnd && d.days <= 35)))} figureLabel="next few weeks">
+              <DueList dues={dues.filter(d => fromDayKey(d.due) > monthEnd)} onPaid={onPaid} by="week" days={35} incoming={incoming.filter(d => fromDayKey(d.due) > monthEnd)} />
+            </Section>
+          </div>
+        ) : null}
+
+        {tab === 'flow' && flowView === 'ledger' && ledgerView === 'category' ? (
+          <Section tone="due" title={`${monthName} by category`} hint="Is everything paid? Bills, card payments, pay later and subscriptions side by side." href={link('Randy')}>
+            <LedgerByCategory dues={monthDues} paidAt={paidAt} model={model} onPaid={onPaid} />
+          </Section>
         ) : null}
 
         {tab === 'spend' && spendView === 'paylater' ? (
