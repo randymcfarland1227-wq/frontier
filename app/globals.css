@@ -3971,10 +3971,10 @@ a.shelf-title:hover { text-decoration: underline; }
 /* Daily grounding: reminders, practices and mindsets, then relocation context. */
 .sec.tone-grounding { --sec: #3d6649; }
 .frontier-shell[data-color-mode="dark"] .sec.tone-grounding { --sec: #86c39a; }
-.grounding { --g: var(--sec); display: grid; gap: 20px; padding: 18px 20px; }
+.grounding { --g: var(--sec); display: grid; gap: 14px; padding: 16px 18px; }
 .grounding h2, .grounding h3, .grounding h4, .grounding h5, .grounding p { margin: 0; }
 .grounding .gr-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
-.grounding .gr-head h2 { font-size: 20px; line-height: 1.3; margin: 3px 0; }
+.grounding .gr-head h2 { font-size: 18px; line-height: 1.3; margin: 3px 0; }
 .grounding .section-label { color: var(--g); }
 .gr-sub, .gr-empty { font-size: 12px; color: var(--muted); }
 .gr-section-head { display: flex; flex-wrap: wrap; gap: 5px 10px; align-items: baseline; margin-bottom: 10px; }
@@ -4004,27 +4004,24 @@ a.shelf-title:hover { text-decoration: underline; }
 .gr-btn.is-on { color: var(--g); border-color: var(--g); }
 .gr-link { padding: 4px 0; border: 0; background: none; color: var(--accent-ink); font: inherit; font-size: 12px; cursor: pointer; }
 .gr-section-head .gr-link, .gr-reader-head .gr-link { margin-left: auto; }
-.gr-focus-grid { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); gap: 24px; align-items: start; }
-.gr-lane { min-width: 0; border-top: 2px solid var(--g); }
-.gr-lane.is-passive { border-color: var(--muted); }
-.gr-lane-head { padding: 10px 0; }
-.grounding .gr-lane-head h4, .grounding .gr-unlinked h4 { font-size: 13px; font-weight: 650; }
-.gr-lane-head h4 span, .gr-unlinked h4 span { font-weight: 450; color: var(--muted); margin-left: 5px; }
-.gr-lane-head p { font-size: 12px; color: var(--muted); margin-top: 3px; }
-.gr-goal-list { display: grid; }
-.gr-lane.is-active .gr-goal-list { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 20px; }
-.gr-focus-row { min-width: 0; padding: 9px 0; border-top: 1px solid var(--line); }
-.gr-focus-top { display: flex; gap: 8px; align-items: baseline; justify-content: space-between; }
-.grounding .gr-focus-top h5 { font-size: 12.5px; font-weight: 600; line-height: 1.4; }
-.gr-focus-area { flex: 0 0 auto; max-width: 40%; color: var(--muted); font-size: 10.5px; text-align: right; }
-.grounding .gr-practice { font-size: 12px; line-height: 1.5; color: var(--muted); margin-top: 3px; overflow-wrap: anywhere; }
-.grounding .gr-mindset { margin-top: 4px; font-size: 12px; line-height: 1.5; color: var(--ink); }
-.gr-practice b { font-weight: 550; color: var(--g); }
-.gr-focus-detail summary { cursor: pointer; font-size: 11.5px; color: var(--accent-ink); padding: 5px 0; width: fit-content; }
-.gr-focus-detail summary span { color: var(--muted); }
-.gr-goal { display: grid; gap: 8px; margin-top: 5px; padding-left: 10px; border-left: 2px solid var(--line); }
-.gr-goal-why, .gr-goal-how { font-size: 12px; line-height: 1.5; }
+.gr-key { display: flex; flex-wrap: wrap; gap: 12px; color: var(--muted); font-size: 11px; margin-bottom: 8px; }
+.gr-key .is-active { color: var(--g); }
+.gr-overview { display: grid; }
+.gr-area-row { display: grid; grid-template-columns: 155px minmax(0, 1fr); align-items: baseline; gap: 12px; padding: 8px 0; border-top: 1px solid var(--line); }
+.grounding .gr-area-row h4 { font-size: 11.5px; font-weight: 600; color: var(--muted); }
+.gr-goal-buttons { display: flex; flex-wrap: wrap; gap: 5px; }
+.gr-focus-button { display: inline-flex; align-items: center; gap: 6px; padding: 5px 9px; border: 1px solid transparent; border-radius: 6px; background: var(--surface-2); color: var(--ink); font: inherit; font-size: 12px; line-height: 1.35; text-align: left; cursor: pointer; }
+.gr-focus-button > span { color: var(--g); font-size: 9px; }
+.gr-focus-button.is-passive { background: transparent; border-color: var(--line); }
+.gr-focus-button.is-none { background: transparent; border-style: dashed; border-color: var(--line); }
+.gr-focus-button:hover, .gr-focus-button[aria-pressed="true"] { border-color: var(--g); background: color-mix(in srgb, var(--g) 10%, var(--surface)); }
+.gr-selection { margin-top: 12px; padding: 14px; border: 1px solid var(--line); border-left: 3px solid var(--g); border-radius: 8px; background: var(--surface); }
+.grounding .gr-selection h4 { font-size: 14px; }
+.gr-selection-body { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.gr-selection-context { display: grid; align-content: start; gap: 10px; }
+.gr-goal-why, .gr-goal-how { font-size: 13px; line-height: 1.5; }
 .gr-goal-how { color: var(--muted); }
+.grounding .gr-practice-label { font-size: 11px; font-weight: 650; color: var(--g); margin-bottom: 8px; }
 .gr-routine-list { display: grid; gap: 7px; margin: 0; padding: 0; list-style: none; }
 .gr-routine-list li { display: grid; gap: 2px; font-size: 12px; }
 .gr-routine-list small { font-size: 11px; color: var(--muted); }
@@ -4032,8 +4029,6 @@ a.shelf-title:hover { text-decoration: underline; }
 .gr-mode { display: inline-flex; flex-wrap: wrap; gap: 4px; }
 .gr-mode button { min-height: 30px; padding: 4px 8px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); color: var(--ink); font: inherit; font-size: 11.5px; cursor: pointer; }
 .gr-mode button.is-on { border-color: var(--g); background: color-mix(in srgb, var(--g) 12%, var(--surface)); }
-.gr-unlinked { margin-top: 14px; }
-.gr-unlinked-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 20px; }
 .gr-move { padding-top: 12px; border-top: 1px solid var(--line); }
 .gr-move-list { display: flex; flex-wrap: wrap; gap: 6px 20px; list-style: none; padding: 0; margin: 0; }
 .gr-move-list li { min-width: 0; flex: 1 1 180px; font-size: 12px; }
@@ -4042,15 +4037,13 @@ a.shelf-title:hover { text-decoration: underline; }
 .grounding button:focus-visible, .grounding a:focus-visible, .grounding summary:focus-visible { outline: 2px solid var(--g); outline-offset: 3px; }
 @media (max-width: 1050px) {
   .gr-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .gr-focus-grid { grid-template-columns: 1fr; }
-  .gr-lane.is-passive .gr-goal-list { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 20px; }
+
 }
 @media (max-width: 680px) {
   .grounding { padding: 14px; gap: 16px; }
   .grounding .gr-head { align-items: flex-start; }
   .grounding .gr-head h2 { font-size: 17px; }
-  .gr-focus-grid, .gr-unlinked-list { grid-template-columns: 1fr; gap: 14px; }
-  .gr-lane.is-active .gr-goal-list, .gr-lane.is-passive .gr-goal-list { grid-template-columns: 1fr; gap: 0; }
+  .gr-area-row, .gr-selection-body { grid-template-columns: 1fr; gap: 7px; }
   .gr-card { display: grid; grid-template-columns: 18px minmax(0, 1fr); gap: 4px 6px; }
   .gr-card-icon { font-size: 16px; }
   .gr-card-key { display: none; }

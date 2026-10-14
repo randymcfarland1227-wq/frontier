@@ -491,3 +491,8 @@ Design critique + WCAG 2.1 AA + copy + design-system audit, then fixes (last blo
 - Existing manual mode overrides and cloud sync are preserved. A dedicated “Use Flow’s suggestion” action clears the override; redesign does not write goal content or change Flow links.
 - Desktop gives active focuses two compact columns and passive focuses a quieter column; tablet and phone stack responsively. Move is a compact context strip after the daily focuses, with full descriptions available per goal and its existing Move OS entry point.
 - The existing Open Flow action still opens Why → Flow. Actual task planning and completion remain in Doing now / source cards.
+
+## Compact grounding correction (2026-10-14)
+- Replace the long active/passive columns with six compact life-area rows. All goal titles remain visible with active, passive/upkeep or unassigned markers.
+- Selecting a goal opens one shared detail panel with the original why/how, all Flow practices, and existing mode controls. Close returns to the compact overview.
+- Browser verification: 627px desktop overview at 1280px, down from approximately 1503px; goal selection, classification/reset and 390px layout passed. Source content and completion behavior are unchanged.
