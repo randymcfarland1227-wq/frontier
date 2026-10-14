@@ -1,6 +1,6 @@
 'use client';
 
-import { Fragment, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { createContext, Fragment, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { PayPlanner } from './PayPlanner';
 import {
   amountOf,
@@ -22,7 +22,7 @@ import { readSaved, writeSaved, STORAGE_KEYS } from '../../lib/storage';
 import { isOverdue } from '../../lib/billEdits';
 import { BillChangeForm, BillPinButton, billChangeText } from './BillControls';
 import { addLifeSub, updateLifeSub, type LifeSub } from '../../lib/lifeSubs';
-import { mondayOf, setBalancePicks, setPickAccount, setPickLanded, srcKey, useBalancePicks } from '../../lib/balancePicks';
+import { addCustomItem, METHOD_LABEL, mondayOf, setBalancePicks, setPickLanded, srcKey, updatePick, useBalancePicks, type BalancePlan, type CustomItem, type PayMethod } from '../../lib/balancePicks';
 import { addIncoming, incomingDues, updateIncoming, useIncoming, type Incoming, type IncomingDue } from '../../lib/incoming';
 
 type Save = (edits: CellEdit[]) => Promise<{ ok: boolean; results: EditResult[]; error?: string }>;
@@ -182,7 +182,7 @@ function BalancingAdd({ table, onSave }: { table: Table; onSave: Save }) {
   const items = table.rows.filter(row => !row.some(cell => cell.formula) && !/^(cash on hand|balanced cash)/i.test(row[0]?.text || ''));
   const anchor = items.length > 1 ? items[items.length - 1] : table.firstRow;
   if (!anchor) return null;
-  if (!open) return <button type="button" className="mny-btn" onClick={() => setOpen(true)}>+ Add line item</button>;
+  if (!open) return <button type="button" className="mny-btn" onClick={() => setOpen(true)}>+ Add an account</button>;
   const cancel = () => {
     if (busy) return;
     setOpen(false);
@@ -431,7 +431,7 @@ function DueRow({ d, onPaid, showDay }: { d: BillDue; onPaid: (d: BillDue) => vo
         {showDay ? <span className="mny-due-day">{fromDayKey(d.due).toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' })}</span> : null}
         <span className="mny-due-kind">{d.skipped ? 'Skipped' : kind === 'paylater' ? provider || 'Pay later' : kind ? MONEY_KINDS[kind].label : 'Bill'}</span>
         <span className="mny-due-name">
-          {d.bill.name}
+          <ItemName id={d.key}>{d.bill.name}</ItemName>
           {installment ? <small> · {installment}</small> : null}
           {changed ? <small className="mny-due-change"> · {changed}</small> : null}
         </span>
@@ -581,6 +581,22 @@ function DueList({
 // Accounts + cards
 // ---------------------------------------------------------------------------
 
+/** An account amount: one click edits, a double click opens the account. */
+function AcctCell({ cell, name, onSave }: { cell?: Cell; name: string; onSave: Save }) {
+  const panels = useMoneyPanels();
+  return <EditCell cell={cell} onSave={onSave} className="is-num" placeholder="—" onOpen={() => panels.openAccount(name)} />;
+}
+
+/** An account name that opens its panel (Accounts & cards, balancing sheet). */
+function AccountName({ name }: { name: string }) {
+  const panels = useMoneyPanels();
+  return (
+    <button type="button" className="mny-accts-name mny-item-link" onClick={() => panels.openAccount(name)} title="Account details">
+      {name}
+    </button>
+  );
+}
+
 function AccountsList({ model, onSave, only }: { model: MoneyModel; onSave: Save; only?: 1 | 2 }) {
   const accts = model.accounts;
   if (!accts) return null;
@@ -594,9 +610,9 @@ function AccountsList({ model, onSave, only }: { model: MoneyModel; onSave: Save
       </li>
       {accts.rows.map(r => (
         <li key={r[0].r}>
-          <span className="mny-accts-name">{r[0].text}</span>
-          {show(1) ? <EditCell cell={r[1]} onSave={onSave} className="is-num" placeholder="—" /> : null}
-          {show(2) ? <EditCell cell={r[2]} onSave={onSave} className="is-num" placeholder="—" /> : null}
+          <AccountName name={r[0].text} />
+          {show(1) ? <AcctCell cell={r[1]} name={r[0].text} onSave={onSave} /> : null}
+          {show(2) ? <AcctCell cell={r[2]} name={r[0].text} onSave={onSave} /> : null}
         </li>
       ))}
       {accts.total ? (
@@ -662,7 +678,7 @@ function MonthRow({ d, paidAt, onPaid }: { d: BillDue; paidAt: Record<string, st
       </span>
       <span className="mm-kind">{kindLabel(d)}</span>
       <span className="mm-name">
-        {d.bill.name}
+        <ItemName id={d.key}>{d.bill.name}</ItemName>
         {installment ? <small> · {installment}</small> : null}
         {billChangeText(d) ? <small> · {billChangeText(d)}</small> : null}
       </span>
@@ -1245,11 +1261,32 @@ function useSavedChoice<T extends string>(key: string, ids: readonly T[], fallba
 // ---------------------------------------------------------------------------
 
 // ---------------------------------------------------------------------------
-// Balancing sheet: your balances (from the sheet's Balancing block) → money coming in → what you
-// choose to pay → what's left. Upcoming items are added by tap or drag; paid ones are never offered.
+// The money "book": every bill, deposit and account as its own item with its own panel, shared by
+// the balancing sheet, Upcoming, the bill lists and Accounts & cards. The balancing sheet is the
+// worksheet: put items on it, then decide which account each comes out of (or goes into), how, and
+// on what day — and see each account's balance line by line, week by week.
 // ---------------------------------------------------------------------------
 
-type BalanceLine = { key: string; kind: 'pay' | 'in'; due: string; name: string; amount?: number; tag: string; group: string; color: string; overdue?: boolean };
+type BalanceLine = {
+  key: string;
+  kind: 'pay' | 'in';
+  due: string;
+  name: string;
+  amount?: number;
+  tag: string;
+  group: string;
+  color: string;
+  /** Past its day and still unpaid */
+  overdue?: boolean;
+  /** Counts toward this month's sheet (unpaid future, or overdue) */
+  open: boolean;
+  /** Paid on Life Hub / in the sheet (only for this month's list) */
+  paid?: string;
+  /** Typed in by Randy */
+  custom?: boolean;
+  /** Remember key for this bill / source */
+  src: string;
+};
 /** "By type" groups on the Upcoming side, in this order. */
 const OFFER_GROUPS: Array<[string, string]> = [
   ['in', 'Coming in'],
@@ -1258,16 +1295,36 @@ const OFFER_GROUPS: Array<[string, string]> = [
   ['paylater', 'Pay later'],
   ['sub', 'Subscriptions'],
   ['plan', 'Planned'],
+  ['custom', 'Added by you'],
 ];
 const OFFER_VIEW_KEY = 'lifehub-balance-offer-view';
 const DRAG_KEY = 'text/lifehub-balance';
 const shortDay = (k: string) => fromDayKey(k).toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' });
+const dayNum = (k: string) => `${fromDayKey(k).toLocaleDateString([], { weekday: 'short' })} ${fromDayKey(k).getDate()}`;
+const signed = (n: number) => (n < 0 ? `−${money(-n)}` : money(n));
+const normName = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, '');
 
-function payLine(d: BillDue): BalanceLine {
-  return { key: d.key, kind: 'pay', due: d.due, name: d.bill.name, amount: d.bill.amount, tag: kindLabel(d), group: d.bill.kind || 'bill', color: d.bill.kind ? MONEY_KINDS[d.bill.kind].color : '#a8632a', overdue: d.days < 0 };
+function payLine(d: BillDue, paidAt: Record<string, string>): BalanceLine {
+  return {
+    key: d.key,
+    kind: 'pay',
+    due: d.due,
+    name: d.bill.name.trim(),
+    amount: d.bill.amount,
+    tag: kindLabel(d),
+    group: d.bill.kind || 'bill',
+    color: d.bill.kind ? MONEY_KINDS[d.bill.kind].color : '#a8632a',
+    overdue: d.days < 0 && !paidAt[d.key],
+    open: !d.skipped && !paidAt[d.key] && (d.days >= 0 || isOverdue(d)),
+    paid: paidAt[d.key],
+    src: srcKey('pay', d.bill.name),
+  };
 }
 function inLine(d: IncomingDue): BalanceLine {
-  return { key: d.key, kind: 'in', due: d.due, name: d.item.source, amount: d.item.amount, tag: 'Coming in', group: 'in', color: '#0f766e' };
+  return { key: d.key, kind: 'in', due: d.due, name: d.item.source, amount: d.item.amount, tag: 'Coming in', group: 'in', color: '#0f766e', open: true, src: srcKey('in', d.item.source) };
+}
+function customLine(key: string, it: CustomItem): BalanceLine {
+  return { key, kind: it.kind, due: it.due, name: it.name, amount: it.amount, tag: 'Added by you', group: 'custom', color: it.kind === 'in' ? '#0f766e' : '#7c3aed', open: true, custom: true, src: `custom:${key}` };
 }
 
 type WeekSpan = { i: number; mon: Date; sun: Date; key: string; label: string };
@@ -1283,38 +1340,173 @@ function monthWeeks(today: Date): WeekSpan[] {
   return out;
 }
 
-const fullDay = (k: string) => fromDayKey(k).toLocaleDateString([], { weekday: 'long', month: 'long', day: 'numeric' });
-const signed = (n: number) => (n < 0 ? `−${money(-n)}` : money(n));
 /** The cell an account's balance is typed in: its Balancing amount, or the Checking cell a formula there points at. */
 function balanceCellOf(model: MoneyModel, row: Cell[]): Cell | undefined {
   return row[1]?.formula ? balanceTwin(model, row[1]) : row[1];
+}
+
+/** One account: its Balancing row (if any), checking + savings cells (Debit Accounts), pending. */
+type BookAcct = { name: string; bal?: Cell[]; chk?: Cell; sav?: Cell; pend?: Cell; note?: string; linked: boolean };
+type RegLine = BalanceLine & { acct: string; week: number; when: string; method?: PayMethod; pot: 'chk' | 'sav'; landed?: string; before: number; after: number };
+type Reg = { start: number; startChk: number; startSav: number; pend: number; lines: RegLine[]; end: number; endChk: number; endSav: number };
+
+type Book = {
+  today: Date;
+  todayKey: string;
+  weeks: WeekSpan[];
+  accounts: BookAcct[];
+  acct: (name: string) => BookAcct | undefined;
+  /** Account names, then '' (not chosen yet) */
+  keys: string[];
+  universe: BalanceLine[];
+  line: (key: string) => BalanceLine | undefined;
+  plan: BalancePlan;
+  acctOf: (l: BalanceLine) => string;
+  methodOf: (l: BalanceLine) => PayMethod | undefined;
+  payOnOf: (l: BalanceLine) => string | undefined;
+  /** The day it moves money: its planned pay day, else its due day */
+  whenOf: (l: BalanceLine) => string;
+  /** Week index on this month's sheet (0 for anything earlier), −1 past the month */
+  weekOf: (k: string) => number;
+  /** Lines this month can hold (unpaid; overdue count as this week) */
+  month: BalanceLine[];
+  regs: Array<Record<string, Reg>>;
+  regLine: (key: string) => RegLine | undefined;
+  /** Merge of every week (the month) for one account */
+  monthReg: (a: string) => Reg;
+};
+
+function useBalanceBook(model: MoneyModel | null, dues: BillDue[], monthDues: BillDue[], incoming: IncomingDue[], paidAt: Record<string, string>): Book {
+  const plan = useBalancePicks();
+  const today = startOfDay(new Date());
+  const todayKey = dayKey(today);
+  const weeks = monthWeeks(today);
+  const last = weeks[weeks.length - 1];
+
+  // Accounts: the Balancing list first, then Debit Accounts that aren't on it.
+  const t = model?.balancing || null;
+  const pendCol = t ? t.header.findIndex(h => /^pend/i.test(h)) : -1;
+  const noteCol = t ? t.header.findIndex(h => /^note/i.test(h)) : -1;
+  const balRows = (t?.rows || []).filter(r => r[0]?.text && !/^(cash on hand|balanced cash|total)/i.test(r[0].text));
+  const debitRows = (model?.accounts?.rows || []).filter(r => r[0]?.text.trim());
+  const accounts: BookAcct[] = balRows.map(r => {
+    const d = debitRows.find(x => normName(x[0].text) === normName(r[0].text));
+    return {
+      name: r[0].text.trim(),
+      bal: r,
+      chk: model ? balanceCellOf(model, r) || r[1] : r[1],
+      sav: d?.[2],
+      pend: pendCol >= 0 ? r[pendCol] : undefined,
+      note: noteCol >= 0 ? r[noteCol]?.text : undefined,
+      linked: !!r[1]?.formula || !!d,
+    };
+  });
+  for (const d of debitRows) {
+    if (accounts.some(a => normName(a.name) === normName(d[0].text))) continue;
+    accounts.push({ name: d[0].text.replace(/\s+/g, ' ').trim(), chk: d[1], sav: d[2], linked: true });
+  }
+  const acct = (name: string) => accounts.find(a => a.name === name) || accounts.find(a => normName(a.name) === normName(name));
+  const keys = [...accounts.map(a => a.name), ''];
+
+  // Every item: unpaid payments (any date), this month's paid ones, deposits, and Randy's own items.
+  const seen = new Set<string>();
+  const universe: BalanceLine[] = [];
+  const push = (l: BalanceLine) => {
+    if (seen.has(l.key)) return;
+    seen.add(l.key);
+    universe.push(l);
+  };
+  dues.forEach(d => push(payLine(d, paidAt)));
+  monthDues.forEach(d => push(payLine(d, paidAt)));
+  incoming.forEach(d => push(inLine(d)));
+  for (const [k, v] of Object.entries(plan.entries)) if (k.startsWith('custom:') && v.item && v.mark === 'in') push(customLine(k, v.item));
+  const line = (key: string) => universe.find(l => l.key === key);
+
+  const acctOf = (l: BalanceLine) => {
+    const a = plan.entries[l.key]?.acct || plan.remembered.get(l.src)?.acct || '';
+    return a && acct(a) ? acct(a)!.name : '';
+  };
+  const methodOf = (l: BalanceLine) => plan.entries[l.key]?.method || plan.remembered.get(l.src)?.method;
+  const payOnOf = (l: BalanceLine) => (l.kind === 'pay' ? plan.entries[l.key]?.payOn : undefined);
+  const whenOf = (l: BalanceLine) => payOnOf(l) || l.due;
+  const weekOf = (k: string) => {
+    const d = fromDayKey(k);
+    if (d < weeks[0].mon) return 0;
+    if (d > last.sun) return -1;
+    return weeks.findIndex(w => d >= w.mon && d <= w.sun);
+  };
+  const month = universe
+    .filter(l => !l.paid && weekOf(whenOf(l)) >= 0 && (l.kind === 'in' ? fromDayKey(l.due) >= weeks[0].mon : l.open || !!payOnOf(l)))
+    .sort((a, b) => whenOf(a).localeCompare(whenOf(b)) || (a.kind === b.kind ? 0 : a.kind === 'in' ? -1 : 1) || a.name.localeCompare(b.name));
+  const onSheet = month.filter(l => plan.picks.has(l.key));
+
+  const amt = (c?: Cell) => amountOf(c?.text || '') || 0;
+  const regs: Array<Record<string, Reg>> = [];
+  weeks.forEach((w, wi) => {
+    const rec: Record<string, Reg> = {};
+    for (const a of keys) {
+      const ac = a ? acct(a) : undefined;
+      const prev = wi ? regs[wi - 1][a] : undefined;
+      let chk = prev ? prev.endChk : amt(ac?.chk);
+      let sav = prev ? prev.endSav : amt(ac?.sav);
+      const startChk = chk;
+      const startSav = sav;
+      const lines = onSheet
+        .filter(l => weekOf(whenOf(l)) === wi && acctOf(l) === a)
+        .map(l => {
+          const method = methodOf(l);
+          const pot: 'chk' | 'sav' = method === 'savings' && ac?.sav ? 'sav' : 'chk';
+          const landed = l.kind === 'in' ? plan.landed.get(l.key) : undefined;
+          const before = chk + sav;
+          if (!landed) {
+            const delta = (l.kind === 'in' ? 1 : -1) * (l.amount || 0);
+            if (pot === 'sav') sav += delta;
+            else chk += delta;
+          }
+          return { ...l, acct: a, week: wi, when: whenOf(l), method, pot, landed, before, after: chk + sav };
+        });
+      rec[a] = { start: startChk + startSav, startChk, startSav, pend: amt(ac?.pend), lines, end: chk + sav, endChk: chk, endSav: sav };
+    }
+    regs.push(rec);
+  });
+  const regLine = (key: string) => {
+    for (const r of regs) for (const a of keys) {
+      const hit = r[a].lines.find(l => l.key === key);
+      if (hit) return hit;
+    }
+    return undefined;
+  };
+  const monthReg = (a: string): Reg => {
+    const f = regs[0][a];
+    const e = regs[regs.length - 1][a];
+    return { ...f, lines: regs.flatMap(r => r[a].lines), end: e.end, endChk: e.endChk, endSav: e.endSav };
+  };
+  return { today, todayKey, weeks, accounts, acct, keys, universe, line, plan, acctOf, methodOf, payOnOf, whenOf, weekOf, month, regs, regLine, monthReg };
 }
 
 /**
  * On (or after) its day, incoming money on the balancing sheet is added to its account in the sheet —
  * once: it's marked landed first (synced), and the mark is cleared again if the write fails.
  */
-function useIncomingLanding(model: MoneyModel | null, incoming: IncomingDue[], save: Save) {
-  const { picks, remembered, landed } = useBalancePicks();
+function useIncomingLanding(model: MoneyModel | null, book: Book, save: Save) {
   const tried = useRef(new Set<string>());
   const busy = useRef(false);
   useEffect(() => {
     if (!model?.balancing || busy.current) return;
-    const rows = model.balancing.rows;
-    const ready = incoming.find(d => {
-      if (d.days > 0 || !d.item.amount || !picks.has(d.key) || landed.has(d.key) || tried.current.has(d.key)) return false;
-      const acct = picks.get(d.key) || remembered.get(srcKey('in', d.item.source));
-      const row = acct ? rows.find(r => r[0]?.text === acct) : undefined;
-      return !!(row && balanceCellOf(model, row) && !balanceCellOf(model, row)?.formula);
+    const ready = book.universe.find(l => {
+      if (l.kind !== 'in' || l.custom || l.due > book.todayKey || !l.amount) return false;
+      if (!book.plan.picks.has(l.key) || book.plan.landed.has(l.key) || tried.current.has(l.key)) return false;
+      const ac = book.acct(book.acctOf(l));
+      const cell = book.methodOf(l) === 'savings' && ac?.sav ? ac.sav : ac?.chk;
+      return !!cell && !cell.formula;
     });
     if (!ready) return;
-    const acct = picks.get(ready.key) || remembered.get(srcKey('in', ready.item.source));
-    const row = rows.find(r => r[0]?.text === acct)!;
-    const cell = balanceCellOf(model, row)!;
-    const next = (amountOf(cell.text) || 0) + (ready.item.amount || 0);
+    const ac = book.acct(book.acctOf(ready))!;
+    const cell = (book.methodOf(ready) === 'savings' && ac.sav ? ac.sav : ac.chk)!;
+    const next = (amountOf(cell.text) || 0) + (ready.amount || 0);
     tried.current.add(ready.key);
     busy.current = true;
-    setPickLanded(ready.key, dayKey(new Date()));
+    setPickLanded(ready.key, book.todayKey);
     void save([{ tab: cell.tab, r: cell.r, c: cell.c, expect: cell.text, value: `$${next.toFixed(2)}` }])
       .then(res => {
         if (!res.ok || !res.results[0]?.ok) setPickLanded(ready.key, null);
@@ -1322,143 +1514,134 @@ function useIncomingLanding(model: MoneyModel | null, incoming: IncomingDue[], s
       .finally(() => {
         busy.current = false;
       });
-  }, [model, incoming, picks, remembered, landed, save]);
+  }, [model, book, save]);
 }
 
-type RegLine = BalanceLine & { acct: string; week: number; landed?: string; before: number; after: number };
-type Reg = { start: number; pend: number; lines: RegLine[]; end: number };
+/** Open any item's panel from anywhere on the Money page. */
+type PanelState = { type: 'line' | 'acct'; id: string; back?: PanelState };
+const MoneyPanelCtx = createContext<{ openLine: (key: string) => void; openAccount: (name: string) => void; has: (key: string) => boolean }>({
+  openLine: () => {},
+  openAccount: () => {},
+  has: () => false,
+});
+const useMoneyPanels = () => useContext(MoneyPanelCtx);
+
+/** A bill / deposit name that opens its panel (plain text where there's no panel for it). */
+function ItemName({ id, children }: { id: string; children: ReactNode }) {
+  const panels = useMoneyPanels();
+  if (!panels.has(id)) return <>{children}</>;
+  return (
+    <button type="button" className="mny-item-link" onClick={() => panels.openLine(id)} title="Details">
+      {children}
+    </button>
+  );
+}
+
+/** An item Randy types in himself: money out or in, name, amount, day, account (optional). */
+function NewItemForm({ book, onDone }: { book: Book; onDone: () => void }) {
+  const [kind, setKind] = useState<'pay' | 'in'>('pay');
+  const [name, setName] = useState('');
+  const [amount, setAmount] = useState('');
+  const [due, setDue] = useState(book.todayKey);
+  const [acct, setAcct] = useState('');
+  const n = amountOf(amount);
+  const ok = name.trim() && n && due;
+  return (
+    <form
+      className="bal-new"
+      onSubmit={e => {
+        e.preventDefault();
+        if (!ok) return;
+        addCustomItem({ name: name.trim(), amount: Math.abs(n!), kind, due }, acct || undefined);
+        onDone();
+      }}
+    >
+      <span className="bal-toggle" role="group" aria-label="Money out or in">
+        <button type="button" className={kind === 'pay' ? 'is-on' : ''} aria-pressed={kind === 'pay'} onClick={() => setKind('pay')}>
+          − Going out
+        </button>
+        <button type="button" className={kind === 'in' ? 'is-on' : ''} aria-pressed={kind === 'in'} onClick={() => setKind('in')}>
+          + Coming in
+        </button>
+      </span>
+      <input aria-label="What it is" placeholder={kind === 'pay' ? 'e.g. Car repair' : 'e.g. Sold jacket'} value={name} onChange={e => setName(e.target.value)} autoFocus />
+      <input aria-label="Amount" inputMode="decimal" placeholder="$0.00" value={amount} onChange={e => setAmount(e.target.value)} />
+      <input aria-label="Day" type="date" value={due} onChange={e => setDue(e.target.value)} />
+      <select aria-label="Account" value={acct} onChange={e => setAcct(e.target.value)}>
+        <option value="">Account later…</option>
+        {book.accounts.map(a => (
+          <option key={a.name} value={a.name}>
+            {a.name}
+          </option>
+        ))}
+      </select>
+      <button type="submit" className="bal-btn is-primary" disabled={!ok}>
+        Add
+      </button>
+      <button type="button" className="bal-btn" onClick={onDone}>
+        Cancel
+      </button>
+    </form>
+  );
+}
 
 /**
- * The balancing sheet as one register per account: its Now, then every payment out of it and every
- * deposit into it, line by line, each showing the balance after it. Incoming money is grey (still
- * counted) until its day, when it's added to the account in the sheet and crossed out. Pending stays
- * pending — shown, never counted — until it's moved into Now. Each week starts where the last ended;
- * the month is every week in one register with a line between weeks. Click any line or account for
- * its details.
+ * The balancing sheet (worksheet): an inbox of items not given an account yet, then one register per
+ * account — its Now (checking + savings), then each payment / deposit line by line with the balance
+ * after it. Incoming money is grey (still counted) until its day, when it's added to the account in
+ * the sheet and crossed out. Pending stays pending until moved into Now. Weeks carry forward; the
+ * month is every week in one register with a line between weeks.
  */
-function BalancingSheet({
-  period,
-  model,
-  dues,
-  incoming,
-  onSave,
-}: {
-  period: 'week' | 'month';
-  model: MoneyModel;
-  /** Unpaid payments (paid / crossed-off ones are already left out) */
-  dues: BillDue[];
-  incoming: IncomingDue[];
-  onSave: Save;
-}) {
-  const { picks, remembered, landed } = useBalancePicks();
-  const srcOf = (l: BalanceLine) => srcKey(l.kind, l.name);
-  const acctOf = (l: BalanceLine) => picks.get(l.key) || remembered.get(srcOf(l)) || '';
+function BalancingSheet({ period, book, model, onSave }: { period: 'week' | 'month'; book: Book; model: MoneyModel; onSave: Save }) {
+  const panels = useMoneyPanels();
+  const { weeks, regs, keys } = book;
   const [dropping, setDropping] = useState(false);
+  const [adding, setAdding] = useState(false);
   const [weekIdx, setWeekIdx] = useState(0);
-  const [open, setOpen] = useState<{ key: string; adding?: boolean; from?: string } | null>(null);
-  const [acctOpen, setAcctOpen] = useState<string | null>(null);
   const [offerView, setOfferViewState] = useState<'date' | 'type'>(() => (readSaved<string>(OFFER_VIEW_KEY, 'date') === 'type' ? 'type' : 'date'));
   const setOfferView = (v: 'date' | 'type') => {
     setOfferViewState(v);
     writeSaved(OFFER_VIEW_KEY, v);
   };
-  const today = startOfDay(new Date());
-  const todayKey = dayKey(today);
-  const weeks = monthWeeks(today);
-  const last = weeks[weeks.length - 1];
   const week = weeks[Math.min(weekIdx, weeks.length - 1)];
-  const weekOf = (k: string) => {
-    const d = fromDayKey(k);
-    if (d < weeks[0].mon) return 0; // overdue → this week
-    return weeks.findIndex(w => d >= w.mon && d <= w.sun);
-  };
-
-  // Everything this month can hold: unpaid payments (overdue ones count as this week) + incoming.
-  const payable = dues.filter(d => !d.skipped && fromDayKey(d.due) <= last.sun && (d.days >= 0 || isOverdue(d))).map(payLine);
-  const coming = incoming.filter(d => fromDayKey(d.due) >= weeks[0].mon && fromDayKey(d.due) <= last.sun).map(inLine);
-  // Same day: money in before money out.
-  const all = [...coming, ...payable].sort((a, b) => a.due.localeCompare(b.due) || (a.kind === b.kind ? 0 : a.kind === 'in' ? -1 : 1) || a.name.localeCompare(b.name));
-  const inScope = (l: BalanceLine) => (period === 'month' ? true : weekOf(l.due) === week.i);
-  const onSheet = all.filter(l => picks.has(l.key));
-  // Incoming whose day has passed isn't offered: the bank balance likely has it already.
-  const offered = all.filter(l => !picks.has(l.key) && inScope(l) && !(l.kind === 'in' && l.due < todayKey));
-
-  // Balances from the sheet (its own total rows — Cash on hand, Balanced cash — are left out).
-  const t = model.balancing;
-  const pendCol = t ? t.header.findIndex(h => /^pend/i.test(h)) : -1;
-  const noteCol = t ? t.header.findIndex(h => /^note/i.test(h)) : -1;
-  const rows = (t?.rows || []).filter(r => r[0]?.text && !/^(cash on hand|balanced cash|total)/i.test(r[0].text));
-  const amt = (c?: Cell) => amountOf(c?.text || '') || 0;
-  const accountNames = rows.map(r => r[0].text);
-  const keys = [...accountNames, ''];
-
-  // Each account's register, week by week; a week starts at the last one's end.
-  const regs: Array<Record<string, Reg>> = [];
-  weeks.forEach((w, wi) => {
-    const rec: Record<string, Reg> = {};
-    for (const a of keys) {
-      const row = rows.find(r => r[0].text === a);
-      const start = wi === 0 ? (row ? amt(balanceCellOf(model, row) || row[1]) : 0) : regs[wi - 1][a].end;
-      const pend = row && pendCol >= 0 ? amt(row[pendCol]) : 0;
-      let bal = start;
-      const lines = onSheet
-        .filter(l => weekOf(l.due) === wi && acctOf(l) === a)
-        .map(l => {
-          const done = l.kind === 'in' ? landed.get(l.key) : undefined;
-          const before = bal;
-          if (!done) bal += (l.kind === 'in' ? 1 : -1) * (l.amount || 0);
-          return { ...l, acct: a, week: wi, landed: done, before, after: bal };
-        });
-      rec[a] = { start, pend, lines, end: bal };
-    }
-    regs.push(rec);
-  });
-  const view = (a: string): Reg =>
-    period === 'week'
-      ? regs[week.i][a]
-      : { start: regs[0][a].start, pend: regs[0][a].pend, lines: regs.flatMap(r => r[a].lines), end: regs[regs.length - 1][a].end };
-  const tot = keys.reduce((s, a) => ({ start: s.start + view(a).start, pend: s.pend + view(a).pend, end: s.end + view(a).end }), { start: 0, pend: 0, end: 0 });
-  const allLines = regs.flatMap(r => keys.flatMap(a => r[a].lines));
-  const shownLines = keys.flatMap(a => view(a).lines);
-  const outSum = shownLines.filter(l => l.kind === 'pay').reduce((s, l) => s + (l.amount || 0), 0);
-  const inSum = shownLines.filter(l => l.kind === 'in' && !l.landed).reduce((s, l) => s + (l.amount || 0), 0);
-  const firstWeek = period === 'month' || week.i === 0;
+  const last = weeks[weeks.length - 1];
   const next = weeks[week.i + 1];
+  const firstWeek = period === 'month' || week.i === 0;
+  const inScope = (l: BalanceLine) => (period === 'month' ? true : book.weekOf(book.whenOf(l)) === week.i);
+  // Incoming whose day has passed isn't offered: the bank balance likely has it already.
+  const offered = book.month.filter(l => !book.plan.picks.has(l.key) && inScope(l) && !(l.kind === 'in' && l.due < book.todayKey));
+  const view = (a: string): Reg => (period === 'week' ? regs[week.i][a] : book.monthReg(a));
+  const tot = keys.reduce((s, a) => ({ start: s.start + view(a).start, pend: s.pend + view(a).pend, end: s.end + view(a).end }), { start: 0, pend: 0, end: 0 });
+  const shown = keys.flatMap(a => view(a).lines);
+  const outSum = shown.filter(l => l.kind === 'pay').reduce((s, l) => s + (l.amount || 0), 0);
+  const inSum = shown.filter(l => l.kind === 'in' && !l.landed).reduce((s, l) => s + (l.amount || 0), 0);
   const add = (ks: string[]) => setBalancePicks(ks, true);
 
-  const statusOf = (l: BalanceLine & { landed?: string }) => {
-    const days = daysBetween(today, fromDayKey(l.due));
-    if (l.kind === 'in') {
-      if (l.landed) return `Added to the account in your sheet ✓ (${shortDay(l.landed)})`;
-      if (days <= 0) return 'Its day is here — it’s added to the account in your sheet now';
-      return `Arrives in ${days} day${days === 1 ? '' : 's'} · grey until then, but already counted`;
-    }
-    if (l.overdue) return `Overdue · was due ${shortDay(l.due)}`;
-    return days === 0 ? 'Due today' : `Due in ${days} day${days === 1 ? '' : 's'}`;
-  };
-
-  const lineItem = (l: RegLine, withBalance: boolean) => (
+  const lineItem = (l: RegLine) => (
     <li key={l.key}>
       <button
         type="button"
         className={`bal-rl is-${l.kind}${l.kind === 'in' && !l.landed ? ' is-coming' : ''}${l.landed ? ' is-landed' : ''}${l.overdue ? ' is-overdue' : ''}`}
         style={{ '--ev': l.color } as React.CSSProperties}
-        onClick={() => setOpen({ key: l.key })}
+        onClick={() => panels.openLine(l.key)}
         title="Details"
       >
-        <span className="bal-day">{l.overdue ? 'Late' : shortDay(l.due).replace(/,.*/, '') + ' ' + fromDayKey(l.due).getDate()}</span>
+        <span className="bal-day">{l.overdue && !book.payOnOf(l) ? 'Late' : dayNum(l.when)}</span>
         <span className="bal-name">
           {l.name}
-          <small>{l.tag}</small>
+          <small>
+            {l.tag}
+            {book.payOnOf(l) && book.payOnOf(l) !== l.due ? ` · due ${shortDay(l.due).replace(/^\w+, /, '')}` : ''}
+            {l.method ? ` · ${l.method === 'ach' ? 'Checking 1–3d' : METHOD_LABEL[l.method]}` : ''}
+          </small>
         </span>
         <span className={`bal-amt${l.kind === 'in' ? ' is-in' : ''}`}>{l.amount === undefined ? '?' : `${l.kind === 'in' ? '+' : '−'}${money(l.amount)}`}</span>
-        <span className={`bal-after${l.after < 0 ? ' is-neg' : ''}`}>{withBalance ? (l.landed ? 'in Now ✓' : signed(l.after)) : 'pick account'}</span>
+        {l.acct ? <span className={`bal-after${l.after < 0 ? ' is-neg' : ''}`}>{l.landed ? 'in Now ✓' : signed(l.after)}</span> : <span className="bal-need">Choose account</span>}
       </button>
     </li>
   );
-  /** Month: a line between weeks inside each register. */
   const linesOf = (a: string, v: Reg) => {
-    if (period === 'week') return v.lines.map(l => lineItem(l, !!a));
+    if (period === 'week') return v.lines.map(lineItem);
     return weeks.flatMap(w => {
       const ls = v.lines.filter(l => l.week === w.i);
       if (!ls.length) return [];
@@ -1467,60 +1650,29 @@ function BalancingSheet({
           <span>{w.i === 0 ? 'This week' : w.label}</span>
           {a ? <em className={regs[w.i][a].end < 0 ? 'is-neg' : ''}>ends {signed(regs[w.i][a].end)}</em> : null}
         </li>,
-        ...ls.map(l => lineItem(l, !!a)),
+        ...ls.map(lineItem),
       ];
     });
   };
+  const amountCell = (ac: BookAcct, v: Reg) => {
+    if (!firstWeek)
+      return (
+        <button type="button" className="bal-num is-now bal-open" onClick={() => panels.openAccount(ac.name)} title="Details">
+          {signed(v.start)}
+        </button>
+      );
+    if (!ac.sav?.text.trim()) return <EditCell cell={ac.chk} onSave={onSave} className="bal-num is-now" onOpen={() => panels.openAccount(ac.name)} />;
+    return (
+      <span className="bal-num is-now bal-split">
+        <EditCell cell={ac.chk} onSave={onSave} className="is-now" onOpen={() => panels.openAccount(ac.name)} />
+        <small>
+          + sav <EditCell cell={ac.sav} onSave={onSave} className="is-now" onOpen={() => panels.openAccount(ac.name)} />
+        </small>
+      </span>
+    );
+  };
 
-  // ---- the pop-ups ----
-  const openLine = open ? all.find(l => l.key === open.key) : undefined;
-  const openReg = open ? allLines.find(l => l.key === open.key) : undefined;
-  const dialog = openLine ? (
-    <LineDialog
-      line={openLine}
-      reg={openReg}
-      adding={!!open?.adding}
-      acct={acctOf(openLine)}
-      accounts={accountNames}
-      status={statusOf({ ...openLine, landed: openReg?.landed })}
-      weekLabel={weeks[weekOf(openLine.due)]?.label}
-      onAdd={a => {
-        if (a) setPickAccount(openLine.key, a, srcOf(openLine));
-        else add([openLine.key]);
-        setOpen(null);
-      }}
-      onAccount={a => setPickAccount(openLine.key, a, srcOf(openLine))}
-      onRemove={() => {
-        setBalancePicks([openLine.key], false);
-        setOpen(null);
-      }}
-      onBack={open?.from !== undefined ? () => setOpen(null) : undefined}
-      onClose={() => {
-        setOpen(null);
-        if (open?.from !== undefined) setAcctOpen(null);
-      }}
-    />
-  ) : null;
-  const acctDialog =
-    acctOpen !== null && regs[0][acctOpen] ? (
-      <AccountDrawer
-        name={acctOpen}
-        row={rows.find(r => r[0].text === acctOpen)}
-        model={model}
-        pendCol={pendCol}
-        noteCol={noteCol}
-        weeks={weeks}
-        regs={regs.map(r => r[acctOpen])}
-        startWeek={period === 'week' ? week.i : 0}
-        offered={all.filter(l => !picks.has(l.key) && !(l.kind === 'in' && l.due < todayKey))}
-        weekOf={weekOf}
-        onSave={onSave}
-        onLine={key => setOpen({ key, from: acctOpen })}
-        onAddHere={l => (acctOpen ? setPickAccount(l.key, acctOpen, srcOf(l)) : add([l.key]))}
-        onClose={() => setAcctOpen(null)}
-      />
-    ) : null;
-
+  const unassigned = view('');
   return (
     <div className="bal">
       <section
@@ -1535,7 +1687,7 @@ function BalancingSheet({
         onDrop={e => {
           const key = e.dataTransfer.getData(DRAG_KEY);
           setDropping(false);
-          if (key) setOpen({ key, adding: true });
+          if (key) add([key]);
         }}
       >
         <header className="bal-head">
@@ -1563,8 +1715,18 @@ function BalancingSheet({
           ) : null}
         </header>
         <p className="bal-group-name">
-          {firstWeek ? 'Click an amount to change it · double-click it for that account’s details' : 'Each account starts where last week ended · pending stays pending until you move it into Now'}
+          {firstWeek ? 'Click an amount to change it · double-click it, or click any item, for its details' : 'Each account starts where last week ended · pending stays pending until you move it into Now'}
         </p>
+
+        {unassigned.lines.length ? (
+          <div className="bal-inbox">
+            <p className="bal-inbox-head">
+              <b>Needs an account</b> <span>{unassigned.lines.length}</span>
+              <em>{signed(unassigned.end)}</em>
+            </p>
+            <ol className="bal-reg-lines">{linesOf('', unassigned)}</ol>
+          </div>
+        ) : null}
 
         <div className="bal-regs">
           <div className="bal-reg-row is-head">
@@ -1573,28 +1735,26 @@ function BalancingSheet({
             <span className="is-num">Pending</span>
             <span className="is-num">{period === 'month' ? 'End of month' : 'End of week'}</span>
           </div>
-          {keys.map(a => {
-            const v = view(a);
-            const row = rows.find(r => r[0].text === a);
-            if (!row && !v.lines.length && !v.start) return null;
-            const now = row ? balanceCellOf(model, row) : undefined;
+          {book.accounts.map(ac => {
+            const v = view(ac.name);
+            if (!ac.bal && !v.lines.length) return null;
+            const row = ac.bal;
             return (
-              <div key={a || '_none'} className={`bal-reg${v.lines.length ? ' has-lines' : ''}${a ? '' : ' is-unset'}`}>
+              <div key={ac.name} className={`bal-reg${v.lines.length ? ' has-lines' : ''}`}>
                 <div className="bal-reg-row">
                   <span className="bal-acct">
-                    <button type="button" className="bal-acct-name" onClick={() => setAcctOpen(a)} title="Account details">
-                      {a || 'No account chosen'}
-                      {row && noteCol >= 0 && row[noteCol]?.text ? <small>{row[noteCol].text}</small> : null}
-                      {!a ? <small>click a line to pick its account</small> : null}
+                    <button type="button" className="bal-acct-name" onClick={() => panels.openAccount(ac.name)} title="Account details">
+                      {ac.name}
+                      {ac.note ? <small>{ac.note}</small> : null}
                     </button>
                     {row && firstWeek && !row.some(c => c.formula) ? (
                       <button
                         type="button"
                         className="bal-del"
                         title="Remove this line from the sheet"
-                        aria-label={`Remove ${a} from the balancing sheet`}
+                        aria-label={`Remove ${ac.name} from the balancing sheet`}
                         onClick={() => {
-                          if (!window.confirm(`Remove “${a}” from the Balancing list in your sheet?\n\nOnly this line goes; the rest moves up and the totals update.`)) return;
+                          if (!window.confirm(`Remove “${ac.name}” from the Balancing list in your sheet?\n\nOnly this line goes; the rest moves up and the totals update.`)) return;
                           void onSave([{ tab: row[0].tab, deleteBalancing: true, r: row[0].r, startCol: row[0].c, expectRow: row.map(c => c.text) }]);
                         }}
                       >
@@ -1602,25 +1762,19 @@ function BalancingSheet({
                       </button>
                     ) : null}
                   </span>
-                  {row && firstWeek ? (
-                    <EditCell cell={now || row[1]} onSave={onSave} className="bal-num is-now" onOpen={() => setAcctOpen(a)} />
+                  {amountCell(ac, v)}
+                  {firstWeek && ac.pend ? (
+                    <EditCell cell={ac.pend} onSave={onSave} className="bal-num is-pend" placeholder="" onOpen={() => panels.openAccount(ac.name)} />
                   ) : (
-                    <button type="button" className="bal-num is-now bal-open" onClick={() => setAcctOpen(a)} title="Details">
-                      {a ? signed(v.start) : ''}
-                    </button>
-                  )}
-                  {row && firstWeek && pendCol >= 0 ? (
-                    <EditCell cell={row[pendCol]} onSave={onSave} className="bal-num is-pend" placeholder="" onOpen={() => setAcctOpen(a)} />
-                  ) : (
-                    <button type="button" className="bal-num is-pend bal-open" onClick={() => setAcctOpen(a)} title="Details">
+                    <button type="button" className="bal-num is-pend bal-open" onClick={() => panels.openAccount(ac.name)} title="Details">
                       {v.pend ? money(v.pend) : ''}
                     </button>
                   )}
-                  <button type="button" className={`bal-num is-end bal-open${v.end < 0 ? ' is-neg' : ''}`} onClick={() => setAcctOpen(a)} title="Details">
+                  <button type="button" className={`bal-num is-end bal-open${v.end < 0 ? ' is-neg' : ''}`} onClick={() => panels.openAccount(ac.name)} title="Details">
                     {signed(v.end)}
                   </button>
                 </div>
-                {v.lines.length ? <ol className="bal-reg-lines">{linesOf(a, v)}</ol> : null}
+                {v.lines.length ? <ol className="bal-reg-lines">{linesOf(ac.name, v)}</ol> : null}
               </div>
             );
           })}
@@ -1631,8 +1785,17 @@ function BalancingSheet({
             <span className={`bal-num is-end${tot.end < 0 ? ' is-neg' : ''}`}>{signed(tot.end)}</span>
           </div>
         </div>
-        {!shownLines.length ? <p className="bal-drop-hint">Add this {period === 'week' ? 'week’s' : 'month’s'} bills and incoming money from the right (or drag them here) — each goes under the account it’s paid from or into.</p> : null}
-        {firstWeek && t ? <BalancingAdd table={t} onSave={onSave} /> : null}
+        {!shown.length ? <p className="bal-drop-hint">Add this {period === 'week' ? 'week’s' : 'month’s'} bills and incoming money from the right (or drag them here), then give each one an account.</p> : null}
+        <div className="bal-adds">
+          {adding ? (
+            <NewItemForm book={book} onDone={() => setAdding(false)} />
+          ) : (
+            <button type="button" className="mny-btn" onClick={() => setAdding(true)}>
+              + New item (not in Upcoming)
+            </button>
+          )}
+          {firstWeek && model.balancing && !adding ? <BalancingAdd table={model.balancing} onSave={onSave} /> : null}
+        </div>
 
         <div className="bal-totals">
           <div className={tot.end < 0 ? 'is-short' : 'is-ok'}>
@@ -1663,7 +1826,7 @@ function BalancingSheet({
             ))}
           </span>
           {offered.length && period === 'week' ? (
-            <button type="button" className="bal-link" onClick={() => add(offered.map(l => l.key))} title="Adds them all, each under its remembered account">
+            <button type="button" className="bal-link" onClick={() => add(offered.map(l => l.key))}>
               Add all
             </button>
           ) : null}
@@ -1681,15 +1844,15 @@ function BalancingSheet({
               }}
             >
               <span className="bal-day">{l.overdue ? 'Late' : shortDay(l.due).replace(/,.*/, '')}</span>
-              <span className="bal-name">
+              <button type="button" className="bal-name bal-name-btn" onClick={() => panels.openLine(l.key)} title="Details">
                 {l.name}
                 <small>
                   {l.tag}
                   {l.overdue ? ` · was due ${shortDay(l.due)}` : ` · ${shortDay(l.due)}`}
                 </small>
-              </span>
+              </button>
               <span className={`bal-amt${l.kind === 'in' ? ' is-in' : ''}`}>{l.amount === undefined ? '?' : `${l.kind === 'in' ? '+' : '−'}${money(l.amount)}`}</span>
-              <button type="button" className="bal-add" onClick={() => setOpen({ key: l.key, adding: true })} aria-label={`Add ${l.name} to the balancing sheet`}>
+              <button type="button" className="bal-add" onClick={() => add([l.key])} aria-label={`Add ${l.name} to the balancing sheet`}>
                 + Add
               </button>
             </li>
@@ -1724,7 +1887,7 @@ function BalancingSheet({
           return (
             <ul className="bal-lines">
               {weeks.map(w => {
-                const items = offered.filter(l => weekOf(l.due) === w.i);
+                const items = offered.filter(l => book.weekOf(book.whenOf(l)) === w.i);
                 if (!items.length) return null;
                 return (
                   <Fragment key={w.key}>
@@ -1739,7 +1902,6 @@ function BalancingSheet({
           );
         })()}
       </aside>
-      {open ? dialog : acctDialog}
     </div>
   );
 }
@@ -1767,87 +1929,291 @@ function Modal({ label, onClose, onBack, children }: { label: string; onClose: (
   );
 }
 
+const daysText = (days: number, kind: 'pay' | 'in') =>
+  days === 0 ? 'Today' : days > 0 ? `${days} day${days === 1 ? '' : 's'}` : `${-days} day${days === -1 ? '' : 's'} ${kind === 'in' ? 'ago' : 'late'}`;
+
 /**
- * One account's own page on the balancing sheet (double-click its amount): Now / Pending / Out / In /
- * End tiles, its lines for a chosen week with the balance after each, items to add to it, moving
- * pending into Now, and every week's start → end.
+ * One bill / deposit as its own item: amount, due day, days to go, the day you plan to pay it, the
+ * account and how — plus its effect on that account and its other dates.
  */
-function AccountDrawer({
-  name,
-  row,
-  model,
-  pendCol,
-  noteCol,
-  weeks,
-  regs,
-  startWeek,
-  offered,
-  weekOf,
-  onSave,
-  onLine,
-  onAddHere,
-  onClose,
-}: {
-  name: string;
-  row?: Cell[];
-  model: MoneyModel;
-  pendCol: number;
-  noteCol: number;
-  weeks: WeekSpan[];
-  regs: Reg[];
-  startWeek: number;
-  offered: BalanceLine[];
-  weekOf: (k: string) => number;
-  onSave: Save;
-  onLine: (key: string) => void;
-  onAddHere: (l: BalanceLine) => void;
-  onClose: () => void;
-}) {
-  const [wi, setWi] = useState(startWeek);
-  const [showAll, setShowAll] = useState(false);
-  const r = regs[wi];
-  const out = r.lines.filter(l => l.kind === 'pay').reduce((s, l) => s + (l.amount || 0), 0);
-  const inn = r.lines.filter(l => l.kind === 'in' && !l.landed).reduce((s, l) => s + (l.amount || 0), 0);
-  const nowCell = row ? balanceCellOf(model, row) : undefined;
-  const pendCell = row && pendCol >= 0 ? row[pendCol] : undefined;
-  const pend = amountOf(pendCell?.text || '') || 0;
-  const linked = !!row?.[1]?.formula && !!nowCell;
-  const canMove = !!(nowCell && pendCell && !nowCell.formula && !pendCell.formula && pend > 0);
-  const toAdd = offered.filter(l => weekOf(l.due) === wi);
-  const addList = showAll ? toAdd : toAdd.slice(0, 6);
-  const label = name || 'No account chosen';
+function LinePanel({ id, book, model, onBack, onClose }: { id: string; book: Book; model: MoneyModel; onBack?: () => void; onClose: () => void }) {
+  const panels = useMoneyPanels();
+  const l = book.line(id);
+  if (!l)
+    return (
+      <Modal label="Item" onClose={onClose} onBack={onBack}>
+        <h3>Not found</h3>
+        <p className="mny-empty">This item isn’t in Life Hub’s list any more (paid, removed or past its window).</p>
+      </Modal>
+    );
+  const isIn = l.kind === 'in';
+  const pick = book.plan.entries[l.key];
+  const onSheet = book.plan.picks.has(l.key);
+  const acctName = book.acctOf(l);
+  const ac = acctName ? book.acct(acctName) : undefined;
+  const method = book.methodOf(l);
+  const payOn = book.payOnOf(l);
+  const reg = book.regLine(l.key);
+  const days = daysBetween(book.today, fromDayKey(l.due));
+  const payDays = payOn ? daysBetween(book.today, fromDayKey(payOn)) : undefined;
+  const planned = onSheet && !!acctName && (isIn || !!payOn);
+  const set = (patch: Parameters<typeof updatePick>[1]) => updatePick(l.key, { mark: 'in', ...patch }, l.custom ? undefined : l.src);
+  const others = book.universe
+    .filter(x => x.src === l.src && x.key !== l.key && !x.paid && x.due >= book.todayKey)
+    .sort((a, b) => a.due.localeCompare(b.due))
+    .slice(0, 4);
+  const methods: PayMethod[] = isIn ? ['ach', ...(ac?.sav ? (['savings'] as const) : [])] : ['debit', 'ach', ...(ac?.sav ? (['savings'] as const) : [])];
   return (
-    <Modal label={`${label} details`} onClose={onClose}>
+    <Modal label={`${l.name} details`} onClose={onClose} onBack={onBack}>
       <div className="bal-drw-head">
-        <h3>{label}</h3>
+        <p className="section-label">{isIn ? 'Money coming in' : l.tag}</p>
+        <h3>{l.name}</h3>
+        <p className="bal-drw-chips">
+          {l.paid ? <span className="is-ok">Paid ✓</span> : planned ? <span className="is-ok">Planned</span> : onSheet ? <span className="is-pend">{acctName ? 'Needs a pay day' : 'Needs an account'}</span> : <span>Not planned</span>}
+          {l.overdue ? <span className="is-short">Overdue</span> : null}
+          {reg?.landed ? <span className="is-ok">Added to {acctName} ✓</span> : null}
+          {onSheet ? <span>On the balancing sheet</span> : null}
+        </p>
+      </div>
+
+      <div className="bal-drw-tiles">
+        <div className={isIn ? 'is-in' : 'is-out'}>
+          <span>Amount</span>
+          <b>{l.amount === undefined ? '?' : `${isIn ? '+' : '−'}${money(l.amount)}`}</b>
+        </div>
+        <div>
+          <span>{isIn ? 'Paid on' : 'Due'}</span>
+          <b>{shortDay(l.due).replace(/^\w+, /, '')}</b>
+          <small>{fromDayKey(l.due).toLocaleDateString([], { weekday: 'long' })}</small>
+        </div>
+        <div className={l.overdue ? 'is-end is-neg' : ''}>
+          <span>{days < 0 ? (isIn ? 'Since' : 'Late') : 'Days left'}</span>
+          <b>{daysText(days, l.kind)}</b>
+        </div>
+        {!isIn ? (
+          <div className={payOn ? 'is-now' : ''}>
+            <span>Pay on</span>
+            <b>{payOn ? shortDay(payOn).replace(/^\w+, /, '') : '—'}</b>
+            <small>{payOn ? daysText(payDays!, 'pay') : 'not set'}</small>
+          </div>
+        ) : null}
+        <div className={acctName ? 'is-now' : ''}>
+          <span>{isIn ? 'Into' : 'From'}</span>
+          <b>{acctName || '—'}</b>
+          <small>{method ? METHOD_LABEL[method] : acctName ? '' : 'not set'}</small>
+        </div>
+      </div>
+
+      <section className="bal-drw-sec">
+        <h4>Plan</h4>
+        <div className="bal-form">
+          {!isIn ? (
+            <label>
+              <span>Pay on</span>
+              <span className="bal-form-row">
+                <input type="date" value={payOn || ''} onChange={e => set({ payOn: e.target.value || undefined })} />
+                {payOn !== l.due ? (
+                  <button type="button" className="bal-btn" onClick={() => set({ payOn: l.due })}>
+                    Due day
+                  </button>
+                ) : null}
+                {payOn ? (
+                  <button type="button" className="bal-btn" onClick={() => updatePick(l.key, { payOn: undefined })}>
+                    Clear
+                  </button>
+                ) : null}
+              </span>
+            </label>
+          ) : null}
+          <label>
+            <span>{isIn ? 'Paid into' : 'Paid from'}</span>
+            <select className={`bal-from${acctName ? '' : ' is-unset'}`} value={acctName} onChange={e => set({ acct: e.target.value || undefined })}>
+              <option value="">Choose an account…</option>
+              {book.accounts.map(a => (
+                <option key={a.name} value={a.name}>
+                  {a.name}
+                </option>
+              ))}
+            </select>
+          </label>
+          {acctName ? (
+            <label>
+              <span>How</span>
+              <select className={`bal-from${method ? '' : ' is-unset'}`} value={method || ''} onChange={e => set({ method: (e.target.value || undefined) as PayMethod | undefined })}>
+                <option value="">Not set</option>
+                {methods.map(m => (
+                  <option key={m} value={m}>
+                    {isIn ? (m === 'savings' ? 'Into savings' : 'Into checking') : m === 'debit' ? 'Debit card — leaves right away' : m === 'ach' ? 'From checking — 1–3 days to clear' : 'From savings'}
+                  </option>
+                ))}
+              </select>
+            </label>
+          ) : null}
+          <p className="bal-form-note">
+            {l.custom ? 'Added by you.' : `The account and how are remembered for ${l.name}’s other dates.`}
+            {method === 'ach' && !isIn ? ' Checking transfers take 1–3 days, so your bank balance can still show this money after you pay.' : ''}
+            {isIn && !reg?.landed && acctName ? ` On ${shortDay(l.due)}, Life Hub adds ${l.amount ? money(l.amount) : 'it'} to ${acctName} in your sheet once and crosses it out.` : ''}
+          </p>
+        </div>
+        <div className="bal-form-row">
+          {onSheet ? (
+            <button type="button" className="bal-btn is-quiet" onClick={() => setBalancePicks([l.key], false)}>
+              {l.custom ? 'Delete this item' : 'Take off the balancing sheet'}
+            </button>
+          ) : (
+            <button type="button" className="bal-btn is-primary" onClick={() => setBalancePicks([l.key], true)}>
+              Add to the balancing sheet
+            </button>
+          )}
+        </div>
+      </section>
+
+      {reg && reg.acct ? (
+        <section className="bal-drw-sec">
+          <h4>Effect on {reg.acct}</h4>
+          <p className="bal-drw-effect">
+            {reg.landed ? (
+              <>Already in its Now amount (added {shortDay(reg.landed)}).</>
+            ) : (
+              <>
+                {signed(reg.before)} → <b className={reg.after < 0 ? 'is-neg' : ''}>{signed(reg.after)}</b> on {shortDay(reg.when)}
+                {reg.pot === 'sav' ? ' · from savings' : ''} · week of {book.weeks[reg.week].label}
+              </>
+            )}
+          </p>
+          <button type="button" className="bal-link" onClick={() => panels.openAccount(reg.acct)}>
+            Open {reg.acct} ›
+          </button>
+        </section>
+      ) : null}
+
+      {others.length ? (
+        <section className="bal-drw-sec">
+          <h4>Other dates</h4>
+          <ul className="bal-drw-others">
+            {others.map(o => {
+              const oPlanned = book.plan.picks.has(o.key) && book.acctOf(o) && (o.kind === 'in' || book.payOnOf(o));
+              return (
+                <li key={o.key}>
+                  <button type="button" onClick={() => panels.openLine(o.key)}>
+                    <span>{shortDay(o.due)}</span>
+                    <b>{o.amount === undefined ? '?' : money(o.amount)}</b>
+                    <em className={oPlanned ? 'is-ok' : book.plan.picks.has(o.key) ? 'is-pend' : ''}>{oPlanned ? 'Planned' : book.plan.picks.has(o.key) ? 'On the sheet' : 'Not planned'}</em>
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+        </section>
+      ) : null}
+
+      <div className="bal-dlg-actions">
+        {model.sheetUrl && !l.custom ? (
+          <a className="bal-btn is-quiet-link" href={sheetLink(model, 'Randy')} target="_blank" rel="noopener noreferrer">
+            Open in sheet ↗
+          </a>
+        ) : null}
+        <button type="button" className="bal-btn is-primary" onClick={onClose}>
+          Done
+        </button>
+      </div>
+      {pick?.at ? <p className="bal-form-note">Plan last changed {new Date(pick.at).toLocaleString([], { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}</p> : null}
+    </Modal>
+  );
+}
+
+/**
+ * One account as its own item: checking + savings (or Now), pending, and its sub-ledger — what's
+ * planned to come out of it and go into it — for a week or the whole month.
+ */
+function AccountPanel({ name, book, model, onSave, onBack, onClose }: { name: string; book: Book; model: MoneyModel; onSave: Save; onBack?: () => void; onClose: () => void }) {
+  const panels = useMoneyPanels();
+  const [wi, setWi] = useState<number | 'month'>(0);
+  const ac = book.acct(name);
+  if (!ac)
+    return (
+      <Modal label="Account" onClose={onClose} onBack={onBack}>
+        <h3>{name}</h3>
+        <p className="mny-empty">This account isn’t in the sheet’s Balancing list or Debit Accounts.</p>
+      </Modal>
+    );
+  const r = wi === 'month' ? book.monthReg(ac.name) : book.regs[wi][ac.name];
+  const outs = r.lines.filter(l => l.kind === 'pay');
+  const ins = r.lines.filter(l => l.kind === 'in');
+  const out = outs.reduce((s, l) => s + (l.amount || 0), 0);
+  const inn = ins.filter(l => !l.landed).reduce((s, l) => s + (l.amount || 0), 0);
+  const first = wi === 0 || wi === 'month';
+  const hasSav = !!ac.sav;
+  const pend = amountOf(ac.pend?.text || '') || 0;
+  const canMove = !!(ac.chk && ac.pend && !ac.chk.formula && !ac.pend.formula && pend > 0);
+  const label = wi === 'month' ? 'this month' : wi === 0 ? 'this week' : book.weeks[wi].label;
+  const lineRow = (l: RegLine) => (
+    <li key={l.key}>
+      <button type="button" className={`bal-rl is-${l.kind}${l.kind === 'in' && !l.landed ? ' is-coming' : ''}${l.landed ? ' is-landed' : ''}${l.overdue ? ' is-overdue' : ''}`} style={{ '--ev': l.color } as React.CSSProperties} onClick={() => panels.openLine(l.key)}>
+        <span className="bal-day">{dayNum(l.when)}</span>
+        <span className="bal-name">
+          {l.name}
+          <small>
+            {l.tag}
+            {l.method ? ` · ${METHOD_LABEL[l.method]}` : ''}
+          </small>
+        </span>
+        <span className={`bal-amt${l.kind === 'in' ? ' is-in' : ''}`}>{l.amount === undefined ? '?' : `${l.kind === 'in' ? '+' : '−'}${money(l.amount)}`}</span>
+        <span className={`bal-after${l.after < 0 ? ' is-neg' : ''}`}>{l.landed ? 'in Now ✓' : signed(l.after)}</span>
+      </button>
+    </li>
+  );
+  return (
+    <Modal label={`${ac.name} details`} onClose={onClose} onBack={onBack}>
+      <div className="bal-drw-head">
+        <p className="section-label">Account</p>
+        <h3>{ac.name}</h3>
         <p>
-          Balancing account
-          {row && noteCol >= 0 && row[noteCol]?.text ? ` · ${row[noteCol].text}` : ''}
-          {linked ? ` · same number as ${name} in Accounts & cards → Checking` : ''}
+          {ac.note ? `${ac.note} · ` : ''}
+          {ac.bal ? 'On the balancing sheet' : 'In Debit Accounts'}
+          {ac.linked ? ' · same numbers as Accounts & cards → Checking' : ''}
         </p>
         <p className="bal-drw-chips">
           <span className={r.end < 0 ? 'is-short' : 'is-ok'}>{r.end < 0 ? 'Short' : 'On track'}</span>
           {pend ? <span className="is-pend">{money(pend)} pending</span> : null}
-          <span>{r.lines.length ? `${r.lines.length} line${r.lines.length === 1 ? '' : 's'}` : 'no lines'}</span>
+          <span>
+            {outs.length} out · {ins.length} in
+          </span>
         </p>
       </div>
 
-      <div className="bal-drw-weeks" role="group" aria-label="Week">
-        {weeks.map(w => (
-          <button key={w.key} type="button" className={w.i === wi ? 'is-on' : ''} aria-pressed={w.i === wi} onClick={() => setWi(w.i)}>
+      <div className="bal-drw-weeks" role="group" aria-label="Period">
+        {book.weeks.map(w => (
+          <button key={w.key} type="button" className={wi === w.i ? 'is-on' : ''} aria-pressed={wi === w.i} onClick={() => setWi(w.i)}>
             {w.i === 0 ? 'This week' : w.label}
           </button>
         ))}
+        <button type="button" className={wi === 'month' ? 'is-on' : ''} aria-pressed={wi === 'month'} onClick={() => setWi('month')}>
+          Month
+        </button>
       </div>
 
       <div className="bal-drw-tiles">
-        <div className="is-now">
-          <span>{wi === 0 ? 'Now' : 'Start'}</span>
-          {wi === 0 && nowCell ? <EditCell cell={nowCell} onSave={onSave} className="bal-drw-num" /> : <b>{signed(r.start)}</b>}
-        </div>
+        {hasSav ? (
+          <>
+            <div className="is-now">
+              <span>{first ? 'Checking' : 'Checking start'}</span>
+              {first && ac.chk ? <EditCell cell={ac.chk} onSave={onSave} className="bal-drw-num" /> : <b>{signed(r.startChk)}</b>}
+            </div>
+            <div className="is-now">
+              <span>{first ? 'Savings' : 'Savings start'}</span>
+              {first && ac.sav ? <EditCell cell={ac.sav} onSave={onSave} className="bal-drw-num" placeholder="$0" /> : <b>{signed(r.startSav)}</b>}
+            </div>
+          </>
+        ) : (
+          <div className="is-now">
+            <span>{first ? 'Now' : 'Start'}</span>
+            {first && ac.chk ? <EditCell cell={ac.chk} onSave={onSave} className="bal-drw-num" /> : <b>{signed(r.start)}</b>}
+          </div>
+        )}
         <div className="is-pend">
           <span>Pending</span>
-          {wi === 0 && pendCell ? <EditCell cell={pendCell} onSave={onSave} className="bal-drw-num" placeholder="—" /> : <b>{pend ? money(pend) : '—'}</b>}
+          {first && ac.pend ? <EditCell cell={ac.pend} onSave={onSave} className="bal-drw-num" placeholder="—" /> : <b>{pend ? money(pend) : '—'}</b>}
           <small>not counted</small>
         </div>
         <div className="is-out">
@@ -1859,80 +2225,45 @@ function AccountDrawer({
           <b>{inn ? `+${money(inn)}` : '—'}</b>
         </div>
         <div className={`is-end${r.end < 0 ? ' is-neg' : ''}`}>
-          <span>End of week</span>
+          <span>{wi === 'month' ? 'End of month' : 'End of week'}</span>
           <b>{signed(r.end)}</b>
+          {hasSav ? (
+            <small>
+              chk {signed(r.endChk)} · sav {signed(r.endSav)}
+            </small>
+          ) : null}
         </div>
       </div>
 
       <section className="bal-drw-sec">
-        <h4>Lines · {weeks[wi].label}</h4>
-        {r.lines.length ? (
-          <ol className="bal-drw-lines">
-            <li className="bal-drw-start">
-              <span>Start</span>
-              <b>{signed(r.start)}</b>
-            </li>
-            {r.lines.map(l => (
-              <li key={l.key}>
-                <button type="button" className={`bal-rl is-${l.kind}${l.kind === 'in' && !l.landed ? ' is-coming' : ''}${l.landed ? ' is-landed' : ''}${l.overdue ? ' is-overdue' : ''}`} style={{ '--ev': l.color } as React.CSSProperties} onClick={() => onLine(l.key)}>
-                  <span className="bal-day">{l.overdue ? 'Late' : shortDay(l.due).replace(/,.*/, '') + ' ' + fromDayKey(l.due).getDate()}</span>
-                  <span className="bal-name">
-                    {l.name}
-                    <small>{l.tag}</small>
-                  </span>
-                  <span className={`bal-amt${l.kind === 'in' ? ' is-in' : ''}`}>{l.amount === undefined ? '?' : `${l.kind === 'in' ? '+' : '−'}${money(l.amount)}`}</span>
-                  <span className={`bal-after${l.after < 0 ? ' is-neg' : ''}`}>{name ? (l.landed ? 'in Now ✓' : signed(l.after)) : ''}</span>
-                </button>
-              </li>
-            ))}
-          </ol>
-        ) : (
-          <p className="mny-empty">Nothing comes out of or goes into {label} this week yet.</p>
-        )}
+        <h4>
+          Going out · {label} <em>{out ? `−${money(out)}` : ''}</em>
+        </h4>
+        {outs.length ? <ol className="bal-drw-lines">{outs.map(lineRow)}</ol> : <p className="mny-empty">Nothing planned to come out of {ac.name} {label}.</p>}
       </section>
-
-      {name && toAdd.length ? (
-        <section className="bal-drw-sec">
-          <h4>Add to {name}</h4>
-          <ul className="bal-drw-add">
-            {addList.map(l => (
-              <li key={l.key}>
-                <span className="bal-day">{l.overdue ? 'Late' : shortDay(l.due).replace(/,.*/, '')}</span>
-                <span className="bal-name">
-                  {l.name}
-                  <small>{l.tag}</small>
-                </span>
-                <span className={`bal-amt${l.kind === 'in' ? ' is-in' : ''}`}>{l.amount === undefined ? '?' : `${l.kind === 'in' ? '+' : '−'}${money(l.amount)}`}</span>
-                <button type="button" className="bal-add" onClick={() => onAddHere(l)}>
-                  + Add here
-                </button>
-              </li>
-            ))}
-          </ul>
-          {toAdd.length > addList.length ? (
-            <button type="button" className="bal-link" onClick={() => setShowAll(true)}>
-              Show all {toAdd.length}
-            </button>
-          ) : null}
-        </section>
-      ) : null}
+      <section className="bal-drw-sec">
+        <h4>
+          Coming in · {label} <em>{inn ? `+${money(inn)}` : ''}</em>
+        </h4>
+        {ins.length ? <ol className="bal-drw-lines">{ins.map(lineRow)}</ol> : <p className="mny-empty">Nothing planned to go into {ac.name} {label}.</p>}
+      </section>
 
       {canMove ? (
         <section className="bal-drw-sec">
           <h4>Pending landed?</h4>
           <div className="bal-drw-move">
             <p>
-              Move the {money(pend)} pending into Now: {signed(amountOf(nowCell!.text) || 0)} → <b>{signed((amountOf(nowCell!.text) || 0) + pend)}</b>
+              Move the {money(pend)} pending into Now: {signed(amountOf(ac.chk!.text) || 0)} → <b>{signed((amountOf(ac.chk!.text) || 0) + pend)}</b>
             </p>
             <button
               type="button"
               className="bal-btn is-primary"
               onClick={() => {
-                if (!window.confirm(`Move ${money(pend)} from Pending into Now for ${name}?\n\nNow becomes ${money((amountOf(nowCell!.text) || 0) + pend)} and Pending is cleared, in your sheet.`)) return;
-                const next = (amountOf(nowCell!.text) || 0) + pend;
+                const next = (amountOf(ac.chk!.text) || 0) + pend;
+                if (!window.confirm(`Move ${money(pend)} from Pending into Now for ${ac.name}?\n\nNow becomes ${money(next)} and Pending is cleared, in your sheet.`)) return;
                 void onSave([
-                  { tab: nowCell!.tab, r: nowCell!.r, c: nowCell!.c, expect: nowCell!.text, value: `$${next.toFixed(2)}` },
-                  { tab: pendCell!.tab, r: pendCell!.r, c: pendCell!.c, expect: pendCell!.text, value: '' },
+                  { tab: ac.chk!.tab, r: ac.chk!.r, c: ac.chk!.c, expect: ac.chk!.text, value: `$${next.toFixed(2)}` },
+                  { tab: ac.pend!.tab, r: ac.pend!.r, c: ac.pend!.c, expect: ac.pend!.text, value: '' },
                 ]);
               }}
             >
@@ -1955,13 +2286,12 @@ function AccountDrawer({
             </tr>
           </thead>
           <tbody>
-            {weeks.map(w => {
-              const x = regs[w.i];
+            {[...book.weeks.map(w => ({ id: w.i as number | 'month', label: w.i === 0 ? 'This week' : w.label, x: book.regs[w.i][ac.name] })), { id: 'month' as const, label: 'Month', x: book.monthReg(ac.name) }].map(({ id, label: lb, x }) => {
               const o = x.lines.filter(l => l.kind === 'pay').reduce((s, l) => s + (l.amount || 0), 0);
               const n = x.lines.filter(l => l.kind === 'in' && !l.landed).reduce((s, l) => s + (l.amount || 0), 0);
               return (
-                <tr key={w.key} className={w.i === wi ? 'is-on' : ''} onClick={() => setWi(w.i)}>
-                  <td>{w.i === 0 ? 'This week' : w.label}</td>
+                <tr key={String(id)} className={`${wi === id ? 'is-on' : ''}${id === 'month' ? ' is-month' : ''}`} onClick={() => setWi(id)}>
+                  <td>{lb}</td>
                   <td>{signed(x.start)}</td>
                   <td className="is-in">{n ? `+${money(n)}` : ''}</td>
                   <td className="is-out">{o ? `−${money(o)}` : ''}</td>
@@ -1984,126 +2314,6 @@ function AccountDrawer({
         <button type="button" className="bal-btn is-primary" onClick={onClose}>
           Done
         </button>
-      </div>
-    </Modal>
-  );
-}
-
-/** Everything about one payment / deposit: date, amount, type, the account it's paid from or into. */
-function LineDialog({
-  line,
-  reg,
-  adding,
-  acct,
-  accounts,
-  status,
-  weekLabel,
-  onAdd,
-  onAccount,
-  onRemove,
-  onClose,
-  onBack,
-}: {
-  line: BalanceLine;
-  reg?: RegLine;
-  adding: boolean;
-  acct: string;
-  accounts: string[];
-  status: string;
-  weekLabel?: string;
-  onAdd: (acct: string) => void;
-  onAccount: (acct: string) => void;
-  onRemove: () => void;
-  onClose: () => void;
-  onBack?: () => void;
-}) {
-  const [pick, setPick] = useState(acct);
-  const isIn = line.kind === 'in';
-  const chosen = adding ? pick : acct;
-  return (
-    <Modal label={`${line.name} details`} onClose={onClose} onBack={onBack}>
-      <p className="section-label">
-        {isIn ? 'Money coming in' : `Payment going out · ${line.tag}`}
-      </p>
-      <h3>{line.name}</h3>
-      <p className={`bal-dlg-amt${isIn ? ' is-in' : ''}`}>{line.amount === undefined ? 'Amount not set' : `${isIn ? '+' : '−'}${money(line.amount)}`}</p>
-      <dl className="bal-dl">
-        <dt>{isIn ? 'Paid on' : 'Due'}</dt>
-        <dd>
-          {fullDay(line.due)}
-          <small>{status}</small>
-        </dd>
-        <dt>{isIn ? 'Paid into' : 'Paid from'}</dt>
-        <dd>
-          <select
-            className={`bal-from${chosen ? '' : ' is-unset'}`}
-            value={chosen}
-            onChange={e => (adding ? setPick(e.target.value) : onAccount(e.target.value))}
-            aria-label={isIn ? 'Account it goes into' : 'Account it comes out of'}
-          >
-            <option value="">Choose an account…</option>
-            {accounts.map(n => (
-              <option key={n} value={n}>
-                {n}
-              </option>
-            ))}
-          </select>
-          <small>Remembered for {line.name}’s other dates.</small>
-        </dd>
-        {!adding && reg && reg.acct ? (
-          <>
-            <dt>{reg.acct}</dt>
-            <dd>
-              {reg.landed ? (
-                <>Already in its Now amount</>
-              ) : (
-                <>
-                  {signed(reg.before)} → <b className={reg.after < 0 ? 'is-neg' : ''}>{signed(reg.after)}</b>
-                </>
-              )}
-              <small>balance before → after this line</small>
-            </dd>
-          </>
-        ) : null}
-        {weekLabel ? (
-          <>
-            <dt>Week</dt>
-            <dd>{weekLabel}</dd>
-          </>
-        ) : null}
-        {isIn && !reg?.landed ? (
-          <>
-            <dt>On the day</dt>
-            <dd>
-              <small className="is-plain">
-                {chosen
-                  ? `Life Hub adds ${line.amount ? money(line.amount) : 'it'} to ${chosen} in your sheet once, and crosses this line out.`
-                  : 'Pick an account so it can be added on the day.'}
-              </small>
-            </dd>
-          </>
-        ) : null}
-      </dl>
-      <div className="bal-dlg-actions">
-        {adding ? (
-          <>
-            <button type="button" className="bal-btn" onClick={onClose}>
-              Cancel
-            </button>
-            <button type="button" className="bal-btn is-primary" onClick={() => onAdd(pick)}>
-              Add to the sheet
-            </button>
-          </>
-        ) : (
-          <>
-            <button type="button" className="bal-btn is-quiet" onClick={onRemove}>
-              Take off the sheet
-            </button>
-            <button type="button" className="bal-btn is-primary" onClick={onClose}>
-              Done
-            </button>
-          </>
-        )}
       </div>
     </Modal>
   );
@@ -2266,8 +2476,19 @@ export function MoneyPage({
     else setNote({ text: 'Saved to the sheet ✓', tone: 'ok' });
     return res;
   };
+  // Every bill, deposit and account as its own item, with one panel system for the whole page.
+  const book = useBalanceBook(model, dues, monthDues, incomingBal, paidAt);
   // Incoming money on the balancing sheet is added to its account in the sheet on its day.
-  useIncomingLanding(model, incomingBal, save);
+  useIncomingLanding(model, book, save);
+  const [panel, setPanel] = useState<PanelState | null>(null);
+  const panelApi = useMemo(
+    () => ({
+      openLine: (key: string) => setPanel(cur => ({ type: 'line' as const, id: key, back: cur || undefined })),
+      openAccount: (name: string) => setPanel(cur => ({ type: 'acct' as const, id: name, back: cur || undefined })),
+      has: (key: string) => !!book.line(key),
+    }),
+    [book],
+  );
 
   // Skipped ones (Change → Skip) are left out of the planner too.
   const sheetDues = useMemo(() => dues.filter(d => d.bill.kind !== 'plan' && !d.skipped), [dues]);
@@ -2376,6 +2597,7 @@ export function MoneyPage({
   ];
 
   return (
+    <MoneyPanelCtx.Provider value={panelApi}>
     <div className="settings-view money-view mny">
       {/* The story in one line: what you have, what's coming, what's left. */}
       <section className="mny-stand" aria-label="Where you stand">
@@ -2491,7 +2713,7 @@ export function MoneyPage({
         ) : null}
         {tab === 'flow' && flowView === 'week' ? (
           <div className="mny-stack">
-            <BalancingSheet period="week" model={model} dues={dues} incoming={incomingBal} onSave={save} />
+            <BalancingSheet period="week" book={book} model={model} onSave={save} />
             <Section tone="cash" title="Incoming funds" hint="Log money you expect; it shows up on the right to add to the sheet. Synced, not written to the sheet.">
               <IncomeSection list={incomeList} upcoming={incoming} />
             </Section>
@@ -2500,7 +2722,7 @@ export function MoneyPage({
 
         {tab === 'flow' && flowView === 'month' ? (
           <div className="mny-stack">
-            <BalancingSheet period="month" model={model} dues={dues} incoming={incomingBal} onSave={save} />
+            <BalancingSheet period="month" book={book} model={model} onSave={save} />
             <Section tone="due" title="In the sheet" hint="Click any amount or date to change it in the sheet." href={link('Randy')}>
               {model.bills ? (
                 <Fold title="Bills" total={model.bills.total?.[2]?.text} meta={`${model.bills.rows.length}`}>
@@ -2775,5 +2997,11 @@ export function MoneyPage({
       ) : null}
       <p className="money-foot">Every change from Life Hub is logged on the sheet’s “Life Hub edits” tab.</p>
     </div>
+      {panel?.type === 'line' ? (
+        <LinePanel key={panel.id} id={panel.id} book={book} model={model} onBack={panel.back ? () => setPanel(panel.back!) : undefined} onClose={() => setPanel(null)} />
+      ) : panel?.type === 'acct' ? (
+        <AccountPanel key={panel.id} name={panel.id} book={book} model={model} onSave={save} onBack={panel.back ? () => setPanel(panel.back!) : undefined} onClose={() => setPanel(null)} />
+      ) : null}
+    </MoneyPanelCtx.Provider>
   );
 }
