@@ -1677,26 +1677,6 @@ function BalancingSheet({ period, book, model, onSave }: { period: 'week' | 'mon
     );
   };
 
-  /** That account's money out and (grey, still counted) money in for the period — the items themselves live in its panel. */
-  const flowCells = (a: string, v: Reg) => {
-    const o = v.lines.filter(l => l.kind === 'pay').reduce((s, l) => s + (l.amount || 0), 0);
-    const n = v.lines.filter(l => l.kind === 'in' && !l.landed).reduce((s, l) => s + (l.amount || 0), 0);
-    const nOut = v.lines.filter(l => l.kind === 'pay').length;
-    const nIn = v.lines.filter(l => l.kind === 'in' && !l.landed).length;
-    const open = () => (a ? panels.openAccount(a) : undefined);
-    return (
-      <>
-        <button type="button" className="bal-num is-out bal-open" onClick={open} disabled={!a} title={a ? `${nOut} going out · details` : undefined}>
-          {o ? `−${money(o)}` : ''}
-          {nOut > 1 ? <small>{nOut} items</small> : null}
-        </button>
-        <button type="button" className="bal-num is-inc bal-open" onClick={open} disabled={!a} title={a ? `${nIn} coming in · counted · details` : undefined}>
-          {n ? `+${money(n)}` : ''}
-          {nIn > 1 ? <small>{nIn} items</small> : null}
-        </button>
-      </>
-    );
-  };
   const unassigned = view('');
   return (
     <div className="bal">
@@ -1753,82 +1733,158 @@ function BalancingSheet({ period, book, model, onSave }: { period: 'week' | 'mon
           </div>
         ) : null}
 
-        <div className="bal-regs is-six">
-          <div className="bal-reg-row is-head">
-            <span>Account</span>
-            <span className="is-num">{firstWeek ? 'Now' : 'Start'}</span>
-            <span className="is-num">Pending</span>
-            <span className="is-num">Outgoing</span>
-            <span className="is-num">Incoming</span>
-            <span className="is-num">{period === 'month' ? 'End of month' : 'End of week'}</span>
-          </div>
-          {book.accounts.map(ac => {
+        {(() => {
+          // Top to bottom: money you have (checking + other sources, money coming in grey but counted),
+          // then pending (not counted), then outgoing — each account's total; its items are in its panel.
+          const pendNamed = (n: string) => /\(pend\)|pending/i.test(n);
+          const sums = (v: Reg) => ({
+            out: v.lines.filter(l => l.kind === 'pay').reduce((s, l) => s + (l.amount || 0), 0),
+            nOut: v.lines.filter(l => l.kind === 'pay').length,
+            inn: v.lines.filter(l => l.kind === 'in' && !l.landed).reduce((s, l) => s + (l.amount || 0), 0),
+          });
+          const sources = book.accounts.filter(ac => {
             const v = view(ac.name);
-            if (!ac.bal && !v.lines.length) return null;
-            const row = ac.bal;
-            return (
-              <div key={ac.name} className={`bal-reg${v.lines.length ? ' has-lines' : ''}`}>
-                <div className="bal-reg-row">
-                  <span className="bal-acct">
-                    <button type="button" className="bal-acct-name" onClick={() => panels.openAccount(ac.name)} title="Account details">
-                      {ac.name}
-                      {ac.note ? <small>{ac.note}</small> : null}
-                    </button>
-                    {row && firstWeek && !row.some(c => c.formula) ? (
-                      <button
-                        type="button"
-                        className="bal-del"
-                        title="Remove this line from the sheet"
-                        aria-label={`Remove ${ac.name} from the balancing sheet`}
-                        onClick={() => {
-                          if (!window.confirm(`Remove “${ac.name}” from the Balancing list in your sheet?\n\nOnly this line goes; the rest moves up and the totals update.`)) return;
-                          void onSave([{ tab: row[0].tab, deleteBalancing: true, r: row[0].r, startCol: row[0].c, expectRow: row.map(c => c.text) }]);
-                        }}
-                      >
-                        ✕
-                      </button>
-                    ) : null}
-                  </span>
-                  {amountCell(ac, v)}
-                  {firstWeek && ac.pend ? (
-                    <EditCell cell={ac.pend} onSave={onSave} className="bal-num is-pend" placeholder="" onOpen={() => panels.openAccount(ac.name)} />
-                  ) : (
-                    <button type="button" className="bal-num is-pend bal-open" onClick={() => panels.openAccount(ac.name)} title="Details">
-                      {v.pend ? money(v.pend) : ''}
-                    </button>
-                  )}
-                  {flowCells(ac.name, v)}
-                  <button type="button" className={`bal-num is-end bal-open${v.end < 0 ? ' is-neg' : ''}`} onClick={() => panels.openAccount(ac.name)} title="Details">
-                    {signed(v.end)}
-                  </button>
+            return (ac.bal || v.lines.length || v.start) && (!pendNamed(ac.name) || v.start || v.lines.length);
+          });
+          const pending = book.accounts.filter(ac => ac.pend && (pendNamed(ac.name) || view(ac.name).pend));
+          const outs = [...book.accounts.map(ac => ac.name), ''].map(a => ({ a, ...sums(view(a)) })).filter(x => x.out);
+          const delBtn = (ac: BookAcct) =>
+            ac.bal && firstWeek && !ac.bal.some(c => c.formula) ? (
+              <button
+                type="button"
+                className="bal-del"
+                title="Remove this line from the sheet"
+                aria-label={`Remove ${ac.name} from the balancing sheet`}
+                onClick={() => {
+                  const row = ac.bal!;
+                  if (!window.confirm(`Remove “${ac.name}” from the Balancing list in your sheet?\n\nOnly this line goes; the rest moves up and the totals update.`)) return;
+                  void onSave([{ tab: row[0].tab, deleteBalancing: true, r: row[0].r, startCol: row[0].c, expectRow: row.map(c => c.text) }]);
+                }}
+              >
+                ✕
+              </button>
+            ) : null;
+          const nameCell = (ac: BookAcct) => (
+            <span className="bal-acct">
+              <button type="button" className="bal-acct-name" onClick={() => panels.openAccount(ac.name)} title="Account details">
+                {ac.name}
+                {ac.note ? <small>{ac.note}</small> : null}
+              </button>
+              {delBtn(ac)}
+            </span>
+          );
+          return (
+            <div className="bal-stack">
+              <section className="bal-blk is-money" aria-label="Money now">
+                <div className="bal-blk-row is-head">
+                  <span>Checking &amp; money sources</span>
+                  <span className="is-num">{firstWeek ? 'Now' : 'Start'}</span>
+                  <span className="is-num">Coming in</span>
+                  <span className="is-num">{period === 'month' ? 'End of month' : 'End of week'}</span>
                 </div>
-              </div>
-            );
-          })}
-          {unassigned.lines.length ? (
-            <div className="bal-reg is-unset">
-              <div className="bal-reg-row">
-                <span className="bal-acct">
-                  <span className="bal-acct-name">
-                    Needs an account<small>listed above</small>
-                  </span>
-                </span>
-                <span className="bal-num" />
-                <span className="bal-num" />
-                {flowCells('', unassigned)}
-                <span className={`bal-num is-end${unassigned.end < 0 ? ' is-neg' : ''}`}>{signed(unassigned.end)}</span>
-              </div>
+                {sources.map(ac => {
+                  const v = view(ac.name);
+                  const x = sums(v);
+                  return (
+                    <div key={ac.name} className="bal-blk-row">
+                      {nameCell(ac)}
+                      {amountCell(ac, v)}
+                      <button type="button" className="bal-num is-inc bal-open" onClick={() => panels.openAccount(ac.name)} title="Coming in · counted · details">
+                        {x.inn ? `+${money(x.inn)}` : ''}
+                      </button>
+                      <button type="button" className={`bal-num is-end bal-open${v.end < 0 ? ' is-neg' : ''}`} onClick={() => panels.openAccount(ac.name)} title="After what comes in and goes out · details">
+                        {signed(v.end)}
+                      </button>
+                    </div>
+                  );
+                })}
+                {unassigned.lines.length ? (
+                  <div className="bal-blk-row is-unset">
+                    <span className="bal-acct">
+                      <span className="bal-acct-name">
+                        Needs an account<small>its items are listed at the top</small>
+                      </span>
+                    </span>
+                    <span className="bal-num" />
+                    <span className="bal-num is-inc">{sums(unassigned).inn ? `+${money(sums(unassigned).inn)}` : ''}</span>
+                    <span className={`bal-num is-end${unassigned.end < 0 ? ' is-neg' : ''}`}>{signed(unassigned.end)}</span>
+                  </div>
+                ) : null}
+                <div className="bal-blk-row is-total">
+                  <span>Total</span>
+                  <span className="bal-num is-now">{signed(tot.start)}</span>
+                  <span className="bal-num is-inc">{inSum ? `+${money(inSum)}` : ''}</span>
+                  <span className={`bal-num is-end${tot.end < 0 ? ' is-neg' : ''}`}>{signed(tot.end)}</span>
+                </div>
+              </section>
+
+              {pending.length ? (
+                <section className="bal-blk is-pending" aria-label="Pending">
+                  <div className="bal-blk-row is-head">
+                    <span>Pending · not counted until it’s in Now</span>
+                    <span className="is-num">Pending</span>
+                  </div>
+                  {pending.map(ac => (
+                    <div key={ac.name} className="bal-blk-row">
+                      {nameCell(ac)}
+                      {firstWeek ? (
+                        <EditCell cell={ac.pend} onSave={onSave} className="bal-num is-pend" placeholder="—" onOpen={() => panels.openAccount(ac.name)} />
+                      ) : (
+                        <button type="button" className="bal-num is-pend bal-open" onClick={() => panels.openAccount(ac.name)}>
+                          {view(ac.name).pend ? money(view(ac.name).pend) : '—'}
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                  <div className="bal-blk-row is-total">
+                    <span>Total pending</span>
+                    <span className="bal-num is-pend">{tot.pend ? money(tot.pend) : '—'}</span>
+                  </div>
+                </section>
+              ) : null}
+
+              <section className="bal-blk is-outgoing" aria-label="Outgoing">
+                <div className="bal-blk-row is-head">
+                  <span>Outgoing · {period === 'month' ? 'this month' : week.i === 0 ? 'this week' : week.label}</span>
+                  <span className="is-num">Items</span>
+                  <span className="is-num">Out</span>
+                </div>
+                {outs.length ? (
+                  outs.map(o => (
+                    <div key={o.a || '_none'} className={`bal-blk-row${o.a ? '' : ' is-unset'}`}>
+                      {o.a ? (
+                        <span className="bal-acct">
+                          <button type="button" className="bal-acct-name" onClick={() => panels.openAccount(o.a)} title="What’s going out of it">
+                            From {o.a}
+                          </button>
+                        </span>
+                      ) : (
+                        <span className="bal-acct">
+                          <span className="bal-acct-name">
+                            Needs an account<small>listed at the top</small>
+                          </span>
+                        </span>
+                      )}
+                      <span className="bal-num bal-count">{o.nOut}</span>
+                      <button type="button" className="bal-num is-out bal-open" disabled={!o.a} onClick={() => o.a && panels.openAccount(o.a)}>
+                        −{money(o.out)}
+                      </button>
+                    </div>
+                  ))
+                ) : (
+                  <p className="bal-blk-empty">Nothing going out yet — add bills from the right.</p>
+                )}
+                {outs.length ? (
+                  <div className="bal-blk-row is-total">
+                    <span>Total out</span>
+                    <span className="bal-num bal-count">{outs.reduce((s, o) => s + o.nOut, 0)}</span>
+                    <span className="bal-num is-out">−{money(outSum)}</span>
+                  </div>
+                ) : null}
+              </section>
             </div>
-          ) : null}
-          <div className="bal-reg-row is-total">
-            <span>Total</span>
-            <span className="bal-num is-now">{signed(tot.start)}</span>
-            <span className="bal-num is-pend">{tot.pend ? money(tot.pend) : ''}</span>
-            <span className="bal-num is-out">{outSum ? `−${money(outSum)}` : ''}</span>
-            <span className="bal-num is-inc">{inSum ? `+${money(inSum)}` : ''}</span>
-            <span className={`bal-num is-end${tot.end < 0 ? ' is-neg' : ''}`}>{signed(tot.end)}</span>
-          </div>
-        </div>
+          );
+        })()}
         {!shown.length ? <p className="bal-drop-hint">Add this {period === 'week' ? 'week’s' : 'month’s'} bills and incoming money from the right (or drag them here), then give each one an account.</p> : null}
         <div className="bal-adds">
           {adding ? (
