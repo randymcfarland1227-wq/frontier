@@ -68,8 +68,8 @@ function AffirmationForm({ guide, reviewed, submit }: { guide: Guide; reviewed?:
     if (submit(guide.id, draft)) { setDraft(draft.trim()); setError(''); }
     else setError('Your affirmation couldn’t be saved. Please try again.');
   }}>
-    <label htmlFor={`affirmation-${guide.id}`}>My affirmation for today</label>
-    <p id={`affirmation-help-${guide.id}`} className="gr-affirmation-help">Put this reminder into your own words, then press Enter.</p>
+    <label htmlFor={`affirmation-${guide.id}`}>My affirmation · press Enter</label>
+    <p id={`affirmation-help-${guide.id}`} className="gr-affirmation-help sr-only">Put this reminder into your own words, then press Enter.</p>
     <div className="gr-affirmation-entry">
       <input id={`affirmation-${guide.id}`} value={draft} maxLength={1000} autoComplete="off"
         placeholder="Today, I…" aria-describedby={`affirmation-help-${guide.id}${error ? ` affirmation-error-${guide.id}` : ''}`}
@@ -134,13 +134,13 @@ export function DailyGrounding({ move, goals, enter }: { move?: SourceSnapshot; 
             <header className="gr-guide-head">
               <h4><span aria-hidden="true">{g.icon}</span> {g.title}</h4>
               {g.key ? <p className="gr-guide-key">{g.key}</p> : null}
-              {g.intro ? <p>{g.intro}</p> : null}
             </header>
             <div className="gr-guide-body">
-              {g.sections.map(s => <div key={s.heading} className="gr-block">
+              {g.intro ? <p className="gr-outro">{g.intro}</p> : null}
+              <div className={`gr-guide-sections${g.sections.length === 1 ? ' is-single' : ''}`}>{g.sections.map(s => <div key={s.heading} className="gr-block">
                 <h5>{s.heading}</h5>
                 <ul>{s.lines.map(l => <li key={l}>{l}</li>)}</ul>
-              </div>)}
+              </div>)}</div>
               {g.outro ? <p className="gr-outro">{g.outro}</p> : null}
               {g.link?.url ? <a className="gr-link" href={g.link.url} target="_blank" rel="noopener noreferrer">{g.link.label} ↗</a>
                 : g.link?.space ? <button type="button" className="gr-link" onClick={() => enter(g.link!.space!)}>{g.link.label} →</button> : null}
