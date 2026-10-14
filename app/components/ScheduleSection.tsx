@@ -27,7 +27,7 @@ import {
 } from '../../lib/schedule';
 import { MONEY_KINDS } from '../../lib/money';
 import { planSlot, usePlans, type Plan } from '../../lib/plans';
-import { EVENTS_AHEAD_DAYS, eventCountdown, eventIcon, isAppointmentTitle, listKindOf, setEventMark, useEventMarks, type ListKind } from '../../lib/events';
+import { EVENTS_AHEAD_DAYS, eventCountdown, eventTone, eventIcon, isAppointmentTitle, listKindOf, setEventMark, useEventMarks, type ListKind } from '../../lib/events';
 import { readSaved, writeSaved } from '../../lib/storage';
 import { BillsList } from './BillsList';
 import { BillPinButton } from './BillControls';
@@ -414,7 +414,7 @@ function EventsList({
             const start = eventStart(r.slot);
             const soon = eventCountdown(start, now);
             return (
-              <li key={r.id} className={`event-row${soon === 'Now' || soon === 'Tomorrow' || soon === 'This weekend' ? ' is-soon' : ''}`}>
+              <li key={r.id} className={`event-row ${eventTone(start, now)}`}>
                 <button type="button" className="event-main" onClick={() => onShow(dayKey(start < startOfDay(now) ? now : start), r.id)} title={[r.title, r.note].filter(Boolean).join(' — ')}>
                   <span className="event-icon" aria-hidden="true">
                     {eventIcon(r.title)}
@@ -475,7 +475,7 @@ function OverdueBox({ bills, onBillPaid }: { bills: BillDue[]; onBillPaid: (due:
       <h3 id="sc-overdue">
         Overdue <span>· {overdue.length} not marked paid</span>
       </h3>
-      <BillsList dues={overdue} onPaid={onBillPaid} />
+      <BillsList dues={overdue} onPaid={onBillPaid} compact />
     </section>
   );
 }
@@ -616,7 +616,7 @@ function MonthMini({ month, items, picked, onPick }: { month: Date; items: CalIt
             <button
               key={k}
               type="button"
-              className={`mini-cell${d.getMonth() !== month.getMonth() ? ' is-other' : ''}${k === today ? ' is-today' : ''}${k === picked ? ' is-picked' : ''}${
+              className={`mini-cell${d.getMonth() !== month.getMonth() ? ' is-other' : ''}${k < today ? ' is-past' : ''}${k === today ? ' is-today' : ''}${k === picked ? ' is-picked' : ''}${
                 dayItems.some(i => i.kind === 'plan' || i.kind === 'invite') ? ' has-maybe' : ''
               }`}
               onClick={e => onPick(k, e.currentTarget)}
@@ -1120,6 +1120,7 @@ export function ScheduleSection({
               <BillsList
                 dues={shownBills.filter(b => b.days >= 0 && b.days <= 14)}
                 onPaid={onBillPaid}
+                compact
                 limit={5}
                 empty={schedule ? 'No bills due in the next two weeks.' : 'Shows bills from the Finances "Bills" tab once it’s connected.'}
               />
