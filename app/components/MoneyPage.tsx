@@ -21,7 +21,7 @@ import { readSaved, writeSaved, STORAGE_KEYS } from '../../lib/storage';
 import { isOverdue } from '../../lib/billEdits';
 import { BillChangeForm, BillPinButton, billChangeText } from './BillControls';
 import { addLifeSub, updateLifeSub, type LifeSub } from '../../lib/lifeSubs';
-import { mondayOf, setBalancePicks, useBalancePicks } from '../../lib/balancePicks';
+import { mondayOf, setBalancePicks, setPickAccount, useBalancePicks } from '../../lib/balancePicks';
 import { addIncoming, incomingDues, updateIncoming, useIncoming, type Incoming, type IncomingDue } from '../../lib/incoming';
 
 type Save = (edits: CellEdit[]) => Promise<{ ok: boolean; results: EditResult[]; error?: string }>;
@@ -1231,15 +1231,25 @@ function useSavedChoice<T extends string>(key: string, ids: readonly T[], fallba
 // choose to pay → what's left. Upcoming items are added by tap or drag; paid ones are never offered.
 // ---------------------------------------------------------------------------
 
-type BalanceLine = { key: string; kind: 'pay' | 'in'; due: string; name: string; amount?: number; tag: string; color: string; overdue?: boolean };
+type BalanceLine = { key: string; kind: 'pay' | 'in'; due: string; name: string; amount?: number; tag: string; group: string; color: string; overdue?: boolean };
+/** "By type" groups on the Upcoming side, in this order. */
+const OFFER_GROUPS: Array<[string, string]> = [
+  ['in', 'Coming in'],
+  ['bill', 'Bills'],
+  ['card', 'Credit cards'],
+  ['paylater', 'Pay later'],
+  ['sub', 'Subscriptions'],
+  ['plan', 'Planned'],
+];
+const OFFER_VIEW_KEY = 'lifehub-balance-offer-view';
 const DRAG_KEY = 'text/lifehub-balance';
 const shortDay = (k: string) => fromDayKey(k).toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' });
 
 function payLine(d: BillDue): BalanceLine {
-  return { key: d.key, kind: 'pay', due: d.due, name: d.bill.name, amount: d.bill.amount, tag: kindLabel(d), color: d.bill.kind ? MONEY_KINDS[d.bill.kind].color : '#a8632a', overdue: d.days < 0 };
+  return { key: d.key, kind: 'pay', due: d.due, name: d.bill.name, amount: d.bill.amount, tag: kindLabel(d), group: d.bill.kind || 'bill', color: d.bill.kind ? MONEY_KINDS[d.bill.kind].color : '#a8632a', overdue: d.days < 0 };
 }
 function inLine(d: IncomingDue): BalanceLine {
-  return { key: d.key, kind: 'in', due: d.due, name: d.item.source, amount: d.item.amount, tag: 'Coming in', color: '#0f766e' };
+  return { key: d.key, kind: 'in', due: d.due, name: d.item.source, amount: d.item.amount, tag: 'Coming in', group: 'in', color: '#0f766e' };
 }
 
 function BalancingSheet({
@@ -1258,6 +1268,11 @@ function BalancingSheet({
 }) {
   const picks = useBalancePicks();
   const [dropping, setDropping] = useState(false);
+  const [offerView, setOfferViewState] = useState<'date' | 'type'>(() => (readSaved<string>(OFFER_VIEW_KEY, 'date') === 'type' ? 'type' : 'date'));
+  const setOfferView = (v: 'date' | 'type') => {
+    setOfferViewState(v);
+    writeSaved(OFFER_VIEW_KEY, v);
+  };
   const today = startOfDay(new Date());
   const monday = mondayOf(today);
   const sunday = addDays(monday, 6);
@@ -1282,6 +1297,9 @@ function BalancingSheet({
   const pending = pendCol >= 0 ? rows.reduce((s, r) => s + amt(r[pendCol]), 0) : 0;
   const inSum = onSheet.filter(l => l.kind === 'in').reduce((s, l) => s + (l.amount || 0), 0);
   const paySum = onSheet.filter(l => l.kind === 'pay').reduce((s, l) => s + (l.amount || 0), 0);
+  // Outgoing per account: the sheet's payments you've said come out of that account.
+  const outOf = (acct: string) => onSheet.filter(l => l.kind === 'pay' && picks.get(l.key) === acct).reduce((s, l) => s + (l.amount || 0), 0);
+  const accountNames = rows.map(r => r[0].text);
   const left = available + inSum - paySum;
   const leftPending = left + pending;
   const sign = (n: number) => (n < 0 ? `−${money(-n)}` : money(n));
@@ -1309,6 +1327,18 @@ function BalancingSheet({
         </small>
       </span>
       <span className={`bal-amt${l.kind === 'in' ? ' is-in' : ''}`}>{l.amount === undefined ? '?' : `${l.kind === 'in' ? '+' : '−'}${money(l.amount)}`}</span>
+      {onSheetRow && l.kind === 'pay' ? (
+        <select className="bal-from" value={picks.get(l.key) || ''} onChange={e => setPickAccount(l.key, e.target.value)} aria-label={`Pay ${l.name} from`} title="Which account it comes out of">
+          <option value="">From…</option>
+          {accountNames.map(n => (
+            <option key={n} value={n}>
+              {n}
+            </option>
+          ))}
+        </select>
+      ) : onSheetRow ? (
+        <span />
+      ) : null}
       {onSheetRow ? (
         <button type="button" className="bal-x" onClick={() => setBalancePicks([l.key], false)} aria-label={`Take ${l.name} off the balancing sheet`} title="Take it off the sheet">
           ✕
@@ -1371,19 +1401,25 @@ function BalancingSheet({
           <div className="bal-balances">
             <span className="bal-col-h">Account</span>
             <span className="bal-col-h is-num">Now</span>
+            <span className="bal-col-h is-num">Outgoing</span>
             <span className="bal-col-h is-num">Pending</span>
-            {rows.map(r => (
-              <Fragment key={r[0].r}>
-                <span className="bal-acct">
-                  {r[0].text}
-                  {noteCol >= 0 && r[noteCol]?.text ? <small>{r[noteCol].text}</small> : null}
-                </span>
-                <EditCell cell={r[1]} onSave={onSave} className="bal-num" />
-                {pendCol >= 0 ? <EditCell cell={r[pendCol]} onSave={onSave} className="bal-num is-pend" placeholder="" /> : <span />}
-              </Fragment>
-            ))}
+            {rows.map(r => {
+              const out = outOf(r[0].text);
+              return (
+                <Fragment key={r[0].r}>
+                  <span className="bal-acct">
+                    {r[0].text}
+                    {noteCol >= 0 && r[noteCol]?.text ? <small>{r[noteCol].text}</small> : null}
+                  </span>
+                  <EditCell cell={r[1]} onSave={onSave} className="bal-num is-now" />
+                  <span className="bal-num is-out">{out ? `−${money(out)}` : ''}</span>
+                  {pendCol >= 0 ? <EditCell cell={r[pendCol]} onSave={onSave} className="bal-num is-pend" placeholder="" /> : <span />}
+                </Fragment>
+              );
+            })}
             <span className="bal-acct is-total">Available</span>
-            <span className="bal-num is-total">{sign(available)}</span>
+            <span className="bal-num is-total is-now">{sign(available)}</span>
+            <span className="bal-num is-total is-out">{paySum ? `−${money(paySum)}` : ''}</span>
             <span className="bal-num is-total is-pend">{pending ? `+${money(pending)}` : ''}</span>
           </div>
           {t ? <BalancingAdd table={t} onSave={onSave} /> : null}
@@ -1416,13 +1452,40 @@ function BalancingSheet({
         <header className="bal-head">
           <h3>Upcoming</h3>
           <span>{period === 'week' ? 'this week · unpaid' : 'through the month · unpaid'}</span>
+          <span className="bal-toggle" role="group" aria-label="Sort upcoming">
+            {(['date', 'type'] as const).map(v => (
+              <button key={v} type="button" className={offerView === v ? 'is-on' : ''} aria-pressed={offerView === v} onClick={() => setOfferView(v)}>
+                {v === 'date' ? 'By date' : 'By type'}
+              </button>
+            ))}
+          </span>
           {offered.length ? (
             <button type="button" className="bal-link" onClick={() => add(offered.filter(l => thisWeek(l.due)).map(l => l.key))}>
               Add all this week
             </button>
           ) : null}
         </header>
-        {offered.length ? <ul className="bal-lines">{withWeekBreak(offered, false)}</ul> : <p className="mny-empty">Everything this {period === 'week' ? 'week' : 'month'} is on the sheet or paid.</p>}
+        {offered.length && offerView === 'type' ? (
+          <div className="bal-types">
+            {OFFER_GROUPS.map(([g, label]) => {
+              const list = offered.filter(l => l.group === g);
+              if (!list.length) return null;
+              const total = list.reduce((sum, l) => sum + (l.amount || 0), 0);
+              return (
+                <div key={g} className="bal-type">
+                  <p className="bal-type-head">
+                    <b>{label}</b> <span>{list.length}</span>
+                    <em>{g === 'in' ? '+' : '−'}{money(total)}</em>
+                    <button type="button" className="bal-link" onClick={() => add(list.map(l => l.key))}>
+                      Add all
+                    </button>
+                  </p>
+                  <ul className="bal-lines">{list.map(l => lineRow(l, false))}</ul>
+                </div>
+              );
+            })}
+          </div>
+        ) : offered.length ? <ul className="bal-lines">{withWeekBreak(offered, false)}</ul> : <p className="mny-empty">Everything this {period === 'week' ? 'week' : 'month'} is on the sheet or paid.</p>}
       </aside>
     </div>
   );

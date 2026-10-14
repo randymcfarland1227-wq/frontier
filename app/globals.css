@@ -4259,3 +4259,38 @@ a.shelf-title:hover { text-decoration: underline; }
   .bal-line { grid-template-columns: 52px minmax(0, 1fr) auto auto; gap: 6px; }
   .bal-totals { grid-template-columns: 1fr; }
 }
+
+/* ===== Balancing sheet v2 (2026-10-14): four even columns (Account · Now · Outgoing · Pending);
+   cash now = neon green, outgoing = red, pending = yellow; "From" account on each payment;
+   Upcoming by date or by type. ===== */
+.bal-balances { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.bal-balances .is-now, .bal-balances .is-now .mcell { color: #15803d; font-weight: 700; }
+.bal-balances .is-out { color: #b91c1c; font-weight: 650; justify-content: flex-end; font-variant-numeric: tabular-nums; }
+.bal-balances .is-pend, .bal-balances .is-pend .mcell { color: #a16207; font-weight: 650; }
+.frontier-shell[data-color-mode="dark"] .bal-balances .is-now, .frontier-shell[data-color-mode="dark"] .bal-balances .is-now .mcell { color: #39ff6a; text-shadow: 0 0 10px rgba(57, 255, 106, .35); }
+.frontier-shell[data-color-mode="dark"] .bal-balances .is-out { color: #f87171; }
+.frontier-shell[data-color-mode="dark"] .bal-balances .is-pend, .frontier-shell[data-color-mode="dark"] .bal-balances .is-pend .mcell { color: #facc15; }
+.bal-balances .bal-num.is-total.is-pend { color: #a16207; }
+.frontier-shell[data-color-mode="dark"] .bal-balances .bal-num.is-total.is-pend { color: #facc15; }
+.bal-sheet .bal-line { grid-template-columns: 70px minmax(0, 1fr) auto 128px auto; }
+.bal-from { min-height: 28px; max-width: 128px; padding: 0 6px; border: 1px solid var(--line, var(--row-line)); border-radius: 7px; background: var(--surface); color: var(--ink); font: inherit; font-size: 12.5px; }
+.bal-toggle { display: inline-flex; margin-left: 4px; border: 1px solid var(--line, var(--row-line)); border-radius: 8px; overflow: hidden; }
+.bal-toggle button { min-height: 28px; padding: 0 10px; border: 0; background: var(--surface); color: var(--muted); font: inherit; font-size: 12.5px; font-weight: 600; cursor: pointer; }
+.bal-toggle button + button { border-left: 1px solid var(--line, var(--row-line)); }
+.bal-toggle button.is-on { background: #b45309; color: #fff; }
+.frontier-shell[data-color-mode="dark"] .bal-toggle button.is-on { background: #f59e0b; color: #1c1206; }
+.bal-types { display: grid; gap: 12px; }
+.bal-type { display: grid; gap: 4px; }
+.bal-type-head { display: flex; align-items: baseline; gap: 8px; margin: 0; font-size: 12px; letter-spacing: .05em; text-transform: uppercase; color: var(--muted); }
+.bal-type-head b { color: var(--ink); font-weight: 650; }
+.bal-type-head em { font-style: normal; font-weight: 650; color: var(--ink); text-transform: none; letter-spacing: 0; }
+.bal-type-head .bal-link { text-transform: none; letter-spacing: 0; }
+@media (max-width: 560px) {
+  .bal-balances > * { padding: 4px 6px; font-size: 13px; }
+  .bal-sheet .bal-line { grid-template-columns: 48px minmax(0, 1fr) auto auto; }
+  .bal-sheet .bal-from { grid-column: 2 / 4; grid-row: 2; max-width: none; }
+}
+.bal-balances .bal-num.is-now { color: #15803d; font-weight: 700; }
+.bal-balances .bal-num.is-pend { color: #a16207; font-weight: 650; }
+.frontier-shell[data-color-mode="dark"] .bal-balances .bal-num.is-now { color: #39ff6a; text-shadow: 0 0 10px rgba(57, 255, 106, .35); }
+.frontier-shell[data-color-mode="dark"] .bal-balances .bal-num.is-pend { color: #facc15; }
