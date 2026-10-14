@@ -22,20 +22,56 @@ export function BillsList({
   onPaid,
   limit,
   empty = 'No bills due in the next few weeks.',
+  compact = false,
 }: {
   dues: BillDue[];
   onPaid: (due: BillDue) => void;
   limit?: number;
   empty?: string;
+  /** One-line rows the size of Events / Needs to confirm (the Schedule's boxes) */
+  compact?: boolean;
 }) {
   const [changing, setChanging] = useState<string | null>(null);
   const shown = limit ? dues.slice(0, limit) : dues;
   if (!dues.length) return <p className="sched-empty">{empty}</p>;
   return (
-    <ul className="bill-list">
+    <ul className={`bill-list${compact ? ' is-compact' : ''}`}>
       {shown.map(d => {
         const date = fromDayKey(d.due).toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' });
         const changed = billChangeText(d);
+        if (compact) {
+          const when = d.skipped ? 'Skipped' : d.days < 0 ? `${-d.days} ${d.days === -1 ? 'day' : 'days'} late` : d.days === 0 ? 'Today' : d.days === 1 ? 'Tomorrow' : `In ${d.days} days`;
+          return (
+            <li key={d.key} className="bill-item">
+              <div className={`bill-line ${urgency(d)}`}>
+                <span className="bill-line-text" title={[d.bill.name, money(d.bill.amount), date, changed || d.bill.notes].filter(Boolean).join(' · ')}>
+                  <strong>{d.bill.name}</strong>
+                  <small>{[money(d.bill.amount), date, changed].filter(Boolean).join(' · ')}</small>
+                </span>
+                <span className="bill-line-when">{when}</span>
+                <span className="bill-line-tools">
+                  {d.skipped ? null : (
+                    <button type="button" className="bill-line-btn" onClick={() => onPaid(d)} aria-label={`Mark ${d.bill.name} paid for ${date}`} title="Mark paid">
+                      Paid
+                    </button>
+                  )}
+                  {d.skipped ? null : <BillPinButton due={d} className="bill-line-btn is-extra" />}
+                  <button
+                    type="button"
+                    className="bill-line-btn is-extra"
+                    aria-expanded={changing === d.key}
+                    onClick={() => setChanging(c => (c === d.key ? null : d.key))}
+                    aria-label={`Change ${d.bill.name}: skip, move or amount`}
+                    title="Skip, move or change the amount this time"
+                  >
+                    ⋯
+                  </button>
+                </span>
+              </div>
+              {changing === d.key ? <BillChangeForm due={d} onDone={() => setChanging(null)} /> : null}
+            </li>
+          );
+        }
         return (
           <li key={d.key} className="bill-item">
             <div className={`bill-row ${urgency(d)}${d.bill.autopay ? ' is-auto' : ''}`}>

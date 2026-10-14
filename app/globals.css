@@ -4121,3 +4121,43 @@ a.shelf-title:hover { text-decoration: underline; }
 .plan-level:hover { color: var(--ink); }
 .plan-level.is-on { color: var(--ink); border-color: var(--lv); background: color-mix(in srgb, var(--lv) 18%, transparent); }
 .plan-level.is-on i { opacity: 1; box-shadow: 0 0 0 2px color-mix(in srgb, var(--lv) 35%, transparent); }
+
+/* ===== Schedule (2026-10-14): event countdown in days, yellow 14–8 / orange 7–0; Overdue + Money due
+   rows the same one-line size as Events; an X over past days on the month ===== */
+.event-row.is-mid .event-soon { background: color-mix(in srgb, #eab308 18%, var(--surface)); color: #854d0e; }
+.event-row.is-near .event-soon { background: color-mix(in srgb, #f97316 18%, var(--surface)); color: #9a3412; }
+.event-row.is-near { border-color: color-mix(in srgb, #f97316 45%, var(--line)); }
+.frontier-shell[data-color-mode="dark"] .event-row.is-mid .event-soon { background: color-mix(in srgb, #eab308 18%, var(--surface)); color: #facc15; }
+.frontier-shell[data-color-mode="dark"] .event-row.is-near .event-soon { background: color-mix(in srgb, #f97316 20%, var(--surface)); color: #fb923c; }
+
+.bill-list.is-compact { display: grid; gap: 5px; margin: 0; padding: 0; list-style: none; }
+.bill-list.is-compact .bill-item { display: grid; gap: 4px; }
+.bill-line { display: flex; align-items: center; gap: 6px; min-height: 38px; padding: 4px 6px 4px 9px; border-radius: 7px; background: var(--surface); border: 1px solid var(--row-line, var(--line)); }
+.bill-line.is-overdue { border-color: color-mix(in srgb, #dc2626 40%, var(--line)); }
+.bill-line-text { flex: 1 1 auto; min-width: 0; display: grid; line-height: 1.25; }
+.bill-line-text strong { font-size: 13px; font-weight: 600; color: var(--ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bill-line-text small { font-size: 12px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bill-line-when { flex: 0 0 auto; padding: 1px 7px; border-radius: 999px; background: var(--surface-2); color: var(--muted); font-size: 12px; font-weight: 650; white-space: nowrap; }
+.bill-line.is-overdue .bill-line-when { background: color-mix(in srgb, #dc2626 14%, var(--surface)); color: #991b1b; }
+.bill-line.is-soon .bill-line-when { background: color-mix(in srgb, #f97316 18%, var(--surface)); color: #9a3412; }
+.frontier-shell[data-color-mode="dark"] .bill-line.is-overdue .bill-line-when { color: #fca5a5; }
+.frontier-shell[data-color-mode="dark"] .bill-line.is-soon .bill-line-when { color: #fb923c; }
+.bill-line-tools { flex: 0 0 auto; display: inline-flex; gap: 3px; }
+.bill-line-btn { display: inline-grid; place-items: center; min-width: 26px; height: 26px; padding: 0 7px; border: 1px solid var(--row-line, var(--line)); border-radius: 6px; background: var(--surface); color: var(--ink); font: inherit; font-size: 12px; font-weight: 600; cursor: pointer; }
+.bill-line-btn:hover { background: var(--surface-2); }
+.bill-line-btn.is-on { color: var(--accent-ink); border-color: color-mix(in srgb, var(--accent) 50%, var(--line)); }
+
+/* Past days: a soft X behind the day's items */
+.mini-cell.is-past { position: relative; }
+.mini-cell.is-past::before {
+  content: ''; position: absolute; inset: 4px; pointer-events: none; z-index: 0;
+  background:
+    linear-gradient(to top right, transparent calc(50% - 1px), color-mix(in srgb, var(--cal-head, #6b3a5a) 35%, transparent) calc(50% - 1px), color-mix(in srgb, var(--cal-head, #6b3a5a) 35%, transparent) calc(50% + 1px), transparent calc(50% + 1px)),
+    linear-gradient(to bottom right, transparent calc(50% - 1px), color-mix(in srgb, var(--cal-head, #6b3a5a) 35%, transparent) calc(50% - 1px), color-mix(in srgb, var(--cal-head, #6b3a5a) 35%, transparent) calc(50% + 1px), transparent calc(50% + 1px));
+}
+.mini-cell.is-past > * { position: relative; z-index: 1; }
+/* Narrow boxes: Pin and ⋯ appear on hover (always on touch screens), so the bill's name has room */
+.bill-line .bill-line-btn.is-extra { display: none; }
+.bill-line:hover .bill-line-btn.is-extra, .bill-line:focus-within .bill-line-btn.is-extra, .bill-item:has(.bill-change) .bill-line-btn.is-extra { display: inline-grid; }
+@media (hover: none) { .bill-line .bill-line-btn.is-extra { display: inline-grid; } }
+.bill-line-text strong { min-width: 3.5em; }

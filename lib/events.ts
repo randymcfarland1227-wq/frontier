@@ -71,17 +71,24 @@ export function isAutoEvent(e: CalEvent): boolean {
 }
 
 /** "Today" / "Tomorrow" / "This weekend" / "In 5 days" / "In 3 weeks". */
-export function eventCountdown(start: Date, now = new Date()): string {
+/** Whole days from today to an event's first day (0 = today or already started). */
+export function eventDaysAway(start: Date, now = new Date()): number {
   const day = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
-  const days = Math.round((day(start) - day(now)) / 864e5);
-  if (days <= 0) return 'Now';
+  return Math.max(0, Math.round((day(start) - day(now)) / 864e5));
+}
+
+/** "Today" / "Tomorrow" / "In 18 days" — always days, never weeks. */
+export function eventCountdown(start: Date, now = new Date()): string {
+  const days = eventDaysAway(start, now);
+  if (days === 0) return 'Today';
   if (days === 1) return 'Tomorrow';
-  const dow = now.getDay();
-  const toSat = (6 - dow + 7) % 7;
-  if (days <= 6 && (start.getDay() === 6 || start.getDay() === 0) && days <= toSat + 1) return 'This weekend';
-  if (days < 14) return `In ${days} days`;
-  if (days < 60) return `In ${Math.round(days / 7)} weeks`;
-  return `In ${Math.round(days / 30)} months`;
+  return `In ${days} days`;
+}
+
+/** Countdown color: orange from 7 days out to today, yellow from 14 to 8 days, plain before that. */
+export function eventTone(start: Date, now = new Date()): '' | 'is-near' | 'is-mid' {
+  const days = eventDaysAway(start, now);
+  return days <= 7 ? 'is-near' : days <= 14 ? 'is-mid' : '';
 }
 
 export function loadEventMarks(): EventMarks {
