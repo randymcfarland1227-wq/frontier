@@ -4294,3 +4294,11 @@ a.shelf-title:hover { text-decoration: underline; }
 .bal-balances .bal-num.is-pend { color: #a16207; font-weight: 650; }
 .frontier-shell[data-color-mode="dark"] .bal-balances .bal-num.is-now { color: #39ff6a; text-shadow: 0 0 10px rgba(57, 255, 106, .35); }
 .frontier-shell[data-color-mode="dark"] .bal-balances .bal-num.is-pend { color: #facc15; }
+/* Balancing line item: remove (✕) beside the name, quiet until hover */
+.bal-balances .bal-acct { flex-direction: row !important; align-items: center !important; justify-content: space-between; gap: 6px; }
+.bal-acct-name { display: grid; min-width: 0; }
+.bal-acct-name small { font-size: 12px; font-weight: 400; color: var(--muted); }
+.bal-del { flex: none; display: grid; place-items: center; width: 24px; height: 24px; border: 1px solid transparent; border-radius: 6px; background: none; color: var(--muted); font: inherit; font-size: 12px; cursor: pointer; opacity: .35; }
+.bal-balances .bal-acct:hover .bal-del, .bal-del:focus-visible { opacity: 1; border-color: var(--line, var(--row-line)); }
+.bal-del:hover { color: #b91c1c; }
+@media (hover: none) { .bal-del { opacity: .8; } }
