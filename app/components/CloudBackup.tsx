@@ -152,7 +152,7 @@ export function CloudBackup() {
       </div>
       <div className="cloud-row">
         <p className="cloud-text">
-          <strong>Safe copies</strong> that don't depend on any device: {fileMsg || 'download a data file and a recovery sheet, and keep them in Drive or a password manager.'}
+          <strong>Safe copies</strong> that don&apos;t depend on any device: {fileMsg || 'download a data file and a recovery sheet, and keep them in Drive or a password manager.'}
         </p>
         <div className="cloud-actions">
           <button type="button" className="row-action ghost" onClick={() => void saveData()}>Download data file</button>
