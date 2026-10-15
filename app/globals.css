@@ -4625,3 +4625,13 @@ button.bal-led-row:hover { background: color-mix(in srgb, var(--ev, #0f8a7e) 8%,
 .bal-type-head { flex-wrap: nowrap !important; align-items: center !important; }
 .bal-type-head > .bal-link { flex: none; white-space: nowrap; margin: 0 !important; align-self: center; }
 .bal-type-toggle { align-items: center; }
+
+/* Money: Finance tasks above Upcoming (separate containers, stacked) */
+.bal-side { display: grid; gap: 12px; align-content: start; min-width: 0; }
+.bal-side .bal-offer { position: static; max-height: 75vh; }
+.mny-tasks { min-width: 0; }
+.mny-tasks > * { margin: 0; }
+/* Upcoming items one step smaller, consistent inside the container */
+.bal-offer .bal-line { min-height: 34px; font-size: 11.5px; }
+.bal-offer .bal-line * { font-size: inherit; }
+@media (max-width: 900px) { .bal-side .bal-offer { max-height: none; } }

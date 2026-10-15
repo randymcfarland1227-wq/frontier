@@ -40,6 +40,7 @@ import {
 } from '../lib/ticktickComplete';
 import { Header } from './components/Header';
 import { HomeView } from './components/HomeView';
+import { SourceCard } from './components/SourceCard';
 import { SourceView } from './components/SourceView';
 import { FocusDrawer } from './components/FocusDrawer';
 import { SourceBridges } from './components/SourceBridges';
@@ -1082,6 +1083,17 @@ goalsData ? (
           }}
           onRefresh={() => void refreshEverything()}
           syncing={connectorSyncing}
+          financeTasks={
+            <SourceCard
+              source={sourceById.radall}
+              snapshot={visibleSnapshots.radall}
+              onEnter={() => enter('radall')}
+              onOpen={() => openSource('radall')}
+              onCompleteFeatured={item => completeOnHub('radall', item.id)}
+              onCompleteTask={task => completeOnHub('radall', task.id)}
+              onStarTask={task => starOnHub('radall', task)}
+            />
+          }
         />
       ) : active === 'logs' ? (
         <LogsView />

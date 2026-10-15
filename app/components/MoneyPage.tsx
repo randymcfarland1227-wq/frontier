@@ -1599,7 +1599,7 @@ function NewItemForm({ book, onDone }: { book: Book; onDone: () => void }) {
  * the sheet and crossed out. Pending stays pending until moved into Now. Weeks carry forward; the
  * month is every week in one register with a line between weeks.
  */
-function BalancingSheet({ period, book, model, onSave }: { period: 'week' | 'month'; book: Book; model: MoneyModel; onSave: Save }) {
+function BalancingSheet({ period, book, model, onSave, tasks }: { period: 'week' | 'month'; book: Book; model: MoneyModel; onSave: Save; tasks?: ReactNode }) {
   const panels = useMoneyPanels();
   const { weeks, regs, keys } = book;
   const [dropping, setDropping] = useState(false);
@@ -1804,6 +1804,8 @@ function BalancingSheet({ period, book, model, onSave }: { period: 'week' | 'mon
         </div>
       </section>
 
+      <div className="bal-side">
+      {tasks ? <section className="mny-tasks" aria-label="Finance tasks">{tasks}</section> : null}
       <aside className="bal-offer" aria-label="Upcoming — add to the sheet">
         <header className="bal-head">
           <h3>Upcoming</h3>
@@ -1902,6 +1904,7 @@ function BalancingSheet({ period, book, model, onSave }: { period: 'week' | 'mon
           );
         })()}
       </aside>
+      </div>
     </div>
   );
 }
@@ -2474,6 +2477,7 @@ export function MoneyPage({
   onSave,
   onRefresh,
   syncing,
+  financeTasks,
 }: {
   model: MoneyModel | null;
   dues: BillDue[];
@@ -2486,6 +2490,8 @@ export function MoneyPage({
   onSave: (edits: CellEdit[]) => Promise<{ ok: boolean; results: EditResult[]; error?: string }>;
   onRefresh: () => void;
   syncing: boolean;
+  /** The Radall Finances task card (same Done / priority / chips as on Home) */
+  financeTasks?: ReactNode;
 }) {
   const [note, setNote] = useState<{ text: string; tone: 'ok' | 'bad' } | null>(null);
   const [provider, setProvider] = useState('All');
@@ -2774,7 +2780,7 @@ export function MoneyPage({
         ) : null}
         {tab === 'flow' && flowView === 'week' ? (
           <div className="mny-stack">
-            <BalancingSheet period="week" book={book} model={model} onSave={save} />
+            <BalancingSheet period="week" book={book} model={model} onSave={save} tasks={financeTasks} />
             <Section tone="cash" title="Incoming funds" hint="Log money you expect; it shows up on the right to add to the sheet. Synced, not written to the sheet.">
               <IncomeSection list={incomeList} upcoming={incoming} />
             </Section>
@@ -2783,7 +2789,7 @@ export function MoneyPage({
 
         {tab === 'flow' && flowView === 'month' ? (
           <div className="mny-stack">
-            <BalancingSheet period="month" book={book} model={model} onSave={save} />
+            <BalancingSheet period="month" book={book} model={model} onSave={save} tasks={financeTasks} />
             <Section tone="due" title="In the sheet" hint="Click any amount or date to change it in the sheet." href={link('Randy')}>
               {model.bills ? (
                 <Fold title="Bills" total={model.bills.total?.[2]?.text} meta={`${model.bills.rows.length}`}>
