@@ -1298,6 +1298,8 @@ const OFFER_GROUPS: Array<[string, string]> = [
   ['custom', 'Added by you'],
 ];
 const OFFER_VIEW_KEY = 'lifehub-balance-offer-view';
+/** Upcoming "By type" groups left open (closed by default) */
+const OPEN_GROUPS_KEY = 'lifehub-balance-open-groups';
 const DRAG_KEY = 'text/lifehub-balance';
 const shortDay = (k: string) => fromDayKey(k).toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' });
 const dayNum = (k: string) => `${fromDayKey(k).toLocaleDateString([], { weekday: 'short' })} ${fromDayKey(k).getDate()}`;
@@ -1614,12 +1616,21 @@ function BalancingSheet({ period, book, model, onSave }: { period: 'week' | 'mon
   const firstWeek = period === 'month' || week.i === 0;
   const inScope = (l: BalanceLine) => (period === 'month' ? true : book.weekOf(book.whenOf(l)) === week.i);
   // Incoming whose day has passed isn't offered: the bank balance likely has it already.
-  const offered = book.month.filter(l => !book.plan.picks.has(l.key) && inScope(l) && !(l.kind === 'in' && l.due < book.todayKey));
+  // Upcoming shows this week (or the whole month — click the dates to switch).
+  const [offerScope, setOfferScope] = useState<'week' | 'month'>('week');
+  const offerMonth = period === 'month' || offerScope === 'month';
+  const monthLabel = book.today.toLocaleDateString([], { month: 'long' });
+  const offered = book.month.filter(l => !book.plan.picks.has(l.key) && (offerMonth || inScope(l)) && !(l.kind === 'in' && l.due < book.todayKey));
+  const [openGroups, setOpenGroups] = useState<string[]>(() => readSaved<string[]>(OPEN_GROUPS_KEY, []));
+  const toggleGroup = (g: string) =>
+    setOpenGroups(cur => {
+      const next = cur.includes(g) ? cur.filter(x => x !== g) : [...cur, g];
+      writeSaved(OPEN_GROUPS_KEY, next);
+      return next;
+    });
   const view = (a: string): Reg => (period === 'week' ? regs[week.i][a] : book.monthReg(a));
   const tot = keys.reduce((s, a) => ({ start: s.start + view(a).start, pend: s.pend + view(a).pend, end: s.end + view(a).end }), { start: 0, pend: 0, end: 0 });
   const shown = keys.flatMap(a => view(a).lines);
-  const outSum = shown.filter(l => l.kind === 'pay').reduce((s, l) => s + (l.amount || 0), 0);
-  const inSum = shown.filter(l => l.kind === 'in' && !l.landed).reduce((s, l) => s + (l.amount || 0), 0);
   const add = (ks: string[]) => setBalancePicks(ks, true);
 
   const amountCell = (ac: BookAcct, v: Reg) => {
@@ -1701,10 +1712,10 @@ function BalancingSheet({ period, book, model, onSave }: { period: 'week' | 'mon
               onClick={() => panels.openLine(l.key)}
               title="Details"
             >
-              <span className="bal-led-day">{l.overdue && !book.payOnOf(l) ? 'Late' : dayNum(l.when)}</span>
               <span className="bal-led-name">
                 {l.name}
                 <small>
+                  {l.overdue && !book.payOnOf(l) ? <b className="bal-late">Late</b> : null}
                   {l.tag}
                   {l.acct ? (
                     <>
@@ -1723,8 +1734,7 @@ function BalancingSheet({ period, book, model, onSave }: { period: 'week' | 'mon
           return (
             <div className="bal-led">
               <div className="bal-led-row is-head">
-                <span />
-                <span>Credits · checking &amp; money sources</span>
+                <span>Checking &amp; money sources</span>
                 <span className="is-num">{firstWeek ? 'Now' : 'Start'}</span>
                 <span className="is-num">Pending</span>
               </div>
@@ -1732,7 +1742,6 @@ function BalancingSheet({ period, book, model, onSave }: { period: 'week' | 'mon
                 const v = view(ac.name);
                 return (
                   <div key={ac.name} className="bal-led-row is-acct">
-                    <span />
                     <span className="bal-led-name bal-acct">
                       <button type="button" className="bal-acct-name" onClick={() => panels.openAccount(ac.name)} title="Its outgoing, incoming and end of week">
                         {ac.name}
@@ -1764,32 +1773,11 @@ function BalancingSheet({ period, book, model, onSave }: { period: 'week' | 'mon
                 );
               })}
               {ins.map(itemRow)}
-              <div className="bal-led-row is-sub">
-                <span />
-                <span>Total credits</span>
-                <span className="bal-num is-now">{signed(tot.start + inSum)}</span>
-                <span className="bal-num is-pend">{tot.pend ? money(tot.pend) : ''}</span>
-              </div>
-
-              <div className="bal-led-row is-head is-debits">
-                <span />
-                <span>Outgoing</span>
-                <span className="is-num" />
-                <span />
-              </div>
-              {outs.length ? outs.map(itemRow) : <p className="bal-led-empty">Nothing yet — add bills from Upcoming on the right, or + New item.</p>}
-              <div className="bal-led-row is-sub">
-                <span />
-                <span>Total outgoing</span>
-                <span className="bal-num is-out">{outSum ? `−${money(outSum)}` : '$0'}</span>
-                <span />
-              </div>
-
+              {outs.map(itemRow)}
               <div className={`bal-led-row is-balanced${tot.end < 0 ? ' is-short' : ''}`}>
-                <span />
                 <span>
                   Balanced
-                  <small>credits − outgoing{period === 'week' && next ? ` · carries into ${next.label}` : ''}</small>
+                  <small>money sources + coming in − outgoing{period === 'week' && next ? ` · carries into ${next.label}` : ''}</small>
                 </span>
                 <span className={`bal-num${tot.end < 0 ? ' is-neg' : ''}`}>{signed(tot.end)}</span>
                 <span className="bal-num is-pend">
@@ -1819,7 +1807,13 @@ function BalancingSheet({ period, book, model, onSave }: { period: 'week' | 'mon
       <aside className="bal-offer" aria-label="Upcoming — add to the sheet">
         <header className="bal-head">
           <h3>Upcoming</h3>
-          <span>{period === 'week' ? `${week.label} · unpaid` : 'through the month · unpaid'}</span>
+          {period === 'week' ? (
+            <button type="button" className="bal-scope" onClick={() => setOfferScope(offerMonth ? 'week' : 'month')} title={offerMonth ? 'Show just this week' : `Show all of ${monthLabel}`}>
+              {offerMonth ? `All of ${monthLabel}` : week.label} · unpaid <i>⇄</i>
+            </button>
+          ) : (
+            <span>through the month · unpaid</span>
+          )}
           <span className="bal-toggle" role="group" aria-label="Sort upcoming">
             {(['date', 'type'] as const).map(v => (
               <button key={v} type="button" className={offerView === v ? 'is-on' : ''} aria-pressed={offerView === v} onClick={() => setOfferView(v)}>
@@ -1827,7 +1821,7 @@ function BalancingSheet({ period, book, model, onSave }: { period: 'week' | 'mon
               </button>
             ))}
           </span>
-          {offered.length && period === 'week' ? (
+          {offered.length && !offerMonth ? (
             <button type="button" className="bal-link" onClick={() => add(offered.map(l => l.key))}>
               Add all
             </button>
@@ -1859,7 +1853,7 @@ function BalancingSheet({ period, book, model, onSave }: { period: 'week' | 'mon
               </button>
             </li>
           );
-          if (!offered.length) return <p className="mny-empty">Everything {period === 'week' ? 'this week' : 'this month'} is on the sheet or paid.</p>;
+          if (!offered.length) return <p className="mny-empty">Everything {offerMonth ? 'this month' : 'this week'} is on the sheet or paid.</p>;
           if (offerView === 'type')
             return (
               <div className="bal-types">
@@ -1867,25 +1861,29 @@ function BalancingSheet({ period, book, model, onSave }: { period: 'week' | 'mon
                   const list = offered.filter(l => l.group === g);
                   if (!list.length) return null;
                   const total = list.reduce((sum, l) => sum + (l.amount || 0), 0);
+                  const isOpen = openGroups.includes(g);
                   return (
-                    <div key={g} className="bal-type">
+                    <div key={g} className={`bal-type${isOpen ? ' is-open' : ''}`}>
                       <p className="bal-type-head">
-                        <b>{label}</b> <span>{list.length}</span>
-                        <em>
-                          {g === 'in' ? '+' : '−'}
-                          {money(total)}
-                        </em>
+                        <button type="button" className="bal-type-toggle" aria-expanded={isOpen} onClick={() => toggleGroup(g)}>
+                          <i aria-hidden="true">{isOpen ? '▾' : '▸'}</i>
+                          <b>{label}</b> <span>{list.length}</span>
+                          <em>
+                            {g === 'in' ? '+' : '−'}
+                            {money(total)}
+                          </em>
+                        </button>
                         <button type="button" className="bal-link" onClick={() => add(list.map(l => l.key))}>
                           Add all
                         </button>
                       </p>
-                      <ul className="bal-lines">{list.map(offerRow)}</ul>
+                      {isOpen ? <ul className="bal-lines">{list.map(offerRow)}</ul> : null}
                     </div>
                   );
                 })}
               </div>
             );
-          if (period === 'week') return <ul className="bal-lines">{offered.map(offerRow)}</ul>;
+          if (!offerMonth) return <ul className="bal-lines">{offered.map(offerRow)}</ul>;
           return (
             <ul className="bal-lines">
               {weeks.map(w => {

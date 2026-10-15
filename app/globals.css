@@ -4605,5 +4605,23 @@ button.bal-led-row:hover { background: color-mix(in srgb, var(--ev, #0f8a7e) 8%,
   .bal-led-row > * { padding: 4px 5px; font-size: 12.5px; }
   .bal-led-empty { padding-left: 10px; }
 }
-.bal-led-row:not(.is-item) > :first-child { display: none; }
-.bal-led-row:not(.is-item) > :nth-child(2) { grid-column: 1 / 3; }
+
+/* Ledger trimmed: name first (no date column), only the Balanced total (2026-10-14) */
+.bal-led-row { grid-template-columns: minmax(0, 1fr) 120px 110px; }
+.bal-led-row.is-item { padding-left: 4px; }
+.bal-late { margin-right: 4px; color: #b91c1c; font-weight: 700; }
+.frontier-shell[data-color-mode="dark"] .bal-late { color: #f87171; }
+.bal-led-row.is-balanced { border-top: 2px solid var(--ink); }
+.bal-scope { padding: 2px 8px; border: 1px dashed var(--line, var(--row-line)); border-radius: 999px; background: none; color: var(--muted); font: inherit; font-size: 13px; cursor: pointer; }
+.bal-scope:hover { color: var(--ink); border-style: solid; }
+.bal-scope i { font-style: normal; margin-left: 2px; }
+.bal-type-head { display: flex; align-items: center; gap: 8px; }
+.bal-type-toggle { flex: 1; display: flex; align-items: baseline; gap: 8px; min-height: 32px; padding: 0; border: 0; background: none; color: inherit; font: inherit; text-align: left; cursor: pointer; }
+.bal-type-toggle i { font-style: normal; width: 12px; color: var(--muted); }
+.bal-type-toggle em { margin-left: auto; font-style: normal; font-weight: 650; font-variant-numeric: tabular-nums; }
+@media (max-width: 640px) { .bal-led-row { grid-template-columns: minmax(0, 1fr) 86px 72px; } }
+.bal-led-row.is-head > :nth-child(2) { letter-spacing: 0; text-transform: none; color: var(--muted); }
+.bal-led-row.is-head > :first-child { letter-spacing: .05em; text-transform: uppercase; color: var(--ink); }
+.bal-type-head { flex-wrap: nowrap !important; align-items: center !important; }
+.bal-type-head > .bal-link { flex: none; white-space: nowrap; margin: 0 !important; align-self: center; }
+.bal-type-toggle { align-items: center; }
