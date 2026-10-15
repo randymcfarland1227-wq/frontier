@@ -10,6 +10,7 @@ import { hashText, PCC_KEY, type CandleBundle } from './candleSync';
 import { loadCaptures } from './captures';
 import { loadSelfItems } from './adapters/self';
 import { readSaved, writeSaved, STORAGE_KEYS, LOCAL_WRITE_EVENT } from './storage';
+import { requestPersistentStorage, vaultCookieRead, vaultIdbRead, vaultWrite } from './keyVault';
 import { mergeState, normalizeState, stateCounts, type LocalGoalLinks, type SyncedState } from './syncState';
 
 const WORKER_BASE =
@@ -78,11 +79,17 @@ export function syncKeyHeader(): Record<string, string> {
 }
 
 function getKey(): string | undefined {
-  return readSaved<SyncConfig>(STORAGE_KEYS.sync, {}).key;
+  const local = readSaved<SyncConfig>(STORAGE_KEYS.sync, {}).key;
+  if (local) return local;
+  // localStorage lost the key but the cookie copy survived: restore it.
+  const cookie = vaultCookieRead();
+  if (cookie) writeSaved(STORAGE_KEYS.sync, { key: cookie });
+  return cookie;
 }
 
 function setKey(key: string | undefined) {
   writeSaved(STORAGE_KEYS.sync, key ? { key } : {});
+  vaultWrite(key);
 }
 
 const CANDLE_META = 'lifehub-candle-sync';
@@ -238,6 +245,17 @@ function schedulePush() {
 export function startCloudSync() {
   if (started || typeof window === 'undefined') return;
   started = true;
+  requestPersistentStorage();
+  // Make sure every surviving copy of the key agrees; if only IndexedDB kept it, restore from there.
+  const existing = getKey();
+  if (existing) vaultWrite(existing);
+  else
+    void vaultIdbRead().then(saved => {
+      if (!saved || getKey()) return;
+      setKey(saved);
+      setStatus({ state: 'off', notice: 'Backup link restored automatically.' });
+      void syncNow().then(() => window.dispatchEvent(new Event('lifehub:refresh')));
+    });
   window.addEventListener(LOCAL_WRITE_EVENT, event => {
     const key = (event as CustomEvent<string>).detail;
     if (!applying && SYNCED_KEYS.includes(key)) schedulePush();

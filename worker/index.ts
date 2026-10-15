@@ -189,6 +189,21 @@ async function handleState(request: Request, env: Env): Promise<Response> {
     return jsonResponse({ ok: false, error: "invalid_json" }, 400, origin);
   }
   const merged = mergeState(stored, (incoming as { state?: unknown })?.state);
+  // Safety net: a merge only ever adds, so a result smaller than what is stored means a bug — refuse it.
+  const before = stateCounts(stored);
+  const after = stateCounts(merged);
+  if (after.completions < before.completions || after.captures < before.captures || after.self < before.self) {
+    return jsonResponse({ ok: false, error: "would_shrink" }, 409, origin);
+  }
+  // Rolling daily snapshots (7 slots) of the stored copy, so a bad write can always be rolled back.
+  if (claimed && (before.completions || before.captures || before.self)) {
+    const day = new Date().toISOString().slice(0, 10);
+    const slot = `state-snap-${new Date().getUTCDay()}`;
+    const prev = (await env.LIFEHUB_STATE.get(slot, "json")) as { date?: string } | null;
+    if (!prev || prev.date !== day) {
+      await env.LIFEHUB_STATE.put(slot, JSON.stringify({ date: day, state: stored }));
+    }
+  }
   if (!claimed) await env.LIFEHUB_STATE.put(AUTH_KEY, hash);
   await env.LIFEHUB_STATE.put(STATE_KEY, JSON.stringify(merged));
   return jsonResponse({ ok: true, state: merged, counts: stateCounts(merged) }, 200, origin);
