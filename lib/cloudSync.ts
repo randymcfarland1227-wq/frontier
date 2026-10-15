@@ -302,6 +302,61 @@ export async function joinWithKey(input: string): Promise<SyncStatus> {
   return result;
 }
 
+/** Everything Life Hub keeps (cloud copy when linked, else this browser's), as a JSON file's text. */
+export async function buildDataFile(): Promise<string> {
+  let state: unknown = readLocalState();
+  const key = getKey();
+  if (key) {
+    try {
+      const res = await fetch(STATE_URL, { headers: { 'X-Sync-Key': key } });
+      const body = (await res.json()) as { ok?: boolean; state?: unknown };
+      if (res.ok && body.ok) state = mergeState(body.state, state);
+    } catch {
+      /* offline — this browser's copy */
+    }
+  }
+  return JSON.stringify({ app: 'life-hub', kind: 'data-backup', savedAt: new Date().toISOString(), state }, null, 1);
+}
+
+/** Merge a data file into this browser (never deletes). Returns how many items it brought in. */
+export function restoreDataFile(text: string): { ok: boolean; added?: number; error?: string } {
+  try {
+    const parsed = JSON.parse(text) as { app?: string; state?: unknown };
+    if (parsed.app !== 'life-hub' || !parsed.state) return { ok: false, error: "That isn't a Life Hub data file." };
+    const before = readLocalState();
+    const merged = mergeState(before, parsed.state);
+    writeLocalState(merged);
+    const b = stateCounts(before);
+    const a = stateCounts(merged);
+    schedulePush();
+    return { ok: true, added: a.completions - b.completions + a.captures - b.captures + a.self - b.self };
+  } catch {
+    return { ok: false, error: 'Could not read that file.' };
+  }
+}
+
+/** Plain-text recovery sheet: the key, the link, and the steps — safe to keep in a password manager or print. */
+export function buildRecoverySheet(): string | null {
+  const key = getKey();
+  if (!key) return null;
+  return [
+    "RANDY'S LIFE HUB — RECOVERY SHEET",
+    `Saved ${new Date().toLocaleString()}`,
+    '',
+    'Backup key (keep private — anyone with it can read and change your Life Hub backup):',
+    key,
+    '',
+    'Reconnect link (open it in any browser):',
+    `${window.location.origin}${window.location.pathname}#sync-key=${key}`,
+    '',
+    'If a phone or laptop is lost or wiped:',
+    '1. Open Life Hub in any browser.',
+    '2. Paste the link above (or the key) into the red banner, or Review → "I have a link or key".',
+    '3. Never press "Turn on backup" — that starts a second, empty backup.',
+    '4. Your data is in the cloud and also in any Life Hub data file you downloaded (Review → Download data file).',
+  ].join('\n');
+}
+
 export function disableBackup() {
   setKey(undefined);
   setStatus({ state: 'off' });

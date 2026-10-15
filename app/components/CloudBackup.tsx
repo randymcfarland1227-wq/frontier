@@ -2,6 +2,9 @@
 
 import { FormEvent, useEffect, useState } from 'react';
 import {
+  buildDataFile,
+  buildRecoverySheet,
+  restoreDataFile,
   deviceLink,
   disableBackup,
   enableBackup,
@@ -53,6 +56,35 @@ export function CloudBackup() {
     } catch {
       window.prompt('Open this link on your other device:', link);
     }
+  }
+
+  function download(name: string, text: string, type: string) {
+    const url = URL.createObjectURL(new Blob([text], { type }));
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = name;
+    a.click();
+    window.setTimeout(() => URL.revokeObjectURL(url), 2000);
+  }
+
+  const stamp = () => new Date().toISOString().slice(0, 10);
+  const [fileMsg, setFileMsg] = useState('');
+
+  async function saveData() {
+    download(`life-hub-data-${stamp()}.json`, await buildDataFile(), 'application/json');
+    setFileMsg('Data file downloaded — keep it somewhere safe (Drive, email to yourself).');
+  }
+
+  function saveSheet() {
+    const sheet = buildRecoverySheet();
+    if (sheet) download(`life-hub-recovery-${stamp()}.txt`, sheet, 'text/plain');
+    setFileMsg('Recovery sheet downloaded — it holds your key, so store it privately (password manager).');
+  }
+
+  async function restore(file?: File) {
+    if (!file) return;
+    const r = restoreDataFile(await file.text());
+    setFileMsg(r.ok ? `Restored — ${r.added} item${r.added === 1 ? '' : 's'} brought back.` : r.error || 'Could not restore.');
   }
 
   async function join(event: FormEvent) {
@@ -116,6 +148,19 @@ export function CloudBackup() {
               </button>
             </>
           )}
+        </div>
+      </div>
+      <div className="cloud-row">
+        <p className="cloud-text">
+          <strong>Safe copies</strong> that don&apos;t depend on any device: {fileMsg || 'download a data file and a recovery sheet, and keep them in Drive or a password manager.'}
+        </p>
+        <div className="cloud-actions">
+          <button type="button" className="row-action ghost" onClick={() => void saveData()}>Download data file</button>
+          {on ? <button type="button" className="row-action ghost" onClick={saveSheet}>Download recovery sheet</button> : null}
+          <label className="row-action ghost" style={{ cursor: 'pointer' }}>
+            Restore from file
+            <input type="file" accept=".json,application/json" hidden onChange={e => { void restore(e.target.files?.[0]); e.target.value = ''; }} />
+          </label>
         </div>
       </div>
       {joining && !on ? (
