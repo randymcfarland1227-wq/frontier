@@ -1,33 +1,25 @@
 {
   "source": "gmail",
   "metrics": {
-    "starred": 5,
+    "starred": 4,
     "unread": 2,
-    "action": 5
+    "action": 4
   },
   "featured": [
+    {
+      "id": "1a13b24943d1ed28",
+      "title": "Your Subscription is Expiring",
+      "detail": "Subscription Expiring Grok AI SuperGrok SuperGrok (1 month) $30.00/month Dear Randy, The following subscription will expire soon: SuperGrok (1 month) - $30.00/month expires on Octo",
+      "meta": "From no_reply@email.apple.com",
+      "originUrl": "https://mail.google.com/mail/?authuser=randymcfarland1227@gmail.com#all/thread-f:1879041497283816744",
+      "completable": false
+    },
     {
       "id": "1a13796465e18a3b",
       "title": "You made the sale for Nespresso VertuoLine GCA1 Coffee and Espresso Pod M...",
       "detail": "Next, pack it up and ship it out. ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏",
       "meta": "From ebay@ebay.com",
       "originUrl": "https://mail.google.com/mail/?authuser=randymcfarland1227@gmail.com#all/thread-f:1878978941656599099",
-      "completable": false
-    },
-    {
-      "id": "1a1355280073a1f1",
-      "title": "New message from @hbutler09",
-      "detail": "Order Number 6abee864705826b47bbe4eac Hi Randy, @hbutler09 has sent you a message about your recent sale Peter Millar Aronimink Golf Club Lava Wash Hoodie Size XL. View Message Pri",
-      "meta": "From support@poshmark.com",
-      "originUrl": "https://mail.google.com/mail/?authuser=randymcfarland1227@gmail.com#all/thread-f:1878939099838259697",
-      "completable": false
-    },
-    {
-      "id": "1a123eb4cfde0195",
-      "title": "How was your support experience?",
-      "detail": "This message was sent to randymcfarland1227@gmail.com. Please visit notification settings to manage your email alerts. Copyright © 2026 Poshmark, Inc. 203 Redwood Shores Pkwy, 8th ",
-      "meta": "From noreply@poshmark.com",
-      "originUrl": "https://mail.google.com/mail/?authuser=randymcfarland1227@gmail.com#all/thread-f:1878632940869386645",
       "completable": false
     },
     {
@@ -39,15 +31,23 @@
       "completable": false
     },
     {
-      "id": "1a11bd18f3fc50b5",
-      "title": "Final notice for your Poshmark sale,\"Peter Millar Aronimink Golf Club Lava Wash Hoodie Size XL\"",
-      "detail": "Re: Order # 6abee864705826b47bbe4eac Hello Randy, This is a final reminder regarding your sale of “Peter Millar Aronimink Golf Club Lava Wash Hoodie Size XL”. It has been 6 days si",
-      "meta": "From support@poshmark.com",
-      "originUrl": "https://mail.google.com/mail/?authuser=randymcfarland1227@gmail.com#all/thread-f:1878490434460471477",
+      "id": "1a114190f5334133",
+      "title": "[Confirmation] Purchase confirmed",
+      "detail": "Your invoice will be available within 24 hours. ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ Cloudflare logo Purchase confirmed View your invoice",
+      "meta": "From noreply@notify.cloudflare.com",
+      "originUrl": "https://mail.google.com/mail/?authuser=randymcfarland1227@gmail.com#all/thread-f:1878354610435080499",
       "completable": false
     }
   ],
   "tasks": [
+    {
+      "id": "1a13b24943d1ed28",
+      "title": "Your Subscription is Expiring",
+      "detail": "Subscription Expiring Grok AI SuperGrok SuperGrok (1 month) $30.00/month Dear Randy, The following subscription will expire soon: SuperGrok (1 month) - $30.00/month expires on Octo",
+      "status": "open",
+      "starred": true,
+      "originUrl": "https://mail.google.com/mail/?authuser=randymcfarland1227@gmail.com#all/thread-f:1879041497283816744"
+    },
     {
       "id": "1a13796465e18a3b",
       "title": "You made the sale for Nespresso VertuoLine GCA1 Coffee and Espresso Pod M...",
@@ -55,22 +55,6 @@
       "status": "open",
       "starred": true,
       "originUrl": "https://mail.google.com/mail/?authuser=randymcfarland1227@gmail.com#all/thread-f:1878978941656599099"
-    },
-    {
-      "id": "1a1355280073a1f1",
-      "title": "New message from @hbutler09",
-      "detail": "Order Number 6abee864705826b47bbe4eac Hi Randy, @hbutler09 has sent you a message about your recent sale Peter Millar Aronimink Golf Club Lava Wash Hoodie Size XL. View Message Pri",
-      "status": "open",
-      "starred": true,
-      "originUrl": "https://mail.google.com/mail/?authuser=randymcfarland1227@gmail.com#all/thread-f:1878939099838259697"
-    },
-    {
-      "id": "1a123eb4cfde0195",
-      "title": "How was your support experience?",
-      "detail": "This message was sent to randymcfarland1227@gmail.com. Please visit notification settings to manage your email alerts. Copyright © 2026 Poshmark, Inc. 203 Redwood Shores Pkwy, 8th ",
-      "status": "open",
-      "starred": true,
-      "originUrl": "https://mail.google.com/mail/?authuser=randymcfarland1227@gmail.com#all/thread-f:1878632940869386645"
     },
     {
       "id": "1a122c2b24909a50",
@@ -81,13 +65,13 @@
       "originUrl": "https://mail.google.com/mail/?authuser=randymcfarland1227@gmail.com#all/thread-f:1878612558375590480"
     },
     {
-      "id": "1a11bd18f3fc50b5",
-      "title": "Final notice for your Poshmark sale,\"Peter Millar Aronimink Golf Club Lava Wash Hoodie Size XL\"",
-      "detail": "Re: Order # 6abee864705826b47bbe4eac Hello Randy, This is a final reminder regarding your sale of “Peter Millar Aronimink Golf Club Lava Wash Hoodie Size XL”. It has been 6 days si",
+      "id": "1a114190f5334133",
+      "title": "[Confirmation] Purchase confirmed",
+      "detail": "Your invoice will be available within 24 hours. ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ Cloudflare logo Purchase confirmed View your invoice",
       "status": "open",
       "starred": true,
-      "originUrl": "https://mail.google.com/mail/?authuser=randymcfarland1227@gmail.com#all/thread-f:1878490434460471477"
+      "originUrl": "https://mail.google.com/mail/?authuser=randymcfarland1227@gmail.com#all/thread-f:1878354610435080499"
     }
   ],
-  "refreshedAt": "2026-10-14T12:45:21.214Z"
+  "refreshedAt": "2026-10-15T12:38:18.248Z"
 }

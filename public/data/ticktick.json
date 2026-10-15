@@ -1,17 +1,33 @@
 {
   "source": "ticktick",
   "metrics": {
-    "dueToday": 4,
-    "overdue": 4,
+    "dueToday": 2,
+    "overdue": 6,
     "habits": 36
   },
   "featured": [
+    {
+      "id": "69cefe89a8a19102bc8976dc",
+      "title": "Weekly Finances Review",
+      "detail": "- [x] **Personal Finance Allocation** ::-Review upcoming bills and needed expenses and allocate:: - [x] **Needed/Reoccurring Purchase Review** ::-Review inventory and sheet to see ",
+      "meta": "Overdue · Life Planning",
+      "originUrl": "https://ticktick.com/webapp/#p/69dd701e1ca911a95e9a97c7/tasks/69cefe89a8a19102bc8976dc",
+      "completable": false
+    },
     {
       "id": "6a3b0c00dd26118362fba5bf",
       "title": "Schedule Marvel Monthly Trip to Groomer",
       "detail": "Marvel",
       "meta": "Overdue · Marvel",
       "originUrl": "https://ticktick.com/webapp/#p/69dd705c1bd491a95e9a99ca/tasks/6a3b0c00dd26118362fba5bf",
+      "completable": false
+    },
+    {
+      "id": "69f65956b6485118d36dca31",
+      "title": "Music  Session-Maintenance",
+      "detail": "Wed- May 20- No music Session Done --- Wed May 27- Production/ No session done --- June 3- No Session Done --- June 10- No Music Session Done ( Bonaroo) --- June 17- When it rains,",
+      "meta": "Overdue · Creativity",
+      "originUrl": "https://ticktick.com/webapp/#p/69def09b442591a95e9af9db/tasks/69f65956b6485118d36dca31",
       "completable": false
     },
     {
@@ -47,27 +63,11 @@
       "completable": false
     },
     {
-      "id": "69cefe89a8a19102bc8976dc",
-      "title": "Weekly Finances Review",
-      "detail": "- [x] **Personal Finance Allocation** ::-Review upcoming bills and needed expenses and allocate:: - [x] **Needed/Reoccurring Purchase Review** ::-Review inventory and sheet to see ",
-      "meta": "Due today · Life Planning",
-      "originUrl": "https://ticktick.com/webapp/#p/69dd701e1ca911a95e9a97c7/tasks/69cefe89a8a19102bc8976dc",
-      "completable": false
-    },
-    {
-      "id": "69f65956b6485118d36dca31",
-      "title": "Music  Session-Maintenance",
-      "detail": "Wed- May 20- No music Session Done --- Wed May 27- Production/ No session done --- June 3- No Session Done --- June 10- No Music Session Done ( Bonaroo) --- June 17- When it rains,",
+      "id": "69f65979d19c9118d36dcab1",
+      "title": "Music Session-Support",
+      "detail": "--- May 21- No Thursday session was done --- May 28- No session Done --- June 4- No Session Done --- Jul 11- No Session Done (Bonaroo) --- Jun 18- No Session Done --- June 25- no s",
       "meta": "Due today · Creativity",
-      "originUrl": "https://ticktick.com/webapp/#p/69def09b442591a95e9af9db/tasks/69f65956b6485118d36dca31",
-      "completable": false
-    },
-    {
-      "id": "6a7e9d3c4a4491ef72a47fad",
-      "title": "Nail and Cuticle Care",
-      "detail": "Maintenance Organization",
-      "meta": "Due today · Maintenance Organization",
-      "originUrl": "https://ticktick.com/webapp/#p/69eef620b4b19119328b4dff/tasks/6a7e9d3c4a4491ef72a47fad",
+      "originUrl": "https://ticktick.com/webapp/#p/69def09b442591a95e9af9db/tasks/69f65979d19c9118d36dcab1",
       "completable": false
     },
     {
@@ -105,6 +105,17 @@
   ],
   "tasks": [
     {
+      "id": "69cefe89a8a19102bc8976dc",
+      "title": "Weekly Finances Review",
+      "detail": "- [x] **Personal Finance Allocation** ::-Review upcoming bills and needed expenses and allocate:: - [x] **Needed/Reoccurring Purchase Review** ::-Review inventory and sheet to see ",
+      "status": "open",
+      "due": "2026-10-14",
+      "starred": false,
+      "originUrl": "https://ticktick.com/webapp/#p/69dd701e1ca911a95e9a97c7/tasks/69cefe89a8a19102bc8976dc",
+      "kind": "task",
+      "projectId": "69dd701e1ca911a95e9a97c7"
+    },
+    {
       "id": "6a3b0c00dd26118362fba5bf",
       "title": "Schedule Marvel Monthly Trip to Groomer",
       "detail": "Marvel",
@@ -114,6 +125,17 @@
       "originUrl": "https://ticktick.com/webapp/#p/69dd705c1bd491a95e9a99ca/tasks/6a3b0c00dd26118362fba5bf",
       "kind": "task",
       "projectId": "69dd705c1bd491a95e9a99ca"
+    },
+    {
+      "id": "69f65956b6485118d36dca31",
+      "title": "Music  Session-Maintenance",
+      "detail": "Wed- May 20- No music Session Done --- Wed May 27- Production/ No session done --- June 3- No Session Done --- June 10- No Music Session Done ( Bonaroo) --- June 17- When it rains,",
+      "status": "open",
+      "due": "2026-10-14",
+      "starred": false,
+      "originUrl": "https://ticktick.com/webapp/#p/69def09b442591a95e9af9db/tasks/69f65956b6485118d36dca31",
+      "kind": "task",
+      "projectId": "69def09b442591a95e9af9db"
     },
     {
       "id": "6a124c4c639b9152c7faa9b4",
@@ -153,44 +175,22 @@
       "title": "Daily Work & Income Flow",
       "detail": "Complete the active Job, Resale, and Candle actions. Items marked “when needed” may be skipped when they do not apply.",
       "status": "open",
-      "due": "2026-10-14",
+      "due": "2026-10-15",
       "starred": true,
       "originUrl": "https://ticktick.com/webapp/#p/69dd701e1ca911a95e9a97c7/tasks/6a9fb6d68f08ecb120d1a125",
       "kind": "task",
       "projectId": "69dd701e1ca911a95e9a97c7"
     },
     {
-      "id": "69cefe89a8a19102bc8976dc",
-      "title": "Weekly Finances Review",
-      "detail": "- [x] **Personal Finance Allocation** ::-Review upcoming bills and needed expenses and allocate:: - [x] **Needed/Reoccurring Purchase Review** ::-Review inventory and sheet to see ",
+      "id": "69f65979d19c9118d36dcab1",
+      "title": "Music Session-Support",
+      "detail": "--- May 21- No Thursday session was done --- May 28- No session Done --- June 4- No Session Done --- Jul 11- No Session Done (Bonaroo) --- Jun 18- No Session Done --- June 25- no s",
       "status": "open",
-      "due": "2026-10-14",
+      "due": "2026-10-15",
       "starred": false,
-      "originUrl": "https://ticktick.com/webapp/#p/69dd701e1ca911a95e9a97c7/tasks/69cefe89a8a19102bc8976dc",
-      "kind": "task",
-      "projectId": "69dd701e1ca911a95e9a97c7"
-    },
-    {
-      "id": "69f65956b6485118d36dca31",
-      "title": "Music  Session-Maintenance",
-      "detail": "Wed- May 20- No music Session Done --- Wed May 27- Production/ No session done --- June 3- No Session Done --- June 10- No Music Session Done ( Bonaroo) --- June 17- When it rains,",
-      "status": "open",
-      "due": "2026-10-14",
-      "starred": false,
-      "originUrl": "https://ticktick.com/webapp/#p/69def09b442591a95e9af9db/tasks/69f65956b6485118d36dca31",
+      "originUrl": "https://ticktick.com/webapp/#p/69def09b442591a95e9af9db/tasks/69f65979d19c9118d36dcab1",
       "kind": "task",
       "projectId": "69def09b442591a95e9af9db"
-    },
-    {
-      "id": "6a7e9d3c4a4491ef72a47fad",
-      "title": "Nail and Cuticle Care",
-      "detail": "Maintenance Organization",
-      "status": "open",
-      "due": "2026-10-14",
-      "starred": false,
-      "originUrl": "https://ticktick.com/webapp/#p/69eef620b4b19119328b4dff/tasks/6a7e9d3c4a4491ef72a47fad",
-      "kind": "task",
-      "projectId": "69eef620b4b19119328b4dff"
     },
     {
       "id": "habit-69ceedf0f95d5102bc895aab",
@@ -517,5 +517,5 @@
       "kind": "habit"
     }
   ],
-  "refreshedAt": "2026-10-14T12:45:21.214Z"
+  "refreshedAt": "2026-10-15T12:38:18.248Z"
 }
