@@ -100,6 +100,7 @@ import { isHidden, useHiddenItems } from '../lib/siteMoves';
 import { useRoleActive, withRoleShelves, withTaggedShelves } from '../lib/roleShelves';
 import { LogsView } from './components/LogsView';
 import { UpdateNotice } from './components/UpdateNotice';
+import { BackupGuard } from './components/BackupGuard';
 import { TaskSorting } from './components/TaskSorting';
 import { SiteIconSettings } from './components/SiteIconSettings';
 import { NeedsSorting } from './components/NeedsSorting';
@@ -1128,6 +1129,7 @@ goalsData ? (
       )}
       {import.meta.env.VITE_LOCAL_PREVIEW === 'true' && <aside style={{position:'fixed',bottom:0,left:0,right:0,padding:'10px 20px',background:'#202824',color:'#fff',zIndex:9999}}>Local review · live writes disabled · <a href="/flow/#sync">Open Flow connections</a></aside>}
       <UpdateNotice />
+      {import.meta.env.VITE_LOCAL_PREVIEW !== 'true' && <BackupGuard />}
       <FocusDrawer open={focusOpen} close={() => setFocusOpen(false)} focus={focus} setFocus={setFocus} enter={enter} />
       {import.meta.env.VITE_LOCAL_PREVIEW !== 'true' && <SourceBridges register={registerFrame} />}
       {pendingArea && focusConfig ? (
