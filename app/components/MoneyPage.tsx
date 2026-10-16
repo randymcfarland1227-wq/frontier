@@ -21,6 +21,7 @@ import { usePayPlans } from '../../lib/payPlans';
 import { readSaved, writeSaved, STORAGE_KEYS } from '../../lib/storage';
 import { isOverdue } from '../../lib/billEdits';
 import { BillChangeForm, BillPinButton, billChangeText } from './BillControls';
+import { addExtraCard, updateExtraCard, useExtraCards, type ExtraCard } from '../../lib/extraCards';
 import { addLifeSub, updateLifeSub, type LifeSub } from '../../lib/lifeSubs';
 import { addCustomItem, METHOD_LABEL, mondayOf, setBalancePicks, setPickLanded, srcKey, updatePick, useBalancePicks, type BalancePlan, type CustomItem, type PayMethod } from '../../lib/balancePicks';
 import { addIncoming, incomingDues, updateIncoming, useIncoming, type Incoming, type IncomingDue } from '../../lib/incoming';
@@ -918,7 +919,83 @@ function CardTiles({ model, dues, paidAt, onPaid, onSave }: { model: MoneyModel;
           </li>
         );
       })}
+      <ExtraCardTiles />
     </ul>
+  );
+}
+
+/** Cards that live on Life Hub only (not in the sheet): placeholders until the real figures arrive. */
+function ExtraCardTile({ card }: { card: ExtraCard }) {
+  const fields: Array<['limit' | 'balance' | 'fee', string]> = [['limit', 'Limit'], ['balance', 'Balance'], ['fee', 'Monthly fee']];
+  const bal = card.balance ?? 0;
+  const used = card.limit ? Math.min(100, Math.round((bal / card.limit) * 100)) : undefined;
+  return (
+    <li className="cc-tile">
+      <div className="cc-head">
+        <strong>{card.name}</strong>
+        <span className="cc-used">{card.limit === undefined && card.balance === undefined && card.fee === undefined ? 'Placeholder' : used !== undefined ? `${used}% used` : 'Added here'}</span>
+      </div>
+      <div className="cc-bal">
+        <b>{card.balance !== undefined ? money(card.balance) : '—'}</b>
+        <span>{card.limit !== undefined ? `of ${money(card.limit)}` : 'limit not set'}</span>
+      </div>
+      <div className="cc-bar" aria-hidden="true">
+        <i style={{ width: `${used ?? 0}%` }} />
+        <em />
+      </div>
+      <div className="mny-card-detail">
+        {fields.map(([k, label]) => (
+          <label key={k}>
+            <span>{label}</span>
+            <input
+              inputMode="decimal"
+              defaultValue={card[k] ?? ''}
+              placeholder="—"
+              onBlur={e => {
+                const raw = e.target.value.replace(/[$,\s]/g, '');
+                const n = raw === '' ? undefined : Number(raw);
+                if (n === undefined || !Number.isNaN(n)) updateExtraCard(card.id, { [k]: n });
+              }}
+            />
+          </label>
+        ))}
+        <label>
+          <span>Note</span>
+          <input defaultValue={card.note || ''} placeholder="—" onBlur={e => updateExtraCard(card.id, { note: e.target.value.trim() || undefined })} />
+        </label>
+      </div>
+    </li>
+  );
+}
+
+function ExtraCardTiles() {
+  const cards = useExtraCards();
+  const [adding, setAdding] = useState(false);
+  const [name, setName] = useState('');
+  return (
+    <>
+      {cards.map(c => (
+        <ExtraCardTile key={c.id} card={c} />
+      ))}
+      <li className="cc-tile">
+        {adding ? (
+          <form
+            onSubmit={e => {
+              e.preventDefault();
+              if (!name.trim()) return;
+              addExtraCard({ name });
+              setName('');
+              setAdding(false);
+            }}
+          >
+            <input value={name} onChange={e => setName(e.target.value)} placeholder="Card name" aria-label="Card name" autoFocus />
+            <button type="submit" className="mny-btn is-primary">Add</button>
+          </form>
+        ) : (
+          <button type="button" className="mny-btn" onClick={() => setAdding(true)}>+ Add a card</button>
+        )}
+      </li>
+    </>
   );
 }
 

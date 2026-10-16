@@ -55,6 +55,8 @@ export const STORAGE_KEYS = {
   billDays: 'lifehub-bill-days',
   /** Goals marked active / passive — cloud-synced */
   goalModes: 'lifehub-goal-modes',
+  /** Cards added on Life Hub (not in the sheet) — cloud-synced */
+  extraCards: 'lifehub-extra-cards',
   /** Balancing sheet picks (bills / incoming put on the sheet) — cloud-synced */
   balancePicks: 'lifehub-balance-picks',
   /** Uploaded site pictures (Self photo, brand logos) — cloud-synced */
