@@ -9,6 +9,7 @@ import type { SelfItem } from './adapters/self';
 import type { GoalLink } from './goals';
 import type { Plan } from './plans';
 import type { LifeSub } from './lifeSubs';
+import type { ExtraCard } from './extraCards';
 import type { Incoming } from './incoming';
 import type { PayPlan } from './payPlans';
 import { mergeCandle, normalizeCandle, type CandleBundle } from './candleSync';
@@ -52,6 +53,7 @@ export type SyncedState = {
   billEdits: Record<string, { skip?: boolean; moveTo?: string; amount?: number; note?: string; at: string }>;
   /** Subscriptions added on Life Hub: union by id, newest edit wins (removed = flagged, never deleted) */
   subs: LifeSub[];
+  extraCards: ExtraCard[];
   /** Incoming funds logged on Life Hub: union by id, newest edit wins */
   incoming: Incoming[];
   /** Role Hub certs / portfolio ideas marked Active on Life Hub: id → 'active' / null; newest change wins */
@@ -128,6 +130,7 @@ export function emptyState(): SyncedState {
     candle: { raw: null, at: '' },
     billEdits: {},
     subs: [],
+    extraCards: [],
     incoming: [],
     roleActive: {},
     billDays: {},
@@ -171,6 +174,7 @@ export function normalizeState(raw: unknown): SyncedState {
     candle: normalizeCandle(s.candle),
     billEdits: s.billEdits && typeof s.billEdits === 'object' ? s.billEdits : {},
     subs: Array.isArray(s.subs) ? s.subs.filter(x => x && typeof x.id === 'string') : [],
+    extraCards: Array.isArray(s.extraCards) ? s.extraCards.filter(x => x && typeof x.id === 'string') : [],
     incoming: Array.isArray(s.incoming) ? s.incoming.filter(x => x && typeof x.id === 'string') : [],
     roleActive: s.roleActive && typeof s.roleActive === 'object' ? s.roleActive : {},
     billDays: s.billDays && typeof s.billDays === 'object' ? s.billDays : {},
@@ -265,6 +269,7 @@ export function mergeState(aRaw: unknown, bRaw: unknown): SyncedState {
     candle: mergeCandle(a.candle, b.candle),
     billEdits: mergeLevels(a.billEdits, b.billEdits),
     subs: mergeById(a.subs, b.subs),
+    extraCards: mergeById(a.extraCards, b.extraCards),
     incoming: mergeById(a.incoming, b.incoming),
     roleActive: mergeLevels(a.roleActive, b.roleActive),
     billDays: mergeLevels(a.billDays, b.billDays),
