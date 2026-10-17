@@ -4641,3 +4641,31 @@ button.bal-led-row:hover { background: color-mix(in srgb, var(--ev, #0f8a7e) 8%,
 .backup-guard form { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-left: auto; }
 .backup-guard input { min-width: 240px; padding: 6px 10px; border-radius: 6px; border: 1px solid rgba(255,255,255,.5); background: rgba(255,255,255,.12); color: #fff; font-size: 13px; }
 .backup-guard input::placeholder { color: rgba(255,255,255,.7); }
+
+/* Ledger display controls and cumulative payment selector. */
+.money-ledger-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-bottom: 12px; }
+.money-ledger-toolbar .mny-subtabs { margin-bottom: 0; }
+.money-ledger-toolbar > .mny-btn { margin-left: auto; }
+.money-selector { display: grid; gap: 14px; min-width: 0; }
+.money-selector-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+.money-selector-controls label { display: flex; align-items: center; gap: 7px; font-size: 13px; }
+.money-selector select, .money-selector input[type="search"] { max-width: 100%; min-height: 36px; padding: 6px 9px; border: 1px solid var(--line); border-radius: 7px; background: var(--surface); color: var(--ink); font: inherit; }
+.money-selector-types { display: flex; flex-wrap: wrap; gap: 8px; margin: 0; padding: 10px 0 0; border: 0; }
+.money-selector-types legend { font-size: 13px; font-weight: 650; }
+.money-selector-types label { display: inline-flex; align-items: center; gap: 6px; cursor: pointer; }
+.money-selector-types small { color: var(--muted); }
+.money-selector input[type="checkbox"] { accent-color: var(--accent-ink); flex-shrink: 0; }
+.money-selector > .mny-btn { justify-self: start; }
+.money-selector-picker { padding: 12px; border: 1px solid var(--line); border-radius: 9px; }
+.money-selector-picker > label { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; font-size: 13px; }
+.money-selector-picker ul, .money-selector-group ul { margin: 10px 0 0; padding: 0; list-style: none; }
+.money-selector-picker li label { display: flex; align-items: center; gap: 9px; padding: 8px 0; border-bottom: 1px solid var(--line); font-size: 13px; }
+.money-selector-picker li span { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.money-selector-picker li small { display: block; color: var(--muted); font-size: 12px; }
+.money-selector-picker li b { flex-shrink: 0; }
+.money-selector-total { margin: 0; font-size: 13px; font-weight: 650; }
+.money-selector-group { min-width: 0; }
+.money-selector-group header { display: flex; flex-wrap: wrap; align-items: baseline; gap: 10px; border-bottom: 1px solid var(--line); padding-bottom: 6px; }
+.money-selector-group h3 { margin: 0; font-size: 15px; }
+.money-selector-group header span { margin-left: auto; color: var(--muted); font-size: 12px; }
+.money-selector :focus-visible { outline: 2px solid var(--accent-ink); outline-offset: 3px; }

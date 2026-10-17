@@ -1,0 +1,41 @@
+/* eslint-disable */
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const vm = require('node:vm');
+const ts = require('typescript');
+const moduleUnderTest = { exports: {} };
+vm.runInNewContext(ts.transpileModule(fs.readFileSync('lib/moneyLedger.ts', 'utf8'), {
+  compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 },
+}).outputText, { module: moduleUnderTest, exports: moduleUnderTest.exports, Date, Map, Set });
+const { ledgerWeeks, ledgerMonthRows, ledgerType, isLedgerPaid, selectorRows, selectedLedgerGroups } = moduleUnderTest.exports;
+const plain = value => JSON.parse(JSON.stringify(value));
+const due = (key, date, days, provider, extra = {}) => ({key, due: date, days, bill: {id:key, name:key, kind: provider ? 'paylater' : 'bill', notes:provider ? `Pay later · ${provider} · 1/4` : '', amount:10}, ...extra});
+const rows = [due('klarna-overdue', '2026-10-15', -2, 'Klarna'), due('klarna-upcoming', '2026-10-20', 3, 'Klarna'), due('afterpay', '2026-10-19', 2, 'After Pay'), due('rent', '2026-10-21', 4), due('old', '2026-09-30', -17, 'Klarna'), due('later', '2026-10-22', 5, 'Klarna'), due('paid', '2026-10-18', 1, 'Klarna'), due('crossed', '2026-10-17', 0, 'Klarna', {bill:{id:'crossed:crossed', name:'crossed', kind:'paylater', notes:'Pay later · Klarna', amount:15}}), due('skip', '2026-10-18', 1, 'Klarna', {skipped:true})];
+const paidAt = { paid:'2026-10-16T12:00:00Z' };
+const snapshot = JSON.stringify(rows);
+let candidates = selectorRows([...rows, rows[0]], '2026-10-15', '2026-10-21', paidAt, false, false);
+assert.deepEqual(plain(candidates.map(r=>r.key)), ['klarna-overdue','crossed','paid','afterpay','klarna-upcoming','rent']);
+let groups = selectedLedgerGroups(candidates, ['paylater:klarna','paylater:afterpay'], ['rent','klarna-overdue']);
+assert.deepEqual(plain(groups.map(g=>g.label)), ['Klarna','Afterpay','Bills']);
+assert.equal(groups[0].rows.length, 4, 'manual and type picks never duplicate a payment');
+assert.deepEqual(plain(selectedLedgerGroups(candidates, ['paylater:afterpay','paylater:klarna'], []).map(g=>g.label)), ['Afterpay','Klarna'], 'click order preserved');
+assert.deepEqual(plain(selectedLedgerGroups(candidates, [], ['rent']).map(g=>g.rows.map(r=>r.key))), [['rent']], 'manual addition does not select its whole type');
+assert.equal(ledgerType(rows[2]).label, 'Afterpay', 'provider spelling normalized');
+assert.equal(isLedgerPaid(rows[6], paidAt), true);
+assert.equal(isLedgerPaid(rows[7], {}), true, 'sheet cross-off is paid');
+assert.equal(isLedgerPaid(rows[0], paidAt), false, 'past date never assumes paid');
+candidates = selectorRows(rows, '2026-10-15', '2026-10-21', paidAt, true, true);
+assert.deepEqual(plain(candidates.map(r=>r.key)), ['old','klarna-overdue','afterpay','klarna-upcoming','rent'], 'include unpaid overdue but exclude paid, skipped and next week');
+assert.equal(selectorRows(rows, '2026-10-15', '2026-10-21', paidAt, false, false).length, 6, 'show paid restores rows');
+assert.equal(JSON.stringify(rows), snapshot, 'filtering never mutates payment records');
+assert.deepEqual(plain(ledgerWeeks(new Date(2026,9,17))).map(w=>[w.from,w.to]), [['2026-10-01','2026-10-07'],['2026-10-08','2026-10-14'],['2026-10-15','2026-10-21'],['2026-10-22','2026-10-28'],['2026-10-29','2026-10-31']]);
+assert.equal(ledgerWeeks(new Date(2024,1,1))[4].to, '2024-02-29');
+assert.equal(ledgerWeeks(new Date(2025,1,1)).length, 4);
+const crossedItem = {id:'sheet',name:'Sheet paid',kind:'paylater',skipped:true,date:'2026-10-19',amount:20,provider:'Klarna'};
+const combined = ledgerMonthRows([rows[0],rows[0]], [crossedItem,{...crossedItem,id:'not-this-month',date:'2026-09-19'}], new Date(2026,9,17));
+assert.equal(combined.length,2);
+assert.equal(isLedgerPaid(combined[1],{}),true);
+assert.equal(ledgerType(combined[1]).label,'Klarna');
+assert.equal(combined[1].days,2);
+console.log('Money ledger checks passed: paid filtering, unchanged records, cumulative type order, manual additions, deduplication, overdue scope and existing week boundaries.');
+assert.equal(ledgerType({key:'x',due:'2026-10-19',days:2,bill:{id:'x',name:'x',kind:'paylater',notes:'Pay later · 2/4'}}).label,'Pay later','missing provider never becomes an installment type');
