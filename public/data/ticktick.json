@@ -2,10 +2,26 @@
   "source": "ticktick",
   "metrics": {
     "dueToday": 2,
-    "overdue": 6,
+    "overdue": 18,
     "habits": 36
   },
   "featured": [
+    {
+      "id": "6a7f89246b0ed10273275b21",
+      "title": "Reset Medicine and Vitamin Holder",
+      "detail": "Medical",
+      "meta": "Overdue · Medical",
+      "originUrl": "https://ticktick.com/webapp/#p/69dd6ff6d3e8d1a95e9a96ca/tasks/6a7f89246b0ed10273275b21",
+      "completable": false
+    },
+    {
+      "id": "6a9fb6d68f08ecb120d1a125",
+      "title": "Daily Work & Income Flow",
+      "detail": "Complete the active Job, Resale, and Candle actions. Items marked “when needed” may be skipped when they do not apply.",
+      "meta": "Overdue · Life Planning",
+      "originUrl": "https://ticktick.com/webapp/#p/69dd701e1ca911a95e9a97c7/tasks/6a9fb6d68f08ecb120d1a125",
+      "completable": false
+    },
     {
       "id": "69cefe89a8a19102bc8976dc",
       "title": "Weekly Finances Review",
@@ -20,6 +36,14 @@
       "detail": "Marvel",
       "meta": "Overdue · Marvel",
       "originUrl": "https://ticktick.com/webapp/#p/69dd705c1bd491a95e9a99ca/tasks/6a3b0c00dd26118362fba5bf",
+      "completable": false
+    },
+    {
+      "id": "69f65979d19c9118d36dcab1",
+      "title": "Music Session-Support",
+      "detail": "--- May 21- No Thursday session was done --- May 28- No session Done --- June 4- No Session Done --- Jul 11- No Session Done (Bonaroo) --- Jun 18- No Session Done --- June 25- no s",
+      "meta": "Overdue · Creativity",
+      "originUrl": "https://ticktick.com/webapp/#p/69def09b442591a95e9af9db/tasks/69f65979d19c9118d36dcab1",
       "completable": false
     },
     {
@@ -39,35 +63,11 @@
       "completable": false
     },
     {
-      "id": "69ffbe88cd20d11954046851",
-      "title": "Digital Declutter",
-      "detail": "- [ ] Emails - [ ] Phone Numbers - [ ] Chrome/Safari History - [ ] Saved Payment Methods/Emails - [ ] Old Pictures",
-      "meta": "Overdue · Maintenance Organization",
-      "originUrl": "https://ticktick.com/webapp/#p/69eef620b4b19119328b4dff/tasks/69ffbe88cd20d11954046851",
-      "completable": false
-    },
-    {
-      "id": "6a92084c8f087e0df3ef1720",
-      "title": "Wipe Down Phone, Laptop, and Glasses & Sunglasses",
+      "id": "6a92084c8f087e0df3ef1721",
+      "title": "Wash Tote Bag",
       "detail": "Maintenance Organization",
       "meta": "Overdue · Maintenance Organization",
-      "originUrl": "https://ticktick.com/webapp/#p/69eef620b4b19119328b4dff/tasks/6a92084c8f087e0df3ef1720",
-      "completable": false
-    },
-    {
-      "id": "6a9fb6d68f08ecb120d1a125",
-      "title": "Daily Work & Income Flow",
-      "detail": "Complete the active Job, Resale, and Candle actions. Items marked “when needed” may be skipped when they do not apply.",
-      "meta": "Due today · Life Planning",
-      "originUrl": "https://ticktick.com/webapp/#p/69dd701e1ca911a95e9a97c7/tasks/6a9fb6d68f08ecb120d1a125",
-      "completable": false
-    },
-    {
-      "id": "69f65979d19c9118d36dcab1",
-      "title": "Music Session-Support",
-      "detail": "--- May 21- No Thursday session was done --- May 28- No session Done --- June 4- No Session Done --- Jul 11- No Session Done (Bonaroo) --- Jun 18- No Session Done --- June 25- no s",
-      "meta": "Due today · Creativity",
-      "originUrl": "https://ticktick.com/webapp/#p/69def09b442591a95e9af9db/tasks/69f65979d19c9118d36dcab1",
+      "originUrl": "https://ticktick.com/webapp/#p/69eef620b4b19119328b4dff/tasks/6a92084c8f087e0df3ef1721",
       "completable": false
     },
     {
@@ -105,6 +105,28 @@
   ],
   "tasks": [
     {
+      "id": "6a7f89246b0ed10273275b21",
+      "title": "Reset Medicine and Vitamin Holder",
+      "detail": "Medical",
+      "status": "open",
+      "due": "2026-10-16",
+      "starred": false,
+      "originUrl": "https://ticktick.com/webapp/#p/69dd6ff6d3e8d1a95e9a96ca/tasks/6a7f89246b0ed10273275b21",
+      "kind": "task",
+      "projectId": "69dd6ff6d3e8d1a95e9a96ca"
+    },
+    {
+      "id": "6a9fb6d68f08ecb120d1a125",
+      "title": "Daily Work & Income Flow",
+      "detail": "Complete the active Job, Resale, and Candle actions. Items marked “when needed” may be skipped when they do not apply.",
+      "status": "open",
+      "due": "2026-10-15",
+      "starred": true,
+      "originUrl": "https://ticktick.com/webapp/#p/69dd701e1ca911a95e9a97c7/tasks/6a9fb6d68f08ecb120d1a125",
+      "kind": "task",
+      "projectId": "69dd701e1ca911a95e9a97c7"
+    },
+    {
       "id": "69cefe89a8a19102bc8976dc",
       "title": "Weekly Finances Review",
       "detail": "- [x] **Personal Finance Allocation** ::-Review upcoming bills and needed expenses and allocate:: - [x] **Needed/Reoccurring Purchase Review** ::-Review inventory and sheet to see ",
@@ -125,6 +147,17 @@
       "originUrl": "https://ticktick.com/webapp/#p/69dd705c1bd491a95e9a99ca/tasks/6a3b0c00dd26118362fba5bf",
       "kind": "task",
       "projectId": "69dd705c1bd491a95e9a99ca"
+    },
+    {
+      "id": "69f65979d19c9118d36dcab1",
+      "title": "Music Session-Support",
+      "detail": "--- May 21- No Thursday session was done --- May 28- No session Done --- June 4- No Session Done --- Jul 11- No Session Done (Bonaroo) --- Jun 18- No Session Done --- June 25- no s",
+      "status": "open",
+      "due": "2026-10-15",
+      "starred": false,
+      "originUrl": "https://ticktick.com/webapp/#p/69def09b442591a95e9af9db/tasks/69f65979d19c9118d36dcab1",
+      "kind": "task",
+      "projectId": "69def09b442591a95e9af9db"
     },
     {
       "id": "69f65956b6485118d36dca31",
@@ -149,6 +182,105 @@
       "projectId": "69def09b442591a95e9af9db"
     },
     {
+      "id": "6a92084c8f087e0df3ef1721",
+      "title": "Wash Tote Bag",
+      "detail": "Maintenance Organization",
+      "status": "open",
+      "due": "2026-10-16",
+      "starred": false,
+      "originUrl": "https://ticktick.com/webapp/#p/69eef620b4b19119328b4dff/tasks/6a92084c8f087e0df3ef1721",
+      "kind": "task",
+      "projectId": "69eef620b4b19119328b4dff"
+    },
+    {
+      "id": "6a4de9df868a5143d5911ff6",
+      "title": "Put Grocery Order In",
+      "detail": "* Sept 6- Dont need to much so just going to shop for it",
+      "status": "open",
+      "due": "2026-10-16",
+      "starred": false,
+      "originUrl": "https://ticktick.com/webapp/#p/69eef620b4b19119328b4dff/tasks/6a4de9df868a5143d5911ff6",
+      "kind": "task",
+      "projectId": "69eef620b4b19119328b4dff"
+    },
+    {
+      "id": "6a92084c8f0861e0f0c122e3",
+      "title": "Clean Headphones",
+      "detail": "Maintenance Organization",
+      "status": "open",
+      "due": "2026-10-16",
+      "starred": false,
+      "originUrl": "https://ticktick.com/webapp/#p/69eef620b4b19119328b4dff/tasks/6a92084c8f0861e0f0c122e3",
+      "kind": "task",
+      "projectId": "69eef620b4b19119328b4dff"
+    },
+    {
+      "id": "6a92084c8f080f71bb925fc2",
+      "title": "Wash Clothes",
+      "detail": "Maintenance Organization",
+      "status": "open",
+      "due": "2026-10-16",
+      "starred": false,
+      "originUrl": "https://ticktick.com/webapp/#p/69eef620b4b19119328b4dff/tasks/6a92084c8f080f71bb925fc2",
+      "kind": "task",
+      "projectId": "69eef620b4b19119328b4dff"
+    },
+    {
+      "id": "6a92084c8f0869c15148f147",
+      "title": "Clean Out Tote",
+      "detail": "Maintenance Organization",
+      "status": "open",
+      "due": "2026-10-16",
+      "starred": false,
+      "originUrl": "https://ticktick.com/webapp/#p/69eef620b4b19119328b4dff/tasks/6a92084c8f0869c15148f147",
+      "kind": "task",
+      "projectId": "69eef620b4b19119328b4dff"
+    },
+    {
+      "id": "69f3a3bea4d051ee307bdfc3",
+      "title": " Schedule Haircut",
+      "detail": "Maintenance Organization",
+      "status": "open",
+      "due": "2026-10-16",
+      "starred": false,
+      "originUrl": "https://ticktick.com/webapp/#p/69eef620b4b19119328b4dff/tasks/69f3a3bea4d051ee307bdfc3",
+      "kind": "task",
+      "projectId": "69eef620b4b19119328b4dff"
+    },
+    {
+      "id": "6a92084c8f0861e0f0c122e7",
+      "title": "Meal Prep",
+      "detail": "Maintenance Organization",
+      "status": "open",
+      "due": "2026-10-16",
+      "starred": false,
+      "originUrl": "https://ticktick.com/webapp/#p/69eef620b4b19119328b4dff/tasks/6a92084c8f0861e0f0c122e7",
+      "kind": "task",
+      "projectId": "69eef620b4b19119328b4dff"
+    },
+    {
+      "id": "6a92084c8f0869c15148f149",
+      "title": "Foot Care and Moisturize",
+      "detail": "* Sep 6- Skipped ( Returning Home from Motown)",
+      "status": "open",
+      "due": "2026-10-16",
+      "starred": false,
+      "originUrl": "https://ticktick.com/webapp/#p/69eef620b4b19119328b4dff/tasks/6a92084c8f0869c15148f149",
+      "kind": "task",
+      "projectId": "69eef620b4b19119328b4dff"
+    },
+    {
+      "id": "6a93a4ba8f0869c15168d8ef",
+      "title": "Wash Towels",
+      "detail": "Wash, dry, fold, and put away used towels so clean towels are available.",
+      "status": "open",
+      "due": "2026-10-16",
+      "starred": false,
+      "originUrl": "https://ticktick.com/webapp/#p/69eef620b4b19119328b4dff/tasks/6a93a4ba8f0869c15168d8ef",
+      "kind": "task",
+      "projectId": "69eef620b4b19119328b4dff"
+    },
+    {
       "id": "69ffbe88cd20d11954046851",
       "title": "Digital Declutter",
       "detail": "- [ ] Emails - [ ] Phone Numbers - [ ] Chrome/Safari History - [ ] Saved Payment Methods/Emails - [ ] Old Pictures",
@@ -171,26 +303,26 @@
       "projectId": "69eef620b4b19119328b4dff"
     },
     {
-      "id": "6a9fb6d68f08ecb120d1a125",
-      "title": "Daily Work & Income Flow",
-      "detail": "Complete the active Job, Resale, and Candle actions. Items marked “when needed” may be skipped when they do not apply.",
+      "id": "6a92084c8f0869c15148f148",
+      "title": "Vacuum Car",
+      "detail": "Aug 29-Skipping Sep 5- Skipping",
       "status": "open",
-      "due": "2026-10-15",
-      "starred": true,
-      "originUrl": "https://ticktick.com/webapp/#p/69dd701e1ca911a95e9a97c7/tasks/6a9fb6d68f08ecb120d1a125",
+      "due": "2026-10-17",
+      "starred": false,
+      "originUrl": "https://ticktick.com/webapp/#p/69eef620b4b19119328b4dff/tasks/6a92084c8f0869c15148f148",
       "kind": "task",
-      "projectId": "69dd701e1ca911a95e9a97c7"
+      "projectId": "69eef620b4b19119328b4dff"
     },
     {
-      "id": "69f65979d19c9118d36dcab1",
-      "title": "Music Session-Support",
-      "detail": "--- May 21- No Thursday session was done --- May 28- No session Done --- June 4- No Session Done --- Jul 11- No Session Done (Bonaroo) --- Jun 18- No Session Done --- June 25- no s",
+      "id": "6a93a4ba8f080f71bbb4017b",
+      "title": "Clean Bathroom — Weekly",
+      "detail": "Clean the toilet, sink, mirror, tub or shower, floor, and remove trash. Complete when the bathroom is reset and usable.",
       "status": "open",
-      "due": "2026-10-15",
+      "due": "2026-10-17",
       "starred": false,
-      "originUrl": "https://ticktick.com/webapp/#p/69def09b442591a95e9af9db/tasks/69f65979d19c9118d36dcab1",
+      "originUrl": "https://ticktick.com/webapp/#p/69eef620b4b19119328b4dff/tasks/6a93a4ba8f080f71bbb4017b",
       "kind": "task",
-      "projectId": "69def09b442591a95e9af9db"
+      "projectId": "69eef620b4b19119328b4dff"
     },
     {
       "id": "habit-69ceedf0f95d5102bc895aab",
@@ -517,5 +649,5 @@
       "kind": "habit"
     }
   ],
-  "refreshedAt": "2026-10-15T12:38:18.248Z"
+  "refreshedAt": "2026-10-17T23:37:01.302Z"
 }
