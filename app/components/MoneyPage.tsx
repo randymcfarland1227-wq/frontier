@@ -1,6 +1,8 @@
 'use client';
 
 import { createContext, Fragment, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { MoneySelector } from './MoneySelector';
+import { isLedgerPaid, ledgerMonthRows } from '../../lib/moneyLedger';
 import { PayPlanner } from './PayPlanner';
 import {
   amountOf,
@@ -666,7 +668,7 @@ function kindLabel(d: BillDue): string {
   return k ? MONEY_KINDS[k].label : 'Bill';
 }
 
-function MonthRow({ d, paidAt, onPaid }: { d: BillDue; paidAt: Record<string, string>; onPaid: (d: BillDue) => void }) {
+function MonthRow({ d, paidAt, onPaid, fullDate = false }: { d: BillDue; paidAt: Record<string, string>; onPaid: (d: BillDue) => void; fullDate?: boolean }) {
   const state = monthState(d, paidAt);
   const day = fromDayKey(d.due);
   const done = state === 'paid' || state === 'crossed' || state === 'charged' || state === 'skipped';
@@ -675,7 +677,7 @@ function MonthRow({ d, paidAt, onPaid }: { d: BillDue; paidAt: Record<string, st
     <li className={`mm-row is-${state}`} style={{ '--ev': d.bill.kind ? MONEY_KINDS[d.bill.kind].color : '#a8632a' } as React.CSSProperties}>
       <span className="mm-day" aria-label={day.toLocaleDateString([], { weekday: 'long', month: 'long', day: 'numeric' })}>
         <b>{day.getDate()}</b>
-        <small>{day.toLocaleDateString([], { weekday: 'short' })}</small>
+        <small>{day.toLocaleDateString([], fullDate ? { month: 'short' } : { weekday: 'short' })}</small>
       </span>
       <span className="mm-kind">{kindLabel(d)}</span>
       <span className="mm-name">
@@ -705,6 +707,7 @@ function MonthView({
   model,
   onPaid,
   kinds,
+  hidePaid = false,
 }: {
   dues: BillDue[];
   paidAt: Record<string, string>;
@@ -712,14 +715,11 @@ function MonthView({
   onPaid: (d: BillDue) => void;
   /** Only these kinds (the Bills tab shows just bills) */
   kinds?: string[];
+  hidePaid?: boolean;
 }) {
   const today = startOfDay(new Date());
   const dues = kinds ? allDues.filter(d => kinds.includes(d.bill.kind || 'bill')) : allDues;
-  // Rows crossed out in the sheet (skipped this month) show too, so the month adds up like the sheet.
-  const struck: BillDue[] = model.items
-    .filter(i => (!kinds || kinds.includes(i.kind)) && i.skipped && i.date && fromDayKey(i.date).getMonth() === today.getMonth() && fromDayKey(i.date).getFullYear() === today.getFullYear())
-    .map(i => ({ bill: { id: `${CROSSED}${i.id}`, name: i.name, amount: i.amount, kind: i.kind }, due: i.date!, days: Math.round((fromDayKey(i.date!).getTime() - today.getTime()) / 86_400_000), key: i.id }));
-  const all = [...dues, ...struck.filter(s => !dues.some(d => d.key === s.key))].sort((a, b) => a.due.localeCompare(b.due) || a.bill.name.localeCompare(b.bill.name));
+  const all = ledgerMonthRows(dues, model.items.filter(i => !kinds || kinds.includes(i.kind)), today);
   const counted = all.filter(d => !d.skipped);
   const total = counted.reduce((s, d) => s + (d.bill.amount || 0), 0);
   const doneList = counted.filter(d => ['paid', 'crossed', 'charged'].includes(monthState(d, paidAt)));
@@ -802,7 +802,8 @@ function MonthView({
               </span>
             </summary>
             <ul>
-              {list.map(d => (
+              {hidePaid && list.every(d => isLedgerPaid(d, paidAt)) ? <li className="mny-empty">Paid items hidden.</li> : null}
+              {list.filter(d => !hidePaid || !isLedgerPaid(d, paidAt)).map(d => (
                 <MonthRow key={d.key} d={d} paidAt={paidAt} onPaid={onPaid} />
               ))}
             </ul>
@@ -2471,12 +2472,9 @@ const LEDGER_KINDS: Array<[string, string]> = [
   ['sub', 'Subscriptions'],
 ];
 
-function LedgerByCategory({ dues, paidAt, model, onPaid }: { dues: BillDue[]; paidAt: Record<string, string>; model: MoneyModel; onPaid: (d: BillDue) => void }) {
+function LedgerByCategory({ dues, paidAt, model, onPaid, hidePaid }: { dues: BillDue[]; paidAt: Record<string, string>; model: MoneyModel; onPaid: (d: BillDue) => void; hidePaid: boolean }) {
   const today = startOfDay(new Date());
-  const struck: BillDue[] = model.items
-    .filter(i => i.skipped && i.date && fromDayKey(i.date).getMonth() === today.getMonth() && fromDayKey(i.date).getFullYear() === today.getFullYear())
-    .map(i => ({ bill: { id: `${CROSSED}${i.id}`, name: i.name, amount: i.amount, kind: i.kind }, due: i.date!, days: Math.round((fromDayKey(i.date!).getTime() - today.getTime()) / 86_400_000), key: i.id }));
-  const all = [...dues, ...struck.filter(s => !dues.some(d => d.key === s.key))];
+  const all = ledgerMonthRows(dues, model.items, today);
   return (
     <div className="ledger-cats">
       {LEDGER_KINDS.map(([kind, label]) => {
@@ -2498,7 +2496,8 @@ function LedgerByCategory({ dues, paidAt, model, onPaid }: { dues: BillDue[]; pa
             </div>
             {list.length ? (
               <ul>
-                {list.map(d => {
+                {hidePaid && list.every(d => isLedgerPaid(d, paidAt)) ? <li className="mny-empty">Paid items hidden.</li> : null}
+                {list.filter(d => !hidePaid || !isLedgerPaid(d, paidAt)).map(d => {
                   const st = monthState(d, paidAt);
                   const isDone = ['paid', 'crossed', 'charged'].includes(st);
                   return (
@@ -2539,7 +2538,7 @@ const TAB_IDS: TabId[] = ['flow', 'accounts', 'spend', 'plan', 'owed', 'save'];
 /** Old saved tabs → the merged container they now live in */
 const LEGACY_TAB: Record<string, TabId> = { week: 'flow', month: 'flow', due: 'flow', cards: 'accounts', bills: 'spend', subs: 'spend', shop: 'spend' };
 const FLOW_IDS = ['week', 'month', 'ledger'] as const;
-const LEDGER_IDS = ['date', 'category'] as const;
+const LEDGER_IDS = ['date', 'category', 'selector'] as const;
 const ACCT_IDS = ['checking', 'savings', 'cards'] as const;
 const SPEND_IDS = ['out', 'bills', 'paylater', 'subs', 'shop'] as const;
 const TAB_KEY = 'lifehub-money-tab';
@@ -2575,6 +2574,7 @@ export function MoneyPage({
   const [legacyTab] = useState(() => readSaved<string>(TAB_KEY, 'flow'));
   const [tab, setTabState] = useState<TabId>(() => (TAB_IDS.includes(legacyTab as TabId) ? (legacyTab as TabId) : LEGACY_TAB[legacyTab] || 'flow'));
   const [flowView, setFlowView] = useSavedChoice('lifehub-money-flow', FLOW_IDS, 'week', legacyTab === 'month' || legacyTab === 'due' ? 'month' : undefined);
+  const [hidePaid, setHidePaid] = useState(() => readSaved<boolean>('lifehub-money-ledger-hide-paid', false));
   const [ledgerView, setLedgerView] = useSavedChoice('lifehub-money-ledger', LEDGER_IDS, 'date');
   const [acctView, setAcctView] = useSavedChoice('lifehub-money-accounts', ACCT_IDS, 'checking', legacyTab === 'cards' ? 'cards' : undefined);
   const [spendView, setSpendView] = useSavedChoice('lifehub-money-spend', SPEND_IDS, 'out', legacyTab === 'subs' ? 'subs' : legacyTab === 'shop' ? 'shop' : undefined);
@@ -2837,7 +2837,10 @@ export function MoneyPage({
           />
         ) : null}
         {tab === 'flow' && flowView === 'ledger' ? (
-          <SubTabs label="Ledger view" value={ledgerView} onChange={setLedgerView} options={[['date', 'By date'], ['category', 'By category']]} />
+          <div className="money-ledger-toolbar">
+            <SubTabs label="Ledger view" value={ledgerView} onChange={setLedgerView} options={[['date', 'By date'], ['category', 'By category'], ['selector', 'Selector tool']]} />
+            <button type="button" className="mny-btn" aria-pressed={hidePaid} onClick={() => { setHidePaid(!hidePaid); writeSaved('lifehub-money-ledger-hide-paid', !hidePaid); }}>{hidePaid ? 'Show paid items' : 'Hide paid items'}</button>
+          </div>
         ) : null}
         {tab === 'accounts' ? (
           <SubTabs
@@ -2885,7 +2888,7 @@ export function MoneyPage({
         {tab === 'flow' && flowView === 'ledger' && ledgerView === 'date' ? (
           <div className="mny-stack">
             <Section tone="due" title={`${monthName} ledger`} figure={`${monthPaid} of ${monthCount}`} figureLabel="paid" href={link('Randy')}>
-              <MonthView dues={monthDues} paidAt={paidAt} model={model} onPaid={onPaid} />
+              <MonthView dues={monthDues} paidAt={paidAt} model={model} onPaid={onPaid} hidePaid={hidePaid} />
             </Section>
             <Section tone="due" title="After this month" figure={money(sum(dues.filter(d => fromDayKey(d.due) > monthEnd && d.days <= 35)))} figureLabel="next few weeks">
               <DueList dues={dues.filter(d => fromDayKey(d.due) > monthEnd)} onPaid={onPaid} by="week" days={35} incoming={incoming.filter(d => fromDayKey(d.due) > monthEnd)} />
@@ -2895,7 +2898,14 @@ export function MoneyPage({
 
         {tab === 'flow' && flowView === 'ledger' && ledgerView === 'category' ? (
           <Section tone="due" title={`${monthName} by category`} hint="Is everything paid? Bills, card payments, pay later and subscriptions side by side." href={link('Randy')}>
-            <LedgerByCategory dues={monthDues} paidAt={paidAt} model={model} onPaid={onPaid} />
+            <LedgerByCategory dues={monthDues} paidAt={paidAt} model={model} onPaid={onPaid} hidePaid={hidePaid} />
+          </Section>
+        ) : null}
+
+        {tab === 'flow' && flowView === 'ledger' && ledgerView === 'selector' ? (
+          <Section tone="due" title="Selector tool" hint="Choose types in the order you want them listed. Each type adds all matching payments; individual additions stay grouped by type.">
+            <MoneySelector dues={ledgerMonthRows([...dues, ...monthDues], model.items, today)} paidAt={paidAt} hidePaid={hidePaid}
+              renderRow={d => <MonthRow key={d.key} d={d} paidAt={paidAt} onPaid={onPaid} fullDate />} />
           </Section>
         ) : null}
 
