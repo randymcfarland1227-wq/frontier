@@ -17,6 +17,10 @@ export type BillEdit = {
   /** Amount for this one */
   amount?: number;
   note?: string;
+  /** Non Critical set on Life Hub (overrides the sheet's Item Flags): orange when overdue, not red */
+  nonCritical?: boolean;
+  /** Pay-by day set on Life Hub (YYYY-MM-DD; '' = cleared, overriding the sheet) */
+  payBy?: string;
   at: string;
 };
 
@@ -81,10 +85,38 @@ export function setBillEdit(key: string, edit: Omit<BillEdit, 'at'> | null) {
         ...(edit.note?.trim() ? { note: edit.note.trim() } : {}),
       }
     : {};
+  // Non Critical / Pay by are set separately (setBillFlags) and survive a change or an undo.
+  const prev = all[key];
+  const flags = {
+    ...(prev?.nonCritical !== undefined ? { nonCritical: prev.nonCritical } : {}),
+    ...(prev?.payBy !== undefined ? { payBy: prev.payBy } : {}),
+  };
   // A cleared change is kept as an empty, newer entry so other devices drop theirs too.
-  all[key] = { ...clean, at };
+  all[key] = { ...clean, ...flags, at };
   writeSaved(STORAGE_KEYS.billEdits, all);
   if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent(BILL_EDITS_EVENT));
+}
+
+/** Set Non Critical / Pay by for one due (keeps any skip / move / amount / note). */
+export function setBillFlags(key: string, flags: { nonCritical?: boolean; payBy?: string }) {
+  const all = loadBillEdits();
+  all[key] = { ...(all[key] || {}), ...flags, at: new Date().toISOString() };
+  writeSaved(STORAGE_KEYS.billEdits, all);
+  if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent(BILL_EDITS_EVENT));
+}
+
+/** Life Hub's Non Critical / Pay by on top of the sheet's Item Flags. */
+export function withBillFlags(d: BillDue, e?: BillEdit): BillDue {
+  if (!e || (e.nonCritical === undefined && e.payBy === undefined)) return d;
+  const bill = { ...d.bill };
+  if (e.nonCritical !== undefined) bill.nonCritical = e.nonCritical || undefined;
+  if (e.payBy !== undefined) bill.payBy = e.payBy || undefined;
+  return { ...d, bill };
+}
+
+/** Overdue, and not marked Non Critical: shown red (Non Critical overdue is orange). */
+export function isCriticalOverdue(d: BillDue): boolean {
+  return isOverdue(d) && !d.bill.nonCritical;
 }
 
 export function useBillEdits(): BillEdits {
@@ -120,6 +152,7 @@ export function applyBillEdits(dues: BillDue[], edits: BillEdits, today = new Da
       const ruled = withBillDay(d.due, rule);
       if (ruled !== d.due) d = { ...d, due: ruled, days: daysBetween(t, fromDayKey(ruled)), everyMonth: rule!.day! };
       const e = edits[d.key];
+      d = withBillFlags(d, e);
       if (!hasEdit(e)) return d;
       const due = e!.moveTo || d.due;
       return {

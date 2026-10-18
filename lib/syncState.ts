@@ -50,7 +50,7 @@ export type SyncedState = {
   /** Peculiar Command Center's studio data (same-origin localStorage bundle); newest change wins */
   candle: CandleBundle;
   /** Bill changes per due (skip / move / amount / note); newest change wins */
-  billEdits: Record<string, { skip?: boolean; moveTo?: string; amount?: number; note?: string; at: string }>;
+  billEdits: Record<string, { skip?: boolean; moveTo?: string; amount?: number; note?: string; nonCritical?: boolean; payBy?: string; at: string }>;
   /** Subscriptions added on Life Hub: union by id, newest edit wins (removed = flagged, never deleted) */
   subs: LifeSub[];
   extraCards: ExtraCard[];

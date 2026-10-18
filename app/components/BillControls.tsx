@@ -2,7 +2,7 @@
 
 import { useState, type FormEvent } from 'react';
 import { fromDayKey, type BillDue } from '../../lib/schedule';
-import { billRuleKey, loadBillDays, loadBillEdits, setBillDay, setBillEdit } from '../../lib/billEdits';
+import { billRuleKey, loadBillDays, loadBillEdits, setBillDay, setBillEdit, setBillFlags, useBillEdits } from '../../lib/billEdits';
 import { pinKey, updatePinDetails, usePriorityPins } from '../../lib/priorityPins';
 
 const shortDay = (k: string) => fromDayKey(k).toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' });
@@ -20,6 +20,34 @@ export function billChangeText(d: BillDue): string {
 }
 
 const ordinal = (n: number) => `${n}${n % 10 === 1 && n !== 11 ? 'st' : n % 10 === 2 && n !== 12 ? 'nd' : n % 10 === 3 && n !== 13 ? 'rd' : 'th'}`;
+
+/**
+ * Non Critical (overdue shows orange, not red) and Pay by (the last day before a late fee or
+ * suspension; it still counts as overdue after the due date). Saved on Life Hub right away (synced);
+ * the sheet's "Item Flags" block on the Randy tab sets the starting values.
+ */
+export function BillFlagsFields({ due }: { due: BillDue }) {
+  const saved = useBillEdits()[due.key];
+  const nonCritical = saved?.nonCritical ?? !!due.bill.nonCritical;
+  const payBy = saved?.payBy !== undefined ? saved.payBy : due.bill.payBy || '';
+  return (
+    <div className="bill-flags" role="group" aria-label={`Flags for ${due.bill.name}`}>
+      <label className="bill-flags-check">
+        <input type="checkbox" checked={nonCritical} onChange={e => setBillFlags(due.key, { nonCritical: e.target.checked })} />
+        Non critical <small>overdue shows orange, not red</small>
+      </label>
+      <label className="bill-change-field">
+        <span>Pay by</span>
+        <input type="date" value={payBy} min={due.orig || due.due} onChange={e => setBillFlags(due.key, { payBy: e.target.value })} aria-label={`Pay by date for ${due.bill.name}`} />
+      </label>
+      {payBy ? (
+        <button type="button" className="row-action ghost" onClick={() => setBillFlags(due.key, { payBy: '' })}>
+          Clear pay by
+        </button>
+      ) : null}
+    </div>
+  );
+}
 
 /** Pin this due date to Priority ("Doing now"). Checking it off there marks it paid. */
 export function BillPinButton({ due, className = 'row-action ghost' }: { due: BillDue; className?: string }) {
@@ -145,6 +173,7 @@ export function BillChangeForm({ due, onDone }: { due: BillDue; onDone: () => vo
           placeholder={mode === 'skip' ? 'Why? e.g. Shopping for cheaper insurance' : 'Optional'}
         />
       </label>
+      <BillFlagsFields due={due} />
       <div className="bill-change-actions">
         <button type="submit" className="row-action">
           Save

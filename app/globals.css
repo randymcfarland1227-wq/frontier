@@ -4669,3 +4669,28 @@ button.bal-led-row:hover { background: color-mix(in srgb, var(--ev, #0f8a7e) 8%,
 .money-selector-group h3 { margin: 0; font-size: 15px; }
 .money-selector-group header span { margin-left: auto; color: var(--muted); font-size: 12px; }
 .money-selector :focus-visible { outline: 2px solid var(--accent-ink); outline-offset: 3px; }
+
+/* Non Critical overdue (orange, not red) and "Pay by" badges */
+.mny-flag { display: inline-block; margin-left: 6px; padding: 0 6px; border-radius: 999px; font-size: 11px; font-weight: 650; line-height: 18px; white-space: nowrap; vertical-align: middle; }
+.mny-flag.is-payby { background: color-mix(in srgb, #2563eb 12%, var(--surface)); color: #1d4ed8; border: 1px solid color-mix(in srgb, #2563eb 35%, transparent); }
+.mny-flag.is-noncritical { background: color-mix(in srgb, #f97316 14%, var(--surface)); color: #c2410c; border: 1px solid color-mix(in srgb, #f97316 40%, transparent); }
+.frontier-shell[data-color-mode="dark"] .mny-flag.is-payby { color: #93c5fd; }
+.frontier-shell[data-color-mode="dark"] .mny-flag.is-noncritical { color: #fdba74; }
+.mny-due-group li.is-overdue.is-noncritical { border-left-color: #ea7a1a; }
+.mm-row.is-late.is-noncritical { background: color-mix(in srgb, #f97316 10%, var(--surface)); }
+.mm-row.is-late.is-noncritical .mm-state { color: #c2410c; }
+.frontier-shell[data-color-mode="dark"] .mm-row.is-late.is-noncritical .mm-state { color: #fdba74; }
+.ledger-row.is-late.is-noncritical .ledger-paid.is-late { border-color: #ea7a1a; color: #c2410c; background: color-mix(in srgb, #f97316 12%, var(--surface)); }
+.bal-line.is-overdue.is-noncritical .bal-day, .bal-rl.is-overdue.is-noncritical .bal-day, .bal-led-row.is-overdue.is-noncritical .bal-led-day { color: #c2410c; }
+.frontier-shell[data-color-mode="dark"] :is(.bal-line, .bal-rl).is-overdue.is-noncritical .bal-day, .frontier-shell[data-color-mode="dark"] .bal-led-row.is-overdue.is-noncritical .bal-led-day { color: #fdba74; }
+.bill-flags { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; margin: 6px 0; }
+.bill-flags-check { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; }
+.bill-flags-check small { color: var(--muted); }
+.bill-row.is-overdue.is-noncritical .bill-when { background: #fde4cc; color: #9a3d0a; }
+.frontier-shell[data-color-mode="dark"] .bill-row.is-overdue.is-noncritical .bill-when { background: #4a2a10; color: #fdba74; }
+.is-noncritical .bal-late { color: #c2410c; }
+.frontier-shell[data-color-mode="dark"] .is-noncritical .bal-late { color: #fdba74; }
+.bal-name small .mny-flag, .bal-led-name small .mny-flag { font-style: normal; }
+.bal-drw-tiles > .is-noncritical { background: color-mix(in srgb, #f97316 10%, var(--surface)); }
+.bal-drw-tiles > .is-noncritical b { color: #c2410c; }
+.frontier-shell[data-color-mode="dark"] .bal-drw-tiles > .is-noncritical b { color: #fdba74; }

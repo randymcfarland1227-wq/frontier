@@ -54,7 +54,11 @@ export type Bill = {
   autopay?: boolean;
   notes?: string;
   /** Set for items from the Radall money tabs (bill, card min, subscription, pay later) */
-  kind?: 'bill' | 'card' | 'sub' | 'paylater' | 'plan';
+  kind?: 'bill' | 'card' | 'sub' | 'paylater' | 'cash' | 'plan';
+  /** Non Critical: still overdue after its day, but shown orange, not red (sheet "Item Flags" or Life Hub) */
+  nonCritical?: boolean;
+  /** Last day to pay before a late fee / suspension — YYYY-MM-DD; still overdue after the due date */
+  payBy?: string;
 };
 
 /** A dated task on the calendar: a Self task with a day, or a Priority item given a day. */

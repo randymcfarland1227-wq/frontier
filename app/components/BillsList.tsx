@@ -7,7 +7,7 @@ import { BillChangeForm, BillPinButton, billChangeText } from './BillControls';
 /** How loud the countdown is: overdue / within 3 days / later / skipped. */
 function urgency(d: BillDue) {
   if (d.skipped) return 'is-skipped';
-  if (d.days < 0) return 'is-overdue';
+  if (d.days < 0) return d.bill.nonCritical ? 'is-overdue is-noncritical' : 'is-overdue';
   if (d.days <= 3) return 'is-soon';
   return 'is-later';
 }
