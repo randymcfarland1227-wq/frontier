@@ -22,7 +22,7 @@ import { addDays, dayKey, dayName, daysBetween, fromDayKey, money, startOfDay, s
 import { usePayPlans } from '../../lib/payPlans';
 import { readSaved, writeSaved, STORAGE_KEYS } from '../../lib/storage';
 import { isOverdue } from '../../lib/billEdits';
-import { BillChangeForm, BillPinButton, billChangeText } from './BillControls';
+import { BillChangeForm, BillFlagsFields, BillPinButton, billChangeText } from './BillControls';
 import { addExtraCard, updateExtraCard, useExtraCards, type ExtraCard } from '../../lib/extraCards';
 import { addLifeSub, updateLifeSub, type LifeSub } from '../../lib/lifeSubs';
 import { addCustomItem, METHOD_LABEL, mondayOf, setBalancePicks, setPickLanded, srcKey, updatePick, useBalancePicks, type BalancePlan, type CustomItem, type PayMethod } from '../../lib/balancePicks';
@@ -430,13 +430,14 @@ function DueRow({ d, onPaid, showDay }: { d: BillDue; onPaid: (d: BillDue) => vo
   const changed = billChangeText(d);
   return (
     <>
-      <li className={d.skipped ? 'is-skipped' : d.days < 0 ? 'is-overdue' : ''} style={{ '--ev': kind ? MONEY_KINDS[kind].color : '#a8632a' } as React.CSSProperties}>
+      <li className={d.skipped ? 'is-skipped' : d.days < 0 ? `is-overdue${d.bill.nonCritical ? ' is-noncritical' : ''}` : ''} style={{ '--ev': kind ? MONEY_KINDS[kind].color : '#a8632a' } as React.CSSProperties}>
         {showDay ? <span className="mny-due-day">{fromDayKey(d.due).toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' })}</span> : null}
         <span className="mny-due-kind">{d.skipped ? 'Skipped' : kind === 'paylater' ? provider || 'Pay later' : kind ? MONEY_KINDS[kind].label : 'Bill'}</span>
         <span className="mny-due-name">
           <ItemName id={d.key}>{d.bill.name}</ItemName>
           {installment ? <small> · {installment}</small> : null}
           {changed ? <small className="mny-due-change"> · {changed}</small> : null}
+          <FlagBadges d={d} />
         </span>
         <span className="mny-due-amt">{money(d.bill.amount) || '?'}</span>
         <span className="mny-due-tools">
@@ -662,6 +663,19 @@ const STATE_TEXT: Record<MonthState, (d: BillDue, paidAt: Record<string, string>
   later: d => `In ${d.days} days`,
 };
 
+const payByText = (k: string) => fromDayKey(k).toLocaleDateString([], { month: 'short', day: 'numeric' });
+
+/** "Pay by Oct 23" (grace / suspension date after the due date) and "Non critical" chips. */
+export function FlagBadges({ d }: { d: BillDue }) {
+  if (!d.bill.payBy && !d.bill.nonCritical) return null;
+  return (
+    <>
+      {d.bill.payBy ? <small className="mny-flag is-payby" title="Still overdue after its due date — pay by this day to avoid a late fee or suspension">Pay by {payByText(d.bill.payBy)}</small> : null}
+      {d.bill.nonCritical ? <small className="mny-flag is-noncritical" title="Non critical: shown orange when overdue">Non critical</small> : null}
+    </>
+  );
+}
+
 function kindLabel(d: BillDue): string {
   const k = d.bill.kind;
   if (k === 'paylater') return (d.bill.notes || '').split(' · ')[1] || 'Pay later';
@@ -674,7 +688,7 @@ function MonthRow({ d, paidAt, onPaid, fullDate = false }: { d: BillDue; paidAt:
   const done = state === 'paid' || state === 'crossed' || state === 'charged' || state === 'skipped';
   const installment = d.bill.kind === 'paylater' ? (d.bill.notes || '').split(' · ')[2] : '';
   return (
-    <li className={`mm-row is-${state}`} style={{ '--ev': d.bill.kind ? MONEY_KINDS[d.bill.kind].color : '#a8632a' } as React.CSSProperties}>
+    <li className={`mm-row is-${state}${d.bill.nonCritical ? ' is-noncritical' : ''}`} style={{ '--ev': d.bill.kind ? MONEY_KINDS[d.bill.kind].color : '#a8632a' } as React.CSSProperties}>
       <span className="mm-day" aria-label={day.toLocaleDateString([], { weekday: 'long', month: 'long', day: 'numeric' })}>
         <b>{day.getDate()}</b>
         <small>{day.toLocaleDateString([], fullDate ? { month: 'short' } : { weekday: 'short' })}</small>
@@ -684,6 +698,7 @@ function MonthRow({ d, paidAt, onPaid, fullDate = false }: { d: BillDue; paidAt:
         <ItemName id={d.key}>{d.bill.name}</ItemName>
         {installment ? <small> · {installment}</small> : null}
         {billChangeText(d) ? <small> · {billChangeText(d)}</small> : null}
+        <FlagBadges d={d} />
       </span>
       <span className="mm-amt">{money(d.bill.amount) || '?'}</span>
       <span className="mm-state">
@@ -727,7 +742,7 @@ function MonthView({
   const late = counted.filter(d => monthState(d, paidAt) === 'late');
   const left = total - done;
   const pct = total ? Math.round((done / total) * 100) : 0;
-  const byKind = (['bill', 'card', 'sub', 'paylater', 'plan'] as const)
+  const byKind = (['bill', 'card', 'paylater', 'cash', 'sub', 'plan'] as const)
     .map(k => ({ k, sum: counted.filter(d => d.bill.kind === k).reduce((s, d) => s + (d.bill.amount || 0), 0) }))
     .filter(x => x.sum > 0);
   // Weeks of the month: 1–7, 8–14, 15–21, 22–28, 29–end.
@@ -920,7 +935,7 @@ function CardTiles({ model, dues, paidAt, onPaid, onSave }: { model: MoneyModel;
           </li>
         );
       })}
-      <ExtraCardTiles />
+      <ExtraCardTiles sheetNames={cards.map(c => c.name)} />
     </ul>
   );
 }
@@ -969,8 +984,10 @@ function ExtraCardTile({ card }: { card: ExtraCard }) {
   );
 }
 
-function ExtraCardTiles() {
-  const cards = useExtraCards();
+/** Placeholder cards added on Life Hub; one that's now in the sheet (e.g. Atlas under "More Cards") shows once, from the sheet. */
+function ExtraCardTiles({ sheetNames = [] }: { sheetNames?: string[] }) {
+  const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, '');
+  const cards = useExtraCards().filter(c => !sheetNames.some(n => norm(n) === norm(c.name)));
   const [adding, setAdding] = useState(false);
   const [name, setName] = useState('');
   return (
@@ -1356,6 +1373,10 @@ type BalanceLine = {
   color: string;
   /** Past its day and still unpaid */
   overdue?: boolean;
+  /** Non Critical: overdue shows orange, not red */
+  nonCritical?: boolean;
+  /** Pay by (grace day after the due date) */
+  payBy?: string;
   /** Counts toward this month's sheet (unpaid future, or overdue) */
   open: boolean;
   /** Paid on Life Hub / in the sheet (only for this month's list) */
@@ -1371,6 +1392,7 @@ const OFFER_GROUPS: Array<[string, string]> = [
   ['bill', 'Bills'],
   ['card', 'Credit cards'],
   ['paylater', 'Pay later'],
+  ['cash', 'Cash advances'],
   ['sub', 'Subscriptions'],
   ['plan', 'Planned'],
   ['custom', 'Added by you'],
@@ -1397,6 +1419,8 @@ function payLine(d: BillDue, paidAt: Record<string, string>): BalanceLine {
     group: d.bill.kind || 'bill',
     color: d.bill.kind ? MONEY_KINDS[d.bill.kind].color : '#a8632a',
     overdue: d.days < 0 && !paidAt[d.key],
+    nonCritical: d.bill.nonCritical,
+    payBy: d.bill.payBy,
     open: !d.skipped && !paidAt[d.key] && (d.days >= 0 || isOverdue(d)),
     paid: paidAt[d.key],
     src: srcKey('pay', d.bill.name),
@@ -1785,7 +1809,7 @@ function BalancingSheet({ period, book, model, onSave, tasks }: { period: 'week'
             <button
               key={l.key}
               type="button"
-              className={`bal-led-row is-item is-${l.kind}${l.kind === 'in' && !l.landed ? ' is-coming' : ''}${l.landed ? ' is-landed' : ''}${l.overdue ? ' is-overdue' : ''}`}
+              className={`bal-led-row is-item is-${l.kind}${l.kind === 'in' && !l.landed ? ' is-coming' : ''}${l.landed ? ' is-landed' : ''}${l.overdue ? ` is-overdue${l.nonCritical ? ' is-noncritical' : ''}` : ''}`}
               style={{ '--ev': l.color } as React.CSSProperties}
               onClick={() => panels.openLine(l.key)}
               title="Details"
@@ -1795,6 +1819,7 @@ function BalancingSheet({ period, book, model, onSave, tasks }: { period: 'week'
                 <small>
                   {l.overdue && !book.payOnOf(l) ? <b className="bal-late">Late</b> : null}
                   {l.tag}
+                  {l.payBy ? <i className="mny-flag is-payby">Pay by {payByText(l.payBy)}</i> : null}
                   {l.acct ? (
                     <>
                       {' · '}
@@ -1911,7 +1936,7 @@ function BalancingSheet({ period, book, model, onSave, tasks }: { period: 'week'
           const offerRow = (l: BalanceLine) => (
             <li
               key={l.key}
-              className={`bal-line is-${l.kind}${l.overdue ? ' is-overdue' : ''}`}
+              className={`bal-line is-${l.kind}${l.overdue ? ` is-overdue${l.nonCritical ? ' is-noncritical' : ''}` : ''}`}
               style={{ '--ev': l.color } as React.CSSProperties}
               draggable
               onDragStart={e => {
@@ -1925,6 +1950,7 @@ function BalancingSheet({ period, book, model, onSave, tasks }: { period: 'week'
                 <small>
                   {l.tag}
                   {l.overdue ? ` · was due ${shortDay(l.due)}` : ` · ${shortDay(l.due)}`}
+                  {l.payBy ? <i className="mny-flag is-payby">Pay by {payByText(l.payBy)}</i> : null}
                 </small>
               </button>
               <span className={`bal-amt${l.kind === 'in' ? ' is-in' : ''}`}>{l.amount === undefined ? '?' : `${l.kind === 'in' ? '+' : '−'}${money(l.amount)}`}</span>
@@ -2097,7 +2123,8 @@ function LinePanel({
         <h3>{l.name}</h3>
         <p className="bal-drw-chips">
           {l.paid ? <span className="is-ok">Paid ✓</span> : planned ? <span className="is-ok">Planned</span> : onSheet ? <span className="is-pend">{acctName ? 'Needs a pay day' : 'Needs an account'}</span> : <span>Not planned</span>}
-          {l.overdue ? <span className="is-short">Overdue</span> : null}
+          {l.overdue ? <span className={l.nonCritical ? 'is-pend' : 'is-short'}>{l.nonCritical ? 'Overdue · non critical' : 'Overdue'}</span> : null}
+          {l.payBy ? <span className="is-pend">Pay by {payByText(l.payBy)}</span> : null}
           {reg?.landed ? <span className="is-ok">Added to {acctName} ✓</span> : null}
           {onSheet ? <span>On the balancing sheet</span> : null}
         </p>
@@ -2113,7 +2140,7 @@ function LinePanel({
           <b>{shortDay(l.due).replace(/^\w+, /, '')}</b>
           <small>{fromDayKey(l.due).toLocaleDateString([], { weekday: 'long' })}</small>
         </div>
-        <div className={l.overdue ? 'is-end is-neg' : ''}>
+        <div className={l.overdue ? (l.nonCritical ? 'is-end is-noncritical' : 'is-end is-neg') : ''}>
           <span>{days < 0 ? (isIn ? 'Since' : 'Late') : 'Days left'}</span>
           <b>{daysText(days, l.kind)}</b>
         </div>
@@ -2144,6 +2171,13 @@ function LinePanel({
                 : 'No account chosen — marks it paid without changing a balance'}
           </small>
         </div>
+      ) : null}
+
+      {!isIn && book.due(l.key) ? (
+        <section className="bal-drw-sec">
+          <h4>Flags</h4>
+          <BillFlagsFields due={book.due(l.key)!} />
+        </section>
       ) : null}
 
       <section className="bal-drw-sec">
@@ -2291,7 +2325,7 @@ function AccountPanel({ name, book, model, onSave, onBack, onClose }: { name: st
   const label = wi === 'month' ? 'this month' : wi === 0 ? 'this week' : book.weeks[wi].label;
   const lineRow = (l: RegLine) => (
     <li key={l.key}>
-      <button type="button" className={`bal-rl is-${l.kind}${l.kind === 'in' && !l.landed ? ' is-coming' : ''}${l.landed ? ' is-landed' : ''}${l.overdue ? ' is-overdue' : ''}`} style={{ '--ev': l.color } as React.CSSProperties} onClick={() => panels.openLine(l.key)}>
+      <button type="button" className={`bal-rl is-${l.kind}${l.kind === 'in' && !l.landed ? ' is-coming' : ''}${l.landed ? ' is-landed' : ''}${l.overdue ? ` is-overdue${l.nonCritical ? ' is-noncritical' : ''}` : ''}`} style={{ '--ev': l.color } as React.CSSProperties} onClick={() => panels.openLine(l.key)}>
         <span className="bal-day">{dayNum(l.when)}</span>
         <span className="bal-name">
           {l.name}
@@ -2469,6 +2503,7 @@ const LEDGER_KINDS: Array<[string, string]> = [
   ['bill', 'Bills'],
   ['card', 'Credit card payments'],
   ['paylater', 'Pay later'],
+  ['cash', 'Cash advances'],
   ['sub', 'Subscriptions'],
 ];
 
@@ -2501,9 +2536,9 @@ function LedgerByCategory({ dues, paidAt, model, onPaid, hidePaid }: { dues: Bil
                   const st = monthState(d, paidAt);
                   const isDone = ['paid', 'crossed', 'charged'].includes(st);
                   return (
-                    <li key={d.key} className={`ledger-row is-${st}`}>
+                    <li key={d.key} className={`ledger-row is-${st}${d.bill.nonCritical ? ' is-noncritical' : ''}`}>
                       <span className="ledger-day">{fromDayKey(d.due).getDate()}</span>
-                      <span className="ledger-name">{d.bill.name}</span>
+                      <span className="ledger-name">{d.bill.name}<FlagBadges d={d} /></span>
                       <span className="ledger-amt">{money(d.bill.amount) || '?'}</span>
                       {isDone ? (
                         <span className="ledger-state">✓</span>
@@ -2540,7 +2575,7 @@ const LEGACY_TAB: Record<string, TabId> = { week: 'flow', month: 'flow', due: 'f
 const FLOW_IDS = ['week', 'month', 'ledger'] as const;
 const LEDGER_IDS = ['date', 'category', 'selector'] as const;
 const ACCT_IDS = ['checking', 'savings', 'cards'] as const;
-const SPEND_IDS = ['out', 'bills', 'paylater', 'subs', 'shop'] as const;
+const SPEND_IDS = ['out', 'bills', 'paylater', 'cash', 'subs', 'shop'] as const;
 const TAB_KEY = 'lifehub-money-tab';
 
 export function MoneyPage({
@@ -2730,7 +2765,7 @@ export function MoneyPage({
     monthDues
       .filter(d => kinds.includes(d.bill.kind || 'bill') && !d.skipped && !paidAt[d.key] && fromDayKey(d.due) >= weekStart && fromDayKey(d.due) <= weekEnd)
       .reduce((s, d) => s + (d.bill.amount || 0), 0);
-  const OUT_KINDS = ['bill', 'card', 'paylater', 'sub'];
+  const OUT_KINDS = ['bill', 'card', 'paylater', 'cash', 'sub'];
   const TABS: Array<{ id: TabId; tone: Tone; label: string; figure: string }> = [
     { id: 'flow', tone: 'due', label: `Week · ${monthName} · Ledger`, figure: overdue.length ? `${overdue.length} overdue · ${money(dueWeek)}` : money(dueWeek) },
     { id: 'accounts', tone: 'cash', label: 'Accounts & cards', figure: model.cashOnHand?.text ? `${model.cashOnHand.text} on hand` : '' },
@@ -2855,7 +2890,7 @@ export function MoneyPage({
             label="Spending"
             value={spendView}
             onChange={setSpendView}
-            options={[['out', 'Outgoing', `${money(weekLeft(OUT_KINDS))} this wk`], ['bills', 'Bills', `${billsLeft} left`], ['paylater', 'Pay Later', pay?.total?.[1]?.text || ''], ['subs', 'Subscriptions', `${money(subsMonthly)}/mo`], ['shop', 'Shopping', `${neededNow.length + (openNeeded?.rows.length || 0)} needed`]]}
+            options={[['out', 'Outgoing', `${money(weekLeft(OUT_KINDS))} this wk`], ['bills', 'Bills', `${billsLeft} left`], ['paylater', 'Pay Later', pay?.total?.[1]?.text || ''], ['cash', 'Cash Advances', `${money(weekLeft(['cash']))} this wk`], ['subs', 'Subscriptions', `${money(subsMonthly)}/mo`], ['shop', 'Shopping', `${neededNow.length + (openNeeded?.rows.length || 0)} needed`]]}
           />
         ) : null}
         {tab === 'flow' && flowView === 'week' ? (
@@ -2906,6 +2941,12 @@ export function MoneyPage({
           <Section tone="due" title="Selector tool" hint="Choose types in the order you want them listed. Each type adds all matching payments; individual additions stay grouped by type.">
             <MoneySelector dues={ledgerMonthRows([...dues, ...monthDues], model.items, today)} paidAt={paidAt} hidePaid={hidePaid}
               renderRow={d => <MonthRow key={d.key} d={d} paidAt={paidAt} onPaid={onPaid} fullDate />} />
+          </Section>
+        ) : null}
+
+        {tab === 'spend' && spendView === 'cash' ? (
+          <Section tone="due" title={`Cash advances · ${monthName}`} hint="Dave, MoneyLion, Cleo… from the Cash Advances block on the Randy tab. Nothing counts as paid until you tap Paid." figure={money(weekLeft(['cash']))} figureLabel="left this week" href={link('Randy')}>
+            <MonthView dues={monthDues} paidAt={paidAt} model={model} onPaid={onPaid} kinds={['cash']} />
           </Section>
         ) : null}
 
@@ -2985,7 +3026,7 @@ export function MoneyPage({
 
         {tab === 'spend' && spendView === 'out' ? (
           <div className="mny-stack">
-            <Section tone="due" title={`Outgoing · ${monthName}`} hint="Bills, card minimums, Pay Later and subscriptions together." figure={money(weekLeft(OUT_KINDS))} figureLabel="left this week" href={link('Randy')}>
+            <Section tone="due" title={`Outgoing · ${monthName}`} hint="Bills, card minimums, Pay Later, cash advances and subscriptions together." figure={money(weekLeft(OUT_KINDS))} figureLabel="left this week" href={link('Randy')}>
               <MonthView dues={monthDues} paidAt={paidAt} model={model} onPaid={onPaid} kinds={OUT_KINDS} />
             </Section>
           </div>

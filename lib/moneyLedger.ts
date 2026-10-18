@@ -22,7 +22,7 @@ export function ledgerMonthRows(dues: BillDue[], items: MoneyItem[], today: Date
   return [...rows.values()].sort((a, b) => a.due.localeCompare(b.due) || a.bill.name.localeCompare(b.bill.name));
 }
 
-const labels: Record<string, string> = { bill: 'Bills', card: 'Credit card payments', sub: 'Subscriptions', plan: 'Planned transfers' };
+const labels: Record<string, string> = { bill: 'Bills', card: 'Credit card payments', sub: 'Subscriptions', cash: 'Cash advances', plan: 'Planned transfers' };
 export function ledgerType(d: BillDue): { id: string; label: string } {
   const kind = d.bill.kind || 'bill';
   if (kind !== 'paylater') return { id: kind, label: labels[kind] || kind };

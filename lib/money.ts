@@ -324,13 +324,14 @@ const slug = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(
 // The model
 // ---------------------------------------------------------------------------
 
-export type MoneyKind = 'bill' | 'card' | 'sub' | 'paylater' | 'plan';
+export type MoneyKind = 'bill' | 'card' | 'sub' | 'paylater' | 'cash' | 'plan';
 
 export const MONEY_KINDS: Record<MoneyKind, { label: string; plural: string; color: string }> = {
   bill: { label: 'Bill', plural: 'Bills', color: '#a8632a' },
   card: { label: 'Card min', plural: 'Card minimums', color: '#b4881f' },
   sub: { label: 'Subscription', plural: 'Subscriptions', color: '#7b4a68' },
   paylater: { label: 'Pay later', plural: 'Pay later', color: '#627332' },
+  cash: { label: 'Cash advance', plural: 'Cash advances', color: '#b4532a' },
   plan: { label: 'Planned', plural: 'Planned payments', color: '#3f6e8a' },
 };
 
@@ -388,10 +389,34 @@ export type MoneyModel = {
   payoff: Table | null;
   savings: Table | null;
   move: Table[];
+  /** Randy tab "Cash Advances" (Date Due | Cash Advance | Amount) — Dave, MoneyLion, Cleo… */
+  cashAdvances: Table | null;
+  /** Randy tab "More Cards" (Card | Balance | Date Due): cards not in the Credit Cards block yet */
+  moreCards: Table | null;
+  /** Randy tab "Item Flags" (Item | Due | Non Critical | Pay By) */
+  flags: ItemFlag[];
   items: MoneyItem[];
   /** Headings that weren't found (the sheet moved or renamed them) */
   missing: string[];
 };
+
+/** A sheet flag on an item: by name (loosely), optionally one due date only. */
+export type ItemFlag = { name: string; due?: string; nonCritical?: boolean; payBy?: string };
+
+/** The flag rows that apply to one due: same name, and the same due date when the flag names one. */
+export function flagFor(flags: ItemFlag[], name: string, due: string): { nonCritical?: boolean; payBy?: string } {
+  const k = name.toLowerCase().replace(/[^a-z0-9]/g, '');
+  const out: { nonCritical?: boolean; payBy?: string } = {};
+  for (const f of flags) {
+    const fk = f.name.toLowerCase().replace(/[^a-z0-9]/g, '');
+    if (!fk || !(k === fk || k.startsWith(fk) || fk.startsWith(k))) continue;
+    if (f.due && f.due !== due) continue;
+    if (f.nonCritical) out.nonCritical = true;
+    // Without a due date, a pay-by covers the occurrence it follows (due on or before it, within 45 days).
+    if (f.payBy && (f.due || (due <= f.payBy && daysBetween(fromDayKey(due), fromDayKey(f.payBy)) <= 45))) out.payBy = f.payBy;
+  }
+  return out;
+}
 
 /** Rows of a block as dated money items. */
 function itemsFrom(t: Table | null, kind: MoneyKind, cols: { date: number; name: number; amount: number; provider?: number; installment?: number }, today: Date): MoneyItem[] {
@@ -616,11 +641,31 @@ export function parseMoney(snap: MoneySnapshot, today = new Date()): MoneyModel 
     if (col) moveTables.push({ ...col, title: 'Cost of living (monthly)' });
   }
 
+  // Life Hub additions on the Randy tab (right of Upcoming Spend): cash advances, extra cards, item flags.
+  const side = (title: string, width: number, nameCol = 0) => {
+    const at = randy?.find(title);
+    return at ? block(randy, title, title, { cols: [at.c, at.c + width - 1], nameCol }) : null;
+  };
+  const cashAdvances = side('Cash Advances', 3, 1);
+  const moreCards = side('More Cards', 3);
+  const flagTable = side('Item Flags', 4);
+  const flags: ItemFlag[] = (flagTable?.rows || [])
+    .filter(r => r[0]?.text && !r[0].struck)
+    .map(r => ({
+      name: r[0].text.trim(),
+      due: r[1]?.text ? parseSheetDate(r[1].text, today) : undefined,
+      nonCritical: /^(y|yes|x|true|non ?critical|✓)$/i.test((r[2]?.text || '').trim()) || undefined,
+      payBy: r[3]?.text ? parseSheetDate(r[3].text, today) : undefined,
+    }));
+
   const items = [
     ...itemsFrom(bills, 'bill', { date: 0, name: 1, amount: 2 }, today),
     ...itemsFrom(cardMins, 'card', { date: 0, name: 1, amount: 2 }, today),
     ...itemsFrom(subs, 'sub', { date: 0, name: 1, amount: 2 }, today),
     ...itemsFrom(ledger, 'paylater', { date: 0, name: 1, amount: 3, provider: 4, installment: 2 }, today),
+    ...itemsFrom(cashAdvances, 'cash', { date: 0, name: 1, amount: 2 }, today),
+    // A card from "More Cards" with a due date: its balance is the payment.
+    ...itemsFrom(moreCards ? { ...moreCards, rows: moreCards.rows.filter(r => r[2]?.text) } : null, 'card', { date: 2, name: 0, amount: 1 }, today),
   ];
   for (const row of subsOther) {
     items.push({
@@ -669,6 +714,9 @@ export function parseMoney(snap: MoneySnapshot, today = new Date()): MoneyModel 
     payoff,
     savings: savingsTable,
     move: moveTables,
+    cashAdvances,
+    moreCards,
+    flags,
     items,
     missing,
   };
@@ -723,6 +771,7 @@ export function moneyBillDues(model: MoneyModel | null, paid: Set<string>, today
       amount: d.item.amount,
       kind: d.item.kind,
       notes: [MONEY_KINDS[d.item.kind].label, d.item.provider, d.item.installment].filter(Boolean).join(' · '),
+      ...flagFor(model?.flags || [], d.item.name, d.due),
     },
     due: d.due,
     days: d.days,
@@ -772,8 +821,11 @@ export type CardSummary = {
 };
 
 export function cardSummaries(model: MoneyModel | null): CardSummary[] {
-  if (!model?.cards) return [];
-  const rows = model.cards.rows.filter(r => r[0]?.text);
+  if (!model?.cards && !model?.moreCards) return [];
+  const sheetRows = (model.cards?.rows || []).filter(r => r[0]?.text);
+  // "More Cards" (Card | Balance | Date Due): no available / % — just the balance and its due day.
+  const extra = (model.moreCards?.rows || []).filter(r => r[0]?.text && !sheetRows.some(s => cardKey(s[0].text) === cardKey(r[0].text)));
+  const rows = [...sheetRows, ...extra.map(r => [r[0], r[1]])];
   const names = rows.map(r => r[0].text);
   return rows.map(r => {
       const name = r[0].text;
@@ -785,8 +837,8 @@ export function cardSummaries(model: MoneyModel | null): CardSummary[] {
         balance: r[1],
         available: r[2],
         pctAvailable: r[3],
-        min: min?.[2],
-        minDate: min?.[0],
+        min: min?.[2] ?? extra.find(x => x[0] === r[0])?.[1],
+        minDate: min?.[0] ?? extra.find(x => x[0] === r[0])?.[2],
         matrix: matrix && model.creditCards ? { header: model.creditCards.header, row: matrix } : undefined,
         limit: util?.[2],
       };
