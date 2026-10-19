@@ -289,7 +289,7 @@ function Agenda({
                     <span className="agenda-title">
                       <span className="agenda-name">{r.bill!.bill.name}</span>
                       <span className="agenda-sub">
-                        {[money(r.bill!.bill.amount), r.bill!.bill.kind === 'paylater' ? r.bill!.bill.notes?.split(' · ')[2] : '', r.bill!.skipped ? r.bill!.editNote : countdown(r.bill!.days)].filter(Boolean).join(' · ')}
+                        {[money(r.bill!.bill.amount), r.bill!.bill.kind === 'paylater' ? r.bill!.bill.notes?.split(' · ')[2] : '', r.bill!.skipped ? r.bill!.editNote : countdown(r.bill!.days), r.bill!.bill.payBy ? `Pay by ${fromDayKey(r.bill!.bill.payBy).toLocaleDateString([], { month: 'short', day: 'numeric' })}` : ''].filter(Boolean).join(' · ')}
                       </span>
                     </span>
                     {r.bill!.bill.payUrl ? (

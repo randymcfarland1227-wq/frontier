@@ -67,7 +67,6 @@ function withBillDay(due: string, rule?: BillDay): string {
  */
 export const OVERDUE_SINCE = '2026-10-08';
 
-/** Kinds that charge themselves (subscriptions, pay later) never go overdue. */
 
 export function loadBillEdits(): BillEdits {
   return readSaved<BillEdits>(STORAGE_KEYS.billEdits, {});
@@ -170,7 +169,9 @@ export function applyBillEdits(dues: BillDue[], edits: BillEdits, today = new Da
 }
 
 /**
- * Past its day, not paid, not skipped. Sheet rows (money:*) carry their real due date, so they're
+ * Past its day, not paid, not skipped — any kind, subscriptions and pay later included: nothing is
+ * assumed charged (only Paid on Life Hub or the sheet's cross-off counts). A Pay by date never lifts
+ * it out of overdue; it only adds the "Pay by" badge. Sheet rows (money:*) carry their real due date, so they're
  * overdue whatever the date; hub-made monthly bills only count from when overdue tracking began.
  */
 export function isOverdue(d: BillDue): boolean {

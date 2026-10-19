@@ -4694,3 +4694,5 @@ button.bal-led-row:hover { background: color-mix(in srgb, var(--ev, #0f8a7e) 8%,
 .bal-drw-tiles > .is-noncritical { background: color-mix(in srgb, #f97316 10%, var(--surface)); }
 .bal-drw-tiles > .is-noncritical b { color: #c2410c; }
 .frontier-shell[data-color-mode="dark"] .bal-drw-tiles > .is-noncritical b { color: #fdba74; }
+.bill-line-text .mny-flag { margin-left: 4px; }
+.bill-sub .mny-flag { margin-left: 4px; }

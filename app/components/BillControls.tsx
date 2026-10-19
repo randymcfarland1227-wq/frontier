@@ -49,6 +49,19 @@ export function BillFlagsFields({ due }: { due: BillDue }) {
   );
 }
 
+const payByText = (k: string) => fromDayKey(k).toLocaleDateString([], { month: 'short', day: 'numeric' });
+
+/** "Pay by Oct 23" (grace / suspension date after the due date) and "Non critical" chips. */
+export function FlagBadges({ d }: { d: BillDue }) {
+  if (!d.bill.payBy && !d.bill.nonCritical) return null;
+  return (
+    <>
+      {d.bill.payBy ? <small className="mny-flag is-payby" title="Still overdue after its due date — pay by this day to avoid a late fee or suspension">Pay by {payByText(d.bill.payBy)}</small> : null}
+      {d.bill.nonCritical ? <small className="mny-flag is-noncritical" title="Non critical: shown orange when overdue">Non critical</small> : null}
+    </>
+  );
+}
+
 /** Pin this due date to Priority ("Doing now"). Checking it off there marks it paid. */
 export function BillPinButton({ due, className = 'row-action ghost' }: { due: BillDue; className?: string }) {
   const { isPinned, addPin, removePin } = usePriorityPins();

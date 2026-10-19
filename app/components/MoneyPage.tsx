@@ -8,6 +8,7 @@ import {
   amountOf,
   balanceTwin,
   cardSummaries,
+  cardUtilization,
   debtOptions,
   MONEY_KINDS,
   parseSheetDate,
@@ -22,7 +23,7 @@ import { addDays, dayKey, dayName, daysBetween, fromDayKey, money, startOfDay, s
 import { usePayPlans } from '../../lib/payPlans';
 import { readSaved, writeSaved, STORAGE_KEYS } from '../../lib/storage';
 import { isOverdue } from '../../lib/billEdits';
-import { BillChangeForm, BillFlagsFields, BillPinButton, billChangeText } from './BillControls';
+import { BillChangeForm, BillFlagsFields, BillPinButton, FlagBadges, billChangeText } from './BillControls';
 import { addExtraCard, updateExtraCard, useExtraCards, type ExtraCard } from '../../lib/extraCards';
 import { addLifeSub, updateLifeSub, type LifeSub } from '../../lib/lifeSubs';
 import { addCustomItem, METHOD_LABEL, mondayOf, setBalancePicks, setPickLanded, srcKey, updatePick, useBalancePicks, type BalancePlan, type CustomItem, type PayMethod } from '../../lib/balancePicks';
@@ -665,17 +666,6 @@ const STATE_TEXT: Record<MonthState, (d: BillDue, paidAt: Record<string, string>
 
 const payByText = (k: string) => fromDayKey(k).toLocaleDateString([], { month: 'short', day: 'numeric' });
 
-/** "Pay by Oct 23" (grace / suspension date after the due date) and "Non critical" chips. */
-export function FlagBadges({ d }: { d: BillDue }) {
-  if (!d.bill.payBy && !d.bill.nonCritical) return null;
-  return (
-    <>
-      {d.bill.payBy ? <small className="mny-flag is-payby" title="Still overdue after its due date — pay by this day to avoid a late fee or suspension">Pay by {payByText(d.bill.payBy)}</small> : null}
-      {d.bill.nonCritical ? <small className="mny-flag is-noncritical" title="Non critical: shown orange when overdue">Non critical</small> : null}
-    </>
-  );
-}
-
 function kindLabel(d: BillDue): string {
   const k = d.bill.kind;
   if (k === 'paylater') return (d.bill.notes || '').split(' · ')[1] || 'Pay later';
@@ -878,7 +868,7 @@ function CardTiles({ model, dues, paidAt, onPaid, onSave }: { model: MoneyModel;
           <li key={c.name} className={`cc-tile ${level}`}>
             <div className="cc-head">
               <strong>{c.name}</strong>
-              {used !== undefined ? <span className="cc-used">{used}% used</span> : null}
+              {used !== undefined ? <span className="cc-used">{used}% used</span> : <span className="cc-used" title="Type its limit in More Cards (Randy tab, Limit column) to include it in % used">Limit unknown</span>}
             </div>
             <div className="cc-bal">
               <b>{c.balance?.text || '$0'}</b>
@@ -2702,7 +2692,9 @@ export function MoneyPage({
   const afterWeek = cash !== undefined ? cash - dueWeek : undefined;
   const cardsOwed = amountOf(model.cards?.total?.[1]?.text || '');
   const cardsAvail = amountOf(model.cards?.total?.[2]?.text || '');
-  const cardsUsed = cardsOwed !== undefined && cardsAvail !== undefined && cardsOwed + cardsAvail > 0 ? Math.round((cardsOwed / (cardsOwed + cardsAvail)) * 100) : undefined;
+  // % used only over cards with a known limit (Atlas has none yet), so a limitless balance doesn't read as maxed out.
+  const util = cardUtilization(model);
+  const cardsUsed = util.used ?? (cardsOwed !== undefined && cardsAvail !== undefined && cardsOwed + cardsAvail > 0 ? Math.round((cardsOwed / (cardsOwed + cardsAvail)) * 100) : undefined);
   const pay = model.paylaterSums;
   const fico = model.scores.find(s => /fico/i.test(s.label))?.value;
   const lastNum = (row?: Cell[]) => (row ? amountOf([...row].reverse().find(c => amountOf(c.text) !== undefined)?.text || '') || 0 : 0);
@@ -2994,7 +2986,7 @@ export function MoneyPage({
               tone="card"
               title="Credit cards"
               figure={model.cards?.total?.[1]?.text}
-              figureLabel={[cardsUsed !== undefined ? `${cardsUsed}% used` : '', model.cards?.total?.[2]?.text ? `${model.cards.total[2].text} free` : ''].filter(Boolean).join(' · ')}
+              figureLabel={[cardsUsed !== undefined ? `${cardsUsed}% used` : '', model.cards?.total?.[2]?.text ? `${model.cards.total[2].text} free` : '', util.noLimit.length ? `${util.noLimit.join(', ')}: limit unknown, not in % used` : ''].filter(Boolean).join(' · ')}
               href={link('Randy')}
             >
               <CardTiles model={model} dues={dues} paidAt={paidAt} onPaid={onPaid} onSave={save} />

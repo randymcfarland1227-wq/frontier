@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { countdown, fromDayKey, money, type BillDue } from '../../lib/schedule';
-import { BillChangeForm, BillPinButton, billChangeText } from './BillControls';
+import { BillChangeForm, BillPinButton, FlagBadges, billChangeText } from './BillControls';
 
 /** How loud the countdown is: overdue / within 3 days / later / skipped. */
 function urgency(d: BillDue) {
@@ -47,6 +47,7 @@ export function BillsList({
                 <span className="bill-line-text" title={[d.bill.name, money(d.bill.amount), date, changed || d.bill.notes].filter(Boolean).join(' · ')}>
                   <strong>{d.bill.name}</strong>
                   <small>{[money(d.bill.amount), date, changed].filter(Boolean).join(' · ')}</small>
+                  <FlagBadges d={d} />
                 </span>
                 <span className="bill-line-when">{when}</span>
                 <span className="bill-line-tools">
@@ -89,6 +90,7 @@ export function BillsList({
                 <strong>{d.bill.name}</strong>
                 <span className="bill-sub">
                   {[money(d.bill.amount), date, d.bill.autopay ? 'Autopay' : '', changed || d.bill.notes || ''].filter(Boolean).join(' · ')}
+                  <FlagBadges d={d} />
                 </span>
               </span>
               <span className="bill-actions">
