@@ -1,7 +1,7 @@
 {
   "source": "radall",
   "metrics": {
-    "open": 3,
+    "open": 5,
     "dueSoon": 0,
     "done": 0
   },
@@ -29,6 +29,22 @@
       "meta": "open",
       "originUrl": "https://docs.google.com/spreadsheets/d/19rw8MAYTZ70Qy2GFAi0DaCGdsp7hQc67l8nkvw17jQk/edit#gid=138758250",
       "completable": false
+    },
+    {
+      "id": "radall-row-5",
+      "title": "Build out interest-carrying feature per card",
+      "detail": "",
+      "meta": "open",
+      "originUrl": "https://docs.google.com/spreadsheets/d/19rw8MAYTZ70Qy2GFAi0DaCGdsp7hQc67l8nkvw17jQk/edit#gid=138758250",
+      "completable": false
+    },
+    {
+      "id": "radall-row-6",
+      "title": "Weekly reminder: update card balances and credit",
+      "detail": "Weekly",
+      "meta": "open",
+      "originUrl": "https://docs.google.com/spreadsheets/d/19rw8MAYTZ70Qy2GFAi0DaCGdsp7hQc67l8nkvw17jQk/edit#gid=138758250",
+      "completable": false
     }
   ],
   "tasks": [
@@ -52,7 +68,22 @@
       "status": "open",
       "starred": false,
       "originUrl": "https://docs.google.com/spreadsheets/d/19rw8MAYTZ70Qy2GFAi0DaCGdsp7hQc67l8nkvw17jQk/edit#gid=138758250"
+    },
+    {
+      "id": "radall-row-5",
+      "title": "Build out interest-carrying feature per card",
+      "status": "open",
+      "starred": false,
+      "originUrl": "https://docs.google.com/spreadsheets/d/19rw8MAYTZ70Qy2GFAi0DaCGdsp7hQc67l8nkvw17jQk/edit#gid=138758250"
+    },
+    {
+      "id": "radall-row-6",
+      "title": "Weekly reminder: update card balances and credit",
+      "detail": "Weekly",
+      "status": "open",
+      "starred": false,
+      "originUrl": "https://docs.google.com/spreadsheets/d/19rw8MAYTZ70Qy2GFAi0DaCGdsp7hQc67l8nkvw17jQk/edit#gid=138758250"
     }
   ],
-  "refreshedAt": "2026-10-16T13:05:00.000Z"
+  "refreshedAt": "2026-10-19T12:43:14.852Z"
 }

@@ -1,11 +1,19 @@
 {
   "source": "gmail",
   "metrics": {
-    "starred": 4,
-    "unread": 2,
-    "action": 4
+    "starred": 5,
+    "unread": 3,
+    "action": 5
   },
   "featured": [
+    {
+      "id": "1a1460a597b31875",
+      "title": "You made the sale for Harley-Davidson Bar & Shield Lighted Wall Clock Chr...",
+      "detail": "Next, pack it up and ship it out. ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏",
+      "meta": "From ebay@ebay.com",
+      "originUrl": "https://mail.google.com/mail/?authuser=randymcfarland1227@gmail.com#all/thread-f:1879233208851306613",
+      "completable": false
+    },
     {
       "id": "1a13b24943d1ed28",
       "title": "Your Subscription is Expiring",
@@ -17,7 +25,7 @@
     {
       "id": "1a13796465e18a3b",
       "title": "You made the sale for Nespresso VertuoLine GCA1 Coffee and Espresso Pod M...",
-      "detail": "Next, pack it up and ship it out.",
+      "detail": "Next, pack it up and ship it out. ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏",
       "meta": "From ebay@ebay.com",
       "originUrl": "https://mail.google.com/mail/?authuser=randymcfarland1227@gmail.com#all/thread-f:1878978941656599099",
       "completable": false
@@ -25,7 +33,7 @@
     {
       "id": "1a122c2b24909a50",
       "title": "You made the sale for Louis Vuitton Fashion Coffee Table Book Hardcover E...",
-      "detail": "Next, pack it up and ship it out.",
+      "detail": "Next, pack it up and ship it out. ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏",
       "meta": "From ebay@ebay.com",
       "originUrl": "https://mail.google.com/mail/?authuser=randymcfarland1227@gmail.com#all/thread-f:1878612558375590480",
       "completable": false
@@ -33,13 +41,21 @@
     {
       "id": "1a114190f5334133",
       "title": "[Confirmation] Purchase confirmed",
-      "detail": "Your invoice will be available within 24 hours. Cloudflare logo Purchase confirmed View your invoice We confirmed your",
+      "detail": "Your invoice will be available within 24 hours. ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ Cloudflare logo Purchase confirmed View your invoice",
       "meta": "From noreply@notify.cloudflare.com",
       "originUrl": "https://mail.google.com/mail/?authuser=randymcfarland1227@gmail.com#all/thread-f:1878354610435080499",
       "completable": false
     }
   ],
   "tasks": [
+    {
+      "id": "1a1460a597b31875",
+      "title": "You made the sale for Harley-Davidson Bar & Shield Lighted Wall Clock Chr...",
+      "detail": "Next, pack it up and ship it out. ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏",
+      "status": "open",
+      "starred": true,
+      "originUrl": "https://mail.google.com/mail/?authuser=randymcfarland1227@gmail.com#all/thread-f:1879233208851306613"
+    },
     {
       "id": "1a13b24943d1ed28",
       "title": "Your Subscription is Expiring",
@@ -51,7 +67,7 @@
     {
       "id": "1a13796465e18a3b",
       "title": "You made the sale for Nespresso VertuoLine GCA1 Coffee and Espresso Pod M...",
-      "detail": "Next, pack it up and ship it out.",
+      "detail": "Next, pack it up and ship it out. ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏",
       "status": "open",
       "starred": true,
       "originUrl": "https://mail.google.com/mail/?authuser=randymcfarland1227@gmail.com#all/thread-f:1878978941656599099"
@@ -59,7 +75,7 @@
     {
       "id": "1a122c2b24909a50",
       "title": "You made the sale for Louis Vuitton Fashion Coffee Table Book Hardcover E...",
-      "detail": "Next, pack it up and ship it out.",
+      "detail": "Next, pack it up and ship it out. ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏",
       "status": "open",
       "starred": true,
       "originUrl": "https://mail.google.com/mail/?authuser=randymcfarland1227@gmail.com#all/thread-f:1878612558375590480"
@@ -67,11 +83,11 @@
     {
       "id": "1a114190f5334133",
       "title": "[Confirmation] Purchase confirmed",
-      "detail": "Your invoice will be available within 24 hours. Cloudflare logo Purchase confirmed View your invoice We confirmed your",
+      "detail": "Your invoice will be available within 24 hours. ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ Cloudflare logo Purchase confirmed View your invoice",
       "status": "open",
       "starred": true,
       "originUrl": "https://mail.google.com/mail/?authuser=randymcfarland1227@gmail.com#all/thread-f:1878354610435080499"
     }
   ],
-  "refreshedAt": "2026-10-16T13:05:00.000Z"
+  "refreshedAt": "2026-10-19T12:43:14.852Z"
 }

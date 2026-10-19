@@ -1,8 +1,8 @@
 {
   "source": "ticktick",
   "metrics": {
-    "dueToday": 2,
-    "overdue": 18,
+    "dueToday": 1,
+    "overdue": 23,
     "habits": 36
   },
   "featured": [
@@ -12,6 +12,30 @@
       "detail": "Medical",
       "meta": "Overdue · Medical",
       "originUrl": "https://ticktick.com/webapp/#p/69dd6ff6d3e8d1a95e9a96ca/tasks/6a7f89246b0ed10273275b21",
+      "completable": false
+    },
+    {
+      "id": "69cef5e7a89f9102bc896aa6",
+      "title": "Fill in Planner for Week",
+      "detail": "Life Planning",
+      "meta": "Overdue · Life Planning",
+      "originUrl": "https://ticktick.com/webapp/#p/69dd701e1ca911a95e9a97c7/tasks/69cef5e7a89f9102bc896aa6",
+      "completable": false
+    },
+    {
+      "id": "6a93a4ba8f08defd9591a81c",
+      "title": "Life Path & Active Project Direction",
+      "detail": "SHORT TERM • What do I want? • What immediate problem does it solve? • What method or milestone gets me there? • Why am I doing it? GROWTH STRATEGY • Choose one pattern or habit to",
+      "meta": "Overdue · Life Planning",
+      "originUrl": "https://ticktick.com/webapp/#p/69dd701e1ca911a95e9a97c7/tasks/6a93a4ba8f08defd9591a81c",
+      "completable": false
+    },
+    {
+      "id": "6a93a4ba8f0861e0f0e2ae3b",
+      "title": "Next Step Awareness Review",
+      "detail": "Open the next-step guide, choose one active outcome, and identify one concrete physical move. Put only that move in Next Step Actions. * Sep 6- Yeah idk to much going on- maybe nex",
+      "meta": "Overdue · Life Planning",
+      "originUrl": "https://ticktick.com/webapp/#p/69dd701e1ca911a95e9a97c7/tasks/6a93a4ba8f0861e0f0e2ae3b",
       "completable": false
     },
     {
@@ -44,30 +68,6 @@
       "detail": "--- May 21- No Thursday session was done --- May 28- No session Done --- June 4- No Session Done --- Jul 11- No Session Done (Bonaroo) --- Jun 18- No Session Done --- June 25- no s",
       "meta": "Overdue · Creativity",
       "originUrl": "https://ticktick.com/webapp/#p/69def09b442591a95e9af9db/tasks/69f65979d19c9118d36dcab1",
-      "completable": false
-    },
-    {
-      "id": "69f65956b6485118d36dca31",
-      "title": "Music  Session-Maintenance",
-      "detail": "Wed- May 20- No music Session Done --- Wed May 27- Production/ No session done --- June 3- No Session Done --- June 10- No Music Session Done ( Bonaroo) --- June 17- When it rains,",
-      "meta": "Overdue · Creativity",
-      "originUrl": "https://ticktick.com/webapp/#p/69def09b442591a95e9af9db/tasks/69f65956b6485118d36dca31",
-      "completable": false
-    },
-    {
-      "id": "6a124c4c639b9152c7faa9b4",
-      "title": "Music Session- Main",
-      "detail": "May 19- Short production was done --- May 26-Small production session done using train horn- good stuff tbh --- June 2- No session Done --- June 9- Bonaroo ( No Session Done) --- J",
-      "meta": "Overdue · Creativity",
-      "originUrl": "https://ticktick.com/webapp/#p/69def09b442591a95e9af9db/tasks/6a124c4c639b9152c7faa9b4",
-      "completable": false
-    },
-    {
-      "id": "6a92084c8f087e0df3ef1721",
-      "title": "Wash Tote Bag",
-      "detail": "Maintenance Organization",
-      "meta": "Overdue · Maintenance Organization",
-      "originUrl": "https://ticktick.com/webapp/#p/69eef620b4b19119328b4dff/tasks/6a92084c8f087e0df3ef1721",
       "completable": false
     },
     {
@@ -114,6 +114,39 @@
       "originUrl": "https://ticktick.com/webapp/#p/69dd6ff6d3e8d1a95e9a96ca/tasks/6a7f89246b0ed10273275b21",
       "kind": "task",
       "projectId": "69dd6ff6d3e8d1a95e9a96ca"
+    },
+    {
+      "id": "69cef5e7a89f9102bc896aa6",
+      "title": "Fill in Planner for Week",
+      "detail": "Life Planning",
+      "status": "open",
+      "due": "2026-10-18",
+      "starred": false,
+      "originUrl": "https://ticktick.com/webapp/#p/69dd701e1ca911a95e9a97c7/tasks/69cef5e7a89f9102bc896aa6",
+      "kind": "task",
+      "projectId": "69dd701e1ca911a95e9a97c7"
+    },
+    {
+      "id": "6a93a4ba8f08defd9591a81c",
+      "title": "Life Path & Active Project Direction",
+      "detail": "SHORT TERM • What do I want? • What immediate problem does it solve? • What method or milestone gets me there? • Why am I doing it? GROWTH STRATEGY • Choose one pattern or habit to",
+      "status": "open",
+      "due": "2026-10-18",
+      "starred": false,
+      "originUrl": "https://ticktick.com/webapp/#p/69dd701e1ca911a95e9a97c7/tasks/6a93a4ba8f08defd9591a81c",
+      "kind": "task",
+      "projectId": "69dd701e1ca911a95e9a97c7"
+    },
+    {
+      "id": "6a93a4ba8f0861e0f0e2ae3b",
+      "title": "Next Step Awareness Review",
+      "detail": "Open the next-step guide, choose one active outcome, and identify one concrete physical move. Put only that move in Next Step Actions. * Sep 6- Yeah idk to much going on- maybe nex",
+      "status": "open",
+      "due": "2026-10-18",
+      "starred": false,
+      "originUrl": "https://ticktick.com/webapp/#p/69dd701e1ca911a95e9a97c7/tasks/6a93a4ba8f0861e0f0e2ae3b",
+      "kind": "task",
+      "projectId": "69dd701e1ca911a95e9a97c7"
     },
     {
       "id": "6a9fb6d68f08ecb120d1a125",
@@ -180,6 +213,28 @@
       "originUrl": "https://ticktick.com/webapp/#p/69def09b442591a95e9af9db/tasks/6a124c4c639b9152c7faa9b4",
       "kind": "task",
       "projectId": "69def09b442591a95e9af9db"
+    },
+    {
+      "id": "6a92084c8f0869c15148f148",
+      "title": "Vacuum Car",
+      "detail": "Aug 29-Skipping Sep 5- Skipping",
+      "status": "open",
+      "due": "2026-10-17",
+      "starred": false,
+      "originUrl": "https://ticktick.com/webapp/#p/69eef620b4b19119328b4dff/tasks/6a92084c8f0869c15148f148",
+      "kind": "task",
+      "projectId": "69eef620b4b19119328b4dff"
+    },
+    {
+      "id": "6a93a4ba8f080f71bbb4017b",
+      "title": "Clean Bathroom — Weekly",
+      "detail": "Clean the toilet, sink, mirror, tub or shower, floor, and remove trash. Complete when the bathroom is reset and usable.",
+      "status": "open",
+      "due": "2026-10-17",
+      "starred": false,
+      "originUrl": "https://ticktick.com/webapp/#p/69eef620b4b19119328b4dff/tasks/6a93a4ba8f080f71bbb4017b",
+      "kind": "task",
+      "projectId": "69eef620b4b19119328b4dff"
     },
     {
       "id": "6a92084c8f087e0df3ef1721",
@@ -303,24 +358,13 @@
       "projectId": "69eef620b4b19119328b4dff"
     },
     {
-      "id": "6a92084c8f0869c15148f148",
-      "title": "Vacuum Car",
-      "detail": "Aug 29-Skipping Sep 5- Skipping",
+      "id": "6a7e99def51a11ef72a47632",
+      "title": "Water Plants 🪴",
+      "detail": "Maintenance Organization",
       "status": "open",
-      "due": "2026-10-17",
+      "due": "2026-10-19",
       "starred": false,
-      "originUrl": "https://ticktick.com/webapp/#p/69eef620b4b19119328b4dff/tasks/6a92084c8f0869c15148f148",
-      "kind": "task",
-      "projectId": "69eef620b4b19119328b4dff"
-    },
-    {
-      "id": "6a93a4ba8f080f71bbb4017b",
-      "title": "Clean Bathroom — Weekly",
-      "detail": "Clean the toilet, sink, mirror, tub or shower, floor, and remove trash. Complete when the bathroom is reset and usable.",
-      "status": "open",
-      "due": "2026-10-17",
-      "starred": false,
-      "originUrl": "https://ticktick.com/webapp/#p/69eef620b4b19119328b4dff/tasks/6a93a4ba8f080f71bbb4017b",
+      "originUrl": "https://ticktick.com/webapp/#p/69eef620b4b19119328b4dff/tasks/6a7e99def51a11ef72a47632",
       "kind": "task",
       "projectId": "69eef620b4b19119328b4dff"
     },
@@ -649,5 +693,5 @@
       "kind": "habit"
     }
   ],
-  "refreshedAt": "2026-10-17T23:37:01.302Z"
+  "refreshedAt": "2026-10-19T12:43:14.852Z"
 }

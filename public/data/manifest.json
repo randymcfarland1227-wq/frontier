@@ -5,6 +5,6 @@
     "outlook",
     "ticktick"
   ],
-  "refreshedAt": "2026-10-16T13:05:00.000Z",
-  "note": "Static connector snapshots for GitHub Pages. Refresh by agent MCP sync + commit. TickTick not refreshed this run (box startup blocked token)."
+  "refreshedAt": "2026-10-19T12:43:14.852Z",
+  "note": "Static connector snapshots for GitHub Pages. Refresh by agent MCP sync + commit."
 }
