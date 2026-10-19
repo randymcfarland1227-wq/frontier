@@ -391,7 +391,7 @@ export type MoneyModel = {
   move: Table[];
   /** Randy tab "Cash Advances" (Date Due | Cash Advance | Amount) — Dave, MoneyLion, Cleo… */
   cashAdvances: Table | null;
-  /** Randy tab "More Cards" (Card | Balance | Date Due): cards not in the Credit Cards block yet */
+  /** Randy tab "More Cards" (Card | Balance | Date Due | Limit): cards not in the Credit Cards block yet */
   moreCards: Table | null;
   /** Randy tab "Item Flags" (Item | Due | Non Critical | Pay By) */
   flags: ItemFlag[];
@@ -647,7 +647,7 @@ export function parseMoney(snap: MoneySnapshot, today = new Date()): MoneyModel 
     return at ? block(randy, title, title, { cols: [at.c, at.c + width - 1], nameCol }) : null;
   };
   const cashAdvances = side('Cash Advances', 3, 1);
-  const moreCards = side('More Cards', 3);
+  const moreCards = side('More Cards', 4);
   const flagTable = side('Item Flags', 4);
   const flags: ItemFlag[] = (flagTable?.rows || [])
     .filter(r => r[0]?.text && !r[0].struck)
@@ -823,9 +823,10 @@ export type CardSummary = {
 export function cardSummaries(model: MoneyModel | null): CardSummary[] {
   if (!model?.cards && !model?.moreCards) return [];
   const sheetRows = (model.cards?.rows || []).filter(r => r[0]?.text);
-  // "More Cards" (Card | Balance | Date Due): no available / % — just the balance and its due day.
+  // "More Cards" (Card | Balance | Date Due | Limit): balance and due day; available only once a limit is typed.
   const extra = (model.moreCards?.rows || []).filter(r => r[0]?.text && !sheetRows.some(s => cardKey(s[0].text) === cardKey(r[0].text)));
   const rows = [...sheetRows, ...extra.map(r => [r[0], r[1]])];
+  const extraLimit = (r: Cell[]) => extra.find(x => x[0] === r[0])?.[3];
   const names = rows.map(r => r[0].text);
   return rows.map(r => {
       const name = r[0].text;
@@ -840,9 +841,32 @@ export function cardSummaries(model: MoneyModel | null): CardSummary[] {
         min: min?.[2] ?? extra.find(x => x[0] === r[0])?.[1],
         minDate: min?.[0] ?? extra.find(x => x[0] === r[0])?.[2],
         matrix: matrix && model.creditCards ? { header: model.creditCards.header, row: matrix } : undefined,
-        limit: util?.[2],
+        limit: util?.[2] ?? (extraLimit(r)?.text ? extraLimit(r) : undefined),
       };
     });
+}
+
+/**
+ * Cards owed and % used across cards. Owed counts every card (the sheet's Credit Cards total, which
+ * also takes More Cards balances). % used only counts cards whose limit is known (balance +
+ * available, or a typed limit) — a card without one (Atlas so far) is listed in `noLimit`.
+ */
+export function cardUtilization(model: MoneyModel | null): { owed: number; limitOwed: number; limit: number; used?: number; noLimit: string[] } {
+  let owed = 0, limitOwed = 0, limit = 0;
+  const noLimit: string[] = [];
+  for (const c of cardSummaries(model)) {
+    const bal = amountOf(c.balance?.text || '') || 0;
+    owed += bal;
+    const avail = amountOf(c.available?.text || '');
+    const lim = avail !== undefined ? bal + avail : amountOf(c.limit?.text || '');
+    if (lim === undefined || lim <= 0) {
+      if (bal) noLimit.push(c.name);
+      continue;
+    }
+    limitOwed += bal;
+    limit += lim;
+  }
+  return { owed, limitOwed, limit, used: limit > 0 ? Math.round((limitOwed / limit) * 100) : undefined, noLimit };
 }
 
 /** Everything that can take an extra payment in the planner: cards, outstanding, debts. */

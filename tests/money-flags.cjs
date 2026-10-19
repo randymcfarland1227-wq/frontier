@@ -51,3 +51,17 @@ assert.equal(ledger.ledgerType(by('Dave')).label,'Cash advances');
 const groups=ledger.selectedLedgerGroups(dues,['cash','paylater:klarna'],[by('Fortiva').key]);
 assert.deepEqual(plain(groups.map(g=>[g.label,g.rows.length])),[['Cash advances',3],['Bills',1]]);
 console.log('Money flag checks passed: cash advances parsed + grouped, Atlas card, Split P2 date, Non Critical (orange) and Pay by (still overdue), Life Hub overrides.');
+// Follow-ups: Atlas limit, utilization over known limits only, overdue subscriptions keep their Pay by
+{
+  const u=money.cardUtilization(model);
+  assert.equal(u.owed,49.65,'owed counts Atlas');assert.deepEqual(plain(u.noLimit),['Atlas']);assert.equal(u.used,undefined,'no known limits → no % used');
+  const v2=v.map(r=>r?[...r]:r);v2[9][S+3]='Limit';v2[10][S+3]='$300';
+  const m2=money.parseMoney({source:'money',refreshedAt:today.toISOString(),tabs:{Randy:tab(v2)}},today);
+  const u2=money.cardUtilization(m2);assert.equal(u2.used,17,'typed limit counts');assert.equal(u2.noLimit.length,0);
+  assert.equal(money.cardSummaries(m2).find(c=>c.name==='Atlas').limit.text,'$300');
+  const gf=by('G Force');assert.equal(gf.bill.kind,'bill','fixture lists G Force in Bills');
+  const sub={...gf,key:'money:sub:g-force:2026-10-11',bill:{...gf.bill,id:'money:sub:g-force:2026-10-11',kind:'sub'}};
+  assert.equal(edits.isOverdue(sub),true,'an unpaid past subscription is overdue');assert.equal(sub.bill.payBy,'2026-10-27');
+  assert.equal(edits.isOverdue({...sub,skipped:true}),false,'skipped never overdue');
+  console.log('Follow-up checks passed: Atlas limit unknown/typed, % used over known limits, overdue subscription with Pay by.');
+}
