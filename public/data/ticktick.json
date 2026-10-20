@@ -1,8 +1,8 @@
 {
   "source": "ticktick",
   "metrics": {
-    "dueToday": 1,
-    "overdue": 23,
+    "dueToday": 0,
+    "overdue": 24,
     "habits": 36
   },
   "featured": [
@@ -215,6 +215,17 @@
       "projectId": "69def09b442591a95e9af9db"
     },
     {
+      "id": "6a7e99def51a11ef72a47632",
+      "title": "Water Plants 🪴",
+      "detail": "Maintenance Organization",
+      "status": "open",
+      "due": "2026-10-19",
+      "starred": false,
+      "originUrl": "https://ticktick.com/webapp/#p/69eef620b4b19119328b4dff/tasks/6a7e99def51a11ef72a47632",
+      "kind": "task",
+      "projectId": "69eef620b4b19119328b4dff"
+    },
+    {
       "id": "6a92084c8f0869c15148f148",
       "title": "Vacuum Car",
       "detail": "Aug 29-Skipping Sep 5- Skipping",
@@ -354,17 +365,6 @@
       "due": "2026-10-11",
       "starred": false,
       "originUrl": "https://ticktick.com/webapp/#p/69eef620b4b19119328b4dff/tasks/6a92084c8f087e0df3ef1720",
-      "kind": "task",
-      "projectId": "69eef620b4b19119328b4dff"
-    },
-    {
-      "id": "6a7e99def51a11ef72a47632",
-      "title": "Water Plants 🪴",
-      "detail": "Maintenance Organization",
-      "status": "open",
-      "due": "2026-10-19",
-      "starred": false,
-      "originUrl": "https://ticktick.com/webapp/#p/69eef620b4b19119328b4dff/tasks/6a7e99def51a11ef72a47632",
       "kind": "task",
       "projectId": "69eef620b4b19119328b4dff"
     },
@@ -693,5 +693,5 @@
       "kind": "habit"
     }
   ],
-  "refreshedAt": "2026-10-19T12:43:14.852Z"
+  "refreshedAt": "2026-10-20T12:38:12.541Z"
 }
