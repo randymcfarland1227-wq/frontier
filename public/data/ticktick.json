@@ -1,7 +1,7 @@
 {
   "source": "ticktick",
   "metrics": {
-    "dueToday": 0,
+    "dueToday": 1,
     "overdue": 24,
     "habits": 36
   },
@@ -369,6 +369,17 @@
       "projectId": "69eef620b4b19119328b4dff"
     },
     {
+      "id": "6a7e9d3c4a4491ef72a47fad",
+      "title": "Nail and Cuticle Care",
+      "detail": "Maintenance Organization",
+      "status": "open",
+      "due": "2026-10-21",
+      "starred": false,
+      "originUrl": "https://ticktick.com/webapp/#p/69eef620b4b19119328b4dff/tasks/6a7e9d3c4a4491ef72a47fad",
+      "kind": "task",
+      "projectId": "69eef620b4b19119328b4dff"
+    },
+    {
       "id": "habit-69ceedf0f95d5102bc895aab",
       "title": "Medicine and Vitamins",
       "detail": "Check-ins: 37",
@@ -693,5 +704,5 @@
       "kind": "habit"
     }
   ],
-  "refreshedAt": "2026-10-20T12:38:12.541Z"
+  "refreshedAt": "2026-10-21T12:42:19.968Z"
 }

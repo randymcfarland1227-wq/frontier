@@ -1,11 +1,27 @@
 {
   "source": "gmail",
   "metrics": {
-    "starred": 7,
-    "unread": 5,
-    "action": 7
+    "starred": 9,
+    "unread": 6,
+    "action": 9
   },
   "featured": [
+    {
+      "id": "1a15a38a19219923",
+      "title": "Your payment wasn’t processed",
+      "detail": "Make sure you have enough funds. ͏ ﻿ ͏ ﻿ ͏ ﻿ ͏ ﻿ ͏ ﻿ ͏ ﻿ ͏ ﻿ ͏ ﻿ ͏ ﻿ ͏ ﻿ ͏ ﻿ ͏ ﻿ ͏ ﻿ ͏ ﻿ ͏ ﻿ ͏ ﻿ ͏ ﻿ ͏ ﻿ ͏ ﻿ ͏ ﻿ ͏ ﻿ ͏ ﻿ ͏ ﻿ ͏ ﻿ ͏ ﻿ ͏ ﻿ ͏ ﻿ ͏ ﻿",
+      "meta": "From support@info.getflex.com",
+      "originUrl": "https://mail.google.com/mail/?authuser=randymcfarland1227@gmail.com#all/thread-f:1879588233019496739",
+      "completable": false
+    },
+    {
+      "id": "1a15a15e2295bb54",
+      "title": "You made the sale for Polo Ralph Lauren Andrew Pant Men's 34x30 Khaki Tan...",
+      "detail": "Next, pack it up and ship it out. ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏",
+      "meta": "From ebay@ebay.com",
+      "originUrl": "https://mail.google.com/mail/?authuser=randymcfarland1227@gmail.com#all/thread-f:1879585845176286036",
+      "completable": false
+    },
     {
       "id": "1a1593309018eba1",
       "title": "You made the sale for Timberland Ellendale Mid Hiker Boots Women's 8.5 Bl...",
@@ -65,6 +81,22 @@
   ],
   "tasks": [
     {
+      "id": "1a15a38a19219923",
+      "title": "Your payment wasn’t processed",
+      "detail": "Make sure you have enough funds. ͏ ﻿ ͏ ﻿ ͏ ﻿ ͏ ﻿ ͏ ﻿ ͏ ﻿ ͏ ﻿ ͏ ﻿ ͏ ﻿ ͏ ﻿ ͏ ﻿ ͏ ﻿ ͏ ﻿ ͏ ﻿ ͏ ﻿ ͏ ﻿ ͏ ﻿ ͏ ﻿ ͏ ﻿ ͏ ﻿ ͏ ﻿ ͏ ﻿ ͏ ﻿ ͏ ﻿ ͏ ﻿ ͏ ﻿ ͏ ﻿ ͏ ﻿",
+      "status": "open",
+      "starred": true,
+      "originUrl": "https://mail.google.com/mail/?authuser=randymcfarland1227@gmail.com#all/thread-f:1879588233019496739"
+    },
+    {
+      "id": "1a15a15e2295bb54",
+      "title": "You made the sale for Polo Ralph Lauren Andrew Pant Men's 34x30 Khaki Tan...",
+      "detail": "Next, pack it up and ship it out. ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏",
+      "status": "open",
+      "starred": true,
+      "originUrl": "https://mail.google.com/mail/?authuser=randymcfarland1227@gmail.com#all/thread-f:1879585845176286036"
+    },
+    {
       "id": "1a1593309018eba1",
       "title": "You made the sale for Timberland Ellendale Mid Hiker Boots Women's 8.5 Bl...",
       "detail": "Next, pack it up and ship it out. ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏",
@@ -121,5 +153,5 @@
       "originUrl": "https://mail.google.com/mail/?authuser=randymcfarland1227@gmail.com#all/thread-f:1878354610435080499"
     }
   ],
-  "refreshedAt": "2026-10-20T12:38:12.541Z"
+  "refreshedAt": "2026-10-21T12:42:19.968Z"
 }
