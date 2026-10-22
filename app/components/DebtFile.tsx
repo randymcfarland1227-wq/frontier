@@ -8,7 +8,9 @@ import { isSettled, owedOf, useDebtFile, type Bureau, type DebtFile as File, typ
 // Summary (what I really owe) → four views → rows → a pop-out with reports, owners, offers, letters.
 
 type View = 'credit' | 'md' | 'oos' | 'other';
-const VIEW_KEY = 'lifehub-debt-view';
+/** 'credit' = only what touches the credit reports; 'owed' = tickets, tolls, taxes and other non-credit liabilities. */
+export type DebtScope = 'credit' | 'owed';
+const VIEW_KEY = 'lifehub-debt-view-owed';
 
 const usd = (n: number) => n.toLocaleString('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: n % 1 ? 2 : 0 });
 const amt = (n: number | null | undefined) => (n === null || n === undefined ? '?' : usd(n));
@@ -35,9 +37,9 @@ const BUREAUS: Array<[Bureau, string]> = [
 const onReport = (line?: string | null) => Boolean(line) && !/^(was there|gone|not )/i.test(line || '');
 const LETTER_SHORT: Record<string, string> = { 'mva-0703': 'Jul 3', 'mva-0724': 'Jul 24', 'mva-0807': 'Aug 7', 'mva-1015': 'Oct 15', 'ccu-0814': 'CCU Aug', 'ccu-1009': 'CCU Oct' };
 
-export function DebtFile() {
+export function DebtFile({ scope }: { scope: DebtScope }) {
   const { file, marks, status, refresh, setMark } = useDebtFile();
-  const [view, setViewState] = useState<View>(() => readSaved<View>(VIEW_KEY, 'credit'));
+  const [view, setViewState] = useState<View>(() => readSaved<View>(VIEW_KEY, 'md'));
   const [openId, setOpenId] = useState<string | null>(null);
   const setView = (v: View) => {
     setViewState(v);
@@ -67,19 +69,47 @@ export function DebtFile() {
   const regLeft = (file.registration?.steps || []).reduce((s, x) => s + (x.amount || 0), 0);
   const open = openId ? file.items.find(i => i.id === openId) : undefined;
 
+  const unverified = other.filter(i => i.unverified);
   const tiles: Array<{ v: View; label: string; figure: number; small: string; tone: string }> = [
-    { v: 'credit', label: 'Credit & collections', figure: owedOf(credit, marks), small: `${credit.length} accounts · ${behind.length} behind now`, tone: 'owed' },
     { v: 'md', label: 'MD tickets & MVA', figure: owedOf(md, marks) + md.length * 30, small: `${md.length} flags · incl. $30 MVA fee each`, tone: 'due' },
     { v: 'oos', label: 'Out of state', figure: owedOf(oos, marks), small: `${oos.length} tickets & tolls`, tone: 'sub' },
-    { v: 'other', label: 'Taxes & other', figure: owedOf(other, marks), small: `${other.length} letters`, tone: 'plan' },
+    { v: 'other', label: 'Taxes & other', figure: owedOf(other, marks), small: unverified.length ? `${other.length - unverified.length} letters · ${unverified.length} unverified, not counted` : `${other.length} letters`, tone: 'plan' },
   ];
   const grand = tiles.reduce((s, t) => s + t.figure, 0);
 
   return (
     <div className="dbt">
+      {scope === 'credit' ? (
+        <section className="dbt-sum dbt-sum-credit" aria-label="Credit scores">
+          <div className="dbt-sum-total">
+            <span>What’s hurting my credit</span>
+            <b>{usd(owedOf(credit, marks) + owedOf(behind, marks))}</b>
+            <small>
+              {credit.length} collections & charge-offs · {behind.length} past due · as of {shortDate(file.asOf)} ·{' '}
+              <button type="button" className="dbt-link" onClick={() => void refresh()}>
+                refresh
+              </button>
+            </small>
+          </div>
+          {BUREAUS.map(([b, label]) => {
+            const mine = (file.scores || []).filter(x => x.bureau === label).sort((a, c) => c.date.localeCompare(a.date));
+            const [now, prev] = mine;
+            return (
+              <div key={b} className="dbt-tile tone-card" aria-label={`${label} score`}>
+                <span>{label}</span>
+                <b>{now ? now.score : '—'}</b>
+                <small>
+                  {now ? `updated ${shortDate(now.date)}` : 'no report yet'}
+                  {now && prev ? ` · ${now.score - prev.score >= 0 ? '+' : ''}${now.score - prev.score} since ${shortDate(prev.date)}` : ''}
+                </small>
+              </div>
+            );
+          })}
+        </section>
+      ) : (
       <section className="dbt-sum" aria-label="What I really owe">
         <div className="dbt-sum-total">
-          <span>What I really owe</span>
+          <span>Tickets, tolls & taxes I owe</span>
           <b>{usd(grand)}</b>
           <small>
             Before settlements · as of {shortDate(file.asOf)} ·{' '}
@@ -96,15 +126,16 @@ export function DebtFile() {
           </button>
         ))}
       </section>
+      )}
 
-      {view === 'credit' ? <CreditView file={file} items={credit} behind={behind} marks={marks} onOpen={setOpenId} /> : null}
-      {view === 'md' ? <MdView file={file} items={md} wv={wv} marks={marks} onOpen={setOpenId} regLeft={regLeft} /> : null}
-      {view === 'oos' ? (
+      {scope === 'credit' ? <CreditView file={file} items={credit} behind={behind} marks={marks} onOpen={setOpenId} /> : null}
+      {scope === 'owed' && view === 'md' ? <MdView file={file} items={md} wv={wv} marks={marks} onOpen={setOpenId} regLeft={regLeft} /> : null}
+      {scope === 'owed' && view === 'oos' ? (
         <Sec tone="sub" title="Out-of-state tickets & tolls" figure={usd(owedOf(oos, marks))} hint="DC, New York and Delaware. None of these block your MD registration — DC can boot with 2+ unpaid.">
           <Rows items={oos} marks={marks} onOpen={setOpenId} ticket />
         </Sec>
       ) : null}
-      {view === 'other' ? (
+      {scope === 'owed' && view === 'other' ? (
         <Sec tone="plan" title="Taxes & other liabilities" figure={usd(owedOf(other, marks))} hint="Just the letters — no credit-report research needed.">
           <Rows items={other} marks={marks} onOpen={setOpenId} />
         </Sec>
@@ -168,18 +199,6 @@ function CreditView({ file, items, behind, marks, onOpen }: { file: File; items:
         <Sec tone="due" title="Behind now — not collections yet" figure={usd(owedOf(behind, marks))} hint="Open accounts with missed payments in Gmail.">
           <Rows items={behind} marks={marks} onOpen={onOpen} />
         </Sec>
-        {file.scores?.length ? (
-          <Sec tone="card" title="FICO 8 from your reports">
-            <div className="dbt-scores">
-              {file.scores.map(s => (
-                <span key={s.bureau + s.date}>
-                  <b>{s.score}</b>
-                  {s.bureau} · {shortDate(s.date)}
-                </span>
-              ))}
-            </div>
-          </Sec>
-        ) : null}
       </div>
     </div>
   );

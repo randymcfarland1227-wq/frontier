@@ -30,6 +30,8 @@ export type DebtItem = {
   /** Extra that may apply on top (flag fees, late penalties) */
   maybe?: number;
   status: string;
+  /** Might not be Randy's debt at all — shown, but left out of the totals */
+  unverified?: boolean;
   blocksRegistration?: boolean;
   reports?: Partial<Record<Bureau, string | null>>;
   owners?: Array<{ role: string; name: string; from?: string; note?: string }>;
@@ -43,6 +45,8 @@ export type DebtItem = {
   next?: string;
 };
 
+export type PayLaterSeen = { id: string; provider: string; merchant: string; amount: number | null; date: string; state: 'paid' | 'late' | 'upcoming'; note?: string };
+
 export type DebtLetter = { id: string; date: string; from: string; title: string; total: number; count: number; note?: string };
 
 export type RegStep = { id: string; title: string; amount: number | null; maybe?: number; where: string; note?: string };
@@ -52,6 +56,8 @@ export type DebtFile = {
   asOf: string;
   sources?: string;
   scores?: Array<{ bureau: string; date: string; score: number }>;
+  /** Pay-later payments the Gmail sweep saw (Klarna, Afterpay, Zip, Affirm) */
+  paylater?: PayLaterSeen[];
   registration?: { due: string; vehicle: string; steps: RegStep[] };
   letters: DebtLetter[];
   items: DebtItem[];
@@ -74,7 +80,7 @@ export function isSettled(mark?: DebtMark): boolean {
 }
 
 export function owedOf(items: DebtItem[], marks: DebtMarks): number {
-  return items.filter(i => !isSettled(marks[i.id])).reduce((s, i) => s + (i.amount || 0), 0);
+  return items.filter(i => !i.unverified && !isSettled(marks[i.id])).reduce((s, i) => s + (i.amount || 0), 0);
 }
 
 export function useDebtFile() {
