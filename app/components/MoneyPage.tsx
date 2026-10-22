@@ -2737,6 +2737,9 @@ export function MoneyPage({
   const lastNum = (row?: Cell[]) => (row ? amountOf([...row].reverse().find(c => amountOf(c.text) !== undefined)?.text || '') || 0 : 0);
   const outstandingSum = (model.outstanding?.rows || []).reduce((s, r) => s + (amountOf(r[1]?.text || '') || 0), 0);
   const nonCreditSum = model.nonCredit.reduce((s, t) => s + lastNum(t.total), 0);
+  // Tickets, tolls and out-of-state live in the debt file now; keep the sheet's other tables.
+  const sheetOther = model.nonCredit.filter(t => !/ticket|toll|out.?of.?state|camera/i.test(t.title));
+  const sheetOtherSum = sheetOther.reduce((s, t) => s + lastNum(t.total), 0);
   const collectionsSum = (model.collections?.rows || []).reduce((s, r) => s + (amountOf(r[1]?.text || '') || 0), 0);
   const owedSum = outstandingSum + nonCreditSum;
   const latestScores = (['Experian', 'Equifax', 'TransUnion'] as const).map(b => ({ b, s: (debtFile.file?.scores || []).filter(x => x.bureau === b).sort((x, y) => y.date.localeCompare(x.date))[0] }));
@@ -3168,19 +3171,25 @@ export function MoneyPage({
 
         {tab === 'owed' ? (
           <div className="mny-stack">
-            <DebtFile scope="owed" />
-            <div className="mny-cols">
-              <Section tone="owed" title="Outstanding" hint="From the sheet — everything outside the credit reports." figure={money(outstandingSum)} figureLabel="known" href={link('Randy')}>
-                {model.outstanding ? <SheetTable table={model.outstanding} onSave={save} /> : null}
-              </Section>
-              <Section tone="owed" title="Not on credit · in the sheet" hint="Cash advances, repairs, taxes." figure={money(nonCreditSum)} href={link('Non-Credit')}>
-                {model.nonCredit.map(t => (
-                  <Fold key={t.key} title={t.title} meta={`${t.rows.length}`} total={t.total?.[t.total.length - 1]?.text}>
-                    <SheetTable table={t} onSave={save} />
-                  </Fold>
-                ))}
-              </Section>
-            </div>
+            <DebtFile
+              scope="owed"
+              sheet={
+                <Fold title="From the sheet" meta="Outstanding, repairs, cash advances — tickets & tolls above replace the sheet's own ticket tables" total={money(outstandingSum + sheetOtherSum)}>
+                  <div className="mny-cols">
+                    <Section tone="owed" title="Outstanding" hint="Everything outside the credit reports." figure={money(outstandingSum)} figureLabel="known" href={link('Randy')}>
+                      {model.outstanding ? <SheetTable table={model.outstanding} onSave={save} /> : null}
+                    </Section>
+                    <Section tone="owed" title="Not on credit" hint="Cash advances, repairs, taxes." figure={money(sheetOtherSum)} href={link('Non-Credit')}>
+                      {sheetOther.map(t => (
+                        <Fold key={t.key} title={t.title} meta={`${t.rows.length}`} total={t.total?.[t.total.length - 1]?.text}>
+                          <SheetTable table={t} onSave={save} />
+                        </Fold>
+                      ))}
+                    </Section>
+                  </div>
+                </Fold>
+              }
+            />
           </div>
         ) : null}
 

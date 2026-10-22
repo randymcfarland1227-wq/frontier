@@ -4796,3 +4796,73 @@ button.bal-led-row:hover { background: color-mix(in srgb, var(--ev, #0f8a7e) 8%,
 
 .brand-logo { width: 18px; height: 18px; border-radius: 4px; vertical-align: -4px; margin-right: 6px; object-fit: contain; background: #fff; }
 .mny-flag.is-payby.is-urgent { background: #be123c; color: #fff; font-weight: 700; }
+
+/* ── Debt file redesign: credit table + unified "What I owe" ── */
+.dbt-sum-owed { grid-template-columns: 1.3fr repeat(3, 1fr); }
+.dbt-sum-owed .dbt-sum-total { background: color-mix(in srgb, #b45309 12%, var(--surface)); border-color: color-mix(in srgb, #b45309 45%, transparent); }
+.dbt-cols-even { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+.dbt-cols-owed { grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); }
+.dbt-ct { display: grid; }
+.dbt-ct-row { display: grid; grid-template-columns: minmax(140px, 1.35fr) minmax(100px, .95fr) 84px 76px 92px 104px minmax(118px, 1.05fr) minmax(130px, 1.2fr); gap: 10px; align-items: center; }
+.dbt-ct-head { font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); padding: 2px 10px 6px; }
+.dbt-ct .dbt-row { padding: 9px 10px; }
+.dbt-ct-total { padding: 10px 10px 4px; border-top: 2px solid var(--line, var(--row-line)); }
+.dbt-two { display: grid; min-width: 0; font-size: 13px; }
+.dbt-two b { font-weight: 600; font-variant-numeric: tabular-nums; }
+.dbt-two small, .dbt-offer-cell small { font-size: 11.5px; color: var(--muted); }
+.dbt-fall.is-est { color: #b45309; } .dbt-fall.is-latest { color: var(--muted); }
+.dbt-seen { color: #0f8a7e; } .dbt-est { color: #b45309; }
+.dbt-offer-cell { display: grid; min-width: 0; font-size: 12.5px; }
+.dbt-offer-cell small { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.dbt-ct .dbt-who { white-space: normal; }
+.dbt-foot { margin: 8px 10px 0; font-size: 12px; color: var(--muted); }
+.dbt-years { display: flex; flex-wrap: wrap; gap: 10px 22px; }
+.dbt-years > div { display: grid; gap: 2px; align-content: start; min-width: 160px; flex: 1; border-top: 3px solid #0f8a7e; padding-top: 4px; }
+.dbt-years h5 { margin: 0 0 2px; font-size: 18px; font-weight: 500; }
+.dbt-years .dbt-mini { padding: 3px 0; } .dbt-years .dbt-mini b { color: var(--muted); font-size: 11px; text-transform: uppercase; display: inline-block; width: 30px; }
+.dbt-years em { font-style: normal; font-size: 10.5px; color: var(--muted); }
+.dbt-reg-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; padding-bottom: 4px; }
+.dbt-days { font-size: 13px; color: var(--muted); } .dbt-days b { font-size: 26px; font-weight: 500; color: var(--t); font-variant-numeric: tabular-nums; }
+.dbt-days.is-hot b { color: #be123c; }
+.dbt-prog { flex: 1 1 120px; height: 8px; border-radius: 6px; background: color-mix(in srgb, var(--muted) 22%, transparent); overflow: hidden; }
+.dbt-prog i { display: block; height: 100%; background: #0f8a7e; transition: width .2s; }
+.dbt-seg { display: inline-flex; border: 1px solid var(--line, var(--row-line)); border-radius: 8px; overflow: hidden; }
+.dbt-seg button { border: 0; background: none; color: inherit; font: inherit; font-size: 12.5px; padding: 4px 10px; cursor: pointer; }
+.dbt-seg button.is-on { background: var(--t); color: #fff; }
+.dbt-step > summary { flex-wrap: wrap; }
+.dbt-step-n { flex: 0 0 auto; width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; background: var(--t); color: #fff; font-size: 12px; font-weight: 700; }
+.dbt-step.is-done .mny-fold-title, .dbt-step.is-done .mny-fold-total { text-decoration: line-through; opacity: .55; }
+.dbt-step .mny-fold-total small { font-size: 11.5px; color: var(--muted); font-weight: 400; }
+.dbt-check { flex: 0 0 auto; width: 26px; height: 26px; border-radius: 7px; border: 1.5px solid var(--muted); background: none; color: transparent; cursor: pointer; font-size: 14px; }
+.dbt-check.is-on { background: #0f8a7e; border-color: #0f8a7e; color: #fff; }
+.dbt-how { margin: 0; font-size: 13px; }
+.dbt-planline { margin: 2px 0; padding: 6px 10px; border-radius: 6px; font-size: 12.5px; border-left: 3px solid var(--muted); background: color-mix(in srgb, var(--muted) 8%, transparent); }
+.dbt-planline.is-yes { border-left-color: #0f8a7e; background: color-mix(in srgb, #0f8a7e 10%, transparent); }
+.dbt-planline.is-ask { border-left-color: #b45309; background: color-mix(in srgb, #b45309 10%, transparent); }
+.dbt-tk-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px 8px; }
+.dbt-tk { display: flex; align-items: center; gap: 6px; width: 100%; text-align: left; padding: 6px 10px; border: 1px solid var(--line, var(--row-line)); border-radius: 8px; background: var(--surface); color: inherit; font: inherit; font-size: 13.5px; cursor: pointer; }
+.dbt-tk:hover { border-color: var(--t, #be123c); background: color-mix(in srgb, var(--t, #be123c) 7%, var(--surface)); }
+.dbt-tk-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dbt-tk .num { font-variant-numeric: tabular-nums; font-weight: 600; }
+.dbt-tk.is-settled { opacity: .5; } .dbt-tk.is-settled .num { text-decoration: line-through; }
+.dbt-plan { font-style: normal; font-size: 10.5px; font-weight: 700; padding: 1px 6px; border-radius: 10px; white-space: nowrap; }
+.dbt-plan.is-yes { background: #0f8a7e; color: #fff; } .dbt-plan.is-ask { background: color-mix(in srgb, #b45309 22%, transparent); color: #b45309; }
+.dbt-letters { display: flex; flex-wrap: wrap; gap: 6px; }
+.dbt-letter { border: 1px solid var(--line, var(--row-line)); background: var(--surface); color: inherit; font: inherit; font-size: 12.5px; padding: 3px 9px; border-radius: 14px; cursor: pointer; }
+.dbt-letter em { font-style: normal; color: var(--muted); } .dbt-letter:hover { border-color: var(--t); }
+.dbt-grp h5 { display: flex; justify-content: space-between; margin: 4px 2px 4px; font-size: 12px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); } .dbt-grp h5 span { color: var(--t); }
+.dbt-grp { display: grid; gap: 4px; }
+.dbt-planrow { display: grid; gap: 2px; padding: 6px 0; border-top: 1px solid var(--line, var(--row-line)); font-size: 13px; }
+.dbt-planrow:first-of-type { border-top: 0; } .dbt-planrow small { font-size: 12px; color: var(--muted); } .dbt-planrow .dbt-link { justify-self: start; font-size: 12px; color: var(--muted); }
+.dbt-lbtn { width: 100%; text-align: left; background: none; border-left: 0; border-right: 0; border-bottom: 0; color: inherit; font: inherit; cursor: pointer; }
+.dbt-lbtn:hover { background: color-mix(in srgb, var(--muted) 8%, transparent); }
+@media (max-width: 1100px) {
+  .dbt-ct-head { display: none; }
+  .dbt-ct-row { grid-template-columns: minmax(0, 1fr) auto; row-gap: 4px; }
+  .dbt-ct .dbt-row > span[data-l]:not(:first-child):not(.num) { grid-column: 1 / -1; display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 8px; font-size: 12.5px; }
+  .dbt-ct .dbt-row > span[data-l]:not(:first-child):not(.num)::before { content: attr(data-l); flex: 0 0 92px; color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: .04em; }
+  .dbt-ct-total { grid-template-columns: 1fr auto; } .dbt-ct-total > span:nth-child(n+4):not(:nth-child(7)) { display: none; } .dbt-ct-total > span:nth-child(7) { grid-column: 1 / -1; }
+  .dbt-cols-even, .dbt-cols-owed { grid-template-columns: 1fr; }
+  .dbt-sum-owed { grid-template-columns: 1fr 1fr; } .dbt-sum-owed .dbt-sum-total { grid-column: 1 / -1; }
+}
+@media (max-width: 640px) { .dbt-tk-grid { grid-template-columns: 1fr; } }
