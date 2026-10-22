@@ -52,6 +52,8 @@ export function PriorityPanel({
   const [note, setNote] = useState(entry?.note || '');
   const [newStep, setNewStep] = useState('');
   const before = entry?.before || [];
+  const [newSub, setNewSub] = useState('');
+  const subs = entry?.subs || [];
 
   // Behave like a dialog: focus moves in once when it opens, Escape closes it.
   const closeLatest = useRef(close);
@@ -92,6 +94,15 @@ export function PriorityPanel({
     if (!text) return;
     setBefore([...before, { id: `b-${Date.now()}`, text, done: false }]);
     setNewStep('');
+  };
+
+  const setSubs = (next: BeforeStep[]) => updatePinDetails(item.key, { subs: next.length ? next : undefined });
+  const addSub = (e: FormEvent) => {
+    e.preventDefault();
+    const text = newSub.trim();
+    if (!text) return;
+    setSubs([...subs, { id: `s-${Date.now()}`, text, done: false }]);
+    setNewSub('');
   };
 
   // Rendered at the page shell (keeps the theme colours) so the Priority box's blur effect
@@ -202,6 +213,44 @@ export function PriorityPanel({
               placeholder="e.g. Get the account number from Mom"
               aria-label="Add something that has to happen first"
             />
+            <button type="submit" className="row-action">
+              Add
+            </button>
+          </form>
+        </section>
+
+        <section className="plan-panel-sec" aria-labelledby="plan-subs">
+          <h3 id="plan-subs">
+            Subtasks{subs.length ? <span className="plan-subs-count"> {subs.filter(x => x.done).length}/{subs.length}</span> : null}
+          </h3>
+          <p className="plan-panel-hint">The pieces this task is made of. They never change any task count.</p>
+          {subs.length ? (
+            <ul className="plan-before-list plan-subs-list">
+              {subs.map(step => (
+                <li key={step.id} className={step.done ? 'is-done' : ''}>
+                  <label>
+                    <input
+                      type="checkbox"
+                      checked={step.done}
+                      onChange={() => setSubs(subs.map(b => (b.id === step.id ? { ...b, done: !b.done } : b)))}
+                    />
+                    <span>{step.text}</span>
+                  </label>
+                  <button
+                    type="button"
+                    className="row-action ghost"
+                    onClick={() => setSubs(subs.filter(b => b.id !== step.id))}
+                    aria-label={`Remove “${step.text}”`}
+                    title="Remove"
+                  >
+                    ✕
+                  </button>
+                </li>
+              ))}
+            </ul>
+          ) : null}
+          <form className="plan-before-add" onSubmit={addSub}>
+            <input value={newSub} onChange={e => setNewSub(e.target.value)} placeholder="Add a subtask…" aria-label="Add a subtask" />
             <button type="submit" className="row-action">
               Add
             </button>
