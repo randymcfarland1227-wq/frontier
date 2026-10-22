@@ -5,6 +5,7 @@ import { MoneySelector } from './MoneySelector';
 import { isLedgerPaid, ledgerMonthRows } from '../../lib/moneyLedger';
 import { PayPlanner } from './PayPlanner';
 import { DebtFile } from './DebtFile';
+import { BrandLogo } from './BrandLogo';
 import { useDebtFile } from '../../lib/debtFile';
 import {
   amountOf,
@@ -437,6 +438,7 @@ function DueRow({ d, onPaid, showDay }: { d: BillDue; onPaid: (d: BillDue) => vo
         {showDay ? <span className="mny-due-day">{fromDayKey(d.due).toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' })}</span> : null}
         <span className="mny-due-kind">{d.skipped ? 'Skipped' : kind === 'paylater' ? provider || 'Pay later' : kind ? MONEY_KINDS[kind].label : 'Bill'}</span>
         <span className="mny-due-name">
+          <BrandLogo name={`${d.bill.name} ${d.bill.notes || ''}`} />
           <ItemName id={d.key}>{d.bill.name}</ItemName>
           {installment ? <small> · {installment}</small> : null}
           {changed ? <small className="mny-due-change"> · {changed}</small> : null}
@@ -687,6 +689,7 @@ function MonthRow({ d, paidAt, onPaid, fullDate = false }: { d: BillDue; paidAt:
       </span>
       <span className="mm-kind">{kindLabel(d)}</span>
       <span className="mm-name">
+        <BrandLogo name={`${d.bill.name} ${d.bill.notes || ''}`} />
         <ItemName id={d.key}>{d.bill.name}</ItemName>
         {installment ? <small> · {installment}</small> : null}
         {billChangeText(d) ? <small> · {billChangeText(d)}</small> : null}
@@ -1186,6 +1189,7 @@ function SubsView({ model, lifeSubs, paidAt, dues, onSave }: { model: MoneyModel
                 {r.name.charAt(0).toUpperCase()}
               </span>
               <span className="subs-name">
+                <BrandLogo name={r.name} />
                 {r.name}
                 {r.from === 'hub' ? <small>added here{r.sub?.note ? ` · ${r.sub.note}` : ''}</small> : null}
               </span>
@@ -1628,6 +1632,16 @@ const MoneyPanelCtx = createContext<{ openLine: (key: string) => void; openAccou
 const useMoneyPanels = () => useContext(MoneyPanelCtx);
 
 /** A bill / deposit name that opens its panel (plain text where there's no panel for it). */
+/** Gmail-sourced pay-by dates, applied to unpaid bill rows whose name matches and that have no pay-by yet. */
+function withPayBy(list: BillDue[], rules?: Array<{ match: string; kinds?: string[]; date: string; why: string }>): BillDue[] {
+  if (!rules?.length) return list;
+  return list.map(d => {
+    if (d.bill.payBy) return d;
+    const r = rules.find(x => normName(d.bill.name).includes(normName(x.match)) && (!x.kinds || x.kinds.includes(d.bill.kind || 'bill')));
+    return r ? { ...d, bill: { ...d.bill, payBy: r.date, notes: [d.bill.notes, r.why].filter(Boolean).join(' · ') } } : d;
+  });
+}
+
 function ItemName({ id, children }: { id: string; children: ReactNode }) {
   const panels = useMoneyPanels();
   if (!panels.has(id)) return <>{children}</>;
@@ -2530,7 +2544,7 @@ function LedgerByCategory({ dues, paidAt, model, onPaid, hidePaid }: { dues: Bil
                   return (
                     <li key={d.key} className={`ledger-row is-${st}${d.bill.nonCritical ? ' is-noncritical' : ''}`}>
                       <span className="ledger-day">{fromDayKey(d.due).getDate()}</span>
-                      <span className="ledger-name">{d.bill.name}<FlagBadges d={d} /></span>
+                      <span className="ledger-name"><BrandLogo name={d.bill.name} />{d.bill.name}<FlagBadges d={d} /></span>
                       <span className="ledger-amt">{money(d.bill.amount) || '?'}</span>
                       {isDone ? (
                         <span className="ledger-state">✓</span>
@@ -2572,8 +2586,8 @@ const TAB_KEY = 'lifehub-money-tab';
 
 export function MoneyPage({
   model,
-  dues,
-  monthDues,
+  dues: duesIn,
+  monthDues: monthDuesIn,
   paidAt,
   lifeSubs,
   onPaid,
@@ -2596,6 +2610,10 @@ export function MoneyPage({
   /** The Radall Finances task card (same Done / priority / chips as on Home) */
   financeTasks?: ReactNode;
 }) {
+  const debtFile = useDebtFile();
+  // Pay-by dates read from Gmail notices (e.g. Verizon's suspension date) fill in where the sheet / Life Hub has none.
+  const dues = useMemo(() => withPayBy(duesIn, debtFile.file?.payby), [duesIn, debtFile.file?.payby]);
+  const monthDues = useMemo(() => withPayBy(monthDuesIn, debtFile.file?.payby), [monthDuesIn, debtFile.file?.payby]);
   const [note, setNote] = useState<{ text: string; tone: 'ok' | 'bad' } | null>(null);
   const [provider, setProvider] = useState('All');
   const [legacyTab] = useState(() => readSaved<string>(TAB_KEY, 'flow'));
@@ -2673,7 +2691,6 @@ export function MoneyPage({
   const overdue = dues.filter(isOverdue);
   const restOfMonth = dues.filter(d => d.days >= 0 && fromDayKey(d.due) <= monthEnd);
 
-  const debtFile = useDebtFile();
   // Pay-later payments seen in Gmail: mark the matching row paid once (and remember we did, so un-marking sticks).
   const plSeen = debtFile.file?.paylater || [];
   const plMatch = (e: (typeof plSeen)[number]) =>
@@ -2724,6 +2741,7 @@ export function MoneyPage({
   const owedSum = outstandingSum + nonCreditSum;
   const latestScores = (['Experian', 'Equifax', 'TransUnion'] as const).map(b => ({ b, s: (debtFile.file?.scores || []).filter(x => x.bureau === b).sort((x, y) => y.date.localeCompare(x.date))[0] }));
   const overdueOf = (k: string) => overdue.filter(d => (d.bill.kind || 'bill') === k);
+  const nextPayBy = (k: string) => overdueOf(k).map(d => d.bill.payBy).filter((x): x is string => Boolean(x)).sort()[0];
   const overdueSum = (k: string) => overdueOf(k).reduce((t, d) => t + (d.bill.amount || 0), 0);
 
   const neededNow = model.recurring ? model.recurring.rows.filter(r => /^(yes|y\s*low)$/i.test(r[0].text)) : [];
@@ -2845,17 +2863,17 @@ export function MoneyPage({
             <button type="button" className={`mny-mini tone-due${overdueOf('paylater').length ? ' is-late' : ''}`} onClick={() => go('spend', () => setSpendView('paylater'))}>
               <span>Pay later</span>
               <b>{pay?.total?.[1]?.text || '—'}</b>
-              <small>{overdueOf('paylater').length ? `${overdueOf('paylater').length} overdue · ${money(overdueSum('paylater'))}` : 'none overdue'}</small>
+              <small>{overdueOf('paylater').length ? `${overdueOf('paylater').length} overdue · ${money(overdueSum('paylater'))}${nextPayBy('paylater') ? ` · PAY BY ${payByText(nextPayBy('paylater')!)}` : ''}` : 'none overdue'}</small>
             </button>
             <button type="button" className={`mny-mini tone-sub${overdueOf('sub').length ? ' is-late' : ''}`} onClick={() => go('spend', () => setSpendView('subs'))}>
               <span>Subscriptions</span>
               <b>{overdueOf('sub').length ? `${overdueOf('sub').length} overdue` : 'All current'}</b>
-              <small>{overdueOf('sub').length ? money(overdueSum('sub')) : `${money(subsMonthly)}/mo`}</small>
+              <small>{overdueOf('sub').length ? `${money(overdueSum('sub'))}${nextPayBy('sub') ? ` · PAY BY ${payByText(nextPayBy('sub')!)}` : ''}` : `${money(subsMonthly)}/mo`}</small>
             </button>
             <button type="button" className={`mny-mini tone-due${overdueOf('bill').length ? ' is-late' : ''}`} onClick={() => go('spend', () => setSpendView('bills'))}>
               <span>Bills</span>
               <b>{overdueOf('bill').length ? `${overdueOf('bill').length} overdue` : 'All current'}</b>
-              <small>{overdueOf('bill').length ? money(overdueSum('bill')) : `${billsLeft} left this month`}</small>
+              <small>{overdueOf('bill').length ? `${money(overdueSum('bill'))}${nextPayBy('bill') ? ` · PAY BY ${payByText(nextPayBy('bill')!)}` : ''}` : `${billsLeft} left this month`}</small>
             </button>
             <button type="button" className="mny-mini tone-card mny-scores" onClick={() => setTab('debts')}>
               <span>Credit scores</span>

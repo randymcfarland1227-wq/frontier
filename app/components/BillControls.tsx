@@ -51,12 +51,18 @@ export function BillFlagsFields({ due }: { due: BillDue }) {
 
 const payByText = (k: string) => fromDayKey(k).toLocaleDateString([], { month: 'short', day: 'numeric' });
 
+const payLeft = (k: string) => Math.round((fromDayKey(k).getTime() - new Date(new Date().getFullYear(), new Date().getMonth(), new Date().getDate()).getTime()) / 86400000);
+
 /** "Pay by Oct 23" (grace / suspension date after the due date) and "Non critical" chips. */
 export function FlagBadges({ d }: { d: BillDue }) {
   if (!d.bill.payBy && !d.bill.nonCritical) return null;
   return (
     <>
-      {d.bill.payBy ? <small className="mny-flag is-payby" title="Still overdue after its due date — pay by this day to avoid a late fee or suspension">Pay by {payByText(d.bill.payBy)}</small> : null}
+      {d.bill.payBy ? (
+        <small className={`mny-flag is-payby${payLeft(d.bill.payBy) <= 3 ? ' is-urgent' : ''}`} title="Still overdue after its due date — pay by this day to avoid a late fee or suspension">
+          Pay by {payByText(d.bill.payBy)} · {payLeft(d.bill.payBy) < 0 ? 'PASSED' : payLeft(d.bill.payBy) === 0 ? 'TODAY' : `${payLeft(d.bill.payBy)} day${payLeft(d.bill.payBy) === 1 ? '' : 's'} left`}
+        </small>
+      ) : null}
       {d.bill.nonCritical ? <small className="mny-flag is-noncritical" title="Non critical: shown orange when overdue">Non critical</small> : null}
     </>
   );

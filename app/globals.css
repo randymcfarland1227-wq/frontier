@@ -4793,3 +4793,6 @@ button.bal-led-row:hover { background: color-mix(in srgb, var(--ev, #0f8a7e) 8%,
 .mny-seen li small { grid-column: 1 / -1; color: var(--muted); font-size: 12px; }
 .mny-seen li.is-late { border-color: #be123c; background: color-mix(in srgb, #be123c 10%, transparent); }
 .mny-seen li.is-paid span { color: #15803d; }
+
+.brand-logo { width: 18px; height: 18px; border-radius: 4px; vertical-align: -4px; margin-right: 6px; object-fit: contain; background: #fff; }
+.mny-flag.is-payby.is-urgent { background: #be123c; color: #fff; font-weight: 700; }
