@@ -5150,3 +5150,25 @@ button.ob-line-name { cursor: pointer; text-decoration: underline dotted; }
   font-size: 9px !important; line-height: 1.15 !important; padding: 1px 3px !important; hyphens: none !important; overflow-wrap: anywhere;
 }
 .sc-month[data-season] .mini-more { font-size: 8.5px !important; }
+
+/* --- 2026-10-22 markup #2: Doing now — text first, tools in the row menu --- */
+.pb-v3 .pv-row { display: grid; grid-template-columns: auto minmax(0, 1fr); column-gap: 7px; row-gap: 0; align-items: start; padding: 3px 4px 3px 4px; min-height: 0; }
+.pb-v3 .pv-plan .pv-row { grid-template-columns: auto auto auto minmax(0, 1fr); }
+.pb-v3 .pv-row > .pv-check { margin-top: 2px; }
+.pb-v3 .pv-row > .pv-site, .pb-v3 .pv-row > .pv-num { margin-top: 2px; }
+.pb-v3 .pv-row > .pv-num { width: auto; min-width: 12px; }
+.pb-v3 .pv-row .pv-title { display: block; min-width: 0; overflow: visible; text-align: left; }
+.pb-v3 .pv-row .pv-text,
+.pb-v3 .pv-group .pv-text { display: -webkit-box !important; -webkit-box-orient: vertical; -webkit-line-clamp: 2; white-space: normal !important; overflow: hidden; font-size: 12px !important; line-height: 1.3; font-weight: 500; flex: none !important; }
+.pb-v3 .pv-row > .pv-sub, .pb-v3 .pv-group .pv-sub { grid-column: -2 / -1; order: 0; margin: 1px 0 0; flex: none; display: flex; flex-wrap: nowrap; gap: 4px; overflow: hidden; }
+.pb-v3 .pv-row > .pv-sub .task-tag, .pb-v3 .pv-row > .pv-sub .pv-chip { font-size: 10.5px !important; line-height: 15px; padding: 0 5px; }
+.pb-v3 .pv-row > .day-menu { grid-column: 1 / -1; }
+.pb-v3 .pv-tools { display: none; }
+/* each site box a slightly different tint */
+.pb-v3 .pv-groups > .pv-group:nth-child(7n+1) { background: color-mix(in srgb, #e8833a 9%, var(--surface)); }
+.pb-v3 .pv-groups > .pv-group:nth-child(7n+2) { background: color-mix(in srgb, #3b82f6 9%, var(--surface)); }
+.pb-v3 .pv-groups > .pv-group:nth-child(7n+3) { background: color-mix(in srgb, #a855f7 9%, var(--surface)); }
+.pb-v3 .pv-groups > .pv-group:nth-child(7n+4) { background: color-mix(in srgb, #16a34a 9%, var(--surface)); }
+.pb-v3 .pv-groups > .pv-group:nth-child(7n+5) { background: color-mix(in srgb, #e11d74 8%, var(--surface)); }
+.pb-v3 .pv-groups > .pv-group:nth-child(7n+6) { background: color-mix(in srgb, #0ea5b7 9%, var(--surface)); }
+.pb-v3 .pv-groups > .pv-group:nth-child(7n+7) { background: color-mix(in srgb, #d9a21b 10%, var(--surface)); }
