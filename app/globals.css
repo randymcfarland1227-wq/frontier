@@ -5185,3 +5185,9 @@ button.ob-line-name { cursor: pointer; text-decoration: underline dotted; }
 .space-card .row-check { width: 22px; height: 22px; font-size: 12px; }
 .space-card .row-pinned { font-size: 10px; opacity: .8; }
 .space-card .capture-due { font-size: 10.5px; padding: 0 6px; }
+
+/* Subtasks + any task title opens the panel */
+.task-open { all: unset; cursor: pointer; min-width: 0; text-align: left; }
+.task-open:hover strong { text-decoration: underline; text-underline-offset: 2px; }
+.task-open:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+.plan-subs-count { color: var(--muted); font-weight: 500; font-size: 12px; }

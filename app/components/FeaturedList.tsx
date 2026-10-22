@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { tagTone } from '../../lib/tagTone';
 import type { FeaturedItem, SourceId, SourceSnapshot } from '../../lib/types';
 import { sourceById, isMusicTask, MUSIC_HUB_URL } from '../../lib/sources';
-import { pinKey, usePriorityPins } from '../../lib/priorityPins';
+import { openTaskPanel, pinKey, usePriorityPins } from '../../lib/priorityPins';
 import { DayMenu, shortDue } from './DayMenu';
 import { setTaskTag, TAG_SUGGESTIONS, TAGGABLE } from '../../lib/taskTags';
 import { setSelfHome } from '../../lib/adapters/self';
@@ -91,13 +91,9 @@ export function FeaturedList({
               ) : null}
               <div className="featured-main">
                 {item.tag ? <span className={`task-tag tone-${tagTone(item.tag)}`}>{item.tag}</span> : null}
-                {item.originUrl ? (
-                  <a className="origin-link" href={item.originUrl} target="_blank" rel="noopener noreferrer">
-                    <strong>{item.title}</strong>
-                  </a>
-                ) : (
+                <button type="button" className="origin-link task-open" onClick={() => openTaskPanel(pinKey(sourceId, item.id))} title="Open details, subtasks and plan">
                   <strong>{item.title}</strong>
-                )}
+                </button>
                 {isMusicTask(item.title) ? (
                   <a className="row-music" href={MUSIC_HUB_URL} target="_blank" rel="noopener noreferrer" title="Open Music Hub" aria-label="Open Music Hub">
                     ♪

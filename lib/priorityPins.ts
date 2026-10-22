@@ -16,6 +16,11 @@ import type { SourceId } from './types';
 import { readSaved, writeSaved, STORAGE_KEYS } from './storage';
 
 export const PRIORITY_PINS_EVENT = 'lifehub:priority-pins';
+/** Any task title on any card fires this with a pin key; Doing now opens that item's panel. */
+export const OPEN_TASK_EVENT = 'lifehub:open-task';
+export const openTaskPanel = (key: string) => {
+  if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent(OPEN_TASK_EVENT, { detail: key }));
+};
 
 export type Lane = 'now' | 'next' | 'later';
 export const LANES: Array<{ id: Lane; name: string; hint: string }> = [
@@ -40,6 +45,8 @@ export type LaneEntry = {
   note?: string;
   /** Blockers / things that need to happen first */
   before?: BeforeStep[];
+  /** Subtasks: the pieces an umbrella task is made of. Never counted in any task total. */
+  subs?: BeforeStep[];
   /** A day for it (YYYY-MM-DD) — Priority + calendar only, never sent back to its site */
   due?: string;
 };
@@ -131,7 +138,7 @@ export function unpin(key: string) {
 }
 
 /** Change an item's note / "Before this" list (kept even if it's taken off the plan). */
-export function updatePinDetails(key: string, patch: Partial<Pick<LaneEntry, 'note' | 'before' | 'due'>>) {
+export function updatePinDetails(key: string, patch: Partial<Pick<LaneEntry, 'note' | 'before' | 'subs' | 'due'>>) {
   const map = loadLanes();
   const prev = map[key] || { lane: null, order: 0, at: '' };
   map[key] = { ...prev, ...patch, at: new Date().toISOString() };

@@ -1,10 +1,10 @@
 'use client';
 
-import { useMemo, useState, type DragEvent } from 'react';
+import { useEffect, useMemo, useState, type DragEvent } from 'react';
 import { tagTone } from '../../lib/tagTone';
 import type { FeaturedItem, SourceId, SourceSnapshot } from '../../lib/types';
 import { SOURCE_IDS, sourceById } from '../../lib/sources';
-import { DECK, PLAN, arrangeDeck, deckSlotKey, openBefore, pinKey, placePin, setDeckSlot, unpin, usePriorityPins, type Lane } from '../../lib/priorityPins';
+import { DECK, PLAN, OPEN_TASK_EVENT, arrangeDeck, deckSlotKey, openBefore, pinKey, placePin, setDeckSlot, unpin, usePriorityPins, type Lane } from '../../lib/priorityPins';
 import { byLevel, criticalKeys, useFeaturedLevels } from '../../lib/featuredLevels';
 import { SiteIcon } from './SiteIcon';
 import { PriorityPanel, type PriorityItem } from './PriorityPanel';
@@ -98,6 +98,11 @@ export function PriorityBoard({
   const [dragging, setDragging] = useState<string | null>(null);
   const [over, setOver] = useState<string | null>(null);
   const [openKey, setOpenKey] = useState<string | null>(null);
+  useEffect(() => {
+    const open = (e: Event) => setOpenKey(String((e as CustomEvent).detail || '') || null);
+    window.addEventListener(OPEN_TASK_EVENT, open);
+    return () => window.removeEventListener(OPEN_TASK_EVENT, open);
+  }, []);
   // Row whose 📅 day line is open
   const [dayFor, setDayFor] = useState<string | null>(null);
 
@@ -211,7 +216,8 @@ export function PriorityBoard({
     const entry = lanes[item.key];
     const blocked = openBefore(entry);
     const critical = isCritical(item.source, item.id);
-    const hasSub = Boolean(item.tag || critical || entry?.due || blocked || entry?.note);
+    const subTotal = entry?.subs?.length || 0;
+    const hasSub = Boolean(item.tag || critical || entry?.due || blocked || entry?.note || subTotal);
     return (
       <>
         <button
@@ -231,6 +237,11 @@ export function PriorityBoard({
             {blocked ? (
               <span className="pv-chip is-wait" title={`Waiting on ${blocked} thing${blocked === 1 ? '' : 's'} first`}>
                 Waiting · {blocked}
+              </span>
+            ) : null}
+            {subTotal ? (
+              <span className="pv-chip" title="Subtasks done">
+                ☑ {entry!.subs!.filter(x => x.done).length}/{subTotal}
               </span>
             ) : null}
             {entry?.note ? (
