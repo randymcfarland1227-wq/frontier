@@ -4700,7 +4700,7 @@ button.bal-led-row:hover { background: color-mix(in srgb, var(--ev, #0f8a7e) 8%,
 /* ---- Debt file (Money → Credit, debts & tickets) ---- */
 .dbt { display: grid; gap: 14px; }
 .dbt-empty { display: flex; gap: 12px; align-items: center; padding: 18px; color: var(--muted); }
-.dbt-sum { display: grid; grid-template-columns: 1.2fr repeat(4, 1fr); gap: 10px; }
+.dbt-sum { display: grid; grid-template-columns: 1.2fr repeat(3, 1fr); gap: 10px; }
 .dbt-sum-total { display: grid; gap: 2px; padding: 12px 14px; border-radius: 8px; background: color-mix(in srgb, #be123c 12%, var(--surface)); border: 1px solid color-mix(in srgb, #be123c 45%, transparent); }
 .dbt-sum-total span { font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
 .dbt-sum-total b { font-size: 30px; font-variant-numeric: tabular-nums; }
@@ -4782,3 +4782,14 @@ button.bal-led-row:hover { background: color-mix(in srgb, var(--ev, #0f8a7e) 8%,
   .dbt-credit-row { grid-template-columns: minmax(0, 1fr) 84px 96px; } .dbt-credit-row .dbt-who, .dbt-credit-row > span:nth-child(3) { display: none; }
   .dbt-rep { grid-template-columns: 1fr; } .dbt-time li { grid-template-columns: 70px 1fr; } .dbt-time i { display: none; }
 }
+
+.mny-mini.is-late { border-color: color-mix(in srgb, #be123c 60%, transparent); background: color-mix(in srgb, #be123c 10%, var(--surface)); }
+.mny-mini.is-late b { color: #be123c; }
+.mny-scores b { display: flex; gap: 8px; flex-wrap: wrap; font-size: 15px; }
+.mny-scores b i { font-style: normal; white-space: nowrap; }
+
+.mny-seen { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.mny-seen li { display: grid; grid-template-columns: 1.4fr 1fr; gap: 2px 10px; padding: 8px 10px; border-radius: 8px; border: 1px solid var(--line, #8883); }
+.mny-seen li small { grid-column: 1 / -1; color: var(--muted); font-size: 12px; }
+.mny-seen li.is-late { border-color: #be123c; background: color-mix(in srgb, #be123c 10%, transparent); }
+.mny-seen li.is-paid span { color: #15803d; }

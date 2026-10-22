@@ -69,6 +69,17 @@ const SEEDED_SUBS: LifeSub[] = [
     createdAt: '2026-10-22T12:00:00.000Z',
     updatedAt: '2026-10-22T12:00:00.000Z',
   },
+  {
+    id: 'sub-seed-instacart-plus',
+    name: 'Instacart+',
+    day: 22,
+    cycle: 'yearly',
+    month: 11,
+    status: 'cancelled',
+    note: 'Auto-canceled · membership runs until ~Dec 22, 2026 (2 months left as of Oct 22) · member since Aug 2024 · saved $24 so far · will not renew',
+    createdAt: '2026-10-22T18:00:00.000Z',
+    updatedAt: '2026-10-22T18:00:00.000Z',
+  },
 ];
 
 export function loadLifeSubs(): LifeSub[] {
