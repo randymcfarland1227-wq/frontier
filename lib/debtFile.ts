@@ -20,6 +20,9 @@ export type Bureau = 'EX' | 'EQ' | 'TU';
 
 export type DebtEvent = { date: string; kind: 'letter' | 'email' | 'report' | 'notice' | 'event'; text: string };
 
+/** 'yes' = a plan is documented, 'ask' = the letter invites arrangements but prints no terms, 'none' = pay in full */
+export type DebtPlan = { state: 'yes' | 'ask' | 'none'; terms: string; enroll?: string | null; source?: string | null };
+
 export type DebtItem = {
   id: string;
   group: DebtGroup;
@@ -37,6 +40,13 @@ export type DebtItem = {
   owners?: Array<{ role: string; name: string; from?: string; note?: string }>;
   offers?: Array<{ date: string; who: string; text: string; expires?: string; active: boolean }>;
   ticket?: { who: string; date: string; where: string; speed: string; pin?: string; flagged?: string };
+  /** Credit accounts: when it started and when it drops off the reports ('est' = inferred, 'latest' = outer bound from the placement date) */
+  dates?: { opened?: string; openedLabel?: string; dofd?: string; fallsOff?: string; basis: 'dofd' | 'est' | 'latest'; note?: string };
+  /** Lowest offer actually seen */
+  settle?: { lowest?: number | null; who?: string; date?: string; note?: string };
+  plan?: DebtPlan;
+  /** Which Maryland registration step this item belongs to */
+  step?: string;
   /** Combination letters (MVA invoices, CCU) this item appears in */
   letters?: string[];
   timeline: DebtEvent[];
@@ -47,9 +57,9 @@ export type DebtItem = {
 
 export type PayLaterSeen = { id: string; provider: string; merchant: string; amount: number | null; date: string; state: 'paid' | 'late' | 'upcoming'; note?: string };
 
-export type DebtLetter = { id: string; date: string; from: string; title: string; total: number; count: number; note?: string };
+export type DebtLetter = { id: string; date: string; from: string; title: string; total: number; count: number; note?: string; plan?: DebtPlan };
 
-export type RegStep = { id: string; title: string; amount: number | null; maybe?: number; where: string; note?: string };
+export type RegStep = { id: string; title: string; amount: number | null; maybe?: number; where: string; note?: string; plan?: DebtPlan };
 
 export type DebtFile = {
   version: number;
