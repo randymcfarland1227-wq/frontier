@@ -9,6 +9,7 @@ import {
 } from '../../lib/captures';
 import type { FocusArea } from '../../lib/focusAreas';
 import type { SelfItem } from '../../lib/adapters/self';
+import { MenuRow, type RowMenuItem } from './RowMenu';
 import { usePriorityPins } from '../../lib/priorityPins';
 
 /** Where a Self task can be moved (it then shows in that site's card). */
@@ -56,46 +57,31 @@ function dueLabel(day: string) {
   return date.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
 }
 
-/** Optional day on a Self task: "+ Day" until set, then a chip (click to change, × to clear). */
-function DueChip({ due, onChange }: { due?: string; onChange: (due?: string) => void }) {
-  const [editing, setEditing] = useState(false);
-  if (editing) {
-    return (
-      <input
-        type="date"
-        className="capture-due-input"
-        autoFocus
-        defaultValue={due || localDay()}
-        aria-label="Day for this task"
-        onBlur={e => {
-          setEditing(false);
-          if (e.target.value && e.target.value !== due) onChange(e.target.value);
-        }}
-        onKeyDown={e => {
-          if (e.key === 'Enter') (e.target as HTMLInputElement).blur();
-          if (e.key === 'Escape') setEditing(false);
-        }}
-      />
-    );
-  }
-  if (!due) {
-    return (
-      <button type="button" className="capture-due is-empty" onClick={() => setEditing(true)} title="Give it a day (optional) — it shows on the calendar">
-        + Day
-      </button>
-    );
-  }
-  const late = due < localDay();
+/** Date picker for a Self task's day; opened from the row menu. */
+function DueInput({ due, onChange, onClose }: { due?: string; onChange: (due?: string) => void; onClose: () => void }) {
   return (
-    <span className={`capture-due${late ? ' is-late' : ''}`}>
-      <button type="button" onClick={() => setEditing(true)} title="Change the day">
-        {dueLabel(due)}
-      </button>
-      <button type="button" className="capture-due-clear" onClick={() => onChange(undefined)} aria-label="Remove the day" title="Remove the day">
-        ×
-      </button>
-    </span>
+    <input
+      type="date"
+      className="capture-due-input"
+      autoFocus
+      defaultValue={due || localDay()}
+      aria-label="Day for this task"
+      onBlur={e => {
+        onClose();
+        if (e.target.value && e.target.value !== due) onChange(e.target.value);
+      }}
+      onKeyDown={e => {
+        if (e.key === 'Enter') (e.target as HTMLInputElement).blur();
+        if (e.key === 'Escape') onClose();
+      }}
+    />
   );
+}
+
+/** A set day, as a small read-only chip (change it from the row menu). */
+function DueText({ due }: { due?: string }) {
+  if (!due) return null;
+  return <span className={`capture-due${due < localDay() ? ' is-late' : ''}`}>{dueLabel(due)}</span>;
 }
 
 const TABS: Array<{ id: Tab; label: string }> = [
@@ -182,24 +168,23 @@ export function CapturesPanel({
   }, [expanded, title, url, notes]);
 
   const areaName = (id?: string) => areas.find(a => a.id === id)?.name;
-  /** "Move" — send this task to another site's card (Finances, Repair Log…). */
-  const moveControl = (t: SelfItem) =>
-    onTaskMove ? (
-      <select
-        className="capture-move"
-        value=""
-        onChange={e => e.target.value && onTaskMove(t.id, e.target.value)}
-        aria-label={`Move ${t.title} to another site`}
-        title="Move to another site"
-      >
-        <option value="">Move</option>
-        {MOVE_TO.map(([id, name]) => (
-          <option key={id} value={id}>
-            → {name}
-          </option>
-        ))}
-      </select>
-    ) : null;
+  const [dayFor, setDayFor] = useState<string | null>(null);
+  const dayShift = (n: number) => {
+    const d = new Date();
+    d.setDate(d.getDate() + n);
+    return localDay(d);
+  };
+  /** Everything a Self task row used to show as buttons — star, pin, day, move — lives in its right-click / long-press menu. */
+  const taskMenu = (t: SelfItem): RowMenuItem[] => [
+    { label: t.starred ? 'Unstar' : 'Star', onSelect: () => onTaskStar(t.id), hidden: t.done },
+    { label: 'Pin to Priority', onSelect: () => addPin('self', t.id), hidden: t.done || !t.starred || isPinned('self', t.id) },
+    { label: 'Take off Priority', onSelect: () => removePin('self', t.id), hidden: t.done || !isPinned('self', t.id) },
+    { label: 'Day: today', onSelect: () => onTaskDue(t.id, dayShift(0)), hidden: t.done },
+    { label: 'Day: tomorrow', onSelect: () => onTaskDue(t.id, dayShift(1)), hidden: t.done },
+    { label: t.due ? 'Change day…' : 'Pick a day…', onSelect: () => setDayFor(t.id), hidden: t.done },
+    { label: 'Clear the day', onSelect: () => onTaskDue(t.id, undefined), hidden: t.done || !t.due },
+    ...(onTaskMove && !t.done ? MOVE_TO.map(([id, name]) => ({ label: `Move → ${name}`, onSelect: () => onTaskMove(t.id, id) })) : []),
+  ];
   // Dated tasks first (soonest first), then the rest in the order they were added.
   // Tasks moved to another site live in that site's card now.
   const mine = selfItems.filter(i => !i.home);
@@ -338,32 +323,23 @@ export function CapturesPanel({
           {starredTasks.map(t => {
             const pinned = isPinned('self', t.id);
             return (
-              <article className="capture-row is-task is-starred" key={t.id}>
+              <MenuRow className="capture-row is-task is-starred" key={t.id} items={() => taskMenu(t)} title={t.title}>
                 <div className="capture-main">
-                  <div className="capture-meta">
-                    <DueChip due={t.due} onChange={due => onTaskDue(t.id, due)} />
-                  </div>
+                  {t.due || pinned ? (
+                    <div className="capture-meta">
+                      <DueText due={t.due} />
+                      {pinned ? <span title="On your Priority list">📌</span> : null}
+                    </div>
+                  ) : null}
                   <h3 title={[t.title, t.detail].filter(Boolean).join(' — ')}>{t.title}</h3>
+                  {dayFor === t.id ? <DueInput due={t.due} onChange={due => onTaskDue(t.id, due)} onClose={() => setDayFor(null)} /> : null}
                 </div>
                 <div className="capture-actions">
-                  {moveControl(t)}
-                  <button type="button" className="row-action ghost" onClick={() => onTaskStar(t.id)} aria-label={`Unstar ${t.title}`} title="Unstar">
-                    ★
-                  </button>
-                  <button
-                    type="button"
-                    className={`row-action ghost${pinned ? ' active' : ''}`}
-                    aria-pressed={pinned}
-                    onClick={() => (pinned ? removePin('self', t.id) : addPin('self', t.id))}
-                    title={pinned ? 'In Priority — click to take it off' : 'Pin to Priority'}
-                  >
-                    {pinned ? 'Pinned' : 'Pin'}
-                  </button>
                   <button type="button" className="row-action" onClick={() => onTaskDone(t.id)}>
                     Done
                   </button>
                 </div>
-              </article>
+              </MenuRow>
             );
           })}
         </div>
@@ -391,29 +367,20 @@ export function CapturesPanel({
             <p className="capture-empty">No Self tasks yet.</p>
           ) : null}
           {[...openTasks, ...doneTasks].map(t => (
-            <article className={`capture-row is-task${t.done ? ' is-done' : ''}`} key={t.id}>
+            <MenuRow className={`capture-row is-task${t.done ? ' is-done' : ''}`} key={t.id} items={() => taskMenu(t)} title={t.title}>
               <div className="capture-main">
                 <div className="capture-meta">
                   <span className="capture-kind kind-task">Task</span>
                   {areaName(t.focusAreaId) ? <span className="capture-area">{areaName(t.focusAreaId)}</span> : null}
                   {t.done ? <span>done · {shortDay(t.createdAt)}</span> : <span className="capture-ago">{ago(t.createdAt)}</span>}
-                  {!t.done ? <DueChip due={t.due} onChange={due => onTaskDue(t.id, due)} /> : t.due ? <span>{dueLabel(t.due)}</span> : null}
+                  {t.due ? (t.done ? <span>{dueLabel(t.due)}</span> : <DueText due={t.due} />) : null}
                   {t.forEvent ? <span className="capture-for">for {t.forEvent.title}</span> : null}
                 </div>
                 <h3>{t.title}</h3>
                 {t.detail ? <p>{t.detail}</p> : null}
+                {dayFor === t.id ? <DueInput due={t.due} onChange={due => onTaskDue(t.id, due)} onClose={() => setDayFor(null)} /> : null}
               </div>
               <div className="capture-actions">
-                {t.done ? null : moveControl(t)}
-                <button
-                  type="button"
-                  className="row-action ghost"
-                  aria-label={t.starred ? 'Unstar' : 'Star'}
-                  title={t.starred ? 'Starred' : 'Star — shows in Starred above (Pin it there for Priority)'}
-                  onClick={() => onTaskStar(t.id)}
-                >
-                  {t.starred ? '★' : '☆'}
-                </button>
                 {t.done ? (
                   <button type="button" className="row-action ghost" onClick={() => onTaskUndo(t.id)}>
                     Undo
@@ -424,7 +391,7 @@ export function CapturesPanel({
                   </button>
                 )}
               </div>
-            </article>
+            </MenuRow>
           ))}
         </div>
       ) : (

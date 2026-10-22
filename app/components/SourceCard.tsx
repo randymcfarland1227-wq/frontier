@@ -56,7 +56,7 @@ export function SourceCard({
   const consumed = new Set(actionable.consumes || [actionable.key]);
   // Only stats that have a value — a row of "— applied today" placeholders is noise.
   const stats = source.metrics
-    .filter(m => !consumed.has(m.key) && metricValue(snapshot.metrics, m.key) !== '—')
+    .filter(m => !consumed.has(m.key) && !['—', '0'].includes(String(metricValue(snapshot.metrics, m.key))))
     .slice(0, source.id === 'role' || source.id === 'resale' ? 4 : 2);
   const sub = [source.label, showSync ? syncText(snapshot.refreshedAt) : ''].filter(Boolean).join(' · ');
 

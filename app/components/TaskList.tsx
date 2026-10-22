@@ -6,6 +6,7 @@ import { isMusicTask, MUSIC_HUB_URL } from '../../lib/sources';
 import type { SourceId, SourceSnapshot, TaskItem } from '../../lib/types';
 import { pinKey, usePriorityPins } from '../../lib/priorityPins';
 import { DayMenu, shortDue } from './DayMenu';
+import { GestureRow } from './RowMenu';
 import { setTaskTag, TAG_SUGGESTIONS, TAGGABLE } from '../../lib/taskTags';
 import { setSelfHome } from '../../lib/adapters/self';
 import { moveItem, removeItem } from '../../lib/siteMoves';
@@ -105,9 +106,11 @@ export function TaskList({
     const key = pinKey(sourceId, task.id);
     const due = lanes[key]?.lane ? lanes[key]?.due : undefined;
     return (
-                <article
-                  className={`task-row one-line ${task.status === 'done' ? 'done' : ''} ${isHabit(task) ? 'habit' : ''}${whenLabel(task) === 'overdue' ? ' is-overdue' : ''}${menuFor === task.id ? ' has-menu' : ''}`}
+                <GestureRow
+                  as="article"
                   key={task.id}
+                  onOpen={() => (dayMenus && onStar ? setMenuFor(task.id) : undefined)}
+                  className={`task-row one-line ${task.status === 'done' ? 'done' : ''} ${isHabit(task) ? 'habit' : ''}${whenLabel(task) === 'overdue' ? ' is-overdue' : ''}${menuFor === task.id ? ' has-menu' : ''}`}
                   title={[task.title, whenLabel(task), task.detail].filter(Boolean).join(' — ')}
                 >
                   <div className="task-main">
@@ -129,7 +132,7 @@ export function TaskList({
                     <span className={`task-when${whenLabel(task) === 'overdue' ? ' is-overdue' : ''}`}>{whenLabel(task)}</span>
                   </div>
                   <div className="task-actions">
-                    {onStar ? (
+                    {onStar && !dayMenus ? (
                       <button
                         type="button"
                         className="row-action ghost row-star"
@@ -170,7 +173,7 @@ export function TaskList({
                       onClose={() => setMenuFor(null)}
                     />
                   ) : null}
-                </article>
+                </GestureRow>
     );
   };
 
