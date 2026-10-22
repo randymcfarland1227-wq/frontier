@@ -4,6 +4,7 @@ import { createContext, Fragment, useContext, useEffect, useMemo, useRef, useSta
 import { MoneySelector } from './MoneySelector';
 import { isLedgerPaid, ledgerMonthRows } from '../../lib/moneyLedger';
 import { PayPlanner } from './PayPlanner';
+import { DebtFile } from './DebtFile';
 import {
   amountOf,
   balanceTwin,
@@ -2558,8 +2559,8 @@ function LedgerByCategory({ dues, paidAt, model, onPaid, hidePaid }: { dues: Bil
 }
 
 const NEEDED_OPTIONS = ['Yes', 'Y Low', 'No', 'Ordered'];
-type TabId = 'flow' | 'accounts' | 'spend' | 'plan' | 'owed' | 'save';
-const TAB_IDS: TabId[] = ['flow', 'accounts', 'spend', 'plan', 'owed', 'save'];
+type TabId = 'flow' | 'accounts' | 'spend' | 'plan' | 'owed' | 'debts' | 'save';
+const TAB_IDS: TabId[] = ['flow', 'accounts', 'spend', 'plan', 'owed', 'debts', 'save'];
 /** Old saved tabs → the merged container they now live in */
 const LEGACY_TAB: Record<string, TabId> = { week: 'flow', month: 'flow', due: 'flow', cards: 'accounts', bills: 'spend', subs: 'spend', shop: 'spend' };
 const FLOW_IDS = ['week', 'month', 'ledger'] as const;
@@ -2764,6 +2765,7 @@ export function MoneyPage({
     { id: 'spend', tone: 'sub', label: 'Bills & spending', figure: `${billsLeft} bills left` },
     { id: 'plan', tone: 'plan', label: 'Plan', figure: livePlan ? livePlan.title : 'New' },
     { id: 'owed', tone: 'owed', label: 'What I owe', figure: money(owedSum) },
+    { id: 'debts', tone: 'owed', label: 'Credit, debts & tickets', figure: 'each with its story' },
     { id: 'save', tone: 'save', label: 'Savings & move', figure: '' },
   ];
 
@@ -3113,6 +3115,8 @@ export function MoneyPage({
             </div>
           </div>
         ) : null}
+
+        {tab === 'debts' ? <DebtFile /> : null}
 
         {tab === 'spend' && spendView === 'shop' ? (
           <div className="mny-cols">
