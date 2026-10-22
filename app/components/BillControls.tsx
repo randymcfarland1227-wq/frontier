@@ -69,20 +69,27 @@ export function FlagBadges({ d }: { d: BillDue }) {
 }
 
 /** Pin this due date to Priority ("Doing now"). Checking it off there marks it paid. */
-export function BillPinButton({ due, className = 'row-action ghost' }: { due: BillDue; className?: string }) {
+/** Pin / unpin one bill due date to Doing now (for row menus and the Pin button). */
+export function useBillPin(due: BillDue) {
   const { isPinned, addPin, removePin } = usePriorityPins();
   const pinned = isPinned('radall', due.key);
+  const toggle = () => {
+    if (pinned) return removePin('radall', due.key);
+    addPin('radall', due.key);
+    // Its due date shows as the item's day in Doing now (and on the calendar)
+    updatePinDetails(pinKey('radall', due.key), { due: due.due });
+  };
+  return { pinned, toggle };
+}
+
+export function BillPinButton({ due, className = 'row-action ghost' }: { due: BillDue; className?: string }) {
+  const { pinned, toggle } = useBillPin(due);
   return (
     <button
       type="button"
       className={`${className} bill-pin${pinned ? ' is-on' : ''}`}
       aria-pressed={pinned}
-      onClick={() => {
-        if (pinned) return removePin('radall', due.key);
-        addPin('radall', due.key);
-        // Its due date shows as the item's day in Doing now (and on the calendar)
-        updatePinDetails(pinKey('radall', due.key), { due: due.due });
-      }}
+      onClick={toggle}
       aria-label={pinned ? `Unpin ${due.bill.name} from Doing now` : `Pin ${due.bill.name} to Doing now`}
       title={pinned ? 'Pinned to Doing now — tap to unpin' : 'Pin to Doing now'}
     >

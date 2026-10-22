@@ -5087,3 +5087,66 @@ button.ob-line-name { cursor: pointer; text-decoration: underline dotted; }
   .mb-dash.is-compact .mb-only-compact { display: flex; }
   .mb-dash.is-compact .mb-dc-sums.is-late:not(.mb-only-compact) { display: none; }
 }
+
+/* === 2026-10-22 markup: the item's text is the focus; tools live in the row menu === */
+/* Row menu: right-click on a Mac, long-press on the iPad (RowMenu.tsx) */
+.row-menu {
+  position: fixed; z-index: 1000; min-width: 180px; max-width: 280px; padding: 4px; display: grid;
+  border: 1px solid var(--line); border-radius: 9px; background: var(--surface); color: var(--ink);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, .35);
+}
+.row-menu-title { padding: 4px 10px 5px; color: var(--muted); font-size: 11.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; border-bottom: 1px solid var(--line); margin-bottom: 3px; }
+.row-menu-item {
+  display: block; width: 100%; padding: 7px 10px; border: 0; border-radius: 6px; background: none;
+  color: var(--ink); font: inherit; font-size: 13px; text-align: left; text-decoration: none; cursor: pointer;
+}
+.row-menu-item:hover, .row-menu-item:focus-visible { background: var(--surface-2); outline: none; }
+.row-menu-item.is-on::after { content: ' ✓'; color: var(--accent-ink); }
+.row-menu-item.is-danger { color: #b42318; }
+.frontier-shell[data-color-mode="dark"] .row-menu-item.is-danger { color: #fca5a5; }
+[data-row-menu] { -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; }
+
+/* Compact countdown: big number with "days"/"late" under it */
+.days-badge { display: inline-grid; justify-items: center; line-height: 1; font-variant-numeric: tabular-nums; }
+.days-badge b { font-size: 13px; font-weight: 700; }
+.days-badge small { font-size: 9px; text-transform: uppercase; letter-spacing: .04em; opacity: .85; }
+.days-badge.is-word { font-size: 11px; font-weight: 600; }
+
+/* Schedule · Upcoming: narrow "TOM / Oct 24" date column, small kind tag */
+.sched-compact .agenda > li:not(.sched-more) { grid-template-columns: 38px minmax(0, 1fr) !important; gap: 5px !important; }
+.sched-compact .agenda-day { display: grid; align-content: start; padding-top: 1px; line-height: 1.1; white-space: nowrap; }
+.sched-compact .agenda-day b { font-size: 11px; font-weight: 700; letter-spacing: .03em; }
+.sched-compact .agenda-day small { font-size: 10px; color: var(--muted); }
+.sched-compact .agenda-item { gap: 5px; padding: 1px 5px !important; }
+.sched-compact .agenda-time { flex: 0 0 auto !important; font-size: 10.5px; }
+.sched-compact .agenda-kind { max-width: 4.2em; overflow: hidden; text-overflow: clip; white-space: nowrap; text-transform: uppercase; font-size: 9.5px !important; letter-spacing: .02em; opacity: .9; }
+.sched-compact .agenda-title { font-size: 12.5px !important; }
+.sched-compact .agenda-bill .agenda-name { flex: 1 1 auto !important; min-width: 3em !important; }
+.sched-compact .agenda-bill .agenda-sub { flex: 0 0 auto !important; font-size: 11.5px; }
+
+/* Schedule · Events: the title gets the row; countdown is "9 / days"; ↗ and ✕ are in the menu */
+.event-row { gap: 0; }
+.event-main { gap: 6px; padding: 3px 5px 3px 6px; }
+.event-icon { width: 16px; font-size: 13px; }
+.event-text strong { font-size: 12.5px; }
+.event-text .event-when { font-size: 11px; }
+.event-soon { padding: 2px 5px !important; min-width: 30px; border-radius: 6px !important; text-align: center; }
+
+/* Overdue / money-due bills: same text size as the other boxes, small Paid, compact countdown */
+.bill-line { gap: 5px; min-height: 0; padding: 3px 4px 3px 7px; }
+.bill-line-text strong { font-size: 12.5px !important; }
+.bill-line-text small { font-size: 11px !important; }
+.bill-line .days-badge { flex: 0 0 auto; min-width: 26px; padding: 2px 4px; border-radius: 6px; background: var(--surface-2); color: var(--muted); }
+.bill-line.is-overdue .days-badge { background: color-mix(in srgb, #dc2626 14%, var(--surface)); color: #991b1b; }
+.bill-line.is-soon .days-badge { background: color-mix(in srgb, #f97316 18%, var(--surface)); color: #9a3412; }
+.frontier-shell[data-color-mode="dark"] .bill-line.is-overdue .days-badge { color: #fca5a5; }
+.frontier-shell[data-color-mode="dark"] .bill-line.is-soon .days-badge { color: #fb923c; }
+.bill-line .bill-line-btn { min-width: 0; height: 20px; padding: 0 6px; font-size: 11px; border-radius: 5px; }
+.bill-line.is-pinned .bill-line-text strong::after { content: ' 📌'; font-size: 10px; }
+.sc-overdue .bill-list { gap: 3px; }
+
+/* Calendar grid: smaller chip text so names fit instead of being cut off */
+.sc-month[data-season] .mini-item, .sc-month[data-season] .mini-item.kind-bill, .sc-month[data-season] .mini-item:is(.kind-plan, .kind-invite) {
+  font-size: 9px !important; line-height: 1.15 !important; padding: 1px 3px !important; hyphens: none !important; overflow-wrap: anywhere;
+}
+.sc-month[data-season] .mini-more { font-size: 8.5px !important; }
