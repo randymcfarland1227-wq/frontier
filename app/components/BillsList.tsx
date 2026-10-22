@@ -2,7 +2,8 @@
 
 import { useState } from 'react';
 import { countdown, fromDayKey, money, type BillDue } from '../../lib/schedule';
-import { BillChangeForm, BillPinButton, FlagBadges, billChangeText } from './BillControls';
+import { BillChangeForm, BillPinButton, FlagBadges, billChangeText, useBillPin } from './BillControls';
+import { useRowMenu } from './RowMenu';
 
 /** How loud the countdown is: overdue / within 3 days / later / skipped. */
 function urgency(d: BillDue) {
@@ -10,6 +11,66 @@ function urgency(d: BillDue) {
   if (d.days < 0) return d.bill.nonCritical ? 'is-overdue is-noncritical' : 'is-overdue';
   if (d.days <= 3) return 'is-soon';
   return 'is-later';
+}
+
+/** "18" over "late" / "3" over "days" / "Today": a compact countdown that leaves room for the name. */
+export function DaysBadge({ days, skipped }: { days: number; skipped?: boolean }) {
+  if (skipped) return <span className="days-badge is-word">Skip</span>;
+  if (days === 0) return <span className="days-badge is-word">Today</span>;
+  if (days === 1) return <span className="days-badge is-word">Tmrw</span>;
+  return (
+    <span className="days-badge" title={days < 0 ? `${-days} days late` : `In ${days} days`}>
+      <b>{Math.abs(days)}</b>
+      <small>{days < 0 ? 'late' : 'days'}</small>
+    </span>
+  );
+}
+
+/** One-line bill: name + amount, a compact countdown, one small Paid. Pin / Pay / Change are on right-click (long-press). */
+function CompactBill({
+  d,
+  date,
+  changed,
+  onPaid,
+  changing,
+  setChanging,
+}: {
+  d: BillDue;
+  date: string;
+  changed: string;
+  onPaid: (due: BillDue) => void;
+  changing: boolean;
+  setChanging: (on: boolean) => void;
+}) {
+  const pin = useBillPin(d);
+  const { bind, menu } = useRowMenu(
+    () => [
+      { label: 'Pay ↗', href: d.bill.payUrl, hidden: !d.bill.payUrl || d.skipped },
+      { label: 'Mark paid', onSelect: () => onPaid(d), hidden: d.skipped },
+      { label: pin.pinned ? 'Unpin from Doing now' : 'Pin to Doing now', onSelect: pin.toggle, on: pin.pinned, hidden: d.skipped },
+      { label: 'Skip, move or change amount…', onSelect: () => setChanging(true) },
+    ],
+    d.bill.name,
+  );
+  return (
+    <li className="bill-item" {...bind}>
+      <div className={`bill-line ${urgency(d)}${pin.pinned ? ' is-pinned' : ''}`}>
+        <span className="bill-line-text" title={[d.bill.name, money(d.bill.amount), date, changed || d.bill.notes].filter(Boolean).join(' · ')}>
+          <strong>{d.bill.name}</strong>
+          <small>{[money(d.bill.amount), date, changed].filter(Boolean).join(' · ')}</small>
+          <FlagBadges d={d} />
+        </span>
+        <DaysBadge days={d.days} skipped={d.skipped} />
+        {d.skipped ? null : (
+          <button type="button" className="bill-line-btn" onClick={() => onPaid(d)} aria-label={`Mark ${d.bill.name} paid for ${date}`} title="Mark paid · right-click or long-press for more">
+            Paid
+          </button>
+        )}
+      </div>
+      {changing ? <BillChangeForm due={d} onDone={() => setChanging(false)} /> : null}
+      {menu}
+    </li>
+  );
 }
 
 /**
@@ -40,37 +101,8 @@ export function BillsList({
         const date = fromDayKey(d.due).toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' });
         const changed = billChangeText(d);
         if (compact) {
-          const when = d.skipped ? 'Skipped' : d.days < 0 ? `${-d.days} ${d.days === -1 ? 'day' : 'days'} late` : d.days === 0 ? 'Today' : d.days === 1 ? 'Tomorrow' : `In ${d.days} days`;
           return (
-            <li key={d.key} className="bill-item">
-              <div className={`bill-line ${urgency(d)}`}>
-                <span className="bill-line-text" title={[d.bill.name, money(d.bill.amount), date, changed || d.bill.notes].filter(Boolean).join(' · ')}>
-                  <strong>{d.bill.name}</strong>
-                  <small>{[money(d.bill.amount), date, changed].filter(Boolean).join(' · ')}</small>
-                  <FlagBadges d={d} />
-                </span>
-                <span className="bill-line-when">{when}</span>
-                <span className="bill-line-tools">
-                  {d.skipped ? null : (
-                    <button type="button" className="bill-line-btn" onClick={() => onPaid(d)} aria-label={`Mark ${d.bill.name} paid for ${date}`} title="Mark paid">
-                      Paid
-                    </button>
-                  )}
-                  {d.skipped ? null : <BillPinButton due={d} className="bill-line-btn is-extra" />}
-                  <button
-                    type="button"
-                    className="bill-line-btn is-extra"
-                    aria-expanded={changing === d.key}
-                    onClick={() => setChanging(c => (c === d.key ? null : d.key))}
-                    aria-label={`Change ${d.bill.name}: skip, move or amount`}
-                    title="Skip, move or change the amount this time"
-                  >
-                    ⋯
-                  </button>
-                </span>
-              </div>
-              {changing === d.key ? <BillChangeForm due={d} onDone={() => setChanging(null)} /> : null}
-            </li>
+            <CompactBill key={d.key} d={d} date={date} changed={changed} onPaid={onPaid} changing={changing === d.key} setChanging={on => setChanging(on ? d.key : null)} />
           );
         }
         return (

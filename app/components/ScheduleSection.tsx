@@ -27,10 +27,12 @@ import {
 } from '../../lib/schedule';
 import { MONEY_KINDS } from '../../lib/money';
 import { planSlot, usePlans, type Plan } from '../../lib/plans';
-import { EVENTS_AHEAD_DAYS, eventCountdown, eventTone, eventIcon, isAppointmentTitle, listKindOf, setEventMark, useEventMarks, type ListKind } from '../../lib/events';
+import { EVENTS_AHEAD_DAYS, eventDaysAway, eventTone, eventIcon, isAppointmentTitle, listKindOf, setEventMark, useEventMarks, type ListKind } from '../../lib/events';
 import { readSaved, writeSaved } from '../../lib/storage';
 import { BillsList } from './BillsList';
-import { BillPinButton } from './BillControls';
+import { BillPinButton, useBillPin } from './BillControls';
+import { MenuRow, useRowMenu } from './RowMenu';
+import { DaysBadge } from './BillsList';
 import { isOverdue } from '../../lib/billEdits';
 import { CalendarView, SEASON, type CalItem } from './CalendarView';
 
@@ -203,6 +205,49 @@ function PlanForm({ onDone, date: initialDate }: { onDone: () => void; date?: st
   );
 }
 
+/** "TOM" / "SAT" over "Oct 24": a narrow date column so the bill names get the room. */
+function AgendaDay({ day }: { day: Date }) {
+  const diff = Math.round((startOfDay(day).getTime() - startOfDay(new Date()).getTime()) / 86400000);
+  const top = diff === 0 ? 'TODAY' : diff === 1 ? 'TOM' : day.toLocaleDateString([], { weekday: 'short' }).toUpperCase();
+  return (
+    <>
+      <b>{top}</b>
+      <small>{day.toLocaleDateString([], { month: 'short', day: 'numeric' })}</small>
+    </>
+  );
+}
+
+/** A bill in Upcoming: small kind tag, name, amount. Pay ↗ / Pin live on right-click (long-press). */
+function AgendaBill({ due }: { due: BillDue }) {
+  const pin = useBillPin(due);
+  const { bind, menu } = useRowMenu(
+    () => [
+      { label: 'Pay ↗', href: due.bill.payUrl, hidden: !due.bill.payUrl },
+      { label: pin.pinned ? 'Unpin from Doing now' : 'Pin to Doing now', onSelect: pin.toggle, on: pin.pinned, hidden: due.skipped },
+    ],
+    due.bill.name,
+  );
+  const b = due.bill;
+  return (
+    <li {...bind}>
+      <span
+        className={`agenda-item agenda-bill${b.kind ? ` is-money kind-${b.kind}` : ''}${due.skipped ? ' is-skipped' : due.days <= 3 && !b.kind ? ' is-soon' : ''}`}
+        style={{ '--ev': billColor(due) } as React.CSSProperties}
+        title={[moneyTag(due), b.name, money(b.amount), b.notes].filter(Boolean).join(' · ')}
+      >
+        <span className="agenda-time agenda-kind">{due.skipped ? 'Skip' : moneyTag(due)}</span>
+        <span className="agenda-title">
+          <span className="agenda-name">{b.name}</span>
+          <span className="agenda-sub">
+            {[money(b.amount), due.skipped ? due.editNote : '', b.payBy ? `Pay by ${fromDayKey(b.payBy).toLocaleDateString([], { month: 'short', day: 'numeric' })}` : ''].filter(Boolean).join(' · ')}
+          </span>
+        </span>
+      </span>
+      {menu}
+    </li>
+  );
+}
+
 /** Upcoming: the next 7 days, grouped by day. With `bills`, bills sit on their due day too. */
 function Agenda({
   events,
@@ -252,8 +297,8 @@ function Agenda({
     <ol className="agenda">
       {[...byDay.entries()].map(([k, list]) => (
         <li key={k}>
-          <button type="button" className="agenda-day" onClick={() => onShow(k)}>
-            {dayName(fromDayKey(k))}
+          <button type="button" className="agenda-day" onClick={() => onShow(k)} title={dayName(fromDayKey(k))}>
+            <AgendaDay day={fromDayKey(k)} />
           </button>
           <ul>
             {list.map(r =>
@@ -280,25 +325,7 @@ function Agenda({
                   </button>
                 </li>
               ) : (
-                <li key={r.key}>
-                  <span
-                    className={`agenda-item agenda-bill${r.bill!.bill.kind ? ` is-money kind-${r.bill!.bill.kind}` : ''}${r.bill!.skipped ? ' is-skipped' : r.bill!.days <= 3 && !r.bill!.bill.kind ? ' is-soon' : ''}`}
-                    style={{ '--ev': billColor(r.bill!) } as React.CSSProperties}
-                  >
-                    <span className="agenda-time">{r.bill!.skipped ? 'Skipped' : moneyTag(r.bill!)}</span>
-                    <span className="agenda-title">
-                      <span className="agenda-name">{r.bill!.bill.name}</span>
-                      <span className="agenda-sub">
-                        {[money(r.bill!.bill.amount), r.bill!.bill.kind === 'paylater' ? r.bill!.bill.notes?.split(' · ')[2] : '', r.bill!.skipped ? r.bill!.editNote : countdown(r.bill!.days), r.bill!.bill.payBy ? `Pay by ${fromDayKey(r.bill!.bill.payBy).toLocaleDateString([], { month: 'short', day: 'numeric' })}` : ''].filter(Boolean).join(' · ')}
-                      </span>
-                    </span>
-                    {r.bill!.bill.payUrl ? (
-                      <a className="agenda-pay" href={r.bill!.bill.payUrl} target="_blank" rel="noopener noreferrer" aria-label={`Pay ${r.bill!.bill.name}`}>
-                        Pay ↗
-                      </a>
-                    ) : null}
-                  </span>
-                </li>
+                <AgendaBill key={r.key} due={r.bill!} />
               ),
             )}
           </ul>
@@ -412,9 +439,19 @@ function EventsList({
         <ul className="events-list">
           {rows.map(r => {
             const start = eventStart(r.slot);
-            const soon = eventCountdown(start, now);
+            const days = eventDaysAway(start, now);
+            const where = appt ? 'Appointments' : 'Events';
             return (
-              <li key={r.id} className={`event-row ${eventTone(start, now)}`}>
+              <MenuRow
+                as="li"
+                key={r.id}
+                className={`event-row ${eventTone(start, now)}`}
+                title={r.title}
+                items={[
+                  { label: 'Add to Google Calendar ↗', href: googleCalendarLink({ title: r.title, ...r.slot, details: r.note }), hidden: !r.plan },
+                  { label: `Remove from ${where}`, danger: true, onSelect: () => (r.plan ? onDropPlan(r.plan) : setEventMark(r.id, 'hide')) },
+                ]}
+              >
                 <button type="button" className="event-main" onClick={() => onShow(dayKey(start < startOfDay(now) ? now : start), r.id)} title={[r.title, r.note].filter(Boolean).join(' — ')}>
                   <span className="event-icon" aria-hidden="true">
                     {eventIcon(r.title)}
@@ -423,30 +460,11 @@ function EventsList({
                     <strong>{r.title}</strong>
                     <span className="event-when">{eventDates(r.slot)}</span>
                   </span>
-                  <span className="event-soon">{soon}</span>
+                  <span className="event-soon">
+                    <DaysBadge days={days} />
+                  </span>
                 </button>
-                {r.plan ? (
-                  <a
-                    className="event-tool"
-                    href={googleCalendarLink({ title: r.title, ...r.slot, details: r.note })}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    title="Add to Google Calendar"
-                    aria-label={`Add ${r.title} to Google Calendar`}
-                  >
-                    ↗
-                  </a>
-                ) : null}
-                <button
-                  type="button"
-                  className="event-tool"
-                  onClick={() => (r.plan ? onDropPlan(r.plan) : setEventMark(r.id, 'hide'))}
-                  title={`Remove from ${appt ? 'Appointments' : 'Events'}`}
-                  aria-label={`Remove ${r.title} from ${appt ? 'Appointments' : 'Events'}`}
-                >
-                  ✕
-                </button>
-              </li>
+              </MenuRow>
             );
           })}
         </ul>
