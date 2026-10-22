@@ -509,3 +509,10 @@ Design critique + WCAG 2.1 AA + copy + design-system audit, then fixes (last blo
 - Section headings and reminder lists flow as labeled text with dot separators. Goal rows and padding are tighter. Content remains fully visible; no additional disclosures, clipping, or internal scrolling.
 - Tablet moves affirmations below each reminder; phone stacks each row and wraps the original text. Affirmation persistence and review behavior are unchanged.
 - Browser checks: 996px section at 1280px versus approximately 1760px previously, no overflow at 390px or 900px, and Enter submission passed. TypeScript, component lint, and Pages build pass. Full lint retains the documented existing issues.
+
+## Passive grounding and nutrition task duplicates (2026-10-22)
+- Daily Grounding retains both `open-grounding` and `nutrition-flow` guides, their original wording, and the macro-tracker link. Their review/affirmation remains separate from real task completion.
+- Hide only the exact TickTick task titles `Open Grounding (Reminders)` and `Nutrition Flow — Use Macro Tracker` via the existing `ignore.ticktick.titles` rule. This covers cached/live task lists, featured entries and their counts without deleting TickTick records or completion history.
+- Genuine actions such as drinking water, eating fruit/vegetables and taking supplements remain visible. Other orientation entries and other app sources retain their existing behavior; no broad title substring is used.
+- At inspection the canonical static TickTick snapshot contained neither duplicate. This rule prevents cached or future snapshots from bringing those task duplicates back. No private TickTick records were accessed.
+- Regression checks: `node tests/flow-migration.cjs` verifies both guides, exact-title/source scope, preserved actions and no-credit history behavior. Week/Money feature work remains separate.
