@@ -11,6 +11,7 @@ import { setSelfHome } from '../../lib/adapters/self';
 import { moveItem, removeItem } from '../../lib/siteMoves';
 import { setRoleActive, shelfOf } from '../../lib/roleShelves';
 import { byLevel, useFeaturedLevels } from '../../lib/featuredLevels';
+import { GestureRow } from './RowMenu';
 import { LevelDot } from './LevelDot';
 import { CriticalFlag } from './CriticalFlag';
 import { readSaved, writeSaved, STORAGE_KEYS } from '../../lib/storage';
@@ -76,9 +77,11 @@ export function FeaturedList({
         <div className="featured-strip">{items.map(item => {
           const pinned = isPinned(sourceId, item.id);
           return (
-            <article
-              className={`featured-row one-line${isCritical(sourceId, item.id) ? ' is-critical' : ''}${menuFor === item.id ? ' has-menu' : ''}`}
+            <GestureRow
+              as="article"
               key={item.id}
+              onOpen={() => setMenuFor(item.id)}
+              className={`featured-row one-line${isCritical(sourceId, item.id) ? ' is-critical' : ''}${menuFor === item.id ? ' has-menu' : ''}`}
               title={[item.title, item.detail, item.meta].filter(Boolean).join(' — ')}
             >
               <LevelDot level={levelOf(sourceId, item.id)} title={item.title} onCycle={() => cycle(sourceId, item.id)} />
@@ -104,16 +107,7 @@ export function FeaturedList({
                 {item.meta ? <span className="featured-meta">{compact ? item.meta.replace(/^From /, '') : item.meta}</span> : null}
               </div>
               <div className="featured-actions">
-                <button
-                  type="button"
-                  className={`row-action ghost ${pinned ? 'active' : ''}`}
-                  data-day-trigger
-                  onClick={() => setMenuFor(m => (m === item.id ? null : item.id))}
-                  aria-expanded={menuFor === item.id}
-                  aria-label={`Pin or give a day: ${item.title}`}
-                >
-                  {pinned ? 'Pinned' : 'Pin'}
-                </button>
+                {pinned ? <span className="row-pinned" title="On your Priority list" aria-label="Pinned">📌</span> : null}
                 {onComplete ? (
                   <button
                     type="button"
@@ -147,7 +141,7 @@ export function FeaturedList({
                   onClose={() => setMenuFor(null)}
                 />
               ) : null}
-            </article>
+            </GestureRow>
           );
         })}</div>
       ) : (

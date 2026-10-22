@@ -30,8 +30,7 @@ function pageZoom() {
  * Randy's rule (2026-10-22 markup): a row shows its text and one small primary action; everything
  * else lives here — right-click on a Mac, long-press on the iPad. Spread `bind` onto the row.
  */
-export function useRowMenu(items: RowMenuItem[] | (() => RowMenuItem[]), title?: string) {
-  const [at, setAt] = useState<{ x: number; y: number } | null>(null);
+export function useRowGesture(open: (x: number, y: number) => void) {
   const timer = useRef<number | null>(null);
   const start = useRef<{ x: number; y: number } | null>(null);
   const fired = useRef(false);
@@ -41,9 +40,8 @@ export function useRowMenu(items: RowMenuItem[] | (() => RowMenuItem[]), title?:
     timer.current = null;
     start.current = null;
   };
-  const open = useCallback((x: number, y: number) => setAt({ x, y }), []);
 
-  const bind = {
+  return {
     onContextMenu: (e: React.MouseEvent) => {
       if (!inside(e)) return;
       e.preventDefault();
@@ -80,6 +78,34 @@ export function useRowMenu(items: RowMenuItem[] | (() => RowMenuItem[]), title?:
     },
     'data-row-menu': '',
   };
+}
+
+/** A row that runs `onOpen` on right-click / long-press (for rows whose menu is an inline panel). */
+export function GestureRow({
+  as: Tag = 'div',
+  onOpen,
+  className,
+  title,
+  children,
+}: {
+  as?: 'div' | 'li' | 'article';
+  onOpen: () => void;
+  className?: string;
+  title?: string;
+  children: ReactNode;
+}) {
+  const bind = useRowGesture(() => onOpen());
+  return (
+    <Tag className={className} title={title} {...bind}>
+      {children}
+    </Tag>
+  );
+}
+
+export function useRowMenu(items: RowMenuItem[] | (() => RowMenuItem[]), title?: string) {
+  const [at, setAt] = useState<{ x: number; y: number } | null>(null);
+  const open = useCallback((x: number, y: number) => setAt({ x, y }), []);
+  const bind = useRowGesture(open);
 
   const list = at ? (typeof items === 'function' ? items() : items).filter(i => !i.hidden) : [];
   const menu = at && list.length ? <RowMenuPop at={at} items={list} title={title} onClose={() => setAt(null)} /> : null;
