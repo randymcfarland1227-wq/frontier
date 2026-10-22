@@ -2,10 +2,10 @@
   "note": "Daily grounding guides (moved off TickTick 2026-10-13). Text is Randy's own, word for word from the TickTick tasks. Edit here to change what Life Hub shows.",
   "guides": [
     {
-      "id": "open-grounding",
-      "title": "Open Grounding",
+      "id": "alignment",
+      "title": "Alignment",
       "icon": "🌱",
-      "when": "Weekdays",
+      "when": "Daily",
       "from": "TickTick · Grounding · Open Grounding (Reminders)",
       "sections": [
         {
@@ -39,9 +39,32 @@
             "Make room for joy and curiosity.",
             "Act with self-assurance."
           ]
+        },
+        {
+          "heading": "Rest while awake",
+          "lines": [
+            "Pause before filling every open moment. Choose physical or mental rest when recovery is the real need."
+          ]
+        },
+        {
+          "heading": "Sleep",
+          "lines": [
+            "Protect sleep as a foundation for healing, regulation, energy, and follow-through."
+          ]
+        },
+        {
+          "heading": "How it appears in TickTick",
+          "lines": [
+            "Daytime Rest / Quiet Reset = awake rest, meditation, or a straightforward low-thinking action.",
+            "Night Time Routine = the wind-down sequence.",
+            "Medicine and Vitamins = planned sleep supplements when applicable.",
+            "Recovery Options — Choose or Skip = stretching/yoga and other recovery tools."
+          ]
         }
       ],
-      "key": "What matters most today?"
+      "key": "What matters most today? Sleep is an outcome, not a checkbox.",
+      "intro": "What matters most today?",
+      "outro": "Sleep is an outcome—not a checkbox."
     },
     {
       "id": "nutrition-flow",
@@ -100,38 +123,6 @@
         "url": "https://my-music-hub.randymcfarland1227.workers.dev/"
       },
       "key": "Keep outcomes undated."
-    },
-    {
-      "id": "rest-sleep",
-      "title": "Rest & Sleep Priorities",
-      "icon": "🌙",
-      "when": "Daily",
-      "from": "TickTick · Grounding · Rest & Sleep Priorities",
-      "sections": [
-        {
-          "heading": "Rest while awake",
-          "lines": [
-            "Pause before filling every open moment. Choose physical or mental rest when recovery is the real need."
-          ]
-        },
-        {
-          "heading": "Sleep",
-          "lines": [
-            "Protect sleep as a foundation for healing, regulation, energy, and follow-through."
-          ]
-        },
-        {
-          "heading": "How it appears in TickTick",
-          "lines": [
-            "Daytime Rest / Quiet Reset = awake rest, meditation, or a straightforward low-thinking action.",
-            "Night Time Routine = the wind-down sequence.",
-            "Medicine and Vitamins = planned sleep supplements when applicable.",
-            "Recovery Options — Choose or Skip = stretching/yoga and other recovery tools."
-          ]
-        }
-      ],
-      "outro": "Sleep is an outcome—not a checkbox.",
-      "key": "Sleep is an outcome—not a checkbox."
     }
   ]
 }

@@ -111,12 +111,13 @@ function AffirmationForm({ guide, reviewed, submit }: { guide: Guide; reviewed?:
 }
 
 const OPEN_KEY = 'lifehub-grounding-open';
+const AREAS_OPEN_KEY = 'lifehub-grounding-areas-open';
 
 /** Collapsed-bar summary: how many reminders are affirmed today. */
 export function GroundingSummary() {
   const { entries } = useAffirmations();
-  const weekday = ![0, 6].includes(new Date().getDay());
-  const total = weekday ? 4 : 3;
+  // Alignment, Nutrition Flow, Creative menu — all daily
+  const total = 3;
   const done = Object.values(entries).filter(v => v?.trim()).length;
   return (
     <span className={`sum-chip${done >= total ? ' is-done' : ''}`}>
@@ -134,6 +135,13 @@ export function DailyGrounding({ move, goals, enter }: { move?: SourceSnapshot; 
   const { day, entries, submit } = useAffirmations();
   const modes = useGoalModes();
   const [selectedGoal, selectGoal] = useState<string | null>(null);
+  // Goal areas start collapsed; the ones you open stay open
+  const [openAreas, setOpenAreas] = useState<string[]>(() => readSaved<string[]>(AREAS_OPEN_KEY, []));
+  const toggleArea = (id: string) => {
+    const next = openAreas.includes(id) ? openAreas.filter(a => a !== id) : [...openAreas, id];
+    setOpenAreas(next);
+    writeSaved(AREAS_OPEN_KEY, next);
+  };
   const [open, setOpenState] = useState<string | null>(() => readSaved<string | null>(OPEN_KEY, null));
   const setOpen = (id: string | null) => {
     setOpenState(id);
@@ -272,28 +280,42 @@ export function DailyGrounding({ move, goals, enter }: { move?: SourceSnapshot; 
               const list = currentGoals.filter(g => g.categoryId === c.id);
               if (!list.length) return null;
               return (
-                <div key={c.id} className={`gr-area area-${c.id}`}>
-                  <span className="gr-area-name">
+                <div key={c.id} className={`gr-area area-${c.id}${openAreas.includes(c.id) ? ' is-open' : ' is-collapsed'}`}>
+                  <button
+                    type="button"
+                    className="gr-area-name"
+                    aria-expanded={openAreas.includes(c.id)}
+                    onClick={() => toggleArea(c.id)}
+                  >
                     <span aria-hidden="true">{c.icon}</span> {c.label}
-                  </span>
-                  <span className="gr-chips">
-                    {list.map(g => {
-                      const { mode } = modeOf(g.id, modes);
-                      return (
-                        <button
-                          key={g.id}
-                          type="button"
-                          className={`gr-chip is-${mode || 'none'}${selectedGoal === g.id ? ' is-open' : ''}`}
-                          aria-expanded={selectedGoal === g.id}
-                          aria-label={`${g.title}: ${mode === 'active' ? 'active' : mode === 'passive' ? 'passive' : 'no routine yet'}`}
-                          onClick={() => selectGoal(selectedGoal === g.id ? null : g.id)}
-                        >
-                          {g.title}
-                        </button>
-                      );
-                    })}
-                  </span>
-                  {selected && selected.categoryId === c.id ? <GoalDetail goal={selected} modes={modes} close={() => selectGoal(null)} openFlow={openFlow} /> : null}
+                    <span className="gr-area-count">{list.length}</span>
+                    <span className="gr-area-dots" aria-hidden="true">
+                      {list.map(g => (
+                        <i key={g.id} className={`is-${modeOf(g.id, modes).mode || 'none'}`} />
+                      ))}
+                    </span>
+                    <span className="gr-area-caret" aria-hidden="true">{openAreas.includes(c.id) ? '▾' : '▸'}</span>
+                  </button>
+                  {openAreas.includes(c.id) ? (
+                    <span className="gr-chips">
+                      {list.map(g => {
+                        const { mode } = modeOf(g.id, modes);
+                        return (
+                          <button
+                            key={g.id}
+                            type="button"
+                            className={`gr-chip is-${mode || 'none'}${selectedGoal === g.id ? ' is-open' : ''}`}
+                            aria-expanded={selectedGoal === g.id}
+                            aria-label={`${g.title}: ${mode === 'active' ? 'active' : mode === 'passive' ? 'passive' : 'no routine yet'}`}
+                            onClick={() => selectGoal(selectedGoal === g.id ? null : g.id)}
+                          >
+                            {g.title}
+                          </button>
+                        );
+                      })}
+                    </span>
+                  ) : null}
+                  {openAreas.includes(c.id) && selected && selected.categoryId === c.id ? <GoalDetail goal={selected} modes={modes} close={() => selectGoal(null)} openFlow={openFlow} /> : null}
                 </div>
               );
             })}
