@@ -4,7 +4,7 @@ import { useMemo, useState } from 'react';
 import { tagTone } from '../../lib/tagTone';
 import { isMusicTask, MUSIC_HUB_URL } from '../../lib/sources';
 import type { SourceId, SourceSnapshot, TaskItem } from '../../lib/types';
-import { pinKey, usePriorityPins } from '../../lib/priorityPins';
+import { openTaskPanel, pinKey, usePriorityPins } from '../../lib/priorityPins';
 import { DayMenu, shortDue } from './DayMenu';
 import { GestureRow } from './RowMenu';
 import { setTaskTag, TAG_SUGGESTIONS, TAGGABLE } from '../../lib/taskTags';
@@ -116,13 +116,9 @@ export function TaskList({
                   <div className="task-main">
                     {isHabit(task) ? <span className="task-badge">Habit</span> : null}
                     {task.tag ? <span className={`task-tag tone-${tagTone(task.tag)}`}>{task.tag}</span> : null}
-                    {task.originUrl ? (
-                      <a className="origin-link" href={task.originUrl} target="_blank" rel="noopener noreferrer">
-                        <strong>{task.title}</strong>
-                      </a>
-                    ) : (
+                    <button type="button" className="origin-link task-open" onClick={() => openTaskPanel(key)} title="Open details, subtasks and plan">
                       <strong>{task.title}</strong>
-                    )}
+                    </button>
                     {isMusicTask(task.title) ? (
                       <a className="row-music" href={MUSIC_HUB_URL} target="_blank" rel="noopener noreferrer" title="Open Music Hub" aria-label="Open Music Hub">
                         ♪
