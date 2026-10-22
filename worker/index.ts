@@ -819,6 +819,43 @@ async function handleMoney(request: Request, env: Env): Promise<Response> {
   return jsonResponse({ ok: false, error: "method_not_allowed" }, 405, origin);
 }
 
+// ---------------------------------------------------------------------------
+// Debt file: credit collections, liabilities and tickets, each with its own story. The file itself
+// (amounts, letters, owners) lives only in KV (written with wrangler, never in this public repo);
+// Randy's marks (paid / disputed / gone + a note) are written from the page.
+// ---------------------------------------------------------------------------
+
+const DEBT_FILE_KEY = "debt-file";
+const DEBT_MARKS_KEY = "debt-marks";
+
+async function handleDebts(request: Request, env: Env): Promise<Response> {
+  const origin = request.headers.get("Origin");
+  if (request.method === "OPTIONS") return new Response(null, { status: 204, headers: corsHeaders(origin) });
+  if (origin && !CORS_ALLOW_ORIGINS.has(origin)) return jsonResponse({ ok: false, error: "cors_denied" }, 403, origin);
+  if (!(await syncKeyAllowed(request, env))) return jsonResponse({ ok: false, error: "wrong_key" }, 401, origin);
+  const marks = ((await env.LIFEHUB_STATE.get(DEBT_MARKS_KEY, "json")) || {}) as Record<string, unknown>;
+  if (request.method === "GET") {
+    return jsonResponse({ ok: true, file: await env.LIFEHUB_STATE.get(DEBT_FILE_KEY, "json"), marks }, 200, origin);
+  }
+  if (request.method === "POST") {
+    let body: { id?: unknown; mark?: unknown };
+    try {
+      body = await request.json();
+    } catch {
+      return jsonResponse({ ok: false, error: "invalid_json" }, 400, origin);
+    }
+    if (typeof body.id !== "string" || body.id.length > 80) return jsonResponse({ ok: false, error: "bad_id" }, 400, origin);
+    const m = body.mark as { status?: unknown; note?: unknown } | null;
+    if (m === null) delete marks[body.id];
+    else if (m && typeof m === "object" && typeof m.status === "string" && m.status.length <= 20 && (m.note === undefined || (typeof m.note === "string" && m.note.length <= 2000))) {
+      marks[body.id] = { status: m.status, note: m.note || "", at: new Date().toISOString() };
+    } else return jsonResponse({ ok: false, error: "bad_mark" }, 400, origin);
+    await env.LIFEHUB_STATE.put(DEBT_MARKS_KEY, JSON.stringify(marks));
+    return jsonResponse({ ok: true, marks }, 200, origin);
+  }
+  return jsonResponse({ ok: false, error: "method_not_allowed" }, 405, origin);
+}
+
 async function handleMoneyEdit(request: Request, env: Env): Promise<Response> {
   const origin = request.headers.get("Origin");
   if (request.method === "OPTIONS") return new Response(null, { status: 204, headers: corsHeaders(origin) });
@@ -918,6 +955,10 @@ export default {
 
     if (pathname === "/api/money/edit") {
       return handleMoneyEdit(request, env);
+    }
+
+    if (pathname === "/api/debts") {
+      return handleDebts(request, env);
     }
 
     if (pathname === "/api/sync/now") {
