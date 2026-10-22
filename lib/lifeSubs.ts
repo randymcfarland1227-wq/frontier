@@ -21,6 +21,8 @@ export type LifeSub = {
   /** For yearly ones: the month it charges (0–11) */
   month?: number;
   status: SubStatus;
+  /** First charge day (YYYY-MM-DD); nothing is due before it */
+  start?: string;
   note?: string;
   removed?: boolean;
   createdAt: string;
@@ -29,8 +31,50 @@ export type LifeSub = {
 
 export const LIFE_SUBS_EVENT = 'lifehub:subs';
 
+/** Added from Randy's emails (2026-10-22). Fixed ids, so an edit on any device replaces the built-in copy. */
+const SEEDED_SUBS: LifeSub[] = [
+  {
+    id: 'sub-seed-google-one',
+    name: 'Google One (200 GB)',
+    amount: 2.99,
+    day: 27,
+    cycle: 'monthly',
+    status: 'active',
+    start: '2026-10-27',
+    note: 'Storage · Google Play · intro price ends Oct 27, then $2.99/mo + tax',
+    createdAt: '2026-10-22T12:00:00.000Z',
+    updatedAt: '2026-10-22T12:00:00.000Z',
+  },
+  {
+    id: 'sub-seed-google-workspace',
+    name: 'Google Workspace (peculiarcandle.com)',
+    day: 1,
+    cycle: 'monthly',
+    status: 'active',
+    start: '2026-11-01',
+    note: 'Peculiar Candle · info@peculiarcandle.com · paid from Nov 1 · price not in the email (Admin Console → Billing)',
+    createdAt: '2026-10-22T12:00:00.000Z',
+    updatedAt: '2026-10-22T12:00:00.000Z',
+  },
+  {
+    id: 'sub-seed-canva-business',
+    name: 'Canva Business',
+    amount: 250,
+    day: 3,
+    cycle: 'yearly',
+    month: 10,
+    status: 'trial',
+    start: '2026-11-03',
+    note: 'Free 14-day trial · cancel before Nov 3 or $250/yr + tax charges · 1 seat',
+    createdAt: '2026-10-22T12:00:00.000Z',
+    updatedAt: '2026-10-22T12:00:00.000Z',
+  },
+];
+
 export function loadLifeSubs(): LifeSub[] {
-  return readSaved<LifeSub[]>(STORAGE_KEYS.lifeSubs, []);
+  const saved = readSaved<LifeSub[]>(STORAGE_KEYS.lifeSubs, []);
+  const ids = new Set(saved.map(s => s.id));
+  return [...saved, ...SEEDED_SUBS.filter(s => !ids.has(s.id))];
 }
 
 function save(list: LifeSub[]) {
@@ -86,6 +130,7 @@ export function lifeSubDues(subs: LifeSub[], paid: Set<string>, today = new Date
       const d = chargeIn(y, m, s.day);
       if (d < from || d > to || d < addDays(created, -31)) continue;
       const due = dayKey(d);
+      if (s.start && due < s.start) continue;
       const key = `money:lhsub:${s.id}:${due}`;
       if (!keepPaid && paid.has(key)) continue;
       out.push({
