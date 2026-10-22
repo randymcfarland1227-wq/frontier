@@ -1,20 +1,19 @@
 'use client';
 
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
-import { readSaved, writeSaved } from '../../lib/storage';
+import type { Cell, MoneyModel } from '../../lib/money';
+import type { BillDue } from '../../lib/schedule';
+import { OutstandingView } from './OutstandingView';
 import { isSettled, owedOf, useDebtFile, type Bureau, type DebtFile as File, type DebtItem, type DebtLetter, type DebtMark, type DebtMarks, type DebtPlan, type MarkStatus } from '../../lib/debtFile';
 
 // The debt file, two pages of one story.
 //  Credit   → one dense table (owner, balance, bureaus, dates, falls-off, lowest settlement, offer).
-//  What I owe → one list: the Maryland registration story (steps → tickets → letters), then out of state and other.
+//  Outstanding → MD tickets by source, out-of-state, then pay laters · taxes / legal · projects (OutstandingView.tsx).
 // Every row is an entity: tap it for its pop-out (owners, timeline, offers, plan, letters).
 
 /** 'credit' = what touches the credit reports; 'owed' = tickets, tolls, taxes and other non-credit liabilities. */
 export type DebtScope = 'credit' | 'owed';
 type Dlg = { kind: 'item' | 'letter'; id: string };
-type OwedView = 'step' | 'letter';
-const REG_KEY = 'lifehub-debt-reg';
-const VIEW_KEY = 'lifehub-debt-regview';
 /** Rough floor debt buyers settle for — an estimate for planning, never a promise. */
 const FLOOR = 0.25;
 
@@ -30,7 +29,6 @@ const monthYear = (d?: string) => {
   const m = d ? /^(\d{4})-(\d{2})/.exec(d) : null;
   return m ? new Date(+m[1], +m[2] - 1, 1).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }) : '—';
 };
-const daysUntil = (d: string) => Math.ceil((new Date(`${d}T23:59:59`).getTime() - Date.now()) / 86400000);
 /** "Kenilworth Dr — 46 in a 30" → "Kenilworth Dr · 46/30" */
 const compactName = (n: string) => n.replace(/ — (\d+) in a (\d+)/, ' · $1/$2').replace(/ — /g, ' · ');
 
@@ -50,7 +48,7 @@ const BUREAUS: Array<[Bureau, string]> = [
 const onReport = (line?: string | null) => Boolean(line) && !/^(was there|gone|not )/i.test(line || '');
 const PLAN_LABEL: Record<DebtPlan['state'], string> = { yes: 'Plan offered', ask: 'Ask about a plan', none: 'Pay in full' };
 
-export function DebtFile({ scope, sheet }: { scope: DebtScope; sheet?: ReactNode }) {
+export function DebtFile({ scope, sheet, scores = [], model = null, monthDues = [], paidAt = {}, cell }: { scope: DebtScope; sheet?: ReactNode; scores?: Array<{ bureau: string; date: string; score: number }>; model?: MoneyModel | null; monthDues?: BillDue[]; paidAt?: Record<string, string>; cell?: (c: Cell | undefined, placeholder?: string) => ReactNode }) {
   const { file, marks, status, refresh, setMark } = useDebtFile();
   const [dlg, setDlg] = useState<Dlg | null>(null);
 
@@ -74,7 +72,11 @@ export function DebtFile({ scope, sheet }: { scope: DebtScope; sheet?: ReactNode
 
   return (
     <div className="dbt">
-      {scope === 'credit' ? <CreditView file={file} marks={marks} onOpen={onOpen} onRefresh={() => void refresh()} /> : <OwedViewPage file={file} marks={marks} onOpen={onOpen} onLetter={onLetter} onRefresh={() => void refresh()} sheet={sheet} />}
+      {scope === 'credit' ? (
+        <CreditView file={{ ...file, scores: [...(file.scores || []), ...scores] }} marks={marks} onOpen={onOpen} onRefresh={() => void refresh()} extra={sheet} />
+      ) : (
+        <OutstandingView file={file} marks={marks} onOpen={onOpen} onLetter={onLetter} model={model} monthDues={monthDues} paidAt={paidAt} cell={cell || (c => c?.text || '—')} />
+      )}
       {file.sources ? <p className="dbt-src">Sources: {file.sources}</p> : null}
       {open ? <Story item={open} file={file} mark={marks[open.id]} onMark={m => void setMark(open.id, m)} onClose={() => setDlg(null)} onLetter={onLetter} /> : null}
       {openLetter ? <LetterStory letter={openLetter} file={file} marks={marks} onOpen={onOpen} onClose={() => setDlg(null)} /> : null}
@@ -92,7 +94,7 @@ function settleOf(i: DebtItem): Settle {
 const pct = (part: number, whole: number | null) => (whole ? `${Math.round((part / whole) * 100)}%` : '');
 const fallsKey = (i: DebtItem) => i.dates?.fallsOff || '9999-99';
 
-function CreditView({ file, marks, onOpen, onRefresh }: { file: File; marks: DebtMarks; onOpen: (id: string) => void; onRefresh: () => void }) {
+function CreditView({ file, marks, onOpen, onRefresh, extra }: { file: File; marks: DebtMarks; onOpen: (id: string) => void; onRefresh: () => void; extra?: ReactNode }) {
   const credit = file.items.filter(i => i.group === 'credit');
   const behind = file.items.filter(i => i.group === 'behind');
   const live = credit.filter(i => !isSettled(marks[i.id]));
@@ -125,16 +127,18 @@ function CreditView({ file, marks, onOpen, onRefresh }: { file: File; marks: Deb
             <div key={b} className="dbt-tile tone-card" aria-label={`${label} score`}>
               <span>{label}</span>
               <b>{now ? now.score : '—'}</b>
-              <small>
-                {now ? `updated ${shortDate(now.date)}` : 'no report yet'}
-                {now && prev ? ` · ${now.score - prev.score >= 0 ? '+' : ''}${now.score - prev.score} since ${shortDate(prev.date)}` : ''}
+              <small title={now && prev ? `${now.score - prev.score >= 0 ? '+' : ''}${now.score - prev.score} since ${shortDate(prev.date)}` : undefined}>
+                {now ? shortDate(now.date) : 'no report yet'}
+                {now && prev ? <em className={now.score >= prev.score ? 'dbt-up' : 'dbt-down'}> {now.score - prev.score >= 0 ? '▲' : '▼'}{Math.abs(now.score - prev.score)}</em> : null}
               </small>
             </div>
           );
         })}
       </section>
 
-      <Sec tone="owed" title="Every account on my reports" figure={usd(owed)} figureLabel="owed" hint="Tap a row for its full story: owners, timeline, offers, letters.">
+      {extra}
+
+      <Sec tone="owed" title="Collections & charge-offs" figure={usd(owed)} figureLabel="owed" hint="Tap a row for its full story: owners, timeline, offers, letters.">
         <div className="dbt-ct">
           <div className="dbt-ct-head dbt-ct-row">
             <span>Account</span>
@@ -273,264 +277,6 @@ function CreditView({ file, marks, onOpen, onRefresh }: { file: File; marks: Deb
           })}
         </Sec>
       </div>
-    </>
-  );
-}
-
-/* ───────────────────────────── What I owe ───────────────────────────── */
-
-const OOS_GROUPS: Array<[string, string]> = [
-  ['dc-', 'Washington, DC'],
-  ['ny-', 'New York · New Jersey'],
-  ['de-', 'Delaware'],
-];
-
-function OwedViewPage({ file, marks, onOpen, onLetter, onRefresh, sheet }: { file: File; marks: DebtMarks; onOpen: (id: string) => void; onLetter: (id: string) => void; onRefresh: () => void; sheet?: ReactNode }) {
-  const reg = file.registration;
-  const [done, setDone] = useState<Record<string, boolean>>(() => readSaved(REG_KEY, {}));
-  const [view, setViewState] = useState<OwedView>(() => readSaved<OwedView>(VIEW_KEY, 'step'));
-  useEffect(() => writeSaved(REG_KEY, done), [done]);
-  const setView = (v: OwedView) => {
-    setViewState(v);
-    writeSaved(VIEW_KEY, v);
-  };
-
-  const md = file.items.filter(i => i.group === 'md').sort((a, b) => (a.ticket?.date || '').localeCompare(b.ticket?.date || ''));
-  const wv = file.items.filter(i => i.group === 'wv');
-  const oos = file.items.filter(i => i.group === 'oos');
-  const taxItem = file.items.find(i => i.id === 'md-tax');
-  const other = file.items.filter(i => i.group === 'liability' && i.id !== 'md-tax');
-  const live = (xs: DebtItem[]) => xs.filter(i => !isSettled(marks[i.id]));
-  const mvaFees = live(md).length * 30;
-  const regItems = (stepId: string) => [...md, ...(taxItem ? [taxItem] : [])].filter(i => i.step === stepId);
-  const stepAmount = (id: string, fallback: number | null) => {
-    if (id === 'mva') return mvaFees;
-    const its = regItems(id);
-    return its.length ? (its.some(i => i.amount === null && !isSettled(marks[i.id])) && id === 'mdta' ? null : owedOf(its, marks)) : fallback;
-  };
-  const steps = reg?.steps || [];
-  const regTotal = steps.reduce((s, st) => s + (stepAmount(st.id, st.amount) || 0), 0);
-  const oosTotal = owedOf(oos, marks);
-  const otherTotal = owedOf(other, marks);
-  const grand = regTotal + oosTotal + otherTotal;
-  const days = reg ? daysUntil(reg.due) : 0;
-  const doneCount = steps.filter(s => done[s.id]).length;
-  const hasPlan = (p?: DebtPlan) => p?.state === 'yes' || p?.state === 'ask';
-  const unverified = other.filter(i => i.unverified);
-
-  const toggle = (id: string) => setDone(d => ({ ...d, [id]: !d[id] }));
-  const planLines: Array<{ key: string; label: string; plan: DebtPlan; id?: string }> = [
-    ...steps.filter(s => hasPlan(s.plan)).map(s => ({ key: s.id, label: s.title.replace(/ \(.*/, '').replace(/ — .*/, ''), plan: s.plan as DebtPlan })),
-    ...[...oos, ...other].filter(i => hasPlan(i.plan)).map(i => ({ key: i.id, label: i.name, plan: i.plan as DebtPlan, id: i.id })),
-  ];
-  const noPlan = [
-    ...steps.filter(s => s.plan?.state === 'none').map(s => s.title.replace(/ \(.*/, '').replace(/ — .*/, '')),
-    ...(oos.length ? ['DC · NY/NJ · Delaware'] : []),
-  ];
-
-  return (
-    <>
-      <section className="dbt-sum dbt-sum-owed" aria-label="What I owe">
-        <div className="dbt-sum-total">
-          <span>What I owe — not on credit</span>
-          <b>{usd(grand)}</b>
-          <small>
-            Known balances before any settlement · as of {shortDate(file.asOf)} ·{' '}
-            <button type="button" className="dbt-link" onClick={onRefresh}>
-              refresh
-            </button>
-          </small>
-        </div>
-        <div className="dbt-tile tone-due">
-          <span>Maryland registration</span>
-          <b>{usd(regTotal)}</b>
-          <small>{reg ? `renew by ${shortDate(reg.due)} · ${days} days` : ''}</small>
-        </div>
-        <div className="dbt-tile tone-sub">
-          <span>Out of state</span>
-          <b>{usd(oosTotal)}</b>
-          <small>{oos.length} tickets & tolls</small>
-        </div>
-        <div className="dbt-tile tone-plan">
-          <span>Taxes & other</span>
-          <b>{usd(otherTotal)}</b>
-          <small>{unverified.length ? `${unverified.length} unverified, not counted` : `${other.length} bills`}</small>
-        </div>
-      </section>
-
-      <div className="dbt-cols dbt-cols-owed">
-        <div className="dbt-stack">
-          {reg ? (
-            <Sec tone="due" title={`Maryland registration — ${reg.vehicle.split(' · ')[1] || 'tag'}`} figure={usd(regTotal)} figureLabel="known" hint={`${reg.vehicle.split(' · ')[0]} · every ticket, flag and letter on one tag. Pay tickets first, then MVA fees.`}>
-              <div className="dbt-reg-bar">
-                <span className={`dbt-days${days <= 14 ? ' is-hot' : ''}`}>
-                  <b>{days}</b> days to {shortDate(reg.due)}
-                </span>
-                <span className="dbt-prog" aria-label={`${doneCount} of ${steps.length} steps done`}>
-                  <i style={{ width: `${steps.length ? (doneCount / steps.length) * 100 : 0}%` }} />
-                </span>
-                <span className="dbt-seg" role="tablist">
-                  <button type="button" className={view === 'step' ? 'is-on' : ''} onClick={() => setView('step')}>
-                    By step
-                  </button>
-                  <button type="button" className={view === 'letter' ? 'is-on' : ''} onClick={() => setView('letter')}>
-                    By letter
-                  </button>
-                </span>
-              </div>
-
-              {view === 'step'
-                ? steps.map((s, n) => {
-                    const its = regItems(s.id);
-                    const letters = s.id === 'mva' ? file.letters.filter(l => l.id.startsWith('mva')) : s.id === 'ccu' ? file.letters.filter(l => l.id.startsWith('ccu')) : [];
-                    const a = stepAmount(s.id, s.amount);
-                    return (
-                      <details key={s.id} className={`mny-fold dbt-step${done[s.id] ? ' is-done' : ''}`} open={!done[s.id]}>
-                        <summary>
-                          <span className="mny-fold-chev" aria-hidden="true" />
-                          <span className="dbt-step-n">{n + 1}</span>
-                          <span className="mny-fold-title">{s.title}</span>
-                          {its.length ? <span className="mny-fold-meta">{its.length}</span> : null}
-                          {hasPlan(s.plan) ? <PlanChip plan={s.plan as DebtPlan} /> : null}
-                          <span className="mny-fold-total">
-                            {amt(a)}
-                            {s.maybe ? <small> + up to {usd(s.maybe)}</small> : null}
-                          </span>
-                          <button
-                            type="button"
-                            className={`dbt-check${done[s.id] ? ' is-on' : ''}`}
-                            aria-label={done[s.id] ? `Mark ${s.title} not done` : `Mark ${s.title} done`}
-                            onClick={e => {
-                              e.preventDefault();
-                              e.stopPropagation();
-                              toggle(s.id);
-                            }}
-                          >
-                            ✓
-                          </button>
-                        </summary>
-                        <div className="mny-fold-body">
-                          <p className="dbt-how">
-                            <b>How:</b> {s.where}
-                          </p>
-                          {s.note ? <p className="dbt-muted">{s.note}</p> : null}
-                          {s.plan && s.plan.state !== 'none' ? (
-                            <p className={`dbt-planline is-${s.plan.state}`}>
-                              <b>{PLAN_LABEL[s.plan.state]}.</b> {s.plan.terms}
-                            </p>
-                          ) : s.plan ? (
-                            <p className="dbt-muted">No payment plan offered — pay in full.</p>
-                          ) : null}
-                          {its.length ? (
-                            <div className="dbt-tk-grid">
-                              {its.map(i => (
-                                <TicketRow key={i.id} item={i} marks={marks} onOpen={onOpen} />
-                              ))}
-                            </div>
-                          ) : null}
-                          {letters.length ? (
-                            <div className="dbt-letters">
-                              {letters.map(l => (
-                                <button key={l.id} type="button" className="dbt-letter" onClick={() => onLetter(l.id)}>
-                                  <b>{shortDate(l.date)}</b> {l.from.replace('MD Central Collection Unit', 'CCU').replace('MVA Administrative Flag Unit', 'MVA')} <em>{usd(l.total)}</em>
-                                </button>
-                              ))}
-                            </div>
-                          ) : null}
-                        </div>
-                      </details>
-                    );
-                  })
-                : [...file.letters]
-                    .sort((a, b) => b.date.localeCompare(a.date))
-                    .map(l => {
-                      const inIt = md.filter(i => i.letters?.includes(l.id));
-                      return (
-                        <details key={l.id} className="mny-fold" open={l.id === 'mva-1015'}>
-                          <summary>
-                            <span className="mny-fold-chev" aria-hidden="true" />
-                            <span className="mny-fold-title">
-                              {shortDate(l.date)} · {l.from}
-                            </span>
-                            <span className="mny-fold-meta">{l.count} flag{l.count === 1 ? '' : 's'}</span>
-                            {hasPlan(l.plan) ? <PlanChip plan={l.plan as DebtPlan} /> : null}
-                            <span className="mny-fold-total">{usd(l.total)}</span>
-                          </summary>
-                          <div className="mny-fold-body">
-                            <p className="dbt-muted">
-                              {l.title}. {l.note} {l.plan ? `${PLAN_LABEL[l.plan.state]}: ${l.plan.terms}` : ''}
-                            </p>
-                            <div className="dbt-tk-grid">
-                              {inIt.map(i => (
-                                <TicketRow key={i.id} item={i} marks={marks} onOpen={onOpen} />
-                              ))}
-                            </div>
-                          </div>
-                        </details>
-                      );
-                    })}
-
-              <details className="mny-fold dbt-wv">
-                <summary>
-                  <span className="mny-fold-chev" aria-hidden="true" />
-                  <span className="mny-fold-title">Old WV plate N2B933 — 5 Baltimore cameras (2025)</span>
-                  <span className="mny-fold-meta">not flagged in MD · check if paid</span>
-                  <span className="mny-fold-total">{usd(owedOf(wv, marks))}</span>
-                </summary>
-                <div className="mny-fold-body">
-                  <div className="dbt-tk-grid">
-                    {wv.map(i => (
-                      <TicketRow key={i.id} item={i} marks={marks} onOpen={onOpen} />
-                    ))}
-                  </div>
-                </div>
-              </details>
-            </Sec>
-          ) : null}
-        </div>
-
-        <div className="dbt-stack">
-          <Sec tone="sub" title="Out of state" figure={usd(oosTotal)} hint="DC, New York/New Jersey, Delaware. None block your MD registration; DC can boot a car with 2+ unpaid.">
-            {OOS_GROUPS.map(([prefix, label]) => {
-              const its = oos.filter(i => i.id.startsWith(prefix));
-              return its.length ? (
-                <div key={prefix} className="dbt-grp">
-                  <h5>
-                    {label} <span>{usd(owedOf(its, marks))}</span>
-                  </h5>
-                  {its.map(i => (
-                    <TicketRow key={i.id} item={i} marks={marks} onOpen={onOpen} />
-                  ))}
-                </div>
-              ) : null;
-            })}
-          </Sec>
-          <Sec tone="plan" title="Taxes & other" figure={usd(otherTotal)}>
-            {other.map(i => (
-              <TicketRow key={i.id} item={i} marks={marks} onOpen={onOpen} />
-            ))}
-          </Sec>
-          <Sec tone="save" title="Payment plans" hint="What the letters actually offer. Tap to open the item.">
-            {planLines.map(p => (
-              <div key={p.key} className={`dbt-planrow is-${p.plan.state}`}>
-                <b>
-                  {p.label} <PlanChip plan={p.plan} />
-                </b>
-                <small>{p.plan.terms}</small>
-                {p.plan.enroll ? <small>Enroll: {p.plan.enroll}</small> : null}
-                {p.id ? (
-                  <button type="button" className="dbt-link" onClick={() => onOpen(p.id as string)}>
-                    open
-                  </button>
-                ) : null}
-              </div>
-            ))}
-            <p className="dbt-muted">No plan in the notices (pay in full; call to ask): {noPlan.join(' · ')}.</p>
-          </Sec>
-        </div>
-      </div>
-
-      {sheet}
     </>
   );
 }

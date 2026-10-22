@@ -59,6 +59,8 @@ export const STORAGE_KEYS = {
   extraCards: 'lifehub-extra-cards',
   /** Balancing sheet picks (bills / incoming put on the sheet) — cloud-synced */
   balancePicks: 'lifehub-balance-picks',
+  /** Money details the sheet has no column for (APR, loan terms, card fees, resale items, pay-from) — cloud-synced */
+  moneyMeta: 'lifehub-money-meta',
   /** Uploaded site pictures (Self photo, brand logos) — cloud-synced */
   siteIcons: 'lifehub-site-icons',
   captures: 'lifehub-captures',

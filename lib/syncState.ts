@@ -64,6 +64,8 @@ export type SyncedState = {
   goalModes: Record<string, { mode: string | null; at: string }>;
   /** Balancing sheet picks: payment / incoming key → 'in' / null; newest change wins */
   balancePicks: Record<string, { mark: string | null; acct?: string; at: string }>;
+  /** Money details the sheet has no column for (lib/moneyMeta.ts); newest change per key wins */
+  moneyMeta: Record<string, { at: string } & Record<string, unknown>>;
 };
 
 /**
@@ -136,6 +138,7 @@ export function emptyState(): SyncedState {
     billDays: {},
     goalModes: {},
     balancePicks: {},
+    moneyMeta: {},
   };
 }
 
@@ -180,6 +183,7 @@ export function normalizeState(raw: unknown): SyncedState {
     billDays: s.billDays && typeof s.billDays === 'object' ? s.billDays : {},
     goalModes: s.goalModes && typeof s.goalModes === 'object' ? s.goalModes : {},
     balancePicks: s.balancePicks && typeof s.balancePicks === 'object' ? s.balancePicks : {},
+    moneyMeta: s.moneyMeta && typeof s.moneyMeta === 'object' ? s.moneyMeta : {},
   };
 }
 
@@ -275,6 +279,7 @@ export function mergeState(aRaw: unknown, bRaw: unknown): SyncedState {
     billDays: mergeLevels(a.billDays, b.billDays),
     goalModes: mergeLevels(a.goalModes, b.goalModes),
     balancePicks: mergeLevels(a.balancePicks, b.balancePicks),
+    moneyMeta: mergeLevels(a.moneyMeta, b.moneyMeta),
   };
 }
 
