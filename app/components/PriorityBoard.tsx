@@ -9,6 +9,7 @@ import { byLevel, criticalKeys, useFeaturedLevels } from '../../lib/featuredLeve
 import { SiteIcon } from './SiteIcon';
 import { PriorityPanel, type PriorityItem } from './PriorityPanel';
 import { DayMenu } from './DayMenu';
+import { MenuRow } from './RowMenu';
 import { countdown, fromDayKey, money, type BillDue } from '../../lib/schedule';
 
 /** Self's stand-in detail for starred items with no note — not worth a subtext line. */
@@ -173,13 +174,6 @@ export function PriorityBoard({
     if (isCritical(item.source, item.id)) toggleCritical(item.source, item.id);
   };
   const move = (item: PriorityItem, lane: Lane) => placePin(item.key, lane);
-  const nudge = (index: number, by: -1 | 1) => {
-    const target = plan[index + by];
-    if (!target) return;
-    // Moving up = land before the one above; moving down = land before the one after next.
-    if (by < 0) placePin(plan[index].key, PLAN, target.key);
-    else placePin(plan[index].key, PLAN, plan[index + 2]?.key);
-  };
   const onDrop = (lane: Lane, before?: string) => (e: DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -316,10 +310,17 @@ export function PriorityBoard({
           {plan.length ? (
             <ol className="pv-list">
               {plan.map((item, i) => (
-                <li
+                <MenuRow
+                  as="li"
                   key={item.key}
+                  title={item.title}
+                  items={[
+                    { label: lanes[item.key]?.due ? 'Change day…' : 'Give it a day…', onSelect: () => setDayFor(item.key) },
+                    { label: 'Back on deck', onSelect: () => move(item, DECK) },
+                    { label: 'Take off the plan', onSelect: () => remove(item), danger: true },
+                  ]}
                   className={`pv-row src-${item.source}${levelClass(item)}${dragging === item.key ? ' is-dragging' : ''}${over === item.key ? ' is-over' : ''}`}
-                  {...dragProps(item, PLAN)}
+                  dragProps={dragProps(item, PLAN)}
                 >
                   <span className="pv-num" aria-hidden="true">
                     {i + 1}
@@ -327,47 +328,18 @@ export function PriorityBoard({
                   {check(item)}
                   <SiteIcon source={item.source} className="pv-site" />
                   {rowTitle(item)}
-                  <span className="pv-tools">
-                    <button
-                    type="button"
-                    className={`pv-tool pv-cal${lanes[item.key]?.due ? ' is-set' : ''}`}
-                    data-day-trigger
-                    onClick={() => setDayFor(d => (d === item.key ? null : item.key))}
-                    aria-expanded={dayFor === item.key}
-                    aria-label={`Give ${item.title} a day`}
-                    title="Give it a day (shows on the calendar)"
-                    >
-                    📅
-                    </button>
-                    <button type="button" className="pv-tool" onClick={() => nudge(i, -1)} disabled={i === 0} aria-label={`Move ${item.title} up`} title="Move up">
-                      ▲
-                    </button>
-                    <button
-                      type="button"
-                      className="pv-tool"
-                      onClick={() => nudge(i, 1)}
-                      disabled={i === plan.length - 1}
-                      aria-label={`Move ${item.title} down`}
-                      title="Move down"
-                    >
-                      ▼
-                    </button>
-                    <button type="button" className="pv-tool" onClick={() => move(item, DECK)} aria-label={`Put ${item.title} back on deck`} title="Back on deck">
-                      ↩
-                    </button>
-                  </span>
                   {dayFor === item.key ? <DayMenu itemKey={item.key} title={item.title} onClose={() => setDayFor(null)} /> : null}
-                </li>
+                </MenuRow>
               ))}
             </ol>
           ) : (
-            <p className="pv-empty">Nothing on your list yet. Press + List on anything on deck, or drag it here.</p>
+            <p className="pv-empty">Nothing on your list yet. Drag anything from On deck here, or right-click it and choose Add to action list.</p>
           )}
         </div>
 
         <div className="pv-col pv-deck">
           <h3 className="pv-col-head">
-            On deck <span>by site · + List moves it over</span>
+            On deck <span>by site · right-click a task for + List</span>
           </h3>
           {groups.length ? (
             // A grid of site boxes that grows with the number of sites: 2 → 2×1, 3 → 3×1, 4+ → 3 across.
@@ -408,36 +380,22 @@ export function PriorityBoard({
                     </div>
                     <ul className="pv-list">
                       {group.items.map(item => (
-                        <li key={item.key} className={`pv-row${levelClass(item)}${dragging === item.key ? ' is-dragging' : ''}`} {...dragProps(item, DECK)}>
+                        <MenuRow
+                          as="li"
+                          key={item.key}
+                          title={item.title}
+                          items={[
+                            { label: 'Add to action list', onSelect: () => move(item, PLAN) },
+                            { label: lanes[item.key]?.due ? 'Change day…' : 'Give it a day…', onSelect: () => setDayFor(item.key) },
+                            { label: 'Take off the plan', onSelect: () => remove(item), danger: true },
+                          ]}
+                          className={`pv-row${levelClass(item)}${dragging === item.key ? ' is-dragging' : ''}`}
+                          dragProps={dragProps(item, DECK)}
+                        >
                           {check(item)}
                           {rowTitle(item)}
-                          <span className="pv-tools">
-                            <button
-                              type="button"
-                              className={`pv-tool pv-cal${lanes[item.key]?.due ? ' is-set' : ''}`}
-                              data-day-trigger
-                              onClick={() => setDayFor(d => (d === item.key ? null : item.key))}
-                              aria-expanded={dayFor === item.key}
-                              aria-label={`Give ${item.title} a day`}
-                              title="Give it a day (shows on the calendar)"
-                            >
-                              📅
-                            </button>
-                            <button
-                              type="button"
-                              className="pv-tool pv-add"
-                              onClick={() => move(item, PLAN)}
-                              aria-label={`Add ${item.title} to the action list`}
-                              title="Add to the action list"
-                            >
-                              + List
-                            </button>
-                            <button type="button" className="pv-tool" aria-label={`Take ${item.title} off the plan`} title="Take off the plan" onClick={() => remove(item)}>
-                              ✕
-                            </button>
-                          </span>
                           {dayFor === item.key ? <DayMenu itemKey={item.key} title={item.title} onClose={() => setDayFor(null)} /> : null}
-                        </li>
+                        </MenuRow>
                       ))}
                     </ul>
                   </section>

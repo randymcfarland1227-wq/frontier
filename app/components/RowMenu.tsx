@@ -171,6 +171,7 @@ export function MenuRow({
   title,
   className,
   style,
+  dragProps,
   children,
 }: {
   as?: 'div' | 'li';
@@ -178,11 +179,13 @@ export function MenuRow({
   title?: string;
   className?: string;
   style?: React.CSSProperties;
+  /** Extra props for the row element (e.g. drag-and-drop handlers) */
+  dragProps?: React.HTMLAttributes<HTMLElement> & { draggable?: boolean };
   children: ReactNode;
 }) {
   const { bind, menu } = useRowMenu(items, title);
   return (
-    <Tag className={className} style={style} {...bind}>
+    <Tag className={className} style={style} {...dragProps} {...bind}>
       {children}
       {menu}
     </Tag>
