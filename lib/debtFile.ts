@@ -58,6 +58,8 @@ export type DebtFile = {
   scores?: Array<{ bureau: string; date: string; score: number }>;
   /** Pay-later payments the Gmail sweep saw (Klarna, Afterpay, Zip, Affirm) */
   paylater?: PayLaterSeen[];
+  /** Pay-by (cut-off) dates found in Gmail notices; fill in where a bill has none */
+  payby?: Array<{ match: string; kinds?: string[]; date: string; why: string }>;
   registration?: { due: string; vehicle: string; steps: RegStep[] };
   letters: DebtLetter[];
   items: DebtItem[];
