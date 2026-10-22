@@ -1,5 +1,6 @@
 'use client';
 
+import { seedPeculiarUmbrellas } from '../lib/peculiarUmbrellas';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type {
   FeaturedItem,
@@ -262,7 +263,7 @@ export function LifeHub() {
       if (localStorage.getItem('lifehub-selfpins-cleared')) return;
       const lanes = loadLanes();
       for (const [key, e] of Object.entries(lanes)) {
-        if (key.startsWith('self:') && e?.lane === DECK && !e.due && !e.note && !(e.before || []).length) unpin(key);
+        if (key.startsWith('self:') && e?.lane === DECK && !e.due && !e.note && !(e.before || []).length && !(e.subs || []).length) unpin(key);
       }
       localStorage.setItem('lifehub-selfpins-cleared', '1');
     } catch {
@@ -311,6 +312,7 @@ export function LifeHub() {
     );
     setFocus(migrateFocus(savedFocus));
     const snaps = migrateSnapshots(savedSnaps);
+    seedPeculiarUmbrellas();
     const self = loadSelfItems();
     snaps.self = selfSnapshotFrom(self);
     setSelfItems(self);

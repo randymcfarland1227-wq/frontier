@@ -82,7 +82,7 @@ export function loadLanes(): LaneMap {
   return map;
 }
 
-function saveLanes(map: LaneMap) {
+export function saveLanes(map: LaneMap) {
   writeSaved(STORAGE_KEYS.priorityLanes, map);
   if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent(PRIORITY_PINS_EVENT));
 }
