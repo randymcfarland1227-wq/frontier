@@ -24,8 +24,11 @@ export type SelfItem = {
   from?: { source: string; id: string; url?: string };
 };
 
+/** The Peculiar umbrella tasks PR #139 seeded here by mistake; they live in the Candle site now. */
+export const isRetiredSelfId = (id: string) => id.startsWith('self-pc-');
+
 export function loadSelfItems(): SelfItem[] {
-  return readSaved<SelfItem[]>(STORAGE_KEYS.self, []);
+  return readSaved<SelfItem[]>(STORAGE_KEYS.self, []).filter(x => !isRetiredSelfId(x.id));
 }
 
 export function saveSelfItems(items: SelfItem[]) {

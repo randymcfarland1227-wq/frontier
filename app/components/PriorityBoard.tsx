@@ -53,6 +53,7 @@ function buildCatalog(snapshots: Record<SourceId, SourceSnapshot>, bills: BillDu
         originUrl: task.originUrl,
         completable: true,
         tag: task.tag,
+        steps: task.steps,
         source: id,
         key,
       });

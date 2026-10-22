@@ -54,6 +54,10 @@ export function PriorityPanel({
   const before = entry?.before || [];
   const [newSub, setNewSub] = useState('');
   const subs = entry?.subs || [];
+  // The origin's own steps (Peculiar Candle's stepped tasks) come first; they're filled in on that site.
+  const originSteps = item.steps || [];
+  const allSubs = originSteps.length + subs.length;
+  const subsDone = originSteps.filter(x => x.done).length + subs.filter(x => x.done).length;
 
   // Behave like a dialog: focus moves in once when it opens, Escape closes it.
   const closeLatest = useRef(close);
@@ -221,9 +225,31 @@ export function PriorityPanel({
 
         <section className="plan-panel-sec" aria-labelledby="plan-subs">
           <h3 id="plan-subs">
-            Subtasks{subs.length ? <span className="plan-subs-count"> {subs.filter(x => x.done).length}/{subs.length}</span> : null}
+            Subtasks
+            {allSubs ? (
+              <span className="plan-subs-count">
+                {' '}
+                {subsDone}/{allSubs} done
+              </span>
+            ) : null}
           </h3>
-          <p className="plan-panel-hint">The pieces this task is made of. They never change any task count.</p>
+          <p className="plan-panel-hint">
+            {originSteps.length
+              ? `Steps from ${def.shortName || def.name} tick off there as you fill them in; add your own below.`
+              : 'The pieces this task is made of. They never change any task count.'}
+          </p>
+          {originSteps.length ? (
+            <ul className="plan-before-list plan-subs-list plan-origin-steps">
+              {originSteps.map(step => (
+                <li key={step.id} className={step.done ? 'is-done' : ''}>
+                  <label>
+                    <input type="checkbox" checked={step.done} disabled readOnly />
+                    <span>{step.text}</span>
+                  </label>
+                </li>
+              ))}
+            </ul>
+          ) : null}
           {subs.length ? (
             <ul className="plan-before-list plan-subs-list">
               {subs.map(step => (
