@@ -774,8 +774,8 @@ export function MoneyDash({
     const check = () => {
       const r = el.getBoundingClientRect();
       setStuck(cur => {
-        if (!cur) return r.top < -40 && sec.current ? { left: r.left, width: r.width, height: sec.current.getBoundingClientRect().height } : null;
-        if (r.top >= -40) return null;
+        if (!cur) return r.top <= 0 && sec.current ? { left: r.left, width: r.width, height: sec.current.getBoundingClientRect().height } : null;
+        if (r.top > 8) return null;
         return cur.left === r.left && cur.width === r.width ? cur : { ...cur, left: r.left, width: r.width };
       });
     };
