@@ -41,6 +41,10 @@ export function SourceCard({
   extra?: React.ReactNode;
 }) {
   const showSync = isConnectorSource(source.id) && Boolean(snapshot.refreshedAt);
+  // TickTick: starred items sit at the top of their own Tasks / Habits column instead of a separate list;
+  // only starred items that aren't among the open tasks stay in the list above.
+  const inline = source.id === 'ticktick';
+  const featuredAbove = inline ? snapshot.featured.filter(f => !snapshot.tasks.some(t => t.id === f.id && t.status !== 'done')) : snapshot.featured;
   const [collapsed, setCollapsed] = useState(() =>
     readSaved<string[]>(STORAGE_KEYS.collapsedCards, []).includes(source.id),
   );
@@ -118,15 +122,16 @@ export function SourceCard({
           {source.id === 'self' ? extra : null}
           {extra && source.id === 'self' ? null : (
           <>
-          {snapshot.featured.length ? (
-            <FeaturedList sourceId={source.id} snapshot={snapshot} compact onComplete={onCompleteFeatured} />
+          {featuredAbove.length ? (
+            <FeaturedList sourceId={source.id} snapshot={{ ...snapshot, featured: featuredAbove }} compact onComplete={onCompleteFeatured} />
           ) : null}
           <TaskList
             sourceId={source.id}
             snapshot={snapshot}
             compact
             open
-            exclude={new Set(snapshot.featured.map(f => f.id))}
+            exclude={inline ? undefined : new Set(snapshot.featured.map(f => f.id))}
+            starred={inline ? new Set(snapshot.featured.map(f => f.id)) : undefined}
             onComplete={onCompleteTask}
             onStar={onStarTask}
             split={source.id === 'ticktick'}
