@@ -16,9 +16,9 @@ for(const [a,b] of [[oldState,newState],[newState,oldState]]){const merged=merge
 const map=JSON.parse(fs.readFileSync('public/data/flow-map.json'));const focus=JSON.parse(fs.readFileSync('public/data/focus-areas.json'));const goals=JSON.parse(fs.readFileSync('public/data/goals.json'));
 assert.equal(map.records.length,74);assert.equal(map.routines.length,87);assert.equal(new Set(map.buckets.map(b=>b.id)).size,9);for(const id of ['self','money','body','work','venture','marvel','home'])assert.ok(focus.areas.some(a=>a.id===id));assert.equal(goals.categories.length,6);assert.equal(goals.efforts.length,20);assert.equal(goals.supplementalEfforts.length,8);assert.ok(goals.supplementalEfforts.some(e=>e.id==="mental-grounding"&&e.category==="mental"));
 assert.ok(!focus.areas.find(a=>a.id==='body').sourceMap.some(r=>r.source==='move'));assert.ok(focus.areas.find(a=>a.id==='home').sourceMap.some(r=>r.source==='move'));assert.deepEqual(focus.excludeSources,['repair']);
-// No-credit (orientation / container) items stay listed on the TickTick card: they're in noCredit, not the hidden ignore list.
+// Orientation items retain no-credit history handling; only the two passive guide duplicates are hidden.
 for(const t of map.records.filter(t=>!t.credit))assert.ok(focus.noCredit.ticktick.titles.includes(t.title)||(focus.noCredit.ticktick.titleIncludes||[]).some(x=>t.title.toLowerCase().includes(x)),t.title);
-assert.equal(focus.ignore.ticktick.titles.length,0,'nothing on TickTick is hidden: the card matches TickTick');
+assert.deepEqual(focus.ignore.ticktick.titles, ['Open Grounding (Reminders)', 'Nutrition Flow — Use Macro Tracker'], 'only the two passive guide duplicates are hidden');
 for(const t of ['Daily Work & Income Flow','Creative / Tinkering & Project Menu','Rest & Sleep Priorities'])assert.ok(!focus.ignore.ticktick.titles.includes(t),`${t} must stay visible`);
 console.log('Migration checks pass: immutable input, stable counts/identity/dates, explicit manual reassignment, intentional no-goal, validation, idempotence, both merge orders, preserved original IDs and definitions.');
 // Non-TickTick history (Self / Radall …) uses the same path: count, ids and dates kept; only the chosen key moves.
@@ -157,4 +157,27 @@ console.log('Migration checks pass: immutable input, stable counts/identity/date
   assert.equal(balanceTwin(twinModel, { tab: 'Randy', r: 16, c: 3 }), undefined, 'Ebay only on the balancing sheet');
   assert.equal(balanceTwin(twinModel, { tab: 'Randy', r: 13, c: 2 }), undefined, 'the name cell has no twin');
   console.log('Account twin checks pass.');
+}
+
+// Daily Grounding keeps its source wording and routes; exact task filtering must not hide genuine actions.
+{
+  const {isIgnoredItem, earnsNoCredit}=load('lib/focusAreas.ts');
+  const guides=JSON.parse(fs.readFileSync('public/data/grounding.json','utf8')).guides;
+  for(const [id,title] of [['open-grounding','Open Grounding (Reminders)'],['nutrition-flow','Nutrition Flow — Use Macro Tracker']]) {
+    const guide=guides.find(g=>g.id===id);
+    assert.ok(guide && guide.sections.length && guide.sections.every(s=>s.lines.length), `${id} remains readable in the first section`);
+    assert.ok(isIgnoredItem('ticktick',title,focus), `${title} hidden from actionable lists`);
+    assert.ok(isIgnoredItem('ticktick',`  ${title.toUpperCase()}  `,focus), 'exact matching ignores case and surrounding spaces');
+    assert.ok(earnsNoCredit('ticktick',title,focus), 'passive reminder never earns task credit');
+    assert.ok(!isIgnoredItem('self',title,focus), 'other app identities are untouched');
+  }
+  assert.equal(guides.find(g=>g.id==='nutrition-flow').link.space,'logs');
+  assert.ok(guides.find(g=>g.id==='open-grounding').sections.some(s=>s.heading==='Grounding Lens'));
+  for(const title of ['Drink 5 Bottles of Water','Eat a Fruit or Vegetable','Creatine and Fiber Supplements','Open Grounding','Grounding practice','Nutrition Flow — Use Macro Tracker follow-up','Gym Session Standards','Daily Work & Income Flow','Creative / Tinkering & Project Menu','Rest & Sleep Priorities']) {
+    assert.ok(!isIgnoredItem('ticktick',title,focus), `${title} remains visible`);
+  }
+  const tasks=[{id:'guide-grounding',title:'Open Grounding (Reminders)'},{id:'guide-nutrition',title:'Nutrition Flow — Use Macro Tracker'},{id:'water',title:'Drink 5 Bottles of Water'},{id:'food',title:'Eat a Fruit or Vegetable'}];
+  assert.deepEqual(tasks.filter(t=>!isIgnoredItem('ticktick',t.title,focus)).map(t=>t.id),['water','food']);
+  assert.deepEqual(focus.ignore.ticktick.titleIncludes,[], 'no broad title filter');
+  console.log('Passive grounding checks pass: both guides retained, only exact TickTick task duplicates excluded, genuine actions and other sources preserved.');
 }
