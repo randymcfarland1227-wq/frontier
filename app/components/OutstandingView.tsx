@@ -13,6 +13,7 @@ import { fromDayKey, money, type BillDue } from '../../lib/schedule';
 import { isSettled, type DebtFile, type DebtItem, type DebtMarks } from '../../lib/debtFile';
 import { isLedgerPaid } from '../../lib/moneyLedger';
 import { readSaved, writeSaved } from '../../lib/storage';
+import { isOwedDone, setOwedDone, useOwedDone, type OwedDone } from '../../lib/owedComplete';
 
 type CellView = (c: Cell | undefined, placeholder?: string) => ReactNode;
 
@@ -172,11 +173,11 @@ function TicketBox({ title, tone, kind, sources, marks, onOpen, head, foot }: { 
 
 // ─────────────────────────── part 2 ───────────────────────────
 
-export type OwedLine = { key: string; name: string; amount?: number; cell?: Cell; date?: string; note?: string; itemId?: string; done?: boolean; unverified?: boolean };
+export type OwedLine = { recurring?: boolean; key: string; name: string; amount?: number; cell?: Cell; date?: string; note?: string; itemId?: string; done?: boolean; unverified?: boolean };
 const rowsOf = (t?: Table | null) => (t?.rows || []).filter(r => r.some(c => c.text.trim()));
 const lineSum = (xs: OwedLine[]) => xs.filter(x => !x.done && !x.unverified).reduce((s, x) => s + (x.amount || 0), 0);
 
-export function outstandingParts(model: MoneyModel | null, file: DebtFile | null, marks: DebtMarks, monthDues: BillDue[], paidAt: Record<string, string>) {
+export function outstandingParts(model: MoneyModel | null, file: DebtFile | null, marks: DebtMarks, monthDues: BillDue[], paidAt: Record<string, string>, owedDone: OwedDone = {}) {
   const nc = (re: RegExp) => model?.nonCredit.find(t => re.test(t.title)) || null;
   const item = (i: DebtItem): OwedLine => ({ key: i.id, name: i.name, amount: i.amount ?? undefined, itemId: i.id, note: i.status, done: isSettled(marks[i.id]), unverified: i.unverified });
   const sheetLine = (r: Cell[], name: number, amt: number, note?: number, date?: number): OwedLine => ({
@@ -215,11 +216,33 @@ export function outstandingParts(model: MoneyModel | null, file: DebtFile | null
       .filter(r => !/ticket/i.test(r[0].text))
       .map(r => sheetLine(r, 0, 1, 2)),
   ];
-  return { payLater, cashAdv, advances, taxes, projects, sum: lineSum };
+  // Marked complete on Life Hub (recurring pay-later plans only for this month).
+  const mark = (xs: OwedLine[], recurring = false) => xs.map(x => ({ ...x, recurring, done: x.done || isOwedDone(owedDone, x.key) }));
+  return { payLater: mark(payLater, true), cashAdv: mark(cashAdv), advances: mark(advances), taxes: mark(taxes), projects: mark(projects), sum: lineSum };
 }
 
 function OwedCol({ tone, title, groups, cell, onOpen }: { tone: string; title: string; groups: Array<[string, OwedLine[]]>; cell: CellView; onOpen: (id: string) => void }) {
   const total = groups.reduce((s, [, xs]) => s + lineSum(xs), 0);
+  const line = (x: OwedLine) => (
+    <div key={x.key} className={`ob-line${x.done ? ' is-settled' : ''}`}>
+      {x.itemId ? (
+        <button type="button" className="ob-line-name" onClick={() => onOpen(x.itemId!)} title={x.note}>
+          {x.name}
+        </button>
+      ) : (
+        <span className="ob-line-name" title={x.note}>
+          {x.name}
+        </span>
+      )}
+      <span className="num">{x.cell ? cell(x.cell, '—') : usd(x.amount)}</span>
+      <small>{x.unverified ? 'unverified · not counted' : x.date ? md(x.date) : x.done ? 'done' : x.note && x.note.length < 22 ? x.note : '—'}</small>
+      {x.itemId ? <span /> : (
+        <button type="button" className="ob-check" onClick={() => setOwedDone(x.key, !x.done, x.recurring)} title={x.done ? 'Put back on the list' : x.recurring ? 'Paid for this month' : 'Complete — takes it off the list'} aria-label={`${x.done ? 'Reopen' : 'Complete'} ${x.name}`}>
+          {x.done ? '↩' : '✓'}
+        </button>
+      )}
+    </div>
+  );
   return (
     <section className={`mny-sec tone-${tone} ob-col`}>
       <header className="mny-sec-head">
@@ -239,21 +262,13 @@ function OwedCol({ tone, title, groups, cell, onOpen }: { tone: string; title: s
                   {label} <span>{usd(lineSum(xs))}</span>
                 </h5>
               ) : null}
-              {xs.map(x => (
-                <div key={x.key} className={`ob-line${x.done ? ' is-settled' : ''}`}>
-                  {x.itemId ? (
-                    <button type="button" className="ob-line-name" onClick={() => onOpen(x.itemId!)} title={x.note}>
-                      {x.name}
-                    </button>
-                  ) : (
-                    <span className="ob-line-name" title={x.note}>
-                      {x.name}
-                    </span>
-                  )}
-                  <span className="num">{x.cell ? cell(x.cell, '—') : usd(x.amount)}</span>
-                  <small>{x.unverified ? 'unverified · not counted' : x.date ? md(x.date) : x.done ? 'done' : x.note && x.note.length < 22 ? x.note : '—'}</small>
-                </div>
-              ))}
+              {xs.filter(x => !x.done || x.itemId).map(x => line(x))}
+              {xs.some(x => x.done && !x.itemId) ? (
+                <details className="ob-done">
+                  <summary>Done · {xs.filter(x => x.done && !x.itemId).length}</summary>
+                  {xs.filter(x => x.done && !x.itemId).map(x => line(x))}
+                </details>
+              ) : null}
             </div>
           ) : null,
         )}
@@ -265,7 +280,8 @@ function OwedCol({ tone, title, groups, cell, onOpen }: { tone: string; title: s
 export function OutstandingView({ file, marks, onOpen, onLetter, model, monthDues, paidAt, cell }: { file: DebtFile; marks: DebtMarks; onOpen: (id: string) => void; onLetter: (id: string) => void; model: MoneyModel | null; monthDues: BillDue[]; paidAt: Record<string, string>; cell: CellView }) {
   const reg = file.registration;
   const days = reg ? daysUntil(reg.due) : 0;
-  const parts = outstandingParts(model, file, marks, monthDues, paidAt);
+  const owedDone = useOwedDone();
+  const parts = outstandingParts(model, file, marks, monthDues, paidAt, owedDone);
   return (
     <div className="mny-stack">
       <TicketBox
@@ -298,8 +314,14 @@ export function OutstandingView({ file, marks, onOpen, onLetter, model, monthDue
           title="Pay laters"
           cell={cell}
           onOpen={onOpen}
+          groups={[['Pay later', parts.payLater]]}
+        />
+        <OwedCol
+          tone="card"
+          title="Cash advances"
+          cell={cell}
+          onOpen={onOpen}
           groups={[
-            ['Pay later', parts.payLater],
             ['Cash advances', parts.cashAdv],
             ['Older advances', parts.advances],
           ]}
