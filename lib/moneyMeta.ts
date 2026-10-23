@@ -16,6 +16,8 @@ export type MetaEntry = {
   gone?: boolean;
   apr?: number;
   fee?: number;
+  /** Typed pay-off rule for a card ('pay in full every 1st') */
+  rule?: string;
   principal?: number;
   paymentsLeft?: number;
   closed?: boolean;

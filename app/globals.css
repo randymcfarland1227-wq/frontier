@@ -5206,3 +5206,31 @@ button.ob-line-name { cursor: pointer; text-decoration: underline dotted; }
 .gr-area-caret { color: var(--muted); font-size: 11px; }
 .gr-area.is-open > .gr-chips { padding: 6px 2px 2px; }
 .plan-origin-steps input:disabled { opacity: 1; }
+
+/* 2026-10-22 markup · Money at a glance: rows click through, cards grid fits, one color per credit bureau */
+:root { --bu-ex: #2563eb; --bu-eq: #7c3aed; --bu-tu: #0f8a7e; }
+.bu-ex { --bu: var(--bu-ex); } .bu-eq { --bu: var(--bu-eq); } .bu-tu { --bu: var(--bu-tu); }
+.mb-dc-row { display: contents; cursor: pointer; }
+.mb-dc-row > * { min-height: 16px; }
+.mb-dc-row:hover > * { background: color-mix(in srgb, var(--t) 14%, transparent); }
+.mb-dc-link { all: unset; box-sizing: border-box; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; cursor: pointer; }
+.mb-dc-link:focus-visible { outline: 2px solid var(--t); border-radius: 3px; }
+.mb-dc-grid { max-height: none; grid-auto-rows: min-content; font-size: 11.5px; }
+.mb-dc-grid.is-4 { grid-template-columns: minmax(0, 1.2fr) repeat(3, minmax(0, 1fr)); gap: 2px 4px; }
+.mb-dc-grid.is-4 > b { font-size: 11px; letter-spacing: -.01em; }
+.mb-dc-scores > span { padding: 3px 2px; border-top: 3px solid var(--bu); border-radius: 4px; background: color-mix(in srgb, var(--bu) 10%, transparent); }
+.mb-dc-scores b { color: var(--bu); }
+.mb-dc-scores .bu-name { color: var(--bu); font-weight: 600; }
+.dbt-tile.bu-ex b, .dbt-tile.bu-eq b, .dbt-tile.bu-tu b, .dbt-tile .bu-name { color: var(--bu); }
+.dbt-tile[class*="bu-"] { border-top: 3px solid var(--bu); }
+.dbt-bureaus i.on[class*="bu-"] { background: var(--bu); border-color: var(--bu); color: #fff; }
+.dbt-bureaus i[class*="bu-"]:not(.on) { color: var(--bu); border-color: color-mix(in srgb, var(--bu) 40%, transparent); opacity: .6; }
+.mb-cp-figs { display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0; }
+.mb-cp-figs > span { display: grid; flex: 1 1 80px; padding: 4px 8px; border: 1px solid var(--line, var(--row-line)); border-radius: 8px; }
+.mb-cp-figs small { color: var(--muted); font-size: 10.5px; text-transform: uppercase; }
+.mb-cp-h { margin: 10px 0 4px; font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
+.mb-cp-due { all: unset; display: grid; grid-template-columns: 1fr auto auto; gap: 8px; width: 100%; box-sizing: border-box; padding: 6px 8px; border: 1px solid var(--line, var(--row-line)); border-radius: 8px; cursor: pointer; font-size: 13px; }
+.mb-cp-edit { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.mb-cp-edit label { display: grid; gap: 2px; font-size: 11px; color: var(--muted); }
+.mb-cp-edit label.is-wide { grid-column: 1 / -1; }
+.mb-cp-edit input { font: inherit; font-size: 13px; padding: 5px 7px; border-radius: 6px; border: 1px solid var(--line, var(--row-line)); background: var(--surface); color: inherit; }

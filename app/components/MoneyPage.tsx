@@ -7,7 +7,7 @@ import { PayPlanner } from './PayPlanner';
 import { DebtFile } from './DebtFile';
 import { AccountsBoard, CardsTable, LoansTable, MoneyDash, PaySources, WeekBoard, cardRows, loanRows, type CellView, type DashCredit } from './MoneyBoards';
 import { outstandingParts, ticketTotals } from './OutstandingView';
-import { useMoneyMeta } from '../../lib/moneyMeta';
+import { metaName, setMeta, useMoneyMeta, type MetaEntry } from '../../lib/moneyMeta';
 import { isSettled, owedOf } from '../../lib/debtFile';
 import { BrandLogo } from './BrandLogo';
 import { useDebtFile } from '../../lib/debtFile';
@@ -1627,10 +1627,11 @@ function useIncomingLanding(model: MoneyModel | null, book: Book, save: Save) {
 }
 
 /** Open any item's panel from anywhere on the Money page. */
-type PanelState = { type: 'line' | 'acct'; id: string; back?: PanelState };
-const MoneyPanelCtx = createContext<{ openLine: (key: string) => void; openAccount: (name: string) => void; has: (key: string) => boolean }>({
+type PanelState = { type: 'line' | 'acct' | 'card'; id: string; back?: PanelState };
+const MoneyPanelCtx = createContext<{ openLine: (key: string) => void; openAccount: (name: string) => void; openCard: (name: string) => void; has: (key: string) => boolean }>({
   openLine: () => {},
   openAccount: () => {},
+  openCard: () => {},
   has: () => false,
 });
 const useMoneyPanels = () => useContext(MoneyPanelCtx);
@@ -2312,6 +2313,53 @@ function LinePanel({
  * One account as its own item: checking + savings (or Now), pending, and its sub-ledger — what's
  * planned to come out of it and go into it — for a week or the whole month.
  */
+/** A credit card's shared panel: figures, this month's payments, and the APR / fee / pay-off rule Life Hub keeps. */
+function CardPanel({ name, model, monthDues, onBack, onClose }: { name: string; model: MoneyModel; monthDues: BillDue[]; onBack?: () => void; onClose: () => void }) {
+  const panels = useMoneyPanels();
+  const { get } = useMoneyMeta();
+  const c = cardRows(model, monthDues, get).find(x => metaName(x.name) === metaName(name));
+  if (!c)
+    return (
+      <Modal label="Card" onClose={onClose} onBack={onBack}>
+        <h3>{name}</h3>
+        <p className="mny-empty">This card isn’t in the sheet’s credit card list.</p>
+      </Modal>
+    );
+  const m = get(c.key);
+  const rule = (m as { rule?: string } | undefined)?.rule || '';
+  const keep = (patch: Partial<Omit<MetaEntry, 'at'>>) => setMeta(c.key, patch);
+  const num = (v: string) => (v.trim() === '' ? undefined : Number(v));
+  return (
+    <Modal label={c.name} onClose={onClose} onBack={onBack}>
+      <h3>{c.name}</h3>
+      <div className="mb-cp-figs">
+        <span><small>balance</small><b>{money(c.bal || 0)}</b></span>
+        <span><small>limit</small><b>{c.limit ? money(c.limit) : '—'}</b></span>
+        <span><small>available</small><b>{c.avail !== undefined ? money(c.avail) : '—'}</b></span>
+        <span><small>used</small><b className={c.util !== undefined && c.util >= 90 ? 'mb-late' : ''}>{c.util !== undefined ? `${Math.round(c.util)}%` : '—'}</b></span>
+        <span><small>minimum</small><b>{c.min !== undefined ? money(c.min) : '—'}</b></span>
+      </div>
+      <h4 className="mb-cp-h">Upcoming &amp; this month</h4>
+      {c.due ? (
+        <button type="button" className="mb-cp-due" onClick={() => panels.openLine(c.due!.key)}>
+          <span>{c.due.bill.name}</span>
+          <b>{money(c.due.bill.amount || 0)}</b>
+          <small>{c.due.due}</small>
+        </button>
+      ) : (
+        <p className="mny-empty">No payment on the schedule this month.</p>
+      )}
+      <h4 className="mb-cp-h">Yours to edit</h4>
+      <div className="mb-cp-edit">
+        <label>APR %<input type="number" step="0.01" defaultValue={m?.apr ?? ''} onBlur={e => keep({ apr: num(e.target.value) })} /></label>
+        <label>Monthly fee<input type="number" step="0.01" defaultValue={m?.fee ?? ''} onBlur={e => keep({ fee: num(e.target.value) })} /></label>
+        <label className="is-wide">Pay-off rule<input type="text" placeholder="e.g. pay in full every 1st; never above 30%" defaultValue={rule} onBlur={e => keep({ rule: e.target.value.trim() || undefined })} /></label>
+      </div>
+      {c.carry ? <p className="mb-dim">Interest carrying this balance ≈ {money(c.carry)}/mo.</p> : null}
+    </Modal>
+  );
+}
+
 function AccountPanel({ name, book, model, onSave, onBack, onClose }: { name: string; book: Book; model: MoneyModel; onSave: Save; onBack?: () => void; onClose: () => void }) {
   const panels = useMoneyPanels();
   const [wi, setWi] = useState<number | 'month'>(0);
@@ -2679,6 +2727,7 @@ export function MoneyPage({
     () => ({
       openLine: (key: string) => setPanel(cur => ({ type: 'line' as const, id: key, back: cur || undefined })),
       openAccount: (name: string) => setPanel(cur => ({ type: 'acct' as const, id: name, back: cur || undefined })),
+      openCard: (name: string) => setPanel(cur => ({ type: 'card' as const, id: name, back: cur || undefined })),
       has: (key: string) => !!book.line(key),
     }),
     [book],
@@ -2853,6 +2902,8 @@ export function MoneyPage({
         credit={dashCredit}
         owed={dashOwed}
         onGo={goDash}
+        onOpenAccount={panelApi.openAccount}
+        onOpenCard={panelApi.openCard}
         top={
           <>
             <span className="mny-stand-meta">
@@ -3241,6 +3292,8 @@ export function MoneyPage({
         <LinePanel key={panel.id} id={panel.id} book={book} model={model} onSave={save} onPaid={onPaid} onBack={panel.back ? () => setPanel(panel.back!) : undefined} onClose={() => setPanel(null)} />
       ) : panel?.type === 'acct' ? (
         <AccountPanel key={panel.id} name={panel.id} book={book} model={model} onSave={save} onBack={panel.back ? () => setPanel(panel.back!) : undefined} onClose={() => setPanel(null)} />
+      ) : panel?.type === 'card' ? (
+        <CardPanel key={panel.id} name={panel.id} model={model} monthDues={monthDues} onBack={panel.back ? () => setPanel(panel.back!) : undefined} onClose={() => setPanel(null)} />
       ) : null}
     </MoneyPanelCtx.Provider>
   );

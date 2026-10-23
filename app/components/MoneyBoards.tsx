@@ -722,6 +722,8 @@ export function MoneyDash({
   credit,
   owed,
   onGo,
+  onOpenAccount,
+  onOpenCard,
   top,
   tabs,
 }: {
@@ -732,6 +734,9 @@ export function MoneyDash({
   credit: DashCredit;
   owed: DashOwed;
   onGo: (where: string) => void;
+  /** A row opens its entity's shared panel */
+  onOpenAccount: (name: string) => void;
+  onOpenCard: (name: string) => void;
   /** Sync line, buttons and save notes */
   top: ReactNode;
   /** The page's tab bar — pinned along with the dashboard so it stays reachable */
@@ -795,11 +800,10 @@ export function MoneyDash({
             <small>avail</small>
             <small>pend</small>
             {rows.map(r => (
-              <Frag key={r.name}>
-                <span>{r.label}</span>
+              <DashRow key={r.name} onOpen={() => onOpenAccount(r.name)} label={r.label}>
                 <b>{usd(r.now ?? 0)}</b>
                 <b className="mb-pend">{r.pend ? usd(r.pend) : '·'}</b>
-              </Frag>
+              </DashRow>
             ))}
           </div>
           <div className="mb-dc-sums">
@@ -825,12 +829,11 @@ export function MoneyDash({
             <small>avail</small>
             <small>util</small>
             {cards.map(c => (
-              <Frag key={c.key}>
-                <span title={c.name}>{c.name.replace(/^cap(ital)?\s*1\s*/i, 'C1 ')}</span>
+              <DashRow key={c.key} onOpen={() => onOpenCard(c.name)} label={c.name.replace(/^cap(ital)?\s*1\s*/i, 'C1 ')} title={c.name}>
                 <b>{usd(c.limit)}</b>
                 <b>{usd(c.avail)}</b>
                 <b className={c.util !== undefined && c.util >= 90 ? 'mb-late' : ''}>{pct(c.util)}</b>
-              </Frag>
+              </DashRow>
             ))}
           </div>
           <div className="mb-dc-sums">
@@ -919,9 +922,9 @@ export function MoneyDash({
           <h3>Credit</h3>
           <div className="mb-dc-scores">
             {credit.scores.map(s => (
-              <span key={s.bureau}>
-                <small>{s.bureau}</small>
+              <span key={s.bureau} className={`bu-${bureauKey(s.bureau)}`}>
                 <b>{s.score ?? '—'}</b>
+                <small className="bu-name">{s.bureau}</small>
                 <small>{s.date ? md(s.date) : ''}</small>
               </span>
             ))}
@@ -972,6 +975,30 @@ export function MoneyDash({
       {tabs}
     </section>
     </>
+  );
+}
+
+/** Bureau → short key ('ex' | 'eq' | 'tu'); the colors live in globals.css as .bu-ex / .bu-eq / .bu-tu. */
+export function bureauKey(name: string): 'ex' | 'eq' | 'tu' | '' {
+  const n = name.toLowerCase();
+  return n.startsWith('ex') ? 'ex' : n.startsWith('eq') ? 'eq' : n.startsWith('t') ? 'tu' : '';
+}
+
+/** One dashboard row: name + figures in the parent grid, the whole row clicks through to its panel. */
+function DashRow({ label, title, onOpen, children }: { label: string; title?: string; onOpen: () => void; children: ReactNode }) {
+  return (
+    <div
+      className="mb-dc-row"
+      onClick={e => {
+        e.stopPropagation();
+        onOpen();
+      }}
+    >
+      <button type="button" className="mb-dc-link" title={title || label}>
+        {label}
+      </button>
+      {children}
+    </div>
   );
 }
 
