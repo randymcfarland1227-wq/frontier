@@ -16,6 +16,7 @@ import { metaName, monthlyCarry, removeMeta, setMeta, useMoneyMeta, type MetaEnt
 import { isOverdue } from '../../lib/billEdits';
 import { isLedgerPaid, ledgerMonthRows } from '../../lib/moneyLedger';
 import { readSaved, writeSaved } from '../../lib/storage';
+import { MenuRow } from './RowMenu';
 
 export type CellView = (c: Cell | undefined, placeholder?: string) => ReactNode;
 type Get = (key: string) => MetaEntry | undefined;
@@ -500,10 +501,20 @@ export function LoansTable({ model, monthDues, paidAt, cell }: { model: MoneyMod
 
 // ─────────────────────────── week ───────────────────────────
 
-function WeekLine({ d, paidAt, onPaid, onOpen, cols }: { d: BillDue; paidAt: Record<string, string>; onPaid: (d: BillDue) => void; onOpen?: (key: string) => void; cols: 'late' | 'soon' }) {
+function WeekLine({ d, paidAt, onPaid, onOpen, onAdd, isAdded, cols }: { d: BillDue; paidAt: Record<string, string>; onPaid: (d: BillDue) => void; onOpen?: (key: string) => void; onAdd?: (key: string) => void; isAdded?: (key: string) => boolean; cols: 'late' | 'soon' }) {
   const kind = d.bill.kind || 'bill';
   return (
-    <li className="mb-wl" style={{ ['--k' as string]: MONEY_KINDS[kind]?.color }}>
+    <MenuRow
+      as="li"
+      className="mb-wl"
+      style={{ ['--k' as string]: MONEY_KINDS[kind]?.color }}
+      title={d.bill.name.trim()}
+      items={[
+        { label: 'On the balancing sheet', on: true, hidden: !isAdded?.(d.key) },
+        { label: '+ Add to balancing sheet', onSelect: () => onAdd?.(d.key), hidden: !onAdd || isAdded?.(d.key) },
+        { label: 'Details', onSelect: () => onOpen?.(d.key) },
+      ]}
+    >
       <button type="button" className="mb-wl-name" onClick={() => onOpen?.(d.key)} title={MONEY_KINDS[kind]?.label}>
         {d.bill.name.trim()}
       </button>
@@ -513,11 +524,11 @@ function WeekLine({ d, paidAt, onPaid, onOpen, cols }: { d: BillDue; paidAt: Rec
       <button type="button" className="mb-x is-word" onClick={() => onPaid(d)} disabled={Boolean(paidAt[d.key])}>
         Paid
       </button>
-    </li>
+    </MenuRow>
   );
 }
 
-export function WeekBoard({ dues, monthDues, paidAt, onPaid, onOpen, children }: { dues: BillDue[]; monthDues: BillDue[]; paidAt: Record<string, string>; onPaid: (d: BillDue) => void; onOpen?: (key: string) => void; children: ReactNode }) {
+export function WeekBoard({ dues, monthDues, paidAt, onPaid, onOpen, onAdd, isAdded, children }: { dues: BillDue[]; monthDues: BillDue[]; paidAt: Record<string, string>; onPaid: (d: BillDue) => void; onOpen?: (key: string) => void; onAdd?: (key: string) => void; isAdded?: (key: string) => boolean; children: ReactNode }) {
   const today = startOfDay(new Date());
   const mon = mondayOf(today);
   const sunday = addDays(mon, 6);
@@ -569,7 +580,7 @@ export function WeekBoard({ dues, monthDues, paidAt, onPaid, onOpen, children }:
               </div>
               <ul className="mb-wl-list">
                 {overdue.map(d => (
-                  <WeekLine key={d.key} d={d} paidAt={paidAt} onPaid={onPaid} onOpen={onOpen} cols="late" />
+                  <WeekLine key={d.key} d={d} paidAt={paidAt} onPaid={onPaid} onOpen={onOpen} onAdd={onAdd} isAdded={isAdded} cols="late" />
                 ))}
               </ul>
             </Box>
@@ -584,12 +595,12 @@ export function WeekBoard({ dues, monthDues, paidAt, onPaid, onOpen, children }:
             </div>
             <ul className="mb-wl-list">
               {thisWeek.map(d => (
-                <WeekLine key={d.key} d={d} paidAt={paidAt} onPaid={onPaid} onOpen={onOpen} cols="soon" />
+                <WeekLine key={d.key} d={d} paidAt={paidAt} onPaid={onPaid} onOpen={onOpen} onAdd={onAdd} isAdded={isAdded} cols="soon" />
               ))}
               {!thisWeek.length ? <li className="mb-dim">Nothing else due this week.</li> : null}
               {nextWeek.length ? <li className="mb-wl-div">Next week · {usd(sumOf(nextWeek.map(d => d.bill.amount)))}</li> : null}
               {nextWeek.map(d => (
-                <WeekLine key={d.key} d={d} paidAt={paidAt} onPaid={onPaid} onOpen={onOpen} cols="soon" />
+                <WeekLine key={d.key} d={d} paidAt={paidAt} onPaid={onPaid} onOpen={onOpen} onAdd={onAdd} isAdded={isAdded} cols="soon" />
               ))}
             </ul>
           </Box>

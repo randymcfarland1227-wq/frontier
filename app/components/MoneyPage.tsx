@@ -1729,10 +1729,8 @@ function BalancingSheet({ period, book, model, onSave, tasks }: { period: 'week'
   const firstWeek = period === 'month' || week.i === 0;
   const inScope = (l: BalanceLine) => (period === 'month' ? true : book.weekOf(book.whenOf(l)) === week.i);
   // Incoming whose day has passed isn't offered: the bank balance likely has it already.
-  // Upcoming shows this week (or the whole month — click the dates to switch).
-  const [offerScope, setOfferScope] = useState<'week' | 'month'>('week');
-  const offerMonth = period === 'month' || offerScope === 'month';
-  const monthLabel = book.today.toLocaleDateString([], { month: 'long' });
+  // The month register's Upcoming (the week view's lives on the Week board, rows add from their menu).
+  const offerMonth = period === 'month';
   const offered = book.month.filter(l => !book.plan.picks.has(l.key) && (offerMonth || inScope(l)) && !(l.kind === 'in' && l.due < book.todayKey));
   const [openGroups, setOpenGroups] = useState<string[]>(() => readSaved<string[]>(OPEN_GROUPS_KEY, []));
   const toggleGroup = (g: string) =>
@@ -1920,16 +1918,11 @@ function BalancingSheet({ period, book, model, onSave, tasks }: { period: 'week'
 
       <div className="bal-side">
       {tasks ? <section className="mny-tasks" aria-label="Finance tasks">{tasks}</section> : null}
+      {period === 'week' ? null : (
       <aside className="bal-offer" aria-label="Upcoming — add to the sheet">
         <header className="bal-head">
           <h3>Upcoming</h3>
-          {period === 'week' ? (
-            <button type="button" className="bal-scope" onClick={() => setOfferScope(offerMonth ? 'week' : 'month')} title={offerMonth ? 'Show just this week' : `Show all of ${monthLabel}`}>
-              {offerMonth ? `All of ${monthLabel}` : week.label} · unpaid <i>⇄</i>
-            </button>
-          ) : (
-            <span>through the month · unpaid</span>
-          )}
+          <span>through the month · unpaid</span>
           <span className="bal-toggle" role="group" aria-label="Sort upcoming">
             {(['date', 'type'] as const).map(v => (
               <button key={v} type="button" className={offerView === v ? 'is-on' : ''} aria-pressed={offerView === v} onClick={() => setOfferView(v)}>
@@ -2019,6 +2012,7 @@ function BalancingSheet({ period, book, model, onSave, tasks }: { period: 'week'
           );
         })()}
       </aside>
+      )}
       </div>
     </div>
   );
@@ -2974,7 +2968,7 @@ export function MoneyPage({
         ) : null}
         {tab === 'flow' && flowView === 'week' ? (
           <div className="mny-stack">
-            <WeekBoard dues={dues} monthDues={monthDues} paidAt={paidAt} onPaid={onPaid} onOpen={panelApi.openLine}>
+            <WeekBoard dues={dues} monthDues={monthDues} paidAt={paidAt} onPaid={onPaid} onOpen={panelApi.openLine} onAdd={k => setBalancePicks([k], true)} isAdded={k => book.plan.picks.has(k)}>
               <BalancingSheet period="week" book={book} model={model} onSave={save} tasks={financeTasks} />
             </WeekBoard>
             <Section tone="cash" title="Incoming funds" hint="Log money you expect; it shows up on the right to add to the sheet. Synced, not written to the sheet.">
