@@ -8,14 +8,13 @@
  * fees, loan terms, sales, pay-from) lives in lib/moneyMeta.ts.
  */
 
-import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { amountOf, cardSummaries, MONEY_KINDS, parseSheetDate, type Cell, type MoneyModel } from '../../lib/money';
 import { addDays, dayKey, fromDayKey, money, startOfDay, type BillDue } from '../../lib/schedule';
 import { mondayOf, srcKey, updatePick, useBalancePicks } from '../../lib/balancePicks';
 import { metaName, monthlyCarry, removeMeta, setMeta, useMoneyMeta, type MetaEntry } from '../../lib/moneyMeta';
 import { isOverdue } from '../../lib/billEdits';
 import { isLedgerPaid, ledgerMonthRows } from '../../lib/moneyLedger';
-import { readSaved, writeSaved } from '../../lib/storage';
 import { MenuRow } from './RowMenu';
 
 export type CellView = (c: Cell | undefined, placeholder?: string) => ReactNode;
@@ -728,7 +727,6 @@ export type DashCredit = {
 };
 export type DashOwed = Array<{ label: string; sum: number; note?: string; go: string }>;
 
-const PIN_KEY = 'lifehub-money-dash-pinned';
 
 export function MoneyDash({
   model,
@@ -758,36 +756,6 @@ export function MoneyDash({
   /** The page's tab bar — pinned along with the dashboard so it stays reachable */
   tabs?: ReactNode;
 }) {
-  const [pinned, setPinned] = useState(() => readSaved<boolean>(PIN_KEY, true));
-  // Once the page scrolls past it, the pinned dashboard shrinks to its sum boxes.
-  const mark = useRef<HTMLDivElement>(null);
-  const sec = useRef<HTMLElement>(null);
-  // When it's scrolled past, the dashboard is pinned with position: fixed and a spacer of its old height
-  // keeps the page from shifting under the finger (sticky + a height change made iPad scrolling jump).
-  const [stuck, setStuck] = useState<{ left: number; width: number; height: number } | null>(null);
-  useEffect(() => {
-    const el = mark.current;
-    if (!el || !pinned) {
-      setStuck(null);
-      return;
-    }
-    const check = () => {
-      const r = el.getBoundingClientRect();
-      setStuck(cur => {
-        if (!cur) return r.top < -40 && sec.current ? { left: r.left, width: r.width, height: sec.current.getBoundingClientRect().height } : null;
-        if (r.top >= -40) return null;
-        return cur.left === r.left && cur.width === r.width ? cur : { ...cur, left: r.left, width: r.width };
-      });
-    };
-    check();
-    window.addEventListener('scroll', check, { passive: true });
-    window.addEventListener('resize', check);
-    return () => {
-      window.removeEventListener('scroll', check);
-      window.removeEventListener('resize', check);
-    };
-  }, [pinned]);
-  const scrolled = Boolean(stuck);
   const { get } = useMoneyMeta();
   const rows = bankRows(model);
   const cards = cardRows(model, [], get);
@@ -811,20 +779,12 @@ export function MoneyDash({
   const cardLim = sumOf(cards.filter(c => c.limit).map(c => c.limit));
   const cardBal = sumOf(cards.filter(c => c.limit).map(c => c.bal));
   const paidPct = monthCount ? Math.round((monthPaid / monthCount) * 100) : undefined;
-  const toggle = () => {
-    setPinned(!pinned);
-    writeSaved(PIN_KEY, !pinned);
-  };
   return (
     <>
-    <div ref={mark} className="mb-dash-mark" aria-hidden="true" style={stuck ? { height: stuck.height } : undefined} />
-    <section ref={sec} style={stuck ? { position: 'fixed', top: 0, left: stuck.left, width: stuck.width, zIndex: 15 } : undefined} className={`mb-dash${pinned ? ' is-pinned' : ''}${pinned && scrolled ? ' is-compact' : ''}`} aria-label="Money at a glance">
+    <section className="mb-dash" aria-label="Money at a glance">
       <div className="mb-dash-top">
         <p className="mny-eyebrow">Money · at a glance</p>
         {top}
-        <button type="button" className="mny-btn" aria-pressed={pinned} onClick={toggle} title={pinned ? 'Stop pinning this to the top while you scroll' : 'Keep this at the top while you scroll'}>
-          {pinned ? 'Unpin' : 'Pin'}
-        </button>
       </div>
       <div className="mb-dash-cols">
         <DashCol tone="cash" go="accounts" onGo={onGo}>
