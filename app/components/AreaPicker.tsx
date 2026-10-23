@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import type { FocusArea } from '../../lib/focusAreas';
 import type { GoalsData } from '../../lib/goals';
+import { NO_GOAL } from '../../lib/taskRules';
 import { GoalSelect } from './SortControls';
 
 export type SortChoice = { area: string; goal: string; wholeSource: boolean };
@@ -32,7 +33,7 @@ export function AreaPicker({
   onCancel: () => void;
 }) {
   const [area, setArea] = useState(suggested || '');
-  const [goal, setGoal] = useState(initialGoal || '');
+  const [goal, setGoal] = useState(initialGoal || NO_GOAL);
   const [wholeSource, setWholeSource] = useState(false);
 
   useEffect(() => {
@@ -60,7 +61,7 @@ export function AreaPicker({
             </button>
           ))}
         </div>
-        <p className="review-lede area-picker-goal-label">Which goal or care standard does it serve?</p>
+        <p className="review-lede area-picker-goal-label">Which goal does it serve? (No goal unless you pick one)</p>
         <GoalSelect goals={goals} value={goal} onChange={setGoal} />
         <label className="area-picker-scope">
           <input type="checkbox" checked={wholeSource} onChange={e => setWholeSource(e.target.checked)} />
