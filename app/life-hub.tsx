@@ -1,6 +1,6 @@
 'use client';
 
-import { seedPeculiarUmbrellas } from '../lib/peculiarUmbrellas';
+import { removePeculiarUmbrellaLanes } from '../lib/peculiarUmbrellas';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type {
   FeaturedItem,
@@ -312,7 +312,7 @@ export function LifeHub() {
     );
     setFocus(migrateFocus(savedFocus));
     const snaps = migrateSnapshots(savedSnaps);
-    seedPeculiarUmbrellas();
+    removePeculiarUmbrellaLanes();
     const self = loadSelfItems();
     snaps.self = selfSnapshotFrom(self);
     setSelfItems(self);

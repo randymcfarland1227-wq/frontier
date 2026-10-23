@@ -19,6 +19,9 @@ export type LegacySourceId = 'search';
 /** 'settings' = Task sorting page · 'why' = goals page · 'logs' = embedded log sites */
 export type SpaceId = 'home' | 'settings' | 'why' | 'money' | 'logs' | SourceId;
 
+/** A step the origin site tracks on a task (Peculiar Candle's stepped tasks); Life Hub shows them read-only. */
+export type OriginStep = { id: string; text: string; done: boolean };
+
 export type FeaturedItem = {
   id: string;
   title: string;
@@ -28,6 +31,8 @@ export type FeaturedItem = {
   completable?: boolean;
   /** Short task-type label shown before the title, e.g. "Ship", "End Listing · Depop" */
   tag?: string;
+  /** The origin's own steps, shown as the task's subtasks */
+  steps?: OriginStep[];
 };
 
 export type TaskItem = {
@@ -50,6 +55,8 @@ export type TaskItem = {
   tag?: string;
   /** The site asks to keep it off the open count (Resale: 'prep' decision, 'waiting' on an offer) */
   shelf?: string;
+  /** The origin's own steps, shown as the task's subtasks */
+  steps?: OriginStep[];
 };
 
 export type SourceSnapshot = {

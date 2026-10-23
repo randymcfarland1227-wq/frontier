@@ -5205,3 +5205,4 @@ button.ob-line-name { cursor: pointer; text-decoration: underline dotted; }
 .gr-area-dots i.is-none { border-style: dashed; opacity: .6; }
 .gr-area-caret { color: var(--muted); font-size: 11px; }
 .gr-area.is-open > .gr-chips { padding: 6px 2px 2px; }
+.plan-origin-steps input:disabled { opacity: 1; }

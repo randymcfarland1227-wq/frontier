@@ -5,7 +5,7 @@
 
 import type { CompletionEntry, CompletionLedger } from './completions';
 import type { Capture } from './captures';
-import type { SelfItem } from './adapters/self';
+import { isRetiredSelfId, type SelfItem } from './adapters/self';
 import type { GoalLink } from './goals';
 import type { Plan } from './plans';
 import type { LifeSub } from './lifeSubs';
@@ -253,7 +253,7 @@ export function mergeState(aRaw: unknown, bRaw: unknown): SyncedState {
   return {
     completions: { entries },
     captures: mergeById(a.captures, b.captures),
-    self: mergeById(a.self, b.self),
+    self: mergeById(a.self, b.self).filter(x => !isRetiredSelfId(x.id)),
     goalLinks: {
       added: mergeById(a.goalLinks.added, b.goalLinks.added),
       removed: [...new Set([...a.goalLinks.removed, ...b.goalLinks.removed])],
