@@ -5239,3 +5239,11 @@ button.ob-line-name { cursor: pointer; text-decoration: underline dotted; }
 @media (min-width: 1100px) {
   .mb-dash.is-pinned { top: 0; box-shadow: 0 -12px 0 var(--bg), var(--glow, none); }
 }
+
+/* 2026-10-22 markup · Outgoing: rows open their item panel; tighter columns, 2-line names, pay-from shown */
+.mm-row { grid-template-columns: 34px 78px minmax(0, 1fr) 64px 108px 52px; font-size: 12.5px; }
+.mm-name { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; }
+.mm-name small.mm-from { color: var(--muted); font-weight: 500; }
+.mb-cp-sel { font: inherit; font-size: 13px; padding: 6px 8px; border-radius: 6px; border: 1px solid var(--line, var(--row-line)); background: var(--surface); color: inherit; width: 100%; }
+.mb-cp-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 3px; }
+.mb-cp-list li { display: grid; grid-template-columns: 70px 70px 1fr; gap: 8px; font-size: 12.5px; }
