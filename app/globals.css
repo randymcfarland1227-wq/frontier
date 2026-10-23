@@ -5271,3 +5271,8 @@ button.ob-line-name { cursor: pointer; text-decoration: underline dotted; }
 .dbt-sum-total b { font-size: 22px; }
 .dbt-tile b { font-size: 18px; } .dbt-tile span { font-size: 12px; } .dbt-tile small { font-size: 11px; }
 .dbt .mb-table { font-size: 12.5px; } .dbt .mb-table td { padding: 3px 8px; }
+
+/* One title size on every daily-ops card: Gmail / Radall list rows matched the starred rows (12.5px, medium) */
+.space-card.card-v2 :is(.task-row, .featured-row).one-line :is(.task-main, .featured-main) :is(strong, a, .task-open, .origin-link), .space-card.card-v2 :is(.task-row, .featured-row) :is(strong, .task-open) {
+  font-size: 12.5px !important; font-weight: 550 !important; line-height: 1.35 !important;
+}
