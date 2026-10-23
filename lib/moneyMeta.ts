@@ -2,7 +2,8 @@
  * Money details the Radall sheet has no column for, typed in on Life Hub. One entry per key, newest
  * change wins (cloud-synced as `moneyMeta`). Nothing here is written to the sheet.
  *   card:<name>  → { apr, fee }                      APR % and extra monthly fee (Milestone, Indigo, Destiny)
- *   loan:<name>  → { principal, paymentsLeft, closed } loan terms; balance / min / due stay in the sheet
+ *   card:<name> / sub:<name> → { since }             when he got it (cards also: apr, fee, rule)
+ *   loan:<name>  → { principal, paymentsLeft, closed, apr, since } loan terms; balance / min / due stay in the sheet
  *   sale:<id>    → { platform, name, amount, state, availOn } one eBay / Poshmark sale
  *   from:<src>   → { acct }                           which account or card pays a bill / sub / pay later
  * A removed entry keeps `gone: true` so the removal syncs too.
@@ -21,6 +22,8 @@ export type MetaEntry = {
   principal?: number;
   paymentsLeft?: number;
   closed?: boolean;
+  /** When he started it (YYYY-MM-DD): card opened, subscription started, loan taken */
+  since?: string;
   platform?: 'ebay' | 'posh';
   name?: string;
   amount?: number;
