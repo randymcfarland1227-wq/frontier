@@ -4880,7 +4880,7 @@ button.bal-led-row:hover { background: color-mix(in srgb, var(--ev, #0f8a7e) 8%,
 
 /* header dashboard */
 .mb-dash { display: grid; gap: 8px; padding: 10px 12px 12px; border: 1px solid var(--line, var(--row-line)); border-radius: 16px; background: var(--surface); box-shadow: var(--glow, none); }
-@media (min-width: 1100px) { .mb-dash.is-pinned { position: sticky; top: 76px; z-index: 15; } }
+@media all { .mb-dash.is-pinned { position: sticky; top: 0; z-index: 15; } }
 .mb-dash-top { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; }
 .mb-dash-top .mny-stand-meta { margin-left: auto; }
 .mb-dash-top .money-note { flex-basis: 100%; margin: 0; }
@@ -5069,21 +5069,21 @@ button.ob-line-name { cursor: pointer; text-decoration: underline dotted; }
 }
 .mb-dash-mark { height: 0; margin-bottom: -16px; }
 .mb-dash .mny-tabs { margin-top: 2px; }
-@media (min-width: 1100px) {
+@media all {
   .mb-dash.is-compact { gap: 6px; padding-top: 6px; padding-bottom: 8px; }
   .mb-dash.is-compact .mb-dash-top > :not(.money-note), .mb-dash.is-compact .mb-dc-grid, .mb-dash.is-compact .mb-dc-scores, .mb-dash.is-compact .mb-dc > small, .mb-dash.is-compact .mb-dc-big small, .mb-dash.is-compact .mb-bar { display: none; }
   .mb-dash.is-compact .mb-dc { gap: 3px; padding: 5px 7px; }
   .mb-dash.is-compact .mb-dc-big b { font-size: 18px; }
   .mb-dash.is-compact .mny-tab { padding-top: 4px; padding-bottom: 4px; }
 }
-@media (min-width: 1100px) {
+@media all {
   .mb-dash.is-compact .mb-dc-sums { flex-wrap: nowrap; overflow: hidden; }
   .mb-dash.is-compact .mb-dc-sums > span { flex: 1 1 0; }
   .mb-dash.is-compact .mb-dc-sums > span > small:nth-of-type(2), .mb-dash.is-compact .mny-tab-fig { display: none; }
   .mb-dash.is-compact .mb-dc-big { grid-template-columns: auto 1fr; }
 }
 .mb-only-compact { display: none; }
-@media (min-width: 1100px) {
+@media all {
   .mb-dash.is-compact .mb-only-compact { display: flex; }
   .mb-dash.is-compact .mb-dc-sums.is-late:not(.mb-only-compact) { display: none; }
 }
@@ -5236,7 +5236,7 @@ button.ob-line-name { cursor: pointer; text-decoration: underline dotted; }
 .mb-cp-edit input { font: inherit; font-size: 13px; padding: 5px 7px; border-radius: 6px; border: 1px solid var(--line, var(--row-line)); background: var(--surface); color: inherit; }
 
 /* 2026-10-22 markup · Money scroll: the top bar isn't sticky, so the pinned dashboard sticks flush to the top (no strip to scroll content through) */
-@media (min-width: 1100px) {
+@media all {
   .mb-dash.is-pinned { top: 0; box-shadow: 0 -12px 0 var(--bg), var(--glow, none); }
 }
 
