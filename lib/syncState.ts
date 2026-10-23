@@ -66,6 +66,8 @@ export type SyncedState = {
   balancePicks: Record<string, { mark: string | null; acct?: string; at: string }>;
   /** Money details the sheet has no column for (lib/moneyMeta.ts); newest change per key wins */
   moneyMeta: Record<string, { at: string } & Record<string, unknown>>;
+  /** Outstanding lines marked complete (lib/owedComplete.ts); an undo keeps `gone: true` so it syncs; newest change wins */
+  owedDone: Record<string, { at: string; month?: string; gone?: boolean }>;
 };
 
 /**
@@ -139,6 +141,7 @@ export function emptyState(): SyncedState {
     goalModes: {},
     balancePicks: {},
     moneyMeta: {},
+    owedDone: {},
   };
 }
 
@@ -184,6 +187,7 @@ export function normalizeState(raw: unknown): SyncedState {
     goalModes: s.goalModes && typeof s.goalModes === 'object' ? s.goalModes : {},
     balancePicks: s.balancePicks && typeof s.balancePicks === 'object' ? s.balancePicks : {},
     moneyMeta: s.moneyMeta && typeof s.moneyMeta === 'object' ? s.moneyMeta : {},
+    owedDone: s.owedDone && typeof s.owedDone === 'object' ? s.owedDone : {},
   };
 }
 
@@ -280,6 +284,7 @@ export function mergeState(aRaw: unknown, bRaw: unknown): SyncedState {
     goalModes: mergeLevels(a.goalModes, b.goalModes),
     balancePicks: mergeLevels(a.balancePicks, b.balancePicks),
     moneyMeta: mergeLevels(a.moneyMeta, b.moneyMeta),
+    owedDone: mergeLevels(a.owedDone, b.owedDone),
   };
 }
 
