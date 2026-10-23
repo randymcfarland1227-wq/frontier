@@ -196,7 +196,7 @@ export function CapturesPanel({
   // Starred ones sit in their own list above the tabs; Pin there is what sends one to Priority.
   const starredTasks = allOpen.filter(t => t.starred);
   const openTasks = allOpen.filter(t => !t.starred);
-  const doneTasks = mine.filter(i => i.done).slice(0, 15);
+  // Finished ones are kept on the Self page, not on the Daily Ops card.
   const counts: Record<Tab, number> = Object.fromEntries(
     TABS.map(t => [t.id, t.id === 'tasks' ? openTasks.length : captures.filter(c => c.status === t.id).length]),
   ) as Record<Tab, number>;
@@ -363,10 +363,10 @@ export function CapturesPanel({
 
       {tab === 'tasks' ? (
         <div className="capture-list">
-          {openTasks.length === 0 && doneTasks.length === 0 ? (
+          {openTasks.length === 0 ? (
             <p className="capture-empty">No Self tasks yet.</p>
           ) : null}
-          {[...openTasks, ...doneTasks].map(t => (
+          {openTasks.map(t => (
             <MenuRow className={`capture-row is-task${t.done ? ' is-done' : ''}`} key={t.id} items={() => taskMenu(t)} title={t.title}>
               <div className="capture-main">
                 <div className="capture-meta">
