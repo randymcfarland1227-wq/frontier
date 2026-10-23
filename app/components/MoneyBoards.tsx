@@ -761,15 +761,33 @@ export function MoneyDash({
   const [pinned, setPinned] = useState(() => readSaved<boolean>(PIN_KEY, true));
   // Once the page scrolls past it, the pinned dashboard shrinks to its sum boxes.
   const mark = useRef<HTMLDivElement>(null);
-  const [scrolled, setScrolled] = useState(false);
+  const sec = useRef<HTMLElement>(null);
+  // When it's scrolled past, the dashboard is pinned with position: fixed and a spacer of its old height
+  // keeps the page from shifting under the finger (sticky + a height change made iPad scrolling jump).
+  const [stuck, setStuck] = useState<{ left: number; width: number; height: number } | null>(null);
   useEffect(() => {
     const el = mark.current;
-    if (!el) return;
-    const check = () => setScrolled(el.getBoundingClientRect().top < -40);
+    if (!el || !pinned) {
+      setStuck(null);
+      return;
+    }
+    const check = () => {
+      const r = el.getBoundingClientRect();
+      setStuck(cur => {
+        if (!cur) return r.top < -40 && sec.current ? { left: r.left, width: r.width, height: sec.current.getBoundingClientRect().height } : null;
+        if (r.top >= -40) return null;
+        return cur.left === r.left && cur.width === r.width ? cur : { ...cur, left: r.left, width: r.width };
+      });
+    };
     check();
     window.addEventListener('scroll', check, { passive: true });
-    return () => window.removeEventListener('scroll', check);
-  }, []);
+    window.addEventListener('resize', check);
+    return () => {
+      window.removeEventListener('scroll', check);
+      window.removeEventListener('resize', check);
+    };
+  }, [pinned]);
+  const scrolled = Boolean(stuck);
   const { get } = useMoneyMeta();
   const rows = bankRows(model);
   const cards = cardRows(model, [], get);
@@ -799,8 +817,8 @@ export function MoneyDash({
   };
   return (
     <>
-    <div ref={mark} className="mb-dash-mark" aria-hidden="true" />
-    <section className={`mb-dash${pinned ? ' is-pinned' : ''}${pinned && scrolled ? ' is-compact' : ''}`} aria-label="Money at a glance">
+    <div ref={mark} className="mb-dash-mark" aria-hidden="true" style={stuck ? { height: stuck.height } : undefined} />
+    <section ref={sec} style={stuck ? { position: 'fixed', top: 0, left: stuck.left, width: stuck.width, zIndex: 15 } : undefined} className={`mb-dash${pinned ? ' is-pinned' : ''}${pinned && scrolled ? ' is-compact' : ''}`} aria-label="Money at a glance">
       <div className="mb-dash-top">
         <p className="mny-eyebrow">Money · at a glance</p>
         {top}

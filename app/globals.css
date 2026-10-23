@@ -4880,7 +4880,7 @@ button.bal-led-row:hover { background: color-mix(in srgb, var(--ev, #0f8a7e) 8%,
 
 /* header dashboard */
 .mb-dash { display: grid; gap: 8px; padding: 10px 12px 12px; border: 1px solid var(--line, var(--row-line)); border-radius: 16px; background: var(--surface); box-shadow: var(--glow, none); }
-@media all { .mb-dash.is-pinned { position: sticky; top: 0; z-index: 15; } }
+@media all { .mb-dash.is-pinned { position: relative; z-index: 15; } }
 .mb-dash-top { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; }
 .mb-dash-top .mny-stand-meta { margin-left: auto; }
 .mb-dash-top .money-note { flex-basis: 100%; margin: 0; }
@@ -5237,7 +5237,7 @@ button.ob-line-name { cursor: pointer; text-decoration: underline dotted; }
 
 /* 2026-10-22 markup · Money scroll: the top bar isn't sticky, so the pinned dashboard sticks flush to the top (no strip to scroll content through) */
 @media all {
-  .mb-dash.is-pinned { top: 0; box-shadow: 0 -12px 0 var(--bg), var(--glow, none); }
+  .mb-dash.is-pinned { box-shadow: 0 -12px 0 var(--bg), var(--glow, none); }
 }
 
 /* 2026-10-22 markup · Outgoing: rows open their item panel; tighter columns, 2-line names, pay-from shown */
