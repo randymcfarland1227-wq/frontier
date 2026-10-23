@@ -5,7 +5,7 @@ import { MoneySelector } from './MoneySelector';
 import { isLedgerPaid, ledgerMonthRows } from '../../lib/moneyLedger';
 import { PayPlanner } from './PayPlanner';
 import { DebtFile } from './DebtFile';
-import { AccountsBoard, CardsTable, LoansTable, MoneyDash, PaySources, WeekBoard, cardRows, loanRows, type CellView, type DashCredit } from './MoneyBoards';
+import { AccountsBoard, CardsTable, LoansTable, MoneyDash, PaySources, WeekBoard, cardRows, loanRows, nearest, type CellView, type DashCredit } from './MoneyBoards';
 import { outstandingParts, ticketTotals } from './OutstandingView';
 import { useOwedDone } from '../../lib/owedComplete';
 import { metaName, setMeta, useMoneyMeta, type MetaEntry } from '../../lib/moneyMeta';
@@ -844,6 +844,7 @@ function nextMonth(key: string): string {
 
 function CardTiles({ model, dues, paidAt, onPaid, onSave }: { model: MoneyModel; dues: BillDue[]; paidAt: Record<string, string>; onPaid: (d: BillDue) => void; onSave: Save }) {
   const cards = cardSummaries(model);
+  const panels = useMoneyPanels();
   const [open, setOpen] = useState<string | null>(null);
   const today = startOfDay(new Date());
   return (
@@ -880,7 +881,7 @@ function CardTiles({ model, dues, paidAt, onPaid, onSave }: { model: MoneyModel;
         return (
           <li key={c.name} className={`cc-tile ${level}`}>
             <div className="cc-head">
-              <strong>{c.name}</strong>
+              <button type="button" className="mny-item-link" onClick={() => panels.openCard(c.name.replace(/\s+/g, ' '))} title="Card details"><strong>{c.name}</strong></button>
               {used !== undefined ? <span className="cc-used">{used}% used</span> : <span className="cc-used" title="Type its limit in More Cards (Randy tab, Limit column) to include it in % used">Limit unknown</span>}
             </div>
             <div className="cc-bal">
@@ -1111,6 +1112,7 @@ function SubAdd({ onDone }: { onDone: () => void }) {
 
 function SubsView({ model, lifeSubs, paidAt, dues, onSave }: { model: MoneyModel; lifeSubs: LifeSub[]; paidAt: Record<string, string>; dues: BillDue[]; onSave: Save }) {
   const [adding, setAdding] = useState(false);
+  const panels = useMoneyPanels();
   const today = startOfDay(new Date());
   const sheetRows: SubRow[] = (model.subs?.rows || [])
     .filter(r => r[1]?.text)
@@ -1198,7 +1200,7 @@ function SubsView({ model, lifeSubs, paidAt, dues, onSave }: { model: MoneyModel
               </span>
               <span className="subs-name">
                 <BrandLogo name={r.name} />
-                {r.name}
+                <button type="button" className="mny-item-link" onClick={() => panels.openSub(r.name)} title="Subscription details">{r.name}</button>
                 {r.from === 'hub' ? <small>added here{r.sub?.note ? ` · ${r.sub.note}` : ''}</small> : null}
               </span>
               <span className="subs-day">{r.day ? `the ${ordinal(r.day)}${r.sub?.cycle === 'yearly' ? ` of ${new Date(2026, r.sub.month ?? 0, 1).toLocaleDateString([], { month: 'short' })}` : ''}` : ''}</span>
@@ -1631,12 +1633,15 @@ function useIncomingLanding(model: MoneyModel | null, book: Book, save: Save) {
 }
 
 /** Open any item's panel from anywhere on the Money page. */
-type PanelState = { type: 'line' | 'acct' | 'card' | 'item'; id: string; back?: PanelState };
-const MoneyPanelCtx = createContext<{ openLine: (key: string) => void; openAccount: (name: string) => void; openCard: (name: string) => void; openItem: (key: string) => void; has: (key: string) => boolean }>({
+type PanelState = { type: 'line' | 'acct' | 'card' | 'item' | 'loan' | 'sub'; id: string; back?: PanelState };
+const MoneyPanelCtx = createContext<{ openLine: (key: string) => void; openAccount: (name: string) => void; openCard: (name: string) => void; openItem: (key: string) => void; openLoan: (name: string) => void; openSub: (name: string) => void; openDue: (key: string) => void; has: (key: string) => boolean }>({
   openLine: () => {},
   openAccount: () => {},
   openCard: () => {},
   openItem: () => {},
+  openLoan: () => {},
+  openSub: () => {},
+  openDue: () => {},
   has: () => false,
 });
 const useMoneyPanels = () => useContext(MoneyPanelCtx);
@@ -1666,7 +1671,7 @@ function ItemName({ id, children }: { id: string; children: ReactNode }) {
   const panels = useMoneyPanels();
   // Paid / crossed-off ones have no balancing line: they open the plain item panel.
   return (
-    <button type="button" className="mny-item-link" onClick={() => (panels.has(id) ? panels.openLine(id) : panels.openItem(id))} title="Details">
+    <button type="button" className="mny-item-link" onClick={() => panels.openDue(id)} title="Details">
       {children}
     </button>
   );
@@ -2322,8 +2327,158 @@ function LinePanel({
  * One account as its own item: checking + savings (or Now), pending, and its sub-ledger — what's
  * planned to come out of it and go into it — for a week or the whole month.
  */
+/** Which shared entity (card / subscription / loan) a payment belongs to, if any. */
+function entityOfDue(d: BillDue, model: MoneyModel, monthDues: BillDue[], get: (key: string) => MetaEntry | undefined): { type: 'card' | 'sub' | 'loan'; id: string } | undefined {
+  const kind = d.bill.kind || 'bill';
+  if (kind === 'card') {
+    const row = cardRows(model, monthDues, get).find(r => r.due?.key === d.key) || nearest(d.bill.name, cardRows(model, monthDues, get), r => r.name);
+    return row ? { type: 'card', id: row.name } : undefined;
+  }
+  if (kind === 'sub') return { type: 'sub', id: d.bill.name.trim() };
+  if (kind === 'bill') {
+    const loan = loanRows(model, monthDues, get).find(r => r.due && r.due.bill.name === d.bill.name);
+    return loan ? { type: 'loan', id: loan.name } : undefined;
+  }
+  return undefined;
+}
+
+const longDate = (iso: string) => fromDayKey(iso).toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' });
+/** "2 yr 3 mo" since a YYYY-MM-DD day. */
+function heldFor(since: string): string {
+  const a = fromDayKey(since);
+  const n = new Date();
+  let months = (n.getFullYear() - a.getFullYear()) * 12 + n.getMonth() - a.getMonth();
+  if (n.getDate() < a.getDate()) months -= 1;
+  if (months < 0) return '';
+  const y = Math.floor(months / 12);
+  const m = months % 12;
+  return y ? `${y} yr${m ? ` ${m} mo` : ''}` : m ? `${m} mo` : 'under a month';
+}
+
+/** How long he's had it: typed once on the entity, shared by every place it shows. */
+function SinceField({ metaKey, label }: { metaKey: string; label: string }) {
+  const { get } = useMoneyMeta();
+  const since = get(metaKey)?.since;
+  return (
+    <div className="mb-cp-edit">
+      <label className="is-wide">
+        {label}
+        <input type="date" defaultValue={since || ''} onChange={e => setMeta(metaKey, { since: e.target.value || undefined })} />
+      </label>
+      <p className="mb-dim">{since ? `Held ${heldFor(since) || '—'} (since ${longDate(since)}).` : 'How long you’ve had it isn’t known yet — type a start date above.'}</p>
+    </div>
+  );
+}
+
+/** Every payment of one entity that Life Hub knows about, newest first, paid or not. */
+function PaidHistory({ list, paidAt }: { list: BillDue[]; paidAt: Record<string, string> }) {
+  const rows = [...new Map(list.map(x => [x.key, x])).values()].sort((a, b) => b.due.localeCompare(a.due)).slice(0, 12);
+  if (!rows.length) return null;
+  return (
+    <>
+      <h4 className="mb-cp-h">Payments</h4>
+      <ul className="mb-cp-list">
+        {rows.map(x => (
+          <li key={x.key}><span>{fromDayKey(x.due).toLocaleDateString([], { month: 'short', day: 'numeric' })}</span><b>{money(x.bill.amount) || '?'}</b><small>{STATE_TEXT[monthState(x, paidAt)](x, paidAt)}</small></li>
+        ))}
+      </ul>
+    </>
+  );
+}
+
+const PAID_STATES = ['paid', 'crossed', 'charged', 'skipped'];
+
+/** A loan's shared panel: the Credit tab's figures, whichever row you came from (Bills or Credit). */
+function LoanPanel({ name, model, dues, monthDues, paidAt, onPaid, onBack, onClose }: { name: string; model: MoneyModel; dues: BillDue[]; monthDues: BillDue[]; paidAt: Record<string, string>; onPaid: (d: BillDue) => void; onBack?: () => void; onClose: () => void }) {
+  const { get } = useMoneyMeta();
+  const l = loanRows(model, monthDues, get).find(x => metaName(x.name) === metaName(name));
+  if (!l)
+    return (
+      <Modal label="Loan" onClose={onClose} onBack={onBack}>
+        <h3>{name}</h3>
+        <p className="mny-empty">This loan isn’t in the sheet’s credit accounts.</p>
+      </Modal>
+    );
+  const m = get(l.key);
+  const num = (v: string) => (v.trim() === '' ? undefined : Number(v));
+  const history = dues.filter(d => (d.bill.kind || 'bill') === 'bill' && l.due && d.bill.name === l.due.bill.name);
+  const state = l.due ? monthState(l.due, paidAt) : undefined;
+  return (
+    <Modal label={l.name} onClose={onClose} onBack={onBack}>
+      <div className="bal-drw-head">
+        <p className="section-label">Loan{l.closed ? ' · closed' : ''}</p>
+        <h3>{l.name}</h3>
+        {l.what ? <p className="mb-dim">{l.what}</p> : null}
+        {l.due && state ? <p className="bal-drw-chips"><span className={PAID_STATES.includes(state) ? 'is-ok' : state === 'late' ? 'is-short' : ''}>{STATE_TEXT[state](l.due, paidAt)}</span></p> : null}
+      </div>
+      <div className="mb-cp-figs">
+        <span><small>balance left</small><b>{l.bal !== undefined ? money(l.bal) : '—'}</b></span>
+        <span><small>principal</small><b>{l.principal ? money(l.principal) : '—'}</b></span>
+        <span><small>payments left</small><b>{l.paymentsLeft ?? '—'}</b></span>
+        <span><small>rate</small><b>{m?.apr !== undefined ? `${m.apr}%` : '—'}</b></span>
+        <span><small>payment</small><b>{l.payment ? money(l.payment) : '—'}</b></span>
+        <span><small>due</small><b>{l.due ? fromDayKey(l.due.due).toLocaleDateString([], { month: 'short', day: 'numeric' }) : '—'}</b></span>
+        <span><small>% paid</small><b>{l.principal && l.bal !== undefined ? `${Math.round(((l.principal - l.bal) / l.principal) * 100)}%` : '—'}</b></span>
+      </div>
+      <h4 className="mb-cp-h">Yours to edit</h4>
+      <div className="mb-cp-edit">
+        <label>Principal $<input type="number" step="0.01" defaultValue={m?.principal ?? ''} onBlur={e => setMeta(l.key, { principal: num(e.target.value) })} /></label>
+        <label>Payments left<input type="number" step="1" defaultValue={m?.paymentsLeft ?? ''} onBlur={e => setMeta(l.key, { paymentsLeft: num(e.target.value) })} /></label>
+        <label>Rate (APR %)<input type="number" step="0.01" defaultValue={m?.apr ?? ''} onBlur={e => setMeta(l.key, { apr: num(e.target.value) })} /></label>
+      </div>
+      <SinceField metaKey={l.key} label="Loan started" />
+      <PaidHistory list={history} paidAt={paidAt} />
+      <div className="bal-dlg-actions">
+        <button type="button" className="mny-btn" onClick={() => setMeta(l.key, { closed: l.closed ? undefined : true })}>{l.closed ? 'Reopen' : 'Mark closed'}</button>
+        {l.due && state && !PAID_STATES.includes(state) ? <button type="button" className="mny-btn is-primary" onClick={() => { onPaid(l.due!); onClose(); }}>Mark paid</button> : null}
+      </div>
+    </Modal>
+  );
+}
+
+/** A subscription's shared panel: how long, this month's charge, next charge, where it's paid from. */
+function SubPanel({ name, model, dues, paidAt, onPaid, onBack, onClose }: { name: string; model: MoneyModel; dues: BillDue[]; paidAt: Record<string, string>; onPaid: (d: BillDue) => void; onBack?: () => void; onClose: () => void }) {
+  const fromOf = usePayFrom();
+  const list = dues.filter(d => d.bill.kind === 'sub' && d.bill.name.trim().toLowerCase() === name.trim().toLowerCase());
+  const banks = bankRows(model).filter(r => !r.resale);
+  const cards = cardSummaries(model).map(c => c.name.replace(/\s+/g, ' '));
+  const cur = [...list].sort((a, b) => a.due.localeCompare(b.due));
+  const open = cur.find(d => !PAID_STATES.includes(monthState(d, paidAt)));
+  const thisMonth = new Date().toISOString().slice(0, 7);
+  const mine = cur.find(d => d.due.startsWith(thisMonth)) || cur[0];
+  const state = mine ? monthState(mine, paidAt) : undefined;
+  const src = srcKey('pay', name.trim());
+  const pick = (acct: string) => {
+    setMeta(`from:${src}`, { acct: acct || undefined });
+    const bank = banks.find(b => b.name === acct);
+    updatePick(`src:${src}`, { mark: null, acct: bank ? bank.name : undefined });
+  };
+  return (
+    <Modal label={`${name} details`} onClose={onClose} onBack={onBack}>
+      <div className="bal-drw-head">
+        <p className="section-label">Subscription</p>
+        <h3>{name.trim()}</h3>
+        {mine && state ? <p className="bal-drw-chips"><span className={PAID_STATES.includes(state) ? 'is-ok' : state === 'late' ? 'is-short' : ''}>{PAID_STATES.includes(state) ? 'Paid this month' : 'Not paid yet this month'} · {STATE_TEXT[state](mine, paidAt)}</span></p> : null}
+      </div>
+      <div className="mb-cp-figs">
+        <span><small>amount</small><b>{mine ? money(mine.bill.amount) || '?' : '—'}</b></span>
+        <span><small>next charge</small><b>{open ? fromDayKey(open.due).toLocaleDateString([], { month: 'short', day: 'numeric' }) : '—'}</b></span>
+      </div>
+      <SinceField metaKey={`sub:${metaName(name)}`} label="Subscribed since" />
+      <h4 className="mb-cp-h">Paid from</h4>
+      <select className="mb-cp-sel" value={mine ? fromOf(mine) : ''} onChange={e => pick(e.target.value)} aria-label={`Pay ${name} from`}>
+        <option value="">Not set</option>
+        <optgroup label="Accounts">{banks.map(b => <option key={b.name} value={b.name}>{b.label}</option>)}</optgroup>
+        <optgroup label="Cards">{cards.map(c => <option key={c} value={c}>{c}</option>)}</optgroup>
+      </select>
+      <PaidHistory list={list} paidAt={paidAt} />
+      {mine && state && !PAID_STATES.includes(state) ? <button type="button" className="mny-btn" onClick={() => { onPaid(mine); onClose(); }}>Mark paid</button> : null}
+    </Modal>
+  );
+}
+
 /** A credit card's shared panel: figures, this month's payments, and the APR / fee / pay-off rule Life Hub keeps. */
-function CardPanel({ name, model, monthDues, onBack, onClose }: { name: string; model: MoneyModel; monthDues: BillDue[]; onBack?: () => void; onClose: () => void }) {
+function CardPanel({ name, model, dues, monthDues, paidAt, onPaid, onBack, onClose }: { name: string; model: MoneyModel; dues: BillDue[]; monthDues: BillDue[]; paidAt: Record<string, string>; onPaid: (d: BillDue) => void; onBack?: () => void; onClose: () => void }) {
   const panels = useMoneyPanels();
   const { get } = useMoneyMeta();
   const c = cardRows(model, monthDues, get).find(x => metaName(x.name) === metaName(name));
@@ -2350,11 +2505,14 @@ function CardPanel({ name, model, monthDues, onBack, onClose }: { name: string; 
       </div>
       <h4 className="mb-cp-h">Upcoming &amp; this month</h4>
       {c.due ? (
-        <button type="button" className="mb-cp-due" onClick={() => panels.openLine(c.due!.key)}>
-          <span>{c.due.bill.name}</span>
-          <b>{money(c.due.bill.amount || 0)}</b>
-          <small>{c.due.due}</small>
-        </button>
+        <>
+          <button type="button" className="mb-cp-due" onClick={() => panels.openLine(c.due!.key)}>
+            <span>{c.due.bill.name}</span>
+            <b>{money(c.due.bill.amount || 0)}</b>
+            <small>due {longDate(c.due.due)} · {STATE_TEXT[monthState(c.due, paidAt)](c.due, paidAt)}</small>
+          </button>
+          {PAID_STATES.includes(monthState(c.due, paidAt)) ? null : <button type="button" className="mny-btn" onClick={() => { onPaid(c.due!); onClose(); }}>Mark paid</button>}
+        </>
       ) : (
         <p className="mny-empty">No payment on the schedule this month.</p>
       )}
@@ -2365,6 +2523,8 @@ function CardPanel({ name, model, monthDues, onBack, onClose }: { name: string; 
         <label className="is-wide">Pay-off rule<input type="text" placeholder="e.g. pay in full every 1st; never above 30%" defaultValue={rule} onBlur={e => keep({ rule: e.target.value.trim() || undefined })} /></label>
       </div>
       {c.carry ? <p className="mb-dim">Interest carrying this balance ≈ {money(c.carry)}/mo.</p> : null}
+      <SinceField metaKey={c.key} label="Opened" />
+      <PaidHistory list={dues.filter(d => d.bill.kind === 'card' && nearest(d.bill.name, cardRows(model, monthDues, get), r => r.name)?.key === c.key)} paidAt={paidAt} />
     </Modal>
   );
 }
@@ -2660,7 +2820,7 @@ function LedgerByCategory({ dues, paidAt, model, onPaid, hidePaid }: { dues: Bil
                   return (
                     <li key={d.key} className={`ledger-row is-${st}${d.bill.nonCritical ? ' is-noncritical' : ''}`}>
                       <span className="ledger-day">{fromDayKey(d.due).getDate()}</span>
-                      <span className="ledger-name"><BrandLogo name={d.bill.name} />{d.bill.name}<FlagBadges d={d} /></span>
+                      <span className="ledger-name"><BrandLogo name={d.bill.name} /><ItemName id={d.key}>{d.bill.name}</ItemName><FlagBadges d={d} /></span>
                       <span className="ledger-amt">{money(d.bill.amount) || '?'}</span>
                       {isDone ? (
                         <span className="ledger-state">✓</span>
@@ -2794,9 +2954,17 @@ export function MoneyPage({
       openAccount: (name: string) => setPanel(cur => ({ type: 'acct' as const, id: name, back: cur || undefined })),
       openCard: (name: string) => setPanel(cur => ({ type: 'card' as const, id: name, back: cur || undefined })),
       openItem: (key: string) => setPanel(cur => ({ type: 'item' as const, id: key, back: cur || undefined })),
+      openLoan: (name: string) => setPanel(cur => ({ type: 'loan' as const, id: name, back: cur || undefined })),
+      openSub: (name: string) => setPanel(cur => ({ type: 'sub' as const, id: name, back: cur || undefined })),
+      // One entity per card / subscription / loan: whichever row you click, the same panel opens.
+      openDue: (key: string) => {
+        const d = [...dues, ...monthDues].find(x => x.key === key);
+        const e = d && model ? entityOfDue(d, model, monthDues, metaGet) : undefined;
+        setPanel(cur => ({ type: e ? e.type : book.line(key) ? ('line' as const) : ('item' as const), id: e ? e.id : key, back: cur || undefined }));
+      },
       has: (key: string) => !!book.line(key),
     }),
-    [book],
+    [book, dues, monthDues, model, metaGet],
   );
 
   // Skipped ones (Change → Skip) are left out of the planner too.
@@ -3040,7 +3208,7 @@ export function MoneyPage({
         ) : null}
         {tab === 'flow' && flowView === 'week' ? (
           <div className="mny-stack">
-            <WeekBoard dues={dues} monthDues={monthDues} paidAt={paidAt} onPaid={onPaid} onOpen={panelApi.openLine} onAdd={k => setBalancePicks([k], true)} isAdded={k => book.plan.picks.has(k)}>
+            <WeekBoard dues={dues} monthDues={monthDues} paidAt={paidAt} onPaid={onPaid} onOpen={panelApi.openDue} onAdd={k => setBalancePicks([k], true)} isAdded={k => book.plan.picks.has(k)}>
               <BalancingSheet period="week" book={book} model={model} onSave={save} tasks={financeTasks} />
             </WeekBoard>
             <Section tone="cash" title="Incoming funds" hint="Log money you expect; it shows up on the right to add to the sheet. Synced, not written to the sheet.">
@@ -3165,7 +3333,7 @@ export function MoneyPage({
               hint="Monthly carry = the month's interest at each card's APR on today's balance. Type APRs and fees once; they stay on Life Hub."
               href={link('Randy')}
             >
-              <CardsTable model={model} monthDues={monthDues} paidAt={paidAt} />
+              <CardsTable model={model} monthDues={monthDues} paidAt={paidAt} onOpen={panelApi.openCard} />
               <Fold title="Card tiles" meta="pay, limits, details">
                 <CardTiles model={model} dues={dues} paidAt={paidAt} onPaid={onPaid} onSave={save} />
               </Fold>
@@ -3268,10 +3436,10 @@ export function MoneyPage({
               sheet={
                 <div className="mny-stack">
                   <Section tone="card" title="Loans · active & closed" figure={money(activeLoans.reduce((t, l) => t + (l.bal || 0), 0))} figureLabel="balance left" hint="Balance is the sheet's Bal cell; principal and payments left are typed on Life Hub." href={link('Credit Matrix')}>
-                    <LoansTable model={model} monthDues={monthDues} paidAt={paidAt} cell={cell} />
+                    <LoansTable model={model} monthDues={monthDues} paidAt={paidAt} cell={cell} onOpen={panelApi.openLoan} />
                   </Section>
                   <Section tone="card" title="Credit cards" figure={model.cards?.total?.[1]?.text} figureLabel={cardsUsed !== undefined ? `${cardsUsed}% used` : ''} href={link('Randy')}>
-                    <CardsTable model={model} monthDues={monthDues} paidAt={paidAt} />
+                    <CardsTable model={model} monthDues={monthDues} paidAt={paidAt} onOpen={panelApi.openCard} />
                   </Section>
                 </div>
               }
@@ -3359,7 +3527,11 @@ export function MoneyPage({
       ) : panel?.type === 'acct' ? (
         <AccountPanel key={panel.id} name={panel.id} book={book} model={model} onSave={save} onBack={panel.back ? () => setPanel(panel.back!) : undefined} onClose={() => setPanel(null)} />
       ) : panel?.type === 'card' ? (
-        <CardPanel key={panel.id} name={panel.id} model={model} monthDues={monthDues} onBack={panel.back ? () => setPanel(panel.back!) : undefined} onClose={() => setPanel(null)} />
+        <CardPanel key={panel.id} name={panel.id} model={model} dues={[...dues, ...monthDues]} monthDues={monthDues} paidAt={paidAt} onPaid={onPaid} onBack={panel.back ? () => setPanel(panel.back!) : undefined} onClose={() => setPanel(null)} />
+      ) : panel?.type === 'loan' ? (
+        <LoanPanel key={panel.id} name={panel.id} model={model} dues={[...dues, ...monthDues]} monthDues={monthDues} paidAt={paidAt} onPaid={onPaid} onBack={panel.back ? () => setPanel(panel.back!) : undefined} onClose={() => setPanel(null)} />
+      ) : panel?.type === 'sub' ? (
+        <SubPanel key={panel.id} name={panel.id} model={model} dues={[...dues, ...monthDues]} paidAt={paidAt} onPaid={onPaid} onBack={panel.back ? () => setPanel(panel.back!) : undefined} onClose={() => setPanel(null)} />
       ) : panel?.type === 'item' ? (
         <ItemPanel key={panel.id} id={panel.id} dues={[...dues, ...monthDues]} model={model} paidAt={paidAt} onPaid={onPaid} onBack={panel.back ? () => setPanel(panel.back!) : undefined} onClose={() => setPanel(null)} />
       ) : null}

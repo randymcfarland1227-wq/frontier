@@ -27,7 +27,7 @@ const pct = (n?: number) => (n === undefined ? '—' : `${Math.round(n)}%`);
 const md = (k?: string) => (k ? fromDayKey(k).toLocaleDateString([], { month: 'short', day: 'numeric' }) : '—');
 const sumOf = (xs: Array<number | undefined>) => xs.reduce<number>((s, x) => s + (x || 0), 0);
 /** Loose name match: one name starts with the other (Cap 1 S ↔ Cap 1 Sec), closest length wins. */
-function nearest<T>(name: string, list: T[], nameOf: (x: T) => string): T | undefined {
+export function nearest<T>(name: string, list: T[], nameOf: (x: T) => string): T | undefined {
   const k = metaName(name);
   if (!k) return undefined;
   return list
@@ -356,7 +356,7 @@ export function cardRows(model: MoneyModel, monthDues: BillDue[], get: Get): Car
   });
 }
 
-export function CardsTable({ model, monthDues, paidAt }: { model: MoneyModel; monthDues: BillDue[]; paidAt: Record<string, string> }) {
+export function CardsTable({ model, monthDues, paidAt, onOpen }: { model: MoneyModel; monthDues: BillDue[]; paidAt: Record<string, string>; onOpen?: (name: string) => void }) {
   const { get } = useMoneyMeta();
   const rows = cardRows(model, monthDues, get);
   const lim = sumOf(rows.filter(r => r.limit).map(r => r.limit));
@@ -383,7 +383,7 @@ export function CardsTable({ model, monthDues, paidAt }: { model: MoneyModel; mo
         <tbody>
           {rows.map(r => (
             <tr key={r.key}>
-              <td>{r.name}</td>
+              <td>{onOpen ? <button type="button" className="mny-item-link" onClick={() => onOpen(r.name)} title="Card details">{r.name}</button> : r.name}</td>
               <td className="num">{usd(r.bal)}</td>
               <td className="num">
                 <MetaNum id={r.key} field="apr" value={r.apr} placeholder="APR" suffix="%" title={`${r.name} APR`} />
@@ -436,7 +436,7 @@ export function loanRows(model: MoneyModel, monthDues: BillDue[], get: Get): Loa
     });
 }
 
-export function LoansTable({ model, monthDues, paidAt, cell }: { model: MoneyModel; monthDues: BillDue[]; paidAt: Record<string, string>; cell: CellView }) {
+export function LoansTable({ model, monthDues, paidAt, cell, onOpen }: { model: MoneyModel; monthDues: BillDue[]; paidAt: Record<string, string>; cell: CellView; onOpen?: (name: string) => void }) {
   const { get } = useMoneyMeta();
   const rows = loanRows(model, monthDues, get);
   const groups: Array<[string, LoanRow[]]> = [
@@ -469,7 +469,7 @@ export function LoansTable({ model, monthDues, paidAt, cell }: { model: MoneyMod
               {list.map(r => (
                 <tr key={r.key} className={r.closed ? 'is-closed' : ''}>
                   <td>
-                    {r.name} <small className="mb-dim">{r.what}</small>
+                    {onOpen ? <button type="button" className="mny-item-link" onClick={() => onOpen(r.name)} title="Loan details">{r.name}</button> : r.name} <small className="mb-dim">{r.what}</small>
                   </td>
                   <td className="num">{cell(r.balCell, 'add')}</td>
                   <td className="num">
