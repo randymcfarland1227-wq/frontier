@@ -41,6 +41,7 @@ export function TaskList({
   split = false,
   open = false,
   exclude,
+  starred,
   fill = false,
 }: {
   sourceId: SourceId;
@@ -54,6 +55,8 @@ export function TaskList({
   open?: boolean;
   /** Ids already shown above (e.g. in Starred) — not listed twice */
   exclude?: Set<string>;
+  /** Starred ids: listed first in their column, with a ★ */
+  starred?: Set<string>;
   /** List everything (the card scrolls) instead of a short preview + Show more */
   fill?: boolean;
 }) {
@@ -72,8 +75,9 @@ export function TaskList({
   const showAll = fill || showAllState;
 
   const openTasks = snapshot.tasks.filter(t => t.status !== 'done' && !exclude?.has(t.id));
-  const habits = openTasks.filter(isHabit);
-  const tasks = openTasks.filter(t => !isHabit(t));
+  const starFirst = (list: TaskItem[]) => (starred?.size ? [...list.filter(t => starred.has(t.id)), ...list.filter(t => !starred.has(t.id))] : list);
+  const habits = starFirst(openTasks.filter(isHabit));
+  const tasks = starFirst(openTasks.filter(t => !isHabit(t)));
   // Starred items show in the list above, not in these columns — but the column totals still
   // count them, so "Tasks · 16" matches the card's "16 to do".
   const allOpen = snapshot.tasks.filter(t => t.status !== 'done');
@@ -110,10 +114,11 @@ export function TaskList({
                   as="article"
                   key={task.id}
                   onOpen={() => (dayMenus && onStar ? setMenuFor(task.id) : undefined)}
-                  className={`task-row one-line ${task.status === 'done' ? 'done' : ''} ${isHabit(task) ? 'habit' : ''}${whenLabel(task) === 'overdue' ? ' is-overdue' : ''}${menuFor === task.id ? ' has-menu' : ''}`}
+                  className={`task-row one-line ${task.status === 'done' ? 'done' : ''} ${isHabit(task) ? 'habit' : ''}${starred?.has(task.id) ? ' is-starred' : ''}${whenLabel(task) === 'overdue' ? ' is-overdue' : ''}${menuFor === task.id ? ' has-menu' : ''}`}
                   title={[task.title, whenLabel(task), task.detail].filter(Boolean).join(' — ')}
                 >
                   <div className="task-main">
+                    {starred?.has(task.id) ? <span className="task-star" aria-label="Starred">★</span> : null}
                     {isHabit(task) ? <span className="task-badge">Habit</span> : null}
                     {task.tag ? <span className={`task-tag tone-${tagTone(task.tag)}`}>{task.tag}</span> : null}
                     <button type="button" className="origin-link task-open" onClick={() => openTaskPanel(key)} title="Open details, subtasks and plan">

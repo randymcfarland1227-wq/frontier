@@ -5276,3 +5276,10 @@ button.ob-line-name { cursor: pointer; text-decoration: underline dotted; }
 .space-card.card-v2 :is(.task-row, .featured-row).one-line :is(.task-main, .featured-main) :is(strong, a, .task-open, .origin-link), .space-card.card-v2 :is(.task-row, .featured-row) :is(strong, .task-open) {
   font-size: 12.5px !important; font-weight: 550 !important; line-height: 1.35 !important;
 }
+
+/* TickTick: Tasks and Habits each get their own color; starred ones sit first with a ★ */
+.space-card.ticktick .task-row.one-line { border-left: 3px solid #e08a3c; padding-left: 8px; background: color-mix(in srgb, #e08a3c 8%, transparent); }
+.space-card.ticktick .task-row.one-line.habit { border-left-color: #3fb8a8; background: color-mix(in srgb, #3fb8a8 9%, transparent); }
+.space-card.ticktick .task-split > div:first-child .task-split-label { color: #e08a3c; }
+.space-card.ticktick .task-split > div:last-child .task-split-label { color: #3fb8a8; }
+.task-row .task-star { color: #f2b84b; font-size: 11px; flex: none; }
