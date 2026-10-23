@@ -124,9 +124,9 @@ function CreditView({ file, marks, onOpen, onRefresh, extra }: { file: File; mar
         {BUREAUS.map(([b, label]) => {
           const [now, prev] = (file.scores || []).filter(x => x.bureau === label).sort((a, c) => c.date.localeCompare(a.date));
           return (
-            <div key={b} className="dbt-tile tone-card" aria-label={`${label} score`}>
-              <span>{label}</span>
+            <div key={b} className={`dbt-tile tone-card bu-${b.toLowerCase()}`} aria-label={`${label} score`}>
               <b>{now ? now.score : '—'}</b>
+              <span className="bu-name">{label}</span>
               <small title={now && prev ? `${now.score - prev.score >= 0 ? '+' : ''}${now.score - prev.score} since ${shortDate(prev.date)}` : undefined}>
                 {now ? shortDate(now.date) : 'no report yet'}
                 {now && prev ? <em className={now.score >= prev.score ? 'dbt-up' : 'dbt-down'}> {now.score - prev.score >= 0 ? '▲' : '▼'}{Math.abs(now.score - prev.score)}</em> : null}
@@ -170,7 +170,7 @@ function CreditView({ file, marks, onOpen, onRefresh, extra }: { file: File; mar
                 </span>
                 <span className="dbt-bureaus" data-l="Reports">
                   {BUREAUS.map(([b, label]) => (
-                    <i key={b} className={onReport(i.reports?.[b]) ? 'on' : ''} title={`${label}: ${i.reports?.[b] || 'not reported'}`}>
+                    <i key={b} className={`bu-${b.toLowerCase()}${onReport(i.reports?.[b]) ? ' on' : ''}`} title={`${label}: ${i.reports?.[b] || 'not reported'}`}>
                       {b}
                     </i>
                   ))}
