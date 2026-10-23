@@ -5258,3 +5258,16 @@ button.ob-line-name { cursor: pointer; text-decoration: underline dotted; }
 .ob-check:hover { color: #0f8a7e; border-color: #0f8a7e; }
 .ob-done { margin-top: 4px; font-size: 11px; color: var(--muted); }
 .ob-done summary { cursor: pointer; padding: 2px 0; }
+
+/* 2026-10-22 markup · Credit: text was out of proportion with the rest of Money — one 12–13px scale for the rows, tables and tiles */
+.dbt-row { font-size: 12.5px; }
+.dbt .num { font-size: 13px; }
+.dbt .num small { font-size: 10.5px; }
+.dbt-name b { font-size: 13px; }
+.dbt-name small, .dbt-who, .dbt-status { font-size: 11px; }
+.dbt-two { font-size: 12px; } .dbt-two small, .dbt-offer-cell small { font-size: 10.5px; }
+.dbt-offer-cell, .dbt-offer span { font-size: 11.5px; }
+.dbt-bureaus i, .dbt-chips i { font-size: 10px; padding: 0 4px; }
+.dbt-sum-total b { font-size: 22px; }
+.dbt-tile b { font-size: 18px; } .dbt-tile span { font-size: 12px; } .dbt-tile small { font-size: 11px; }
+.dbt .mb-table { font-size: 12px; } .dbt .mb-table td { padding: 3px 8px; }
