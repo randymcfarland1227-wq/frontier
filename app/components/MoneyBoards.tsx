@@ -586,6 +586,11 @@ export function WeekBoard({ dues, monthDues, paidAt, onPaid, onOpen, onAdd, isAd
             </Box>
           ) : null}
           <Box tone="due" title="Upcoming · this week" figure={usd(sumOf(thisWeek.map(d => d.bill.amount)))} figureLabel={`${thisWeek.length} through Sun`} className="mb-fixed">
+            {onAdd && thisWeek.some(d => !isAdded?.(d.key)) ? (
+              <button type="button" className="mny-btn" onClick={() => thisWeek.filter(d => !isAdded?.(d.key)).forEach(d => onAdd(d.key))}>
+                + Add all to balancing sheet
+              </button>
+            ) : null}
             <div className="mb-wl-head">
               <span>Bill</span>
               <span className="num">Amount</span>
