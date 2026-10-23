@@ -4880,7 +4880,7 @@ button.bal-led-row:hover { background: color-mix(in srgb, var(--ev, #0f8a7e) 8%,
 
 /* header dashboard */
 .mb-dash { display: grid; gap: 8px; padding: 10px 12px 12px; border: 1px solid var(--line, var(--row-line)); border-radius: 16px; background: var(--surface); box-shadow: var(--glow, none); }
-@media all { .mb-dash.is-pinned { position: relative; z-index: 15; } }
+
 .mb-dash-top { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; }
 .mb-dash-top .mny-stand-meta { margin-left: auto; }
 .mb-dash-top .money-note { flex-basis: 100%; margin: 0; }
