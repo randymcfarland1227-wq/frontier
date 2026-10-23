@@ -7,6 +7,7 @@ import { PayPlanner } from './PayPlanner';
 import { DebtFile } from './DebtFile';
 import { AccountsBoard, CardsTable, LoansTable, MoneyDash, PaySources, WeekBoard, cardRows, loanRows, type CellView, type DashCredit } from './MoneyBoards';
 import { outstandingParts, ticketTotals } from './OutstandingView';
+import { useOwedDone } from '../../lib/owedComplete';
 import { metaName, setMeta, useMoneyMeta, type MetaEntry } from '../../lib/moneyMeta';
 import { isSettled, owedOf } from '../../lib/debtFile';
 import { bankRows } from './MoneyBoards';
@@ -2785,6 +2786,7 @@ export function MoneyPage({
   const book = useBalanceBook(model, dues, monthDues, incomingBal, paidAt);
   // Incoming money on the balancing sheet is added to its account in the sheet on its day.
   useIncomingLanding(model, book, save);
+  const owedDone = useOwedDone();
   const [panel, setPanel] = useState<PanelState | null>(null);
   const panelApi = useMemo(
     () => ({
@@ -2928,7 +2930,7 @@ export function MoneyPage({
     collections: { n: creditItems.filter(i => !i.unverified && !isSettled(marks[i.id]) && (i.amount || 0) > 0).length, sum: owedOf(creditItems, marks) },
     closed: { n: closedLoans.length, sum: closedLoans.reduce((t, l) => t + (l.bal || 0), 0) },
   };
-  const parts = outstandingParts(model, debtFile.file, marks, monthDues, paidAt);
+  const parts = outstandingParts(model, debtFile.file, marks, monthDues, paidAt, owedDone);
   const tix = ticketTotals(debtFile.file, marks);
   const dashOwed = [
     { label: 'Pay later', sum: parts.sum(parts.payLater), go: 'owed' },
