@@ -836,7 +836,8 @@ export function LifeHub() {
           ? undefined
           : resolveFocusArea({ source, taskId: id, title, kind: taskNow?.kind, projectId: taskNow?.projectId }));
       const goal = goalOf(source, title, [id], taskRules, linkIdx);
-      if (!area || !goal) {
+      // A missing goal is never asked about: it logs as "No goal" unless a goal was picked before.
+      if (!area) {
         setPendingArea({ source, id, title: title || '', area, goal });
         return;
       }
