@@ -1,15 +1,15 @@
 /**
  * Outstanding items marked complete on Life Hub. Recurring ones (pay-later plans) are only marked off
  * for that month; one-offs (a paid cash advance, taxes, legal, tickets, projects) stay off the open
- * list until undone. Kept on this device; nothing is written to the sheet.
+ * list until undone. Cloud-synced (owedDone); nothing is written to the sheet.
  *   { [lineKey]: { at, month? } }   month = 'YYYY-MM' for recurring lines
  */
 
 import { useEffect, useState } from 'react';
-import { readSaved, writeSaved } from './storage';
+import { readSaved, writeSaved, STORAGE_KEYS } from './storage';
 
-export type OwedDone = Record<string, { at: string; month?: string }>;
-const KEY = 'lifehub-owed-complete';
+export type OwedDone = Record<string, { at: string; month?: string; gone?: boolean }>;
+const KEY = STORAGE_KEYS.owedDone;
 const EVENT = 'lifehub:owed-complete';
 
 const monthOf = (d = new Date()) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
@@ -17,13 +17,13 @@ const monthOf = (d = new Date()) => `${d.getFullYear()}-${String(d.getMonth() + 
 /** Is this line marked off right now? (A recurring mark only counts in its own month.) */
 export const isOwedDone = (done: OwedDone, key: string) => {
   const m = done[key];
-  return Boolean(m && (!m.month || m.month === monthOf()));
+  return Boolean(m && !m.gone && (!m.month || m.month === monthOf()));
 };
 
 export function setOwedDone(key: string, on: boolean, recurring = false) {
   const all = readSaved<OwedDone>(KEY, {});
   if (on) all[key] = { at: new Date().toISOString(), ...(recurring ? { month: monthOf() } : {}) };
-  else delete all[key];
+  else all[key] = { at: new Date().toISOString(), gone: true };
   writeSaved(KEY, all);
   if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent(EVENT));
 }
@@ -33,7 +33,11 @@ export function useOwedDone(): OwedDone {
   useEffect(() => {
     const reload = () => setDone(readSaved<OwedDone>(KEY, {}));
     window.addEventListener(EVENT, reload);
-    return () => window.removeEventListener(EVENT, reload);
+    window.addEventListener('lifehub:synced', reload);
+    return () => {
+      window.removeEventListener(EVENT, reload);
+      window.removeEventListener('lifehub:synced', reload);
+    };
   }, []);
   return done;
 }

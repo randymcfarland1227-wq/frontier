@@ -48,6 +48,7 @@ const SYNCED_KEYS: string[] = [
   STORAGE_KEYS.goalModes,
   STORAGE_KEYS.balancePicks,
   STORAGE_KEYS.moneyMeta,
+  STORAGE_KEYS.owedDone,
 ];
 
 export type SyncStatus = {
@@ -160,6 +161,7 @@ export function readLocalState(): SyncedState {
     goalModes: readSaved(STORAGE_KEYS.goalModes, {}),
     balancePicks: readSaved(STORAGE_KEYS.balancePicks, {}),
     moneyMeta: readSaved(STORAGE_KEYS.moneyMeta, {}),
+    owedDone: readSaved(STORAGE_KEYS.owedDone, {}),
   });
 }
 
@@ -192,6 +194,7 @@ function writeLocalState(next: SyncedState): boolean {
     [STORAGE_KEYS.goalModes, current.goalModes, next.goalModes],
     [STORAGE_KEYS.balancePicks, current.balancePicks, next.balancePicks],
     [STORAGE_KEYS.moneyMeta, current.moneyMeta, next.moneyMeta],
+    [STORAGE_KEYS.owedDone, current.owedDone, next.owedDone],
   ];
   let changed = false;
   applying = true;
