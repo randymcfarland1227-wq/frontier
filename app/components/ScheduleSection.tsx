@@ -487,13 +487,25 @@ function EventsList({
 /** Bills past their day and not marked paid (or skipped), under Upcoming. Hidden when there are none. */
 function OverdueBox({ bills, onBillPaid }: { bills: BillDue[]; onBillPaid: (due: BillDue) => void }) {
   const overdue = bills.filter(isOverdue);
+  const [folded, setFolded] = useState(() => readSaved<boolean>('lifehub-overdue-folded', false));
   if (!overdue.length) return null;
   return (
-    <section className="sched-block sc-overdue" aria-labelledby="sc-overdue">
+    <section className={`sched-block sc-overdue${folded ? ' is-folded' : ''}`} aria-labelledby="sc-overdue">
       <h3 id="sc-overdue">
-        Overdue <span>· {overdue.length} not marked paid</span>
+        <button
+          type="button"
+          className="sc-overdue-toggle"
+          aria-expanded={!folded}
+          onClick={() => {
+            writeSaved('lifehub-overdue-folded', !folded);
+            setFolded(!folded);
+          }}
+          title={folded ? 'Show overdue items' : 'Hide overdue items'}
+        >
+          <span aria-hidden="true">{folded ? '▸' : '▾'}</span> Overdue <span>· {overdue.length} not marked paid</span>
+        </button>
       </h3>
-      <BillsList dues={overdue} onPaid={onBillPaid} compact />
+      {folded ? null : <BillsList dues={overdue} onPaid={onBillPaid} compact />}
     </section>
   );
 }
