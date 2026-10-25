@@ -31,7 +31,7 @@ import {
 import { addDays, dayKey, dayName, daysBetween, fromDayKey, money, startOfDay, startOfWeek, type BillDue } from '../../lib/schedule';
 import { usePayPlans } from '../../lib/payPlans';
 import { readSaved, writeSaved, STORAGE_KEYS } from '../../lib/storage';
-import { isOverdue } from '../../lib/billEdits';
+import { isOverdue, loadBillEdits } from '../../lib/billEdits';
 import { BillChangeForm, BillFlagsFields, BillPinButton, FlagBadges, billChangeText } from './BillControls';
 import { addExtraCard, updateExtraCard, useExtraCards, type ExtraCard } from '../../lib/extraCards';
 import { addLifeSub, updateLifeSub, type LifeSub } from '../../lib/lifeSubs';
@@ -2072,12 +2072,14 @@ function LinePanel({
   id,
   book,
   model,
+  due,
   onSave,
   onPaid,
   onBack,
   onClose,
 }: {
   id: string;
+  due?: BillDue;
   book: Book;
   model: MoneyModel;
   onSave: Save;
@@ -2308,6 +2310,8 @@ function LinePanel({
         </section>
       ) : null}
 
+      {due ? <ChangeThisOne due={due} /> : null}
+
       <div className="bal-dlg-actions">
         {model.sheetUrl && !l.custom ? (
           <a className="bal-btn is-quiet-link" href={sheetLink(model, 'Randy')} target="_blank" rel="noopener noreferrer">
@@ -2388,6 +2392,27 @@ function PaidHistory({ list, paidAt }: { list: BillDue[]; paidAt: Record<string,
 
 const PAID_STATES = ['paid', 'crossed', 'charged', 'skipped'];
 
+/** Edit just this one payment (amount, new due day, skip, note); the next cycle stays as it was. */
+function ChangeThisOne({ due }: { due: BillDue }) {
+  const [open, setOpen] = useState(false);
+  const edit = loadBillEdits()[due.key];
+  const changed = Boolean(edit && (edit.skip || edit.moveTo || edit.amount !== undefined || edit.note));
+  return (
+    <div className="mb-cp-change">
+      <h4 className="mb-cp-h">This payment</h4>
+      {changed && !open ? <p className="mb-dim">Changed for this one: {billChangeText(due) || 'edited'}{due.editNote ? ` · ${due.editNote}` : ''}</p> : null}
+      {open ? (
+        <BillChangeForm due={due} onDone={() => setOpen(false)} />
+      ) : (
+        <button type="button" className="mny-btn" onClick={() => setOpen(true)}>
+          {changed ? 'Edit change' : 'Change amount / due day / note'}
+        </button>
+      )}
+      <p className="mb-dim">Only this payment changes — next month’s stays the same.</p>
+    </div>
+  );
+}
+
 /** A loan's shared panel: the Credit tab's figures, whichever row you came from (Bills or Credit). */
 function LoanPanel({ name, model, dues, monthDues, paidAt, onPaid, onBack, onClose }: { name: string; model: MoneyModel; dues: BillDue[]; monthDues: BillDue[]; paidAt: Record<string, string>; onPaid: (d: BillDue) => void; onBack?: () => void; onClose: () => void }) {
   const { get } = useMoneyMeta();
@@ -2428,6 +2453,7 @@ function LoanPanel({ name, model, dues, monthDues, paidAt, onPaid, onBack, onClo
       </div>
       <SinceField metaKey={l.key} label="Loan started" />
       <PaidHistory list={history} paidAt={paidAt} />
+      {l.due ? <ChangeThisOne due={l.due} /> : null}
       <div className="bal-dlg-actions">
         <button type="button" className="mny-btn" onClick={() => setMeta(l.key, { closed: l.closed ? undefined : true })}>{l.closed ? 'Reopen' : 'Mark closed'}</button>
         {l.due && state && !PAID_STATES.includes(state) ? <button type="button" className="mny-btn is-primary" onClick={() => { onPaid(l.due!); onClose(); }}>Mark paid</button> : null}
@@ -2472,6 +2498,7 @@ function SubPanel({ name, model, dues, paidAt, onPaid, onBack, onClose }: { name
         <optgroup label="Cards">{cards.map(c => <option key={c} value={c}>{c}</option>)}</optgroup>
       </select>
       <PaidHistory list={list} paidAt={paidAt} />
+      {mine ? <ChangeThisOne due={mine} /> : null}
       {mine && state && !PAID_STATES.includes(state) ? <button type="button" className="mny-btn" onClick={() => { onPaid(mine); onClose(); }}>Mark paid</button> : null}
     </Modal>
   );
@@ -2524,6 +2551,7 @@ function CardPanel({ name, model, dues, monthDues, paidAt, onPaid, onBack, onClo
       </div>
       {c.carry ? <p className="mb-dim">Interest carrying this balance ≈ {money(c.carry)}/mo.</p> : null}
       <SinceField metaKey={c.key} label="Opened" />
+      {c.due ? <ChangeThisOne due={c.due} /> : null}
       <PaidHistory list={dues.filter(d => d.bill.kind === 'card' && nearest(d.bill.name, cardRows(model, monthDues, get), r => r.name)?.key === c.key)} paidAt={paidAt} />
     </Modal>
   );
@@ -2577,6 +2605,7 @@ function ItemPanel({ id, dues, model, paidAt, onPaid, onBack, onClose }: { id: s
           </ul>
         </>
       ) : null}
+      <ChangeThisOne due={d} />
       {['paid', 'crossed', 'charged', 'skipped'].includes(state) ? null : (
         <button type="button" className="mny-btn" onClick={() => { onPaid(d); onClose(); }}>Mark paid</button>
       )}
@@ -3523,7 +3552,7 @@ export function MoneyPage({
       <p className="money-foot">Every change from Life Hub is logged on the sheet’s “Life Hub edits” tab.</p>
     </div>
       {panel?.type === 'line' ? (
-        <LinePanel key={panel.id} id={panel.id} book={book} model={model} onSave={save} onPaid={onPaid} onBack={panel.back ? () => setPanel(panel.back!) : undefined} onClose={() => setPanel(null)} />
+        <LinePanel key={panel.id} id={panel.id} due={[...dues, ...monthDues].find(x => x.key === panel.id)} book={book} model={model} onSave={save} onPaid={onPaid} onBack={panel.back ? () => setPanel(panel.back!) : undefined} onClose={() => setPanel(null)} />
       ) : panel?.type === 'acct' ? (
         <AccountPanel key={panel.id} name={panel.id} book={book} model={model} onSave={save} onBack={panel.back ? () => setPanel(panel.back!) : undefined} onClose={() => setPanel(null)} />
       ) : panel?.type === 'card' ? (
