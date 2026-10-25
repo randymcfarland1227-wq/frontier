@@ -190,7 +190,8 @@ async function handleState(request: Request, env: Env): Promise<Response> {
   }
   const merged = mergeState(stored, (incoming as { state?: unknown })?.state);
   // Safety net: a merge only ever adds, so a result smaller than what is stored means a bug — refuse it.
-  const before = stateCounts(stored);
+  // Counted after the same cleanup the merge applies (retired Self items are dropped by it), so cleanup alone never reads as shrinking.
+  const before = stateCounts(mergeState(stored, null));
   const after = stateCounts(merged);
   if (after.completions < before.completions || after.captures < before.captures || after.self < before.self) {
     return jsonResponse({ ok: false, error: "would_shrink" }, 409, origin);
