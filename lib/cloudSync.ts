@@ -231,6 +231,14 @@ export async function syncNow(): Promise<SyncStatus> {
     });
     const body = (await res.json().catch(() => ({}))) as { ok?: boolean; error?: string; state?: unknown };
     if (!res.ok || !body.ok) {
+      // A refused push must not leave this device stale: still pull what the backup has.
+      try {
+        const pull = await fetch(STATE_URL, { headers: { 'X-Sync-Key': key }, cache: 'no-store' });
+        const got = (await pull.json().catch(() => ({}))) as { ok?: boolean; state?: unknown };
+        if (pull.ok && got.ok) writeLocalState(mergeState(got.state, readLocalState()));
+      } catch {
+        /* offline: nothing to pull */
+      }
       setStatus({ state: 'error', error: body.error || `HTTP ${res.status}`, at: status.at });
       return status;
     }
