@@ -1015,6 +1015,7 @@ goalsData ? (
             else completeOnHub('self', t.selfId);
           }}
           onAddPrep={(target, title, due) => syncSelf(addSelfItem(title, '', { due, forEvent: target }))}
+          onRefresh={() => void refreshEverything()}
           grounding={<DailyGrounding move={visibleSnapshots.move} goals={goalsData} enter={enter} />}
           onBillPaid={(due: BillDue) =>
             setLedger(recordCompletion('radall', due.key, { title: `Paid ${due.bill.name}`, via: 'hub' }))

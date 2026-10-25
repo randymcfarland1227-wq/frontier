@@ -3,6 +3,11 @@
 import { useState, type ReactNode } from 'react';
 import { readSaved, writeSaved, STORAGE_KEYS } from '../../lib/storage';
 
+const EXPANDED_KEY = 'lifehub-expanded-sections';
+/** Section ids (or id prefixes) that stay open on a phone by default */
+const PHONE_OPEN = ['brief', 'priority'];
+const isPhone = () => typeof window !== 'undefined' && window.matchMedia('(max-width: 640px)').matches;
+
 /**
  * Wraps a home section so it can fold down to a one-line bar. Remembered per browser in the same
  * list as collapsed source cards (keyed `section:<id>`).
@@ -36,11 +41,19 @@ export function Collapsible({
   children: ReactNode;
 }) {
   const key = `section:${id}`;
-  const [collapsed, setCollapsed] = useState(() => readSaved<string[]>(STORAGE_KEYS.collapsedCards, []).includes(key));
+  // On a phone every section starts folded except the ones you act from (Doing now and the brief),
+  // until you open it yourself — that choice is remembered (EXPANDED_KEY) and wins from then on.
+  const [collapsed, setCollapsed] = useState(() => {
+    if (readSaved<string[]>(STORAGE_KEYS.collapsedCards, []).includes(key)) return true;
+    if (readSaved<string[]>(EXPANDED_KEY, []).includes(key)) return false;
+    return isPhone() && !PHONE_OPEN.some(p => id === p || id.startsWith(`${p}-`));
+  });
   const toggle = () => {
     const next = !collapsed;
     const saved = readSaved<string[]>(STORAGE_KEYS.collapsedCards, []).filter(k => k !== key);
     writeSaved(STORAGE_KEYS.collapsedCards, next ? [...saved, key] : saved);
+    const opened = readSaved<string[]>(EXPANDED_KEY, []).filter(k => k !== key);
+    writeSaved(EXPANDED_KEY, next ? opened : [...opened, key]);
     setCollapsed(next);
   };
   const name = title ? `${label} — ${title}` : label;

@@ -208,6 +208,7 @@ export function HomeView({
   onTaskDone,
   onAddPrep,
   grounding,
+  onRefresh,
 }: {
   snapshots: Record<SourceId, SourceSnapshot>;
   enter: (id: SpaceId) => void;
@@ -230,6 +231,8 @@ export function HomeView({
   onAddPrep: (target: { id: string; title: string; date: string }, title: string, due?: string) => void;
   /** Daily grounding: reminder guides + directions (rendered by the page) */
   grounding?: ReactNode;
+  /** Full refresh (Refresh button on phones, where the header has no room for it) */
+  onRefresh?: () => void;
 }) {
   const { lanes } = usePriorityPins();
   const latest =
@@ -323,6 +326,11 @@ export function HomeView({
         </div>
         <p className="hero-status" title="Most recent source refresh">
           {updatedLabel(latest)}
+          {onRefresh ? (
+            <button type="button" className="hero-refresh" onClick={onRefresh}>
+              ⟳ Refresh
+            </button>
+          ) : null}
         </p>
       </section>
 

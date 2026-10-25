@@ -5332,3 +5332,27 @@ button.ob-line-name { cursor: pointer; text-decoration: underline dotted; }
 .frontier-shell[data-color-mode="dark"] .brief-note.is-today { color: #fbbf24; }
 .brief-new { flex: none; padding: 0 5px; border-radius: 4px; background: #0f8a7e; color: #fff; font-size: 10px; font-style: normal; font-weight: 700; letter-spacing: .04em; }
 .brief-more { margin-top: 4px; padding: 0; border: 0; background: none; color: var(--muted); font: inherit; font-size: 12px; cursor: pointer; }
+
+/* Phone Today (2026-10-24): act first, reference folded, real tap targets */
+.hero-refresh { display: none; }
+@media (max-width: 640px) {
+  /* Doing now and the brief come right after the greeting; everything else follows, folded by default */
+  .frontier-shell:has(> #top) { display: flex; flex-direction: column; }
+  .frontier-shell:has(> #top) > #top { order: 1; }
+  .frontier-shell:has(> #top) > [aria-label="Priority"] { order: 2; }
+  .frontier-shell:has(> #top) > [aria-label="Daily brief"] { order: 3; }
+  .frontier-shell:has(> #top) > [aria-label="Schedule"] { order: 4; }
+  .frontier-shell:has(> #top) > [aria-label="Daily grounding"] { order: 5; }
+  .frontier-shell:has(> #top) > [aria-label="Daily ops"] { order: 6; }
+  .frontier-shell:has(> #top) > .source-row:not([aria-label="Daily brief"], [aria-label="Priority"], [aria-label="Schedule"], [aria-label="Daily grounding"], [aria-label="Daily ops"]) { order: 7; }
+  .frontier-shell:has(> #top) > .home-footer { order: 20; }
+  /* Greeting: counts and one Refresh, not a second dashboard */
+  .hero-count-sites { display: none; }
+  .hero-status { display: flex; align-items: center; gap: 10px; }
+  .hero-refresh { display: inline-flex; align-items: center; min-height: 36px; padding: 0 12px; border: 1px solid var(--page-line, var(--line)); border-radius: 999px; background: none; color: inherit; font: inherit; font-weight: 650; }
+  /* Finger-sized header and brief rows */
+  .topbar button { min-height: 40px; }
+  .topbar .settings-button { min-width: 40px; justify-content: center; }
+  .brief-row { min-height: 44px; }
+  .collapsed-bar { min-height: 48px; }
+}

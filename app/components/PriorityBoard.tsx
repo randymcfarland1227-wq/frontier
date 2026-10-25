@@ -345,13 +345,13 @@ export function PriorityBoard({
               ))}
             </ol>
           ) : (
-            <p className="pv-empty">Nothing on your list yet. Drag anything from On deck here, or right-click it and choose Add to action list.</p>
+            <p className="pv-empty">Nothing on your list yet. Press and hold (or right-click) a task in On deck and choose Add to action list — or drag it here.</p>
           )}
         </div>
 
         <div className="pv-col pv-deck">
           <h3 className="pv-col-head">
-            On deck <span>by site · right-click a task for + List</span>
+            On deck <span>by site · press and hold a task for + List</span>
           </h3>
           {groups.length ? (
             // A grid of site boxes that grows with the number of sites: 2 → 2×1, 3 → 3×1, 4+ → 3 across.
