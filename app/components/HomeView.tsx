@@ -11,6 +11,8 @@ import { SourceCard } from './SourceCard';
 import { PriorityBoard } from './PriorityBoard';
 import { GroundingSummary } from './DailyGrounding';
 import { ReviewPanel } from './ReviewPanel';
+import { DailyBrief, BriefSummary } from './DailyBrief';
+import { useBriefPush } from '../../lib/dailyBrief';
 import { Collapsible } from './Collapsible';
 import { shownMetric } from '../../lib/actionable';
 import { usePriorityPins } from '../../lib/priorityPins';
@@ -251,6 +253,7 @@ export function HomeView({
   const tabBills = (schedule?.bills || []).map(b => applyBillEdits(billDues(b, paidKeys), billEdits)[0]).filter((d): d is BillDue => Boolean(d));
   const bills = [...tabBills, ...moneyDues].sort((a, b) => a.due.localeCompare(b.due));
   const overdueBills = bills.filter(isOverdue);
+  useBriefPush(snapshots, bills);
   // Paid from anywhere a bill shows up as a Priority item ("Doing now").
   const payFromPriority = (source: SourceId, item: FeaturedItem) => {
     const due = bills.find(b => b.key === item.id);
@@ -323,6 +326,12 @@ export function HomeView({
         </p>
       </section>
 
+
+      <section className="source-row" aria-label="Daily brief">
+        <Collapsible id="brief" label="Today" title="Daily brief" labelHeader tone="review" icon="☀" summary={<BriefSummary snapshots={snapshots} bills={bills} />}>
+          <DailyBrief snapshots={snapshots} bills={bills} enter={enter} />
+        </Collapsible>
+      </section>
 
       {grounding ? (
         <section className="source-row" aria-label="Daily grounding">
