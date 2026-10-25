@@ -12,7 +12,7 @@ import { PriorityBoard } from './PriorityBoard';
 import { GroundingSummary } from './DailyGrounding';
 import { ReviewPanel } from './ReviewPanel';
 import { Collapsible } from './Collapsible';
-import { getActionableMetric } from '../../lib/actionable';
+import { shownMetric } from '../../lib/actionable';
 import { usePriorityPins } from '../../lib/priorityPins';
 import { criticalKeys, useFeaturedLevels } from '../../lib/featuredLevels';
 import { addDays, billDues, eventStart, onDay, paidBillKeys, type BillDue, type CalTask, type ScheduleSnapshot } from '../../lib/schedule';
@@ -100,13 +100,14 @@ function ScheduleSummary({ schedule, bills }: { schedule: ScheduleSnapshot | nul
 
 /** "TickTick 17 · Gmail 5" — one chip per site in a row, for its section bar. */
 function SiteChips({ ids, snapshots }: { ids: SourceId[]; snapshots: Record<SourceId, SourceSnapshot> }) {
+  const { lanes } = usePriorityPins();
   return (
     <>
       {ids.map(id => {
-        const n = getActionableMetric(id, snapshots[id]).value || 0;
+        const n = shownMetric(id, snapshots[id], lanes).value || 0;
         return (
           <span key={id} className={`sum-chip site-chip src-${id}${n ? '' : ' is-zero'}`}>
-            {sourceById[id].shortName} <b>{n}</b>
+            {sourceById[id].shortName}{n ? <> <b>{n}</b></> : null}
           </span>
         );
       })}
@@ -144,6 +145,7 @@ function SourceRow({
   /** Custom grid (e.g. Daily ops: TickTick wide, Gmail + Outlook stacked) */
   gridClass?: string;
 }) {
+  const { lanes } = usePriorityPins();
   const card = (id: SourceId) => (
     <SourceCard
       key={id}
@@ -167,7 +169,7 @@ function SourceRow({
         tone={tone}
         icon={icon}
         summary={<SiteChips ids={ids} snapshots={snapshots} />}
-        count={ids.reduce((sum, id) => sum + (getActionableMetric(id, snapshots[id]).value || 0), 0)}
+        count={ids.reduce((sum, id) => sum + (shownMetric(id, snapshots[id], lanes).value || 0), 0)}
         countLabel="to do"
       >
       <div
@@ -227,6 +229,7 @@ export function HomeView({
   /** Daily grounding: reminder guides + directions (rendered by the page) */
   grounding?: ReactNode;
 }) {
+  const { lanes } = usePriorityPins();
   const latest =
     Object.values(snapshots)
       .map(item => item.refreshedAt)
@@ -236,7 +239,7 @@ export function HomeView({
 
   // Open to-dos per site — the same blue numbers each card shows.
   const openBySite = [...ROW_1, ...ROW_2, ...ROW_3]
-    .map(id => ({ id, name: sourceById[id].shortName, count: getActionableMetric(id, snapshots[id]).value || 0 }))
+    .map(id => ({ id, name: sourceById[id].shortName, count: shownMetric(id, snapshots[id], lanes).value || 0 }))
     .filter(site => site.count > 0)
     .sort((a, b) => b.count - a.count);
   const openTotal = openBySite.reduce((sum, site) => sum + site.count, 0);
@@ -273,7 +276,7 @@ export function HomeView({
   );
   // TickTick split: tasks (the card's "to do") over habits still to check in today.
   const tt = snapshots.ticktick;
-  const ticktickTasks = getActionableMetric('ticktick', tt).value || 0;
+  const ticktickTasks = shownMetric('ticktick', tt, lanes).value || 0;
   const ticktickHabits = Number(tt?.metrics?.habits) || 0;
 
   return (
