@@ -5308,3 +5308,8 @@ button.ob-line-name { cursor: pointer; text-decoration: underline dotted; }
 .uf-pick b { display: block; font-size: 11.5px; text-transform: uppercase; color: var(--muted); }
 .uf-fails { margin: 0; padding-left: 18px; font-size: 12.5px; }
 .bal-btn.is-quiet.uf-choose { color: var(--muted); }
+
+/* Overdue box folds away (2026-10-24) */
+.sc-overdue-toggle { display: flex; align-items: center; gap: 5px; width: 100%; padding: 0; border: 0; background: none; color: inherit; font: inherit; text-align: left; cursor: pointer; }
+.sc-overdue.is-folded { padding-block: 6px; }
+.sc-overdue.is-folded h3 { margin: 0; }
