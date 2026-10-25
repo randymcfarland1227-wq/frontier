@@ -8,7 +8,7 @@ import type { BillDue } from '../../lib/schedule';
 import type { SourceId, SourceSnapshot, SpaceId } from '../../lib/types';
 
 const SEEN_KEY = 'lifehub-brief-seen';
-const SHOWN = 6;
+const SHOWN = typeof window !== 'undefined' && window.matchMedia('(max-width: 640px)').matches ? 4 : 6;
 
 /** The chips on the folded bar: only sections that have something. */
 export function BriefSummary({ snapshots, bills }: { snapshots: Record<SourceId, SourceSnapshot>; bills: BillDue[] }) {
