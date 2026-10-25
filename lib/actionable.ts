@@ -1,6 +1,7 @@
 /** Actionable (blue) metric helpers for Life Hub source cards. */
 
 import type { SourceId, SourceSnapshot, TaskItem } from './types';
+import { pinKey, type LaneMap } from './priorityPins';
 
 export type ActionableMetric = {
   key: string;
@@ -158,4 +159,17 @@ export function metricsAfterLocalComplete(
   }
 
   return metrics;
+}
+
+/**
+ * The count a card or bar shows: the actionable number minus open items already pinned to
+ * Doing now (they stay in the card's list). TickTick's "to do" is a due-today sum, so it keeps its own.
+ */
+export function shownMetric(id: SourceId, snapshot: SourceSnapshot, lanes: LaneMap) {
+  const base = getActionableMetric(id, snapshot);
+  const inDoingNow = new Set(
+    [...snapshot.tasks.filter(t => t.status !== 'done').map(t => t.id), ...snapshot.featured.map(f => f.id)].filter(x => lanes[pinKey(id, x)]?.lane),
+  ).size;
+  const deduct = id !== 'ticktick' && Number.isFinite(base.value) ? Math.min(inDoingNow, base.value) : 0;
+  return { base, deduct, value: base.value - deduct };
 }
