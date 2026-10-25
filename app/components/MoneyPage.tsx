@@ -11,6 +11,7 @@ import { useOwedDone } from '../../lib/owedComplete';
 import { metaName, setMeta, useMoneyMeta, type MetaEntry } from '../../lib/moneyMeta';
 import { isSettled, owedOf } from '../../lib/debtFile';
 import { bankRows } from './MoneyBoards';
+import { UpdateFiguresButton } from './UpdateFigures';
 import { BrandLogo } from './BrandLogo';
 import { useDebtFile } from '../../lib/debtFile';
 import {
@@ -3171,6 +3172,7 @@ export function MoneyPage({
           <>
             <span className="mny-stand-meta">
               Radall sheet · {new Date(model.refreshedAt).toLocaleString([], { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })} · {model.cashOnHand?.text || '—'} on hand · {money(dueWeek)} due this week
+              <UpdateFiguresButton model={model} monthDues={monthDues} onSave={save} />
               <button type="button" className="mny-btn" onClick={onRefresh} disabled={syncing}>
                 {syncing ? 'Syncing…' : 'Refresh'}
               </button>
