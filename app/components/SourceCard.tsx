@@ -87,10 +87,12 @@ export function SourceCard({
               </button>
             </h2>
             <span className="card-stats">
-              <span className="card-stat is-main" title={actionable.label}>
-                <b>{Number.isFinite(actionable.value) ? actionable.value.toLocaleString() : '—'}</b>
-                <span className="stat-label"> {base.label.toLowerCase()}</span>
-              </span>
+              {actionable.value === 0 ? null : (
+                <span className="card-stat is-main" title={actionable.label}>
+                  <b>{Number.isFinite(actionable.value) ? actionable.value.toLocaleString() : '—'}</b>
+                  <span className="stat-label"> {base.label.toLowerCase()}</span>
+                </span>
+              )}
               {stats.map(m => (
                 <span key={m.key} className="card-stat" title={m.label}>
                   <b>{metricValue(snapshot.metrics, m.key)}</b> {m.label.toLowerCase()}
