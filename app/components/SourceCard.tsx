@@ -6,6 +6,7 @@ import type { FeaturedItem, SourceDefinition, SourceSnapshot, TaskItem } from '.
 import { isConnectorSource } from '../../lib/connectors';
 import { getActionableMetric } from '../../lib/actionable';
 import { metricValue } from '../../lib/protocol';
+import { pinKey, usePriorityPins } from '../../lib/priorityPins';
 import { FeaturedList } from './FeaturedList';
 import { TaskList } from './TaskList';
 import { ShelfList } from './ShelfList';
@@ -56,7 +57,15 @@ export function SourceCard({
   };
   const links = source.relatedLinks || [];
 
-  const actionable = getActionableMetric(source.id, snapshot);
+  const { lanes } = usePriorityPins();
+  const base = getActionableMetric(source.id, snapshot);
+  // Open items already pinned to Doing now stay in this card's list but leave its open count
+  // (TickTick's "to do" is a due-today sum, so it keeps its own number).
+  const inDoingNow = new Set(
+    [...snapshot.tasks.filter(t => t.status !== 'done').map(t => t.id), ...snapshot.featured.map(f => f.id)].filter(id => lanes[pinKey(source.id, id)]?.lane),
+  ).size;
+  const deduct = source.id !== 'ticktick' && Number.isFinite(base.value) ? Math.min(inDoingNow, base.value) : 0;
+  const actionable = deduct ? { ...base, value: base.value - deduct, label: `${base.label} · ${deduct} in Doing now` } : base;
   const consumed = new Set(actionable.consumes || [actionable.key]);
   // Only stats that have a value — a row of "— applied today" placeholders is noise.
   const stats = source.metrics
@@ -80,7 +89,7 @@ export function SourceCard({
             <span className="card-stats">
               <span className="card-stat is-main" title={actionable.label}>
                 <b>{Number.isFinite(actionable.value) ? actionable.value.toLocaleString() : '—'}</b>
-                <span className="stat-label"> {actionable.label.toLowerCase()}</span>
+                <span className="stat-label"> {base.label.toLowerCase()}</span>
               </span>
               {stats.map(m => (
                 <span key={m.key} className="card-stat" title={m.label}>
