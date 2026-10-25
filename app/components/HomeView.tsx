@@ -11,6 +11,7 @@ import { SourceCard } from './SourceCard';
 import { PriorityBoard } from './PriorityBoard';
 import { GroundingSummary } from './DailyGrounding';
 import { ReviewPanel } from './ReviewPanel';
+import { DailyBrief, BriefSummary } from './DailyBrief';
 import { Collapsible } from './Collapsible';
 import { shownMetric } from '../../lib/actionable';
 import { usePriorityPins } from '../../lib/priorityPins';
@@ -323,6 +324,12 @@ export function HomeView({
         </p>
       </section>
 
+
+      <section className="source-row" aria-label="Daily brief">
+        <Collapsible id="brief" label="Today" title="Daily brief" labelHeader tone="review" icon="☀" summary={<BriefSummary snapshots={snapshots} bills={bills} />}>
+          <DailyBrief snapshots={snapshots} bills={bills} enter={enter} />
+        </Collapsible>
+      </section>
 
       {grounding ? (
         <section className="source-row" aria-label="Daily grounding">
