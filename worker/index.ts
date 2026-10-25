@@ -11,6 +11,8 @@ interface Env {
   ROLE_PUSH_KEY?: string;
   /** Shared with the "Life Hub Mail Sync" Apps Script (starred Gmail) */
   MAIL_PUSH_KEY?: string;
+  /** Read key for GET /api/brief (Queen Bee's morning digest) — `wrangler secret put BRIEF_READ_KEY` */
+  BRIEF_READ_KEY?: string;
   /** Mail Sync's web app URL (/exec) — Refresh asks it to sync Gmail, Radall and Schedule now */
   SYNC_NOW_URL?: string;
   /** Where the retired Worker copy of the hub sends people (and their saved data) */
@@ -281,6 +283,39 @@ async function syncKeyAllowed(request: Request, env: Env): Promise<boolean> {
   if (!claimed) return true;
   const key = (request.headers.get("X-Sync-Key") || "").trim();
   return key.length >= 24 && (await sha256(key)) === claimed;
+}
+
+// ---------------------------------------------------------------------------
+// Daily brief: Life Hub (browser, backup key) PUTs today's list; a reader with BRIEF_READ_KEY
+// (X-Brief-Key) GETs it. Only as fresh as the last time Life Hub was open — generatedAt says when.
+// ---------------------------------------------------------------------------
+
+const BRIEF_KEY = "daily-brief";
+
+async function handleBrief(request: Request, env: Env): Promise<Response> {
+  const origin = request.headers.get("Origin");
+  if (request.method === "OPTIONS") return new Response(null, { status: 204, headers: corsHeaders(origin) });
+  if (request.method === "GET" && env.BRIEF_READ_KEY && request.headers.get("X-Brief-Key") === env.BRIEF_READ_KEY) {
+    const brief = await env.LIFEHUB_STATE.get(BRIEF_KEY, "json");
+    return jsonResponse({ ok: true, brief }, 200, origin);
+  }
+  if (origin && !CORS_ALLOW_ORIGINS.has(origin)) return jsonResponse({ ok: false, error: "cors_denied" }, 403, origin);
+  if (!(await syncKeyAllowed(request, env)) || !(request.headers.get("X-Sync-Key") || "").trim()) {
+    return jsonResponse({ ok: false, error: "wrong_key" }, 401, origin);
+  }
+  if (request.method === "GET") return jsonResponse({ ok: true, brief: await env.LIFEHUB_STATE.get(BRIEF_KEY, "json") }, 200, origin);
+  if (request.method !== "PUT") return jsonResponse({ ok: false, error: "method_not_allowed" }, 405, origin);
+  const text = await request.text();
+  if (text.length > 200_000) return jsonResponse({ ok: false, error: "too_large" }, 413, origin);
+  let brief: { generatedAt?: unknown };
+  try {
+    brief = JSON.parse(text);
+  } catch {
+    return jsonResponse({ ok: false, error: "invalid_json" }, 400, origin);
+  }
+  if (typeof brief.generatedAt !== "string") return jsonResponse({ ok: false, error: "bad_brief" }, 400, origin);
+  await env.LIFEHUB_STATE.put(BRIEF_KEY, text);
+  return jsonResponse({ ok: true }, 200, origin);
 }
 
 const stampRe = /^\d{8}$/;
@@ -971,6 +1006,10 @@ export default {
 
     if (pathname === "/api/role/snapshot") {
       return handleRoleSnapshot(request, env);
+    }
+
+    if (pathname === "/api/brief") {
+      return handleBrief(request, env);
     }
 
     if (pathname === "/api/state") {

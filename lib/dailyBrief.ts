@@ -98,3 +98,61 @@ export function buildBrief(snaps: Record<SourceId, SourceSnapshot>, bills: BillD
     { id: 'sales', label: 'Sold & selling · to do', rows: saleRows(snaps.resale) },
   ];
 }
+
+// ---------------------------------------------------------------------------
+// Morning digest feed: Home pushes this to the Worker (PUT /api/brief) so Queen Bee's routine can read it.
+// ---------------------------------------------------------------------------
+
+import { useEffect, useRef } from 'react';
+import { syncKeyHeader } from './cloudSync';
+import { incomingDues, useIncoming } from './incoming';
+import { loadCachedMoney, parseMoney } from './money';
+
+const WORKER_BASE =
+  (import.meta as ImportMeta & { env?: { VITE_WORKER_URL?: string } }).env?.VITE_WORKER_URL ||
+  'https://frontier-work-room.randymcfarland1227.workers.dev';
+
+export function briefPayload(snaps: Record<SourceId, SourceSnapshot>, bills: BillDue[], paydays: { source: string; due: string; amount?: number }[], cashAvailable: string | null, now = new Date()) {
+  const open = bills.filter(d => !d.skipped && d.bill.kind !== 'plan');
+  const line = (d: BillDue) => ({ name: d.bill.name, amount: d.bill.amount ?? null, dueDate: d.due });
+  const sections = buildBrief(snaps, bills, now);
+  const rows = (id: BriefSection['id']) => sections.find(s => s.id === id)?.rows || [];
+  return {
+    generatedAt: now.toISOString(),
+    dueToday: open.filter(d => d.days === 0).map(line),
+    overdue: open.filter(isOverdue).map(line),
+    cashAvailable,
+    nextPayday: paydays[0] ? { source: paydays[0].source, date: paydays[0].due, amount: paydays[0].amount ?? null } : null,
+    tasksDueToday: rows('tasks').map(r => ({ title: r.title, note: r.note, link: `https://randymcfarland1227-wq.github.io/frontier/` })),
+    mail: rows('mail').map(r => ({ title: r.title, note: r.note })),
+    roles: rows('roles').map(r => ({ title: r.title, note: r.note })),
+    soldItems: rows('sales').map(r => ({ title: r.title, note: r.note })),
+  };
+}
+
+/** Pushes the brief when it changes (and at most every 5 minutes). Quiet when backup is off or offline. */
+export function useBriefPush(snaps: Record<SourceId, SourceSnapshot>, bills: BillDue[]) {
+  const incoming = useIncoming();
+  const last = useRef({ sig: '', at: 0 });
+  useEffect(() => {
+    const t = window.setTimeout(() => {
+      const headers = syncKeyHeader();
+      if (!headers['X-Sync-Key']) return;
+      let cash: string | null = null;
+      try {
+        const snap = loadCachedMoney();
+        cash = (snap && parseMoney(snap).cashOnHand?.text) || null;
+      } catch {
+        cash = null;
+      }
+      const paydays = incomingDues(incoming, new Date(), 0, 30).filter(d => (d.item.amount || 0) > 0).map(d => ({ source: d.item.source, due: d.due, amount: d.item.amount }));
+      const body = briefPayload(snaps, bills, paydays, cash);
+      const sig = JSON.stringify({ ...body, generatedAt: '' });
+      if (sig === last.current.sig && Date.now() - last.current.at < 30 * 60 * 1000) return;
+      if (Date.now() - last.current.at < 5 * 60 * 1000) return;
+      last.current = { sig, at: Date.now() };
+      void fetch(`${WORKER_BASE}/api/brief`, { method: 'PUT', headers: { 'Content-Type': 'application/json', ...headers }, body: JSON.stringify(body) }).catch(() => undefined);
+    }, 4000);
+    return () => window.clearTimeout(t);
+  }, [snaps, bills, incoming]);
+}
