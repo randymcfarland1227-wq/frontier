@@ -58,6 +58,7 @@ import {
 import { addCapture, loadCaptures, markPromoted, setCaptureStatus, type Capture } from '../lib/captures';
 import { CapturesPanel } from './components/CapturesPanel';
 import { REFRESH_EVENT, syncGoogleNow } from '../lib/syncNow';
+import { useDayKey } from '../lib/dayKey';
 import { WhyPanel } from './components/WhyPanel';
 import { AreaPicker } from './components/AreaPicker';
 import { DECK, loadLanes, unpin } from '../lib/priorityPins';
@@ -289,6 +290,20 @@ export function LifeHub() {
       setConnectorSyncing(false);
     }
   }, []);
+
+  // New day: Home remounts (its Today state starts clean) and every source pulls again — no manual refresh needed.
+  const rolledDay = useDayKey();
+  const lastDay = useRef(rolledDay);
+  useEffect(() => {
+    if (lastDay.current === rolledDay) return;
+    lastDay.current = rolledDay;
+    try {
+      window.localStorage.removeItem('lifehub-brief-seen');
+    } catch {
+      /* private mode */
+    }
+    window.dispatchEvent(new Event(REFRESH_EVENT));
+  }, [rolledDay]);
 
   // Refresh button: Google syncs Gmail, Radall and Schedule now, then every card pulls again.
   const refreshEverything = useCallback(async () => {
@@ -998,6 +1013,7 @@ goalsData ? (
       />
       {active === 'home' ? (
         <HomeView
+          key={rolledDay}
           enter={enter}
           snapshots={visibleSnapshots}
           openSource={openSource}

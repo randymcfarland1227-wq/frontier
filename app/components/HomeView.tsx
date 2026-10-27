@@ -23,6 +23,7 @@ import { usePlans } from '../../lib/plans';
 import { ScheduleSection } from './ScheduleSection';
 import { BillsList } from './BillsList';
 import { TickTickRings } from './TickTickRings';
+import { FocusSection } from './FocusSection';
 
 const ROW_1: SourceId[] = ['ticktick', 'radall', 'self', 'gmail', 'outlook', 'repair'];
 const ROW_2: SourceId[] = ['role', 'move'];
@@ -354,6 +355,8 @@ export function HomeView({
           <ScheduleSection schedule={schedule} bills={bills} onBillPaid={onBillPaid} tasks={calTasks} onTaskDone={onTaskDone} onAddPrep={onAddPrep} />
         </Collapsible>
       </section>
+
+      <FocusSection snapshots={snapshots} enter={enter} />
 
       <section className="source-row" aria-label="Priority">
         <Collapsible id="priority" label="Priority" title="Doing now" tone="priority" icon="◎" summary={<PrioritySummary />}>
