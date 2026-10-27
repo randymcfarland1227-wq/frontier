@@ -70,22 +70,28 @@ function AffirmationForm({ guide, reviewed, submit }: { guide: AlignmentItem; re
     >
       <label htmlFor={`affirmation-${guide.id}`}>{reviewed ? '✓ Affirmed today' : 'Affirmation'}</label>
       <div className="gr-affirm-row">
-        <input
-          id={`affirmation-${guide.id}`}
-          value={draft}
-          maxLength={1000}
-          autoComplete="off"
-          placeholder="Today, I…"
-          aria-invalid={!!error}
-          aria-describedby={error ? `affirmation-error-${guide.id}` : undefined}
-          onChange={event => {
-            setDraft(event.target.value);
-            setError('');
-          }}
-          onKeyDown={event => {
-            if (event.key === 'Enter' && event.nativeEvent.isComposing) event.preventDefault();
-          }}
-        />
+        <span className="gr-trace">
+          <span className="gr-ghost" aria-hidden="true">{guide.ghost}</span>
+          <textarea
+            id={`affirmation-${guide.id}`}
+            rows={3}
+            value={draft}
+            maxLength={1000}
+            autoComplete="off"
+            aria-invalid={!!error}
+            aria-describedby={error ? `affirmation-error-${guide.id}` : undefined}
+            onChange={event => {
+              setDraft(event.target.value);
+              setError('');
+            }}
+            onKeyDown={event => {
+              if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault();
+                event.currentTarget.form?.requestSubmit();
+              }
+            }}
+          />
+        </span>
         <button type="submit" className="gr-btn is-primary" disabled={!draft.trim() || draft.trim() === reviewed}>
           {reviewed ? 'Update' : 'Affirm'}
         </button>
