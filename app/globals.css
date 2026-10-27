@@ -5420,3 +5420,17 @@ button.ob-line-name { cursor: pointer; text-decoration: underline dotted; }
 .fc-check.is-hot { border-color: var(--fc); }
 .fc-check small { display: block; font-size: 12px; color: var(--muted); }
 @media (max-width: 900px) { .focus-row { grid-template-columns: 1fr; } }
+
+/* Goals: one box per area, left to right; tap opens a pop-up with an X */
+.gr-cats { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 8px; }
+.gr-cat { --ac: #64748b; display: flex; flex-direction: column; gap: 3px; padding: 10px 12px; text-align: left; font: inherit; cursor: pointer; color: var(--ink); border: 1px solid color-mix(in srgb, var(--ac) 40%, var(--line, var(--row-line))); border-top: 4px solid var(--ac); border-radius: 10px; background: color-mix(in srgb, var(--ac) 10%, var(--surface)); }
+.gr-cat.area-physical, .gr-pop.area-physical { --ac: #c2410c; } .gr-cat.area-mental, .gr-pop.area-mental { --ac: #7c3aed; } .gr-cat.area-connection, .gr-pop.area-connection { --ac: #be185d; }
+.gr-cat.area-financial, .gr-pop.area-financial { --ac: #15803d; } .gr-cat.area-spiritual, .gr-pop.area-spiritual { --ac: #0e7490; } .gr-cat.area-upkeep, .gr-pop.area-upkeep { --ac: #92400e; }
+.frontier-shell[data-color-mode="dark"] .area-physical { --ac: #fb923c; } .frontier-shell[data-color-mode="dark"] .area-mental { --ac: #a78bfa; } .frontier-shell[data-color-mode="dark"] .area-connection { --ac: #f472b6; }
+.frontier-shell[data-color-mode="dark"] .area-financial { --ac: #4ade80; } .frontier-shell[data-color-mode="dark"] .area-spiritual { --ac: #22d3ee; } .frontier-shell[data-color-mode="dark"] .area-upkeep { --ac: #fbbf24; }
+.gr-cat-icon { font-size: 18px; } .gr-cat-name { font-size: 13px; font-weight: 650; color: var(--ac); line-height: 1.2; } .gr-cat-count { font-size: 12px; color: var(--muted); }
+.gr-pop-back { position: fixed; inset: 0; z-index: 60; display: grid; place-items: center; padding: 16px; background: rgba(0,0,0,.5); }
+.gr-pop { --ac: #64748b; width: min(720px, 100%); max-height: 86vh; overflow: auto; display: grid; gap: 10px; padding: 14px 16px 16px; border-radius: 12px; border-top: 5px solid var(--ac); background: var(--surface, #fff); color: var(--ink); box-shadow: 0 18px 50px rgba(0,0,0,.4); }
+.gr-pop > header { display: flex; align-items: center; justify-content: space-between; } .gr-pop > header strong { font-size: 15px; color: var(--ac); }
+.gr-pop-x { width: 32px; height: 32px; border: 1px solid var(--line, var(--row-line)); border-radius: 8px; background: none; color: var(--ink); font-size: 14px; cursor: pointer; }
+.gr-pop .gr-gbox { --ac: inherit; }

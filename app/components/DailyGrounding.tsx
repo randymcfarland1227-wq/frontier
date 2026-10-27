@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import type { Goal, GoalsData } from '../../lib/goals';
 import type { SourceSnapshot, SpaceId } from '../../lib/types';
 import { ALIGNMENT, type AlignmentItem } from '../../lib/alignment';
@@ -125,6 +126,9 @@ export function DailyGrounding({ move, goals, enter }: { move?: SourceSnapshot; 
   const counts = { active: 0, passive: 0, none: 0 };
   for (const g of currentGoals) counts[modeOf(g.id, modes).mode || 'none']++;
   const selected = currentGoals.find(g => g.id === selectedGoal) || null;
+  const [openCat, setOpenCat] = useState<string | null>(null);
+  const openCategory = goals?.categories.find(c => c.id === openCat) || null;
+  const popGoals = currentGoals.filter(g => g.categoryId === openCat);
   const openFlow = () => {
     writeSaved('lifehub-why-tab', 'flow');
     enter('why');
@@ -200,38 +204,44 @@ export function DailyGrounding({ move, goals, enter }: { move?: SourceSnapshot; 
         {goals === null ? (
           <p className="gr-empty">Loading goals…</p>
         ) : (
-          <div className="gr-areas">
-            {goals.categories.map(c => {
-              const list = currentGoals.filter(g => g.categoryId === c.id);
-              if (!list.length) return null;
-              return (
-                <div key={c.id} className={`gr-area area-${c.id}`}>
-                  <span className="gr-area-name">
-                    <span aria-hidden="true">{c.icon}</span> {c.label}
-                  </span>
-                  <span className="gr-boxes">
-                    {list.map(g => {
+          <>
+            <div className="gr-cats">
+              {goals.categories.map(c => {
+                const list = currentGoals.filter(g => g.categoryId === c.id);
+                if (!list.length) return null;
+                return (
+                  <button key={c.id} type="button" className={`gr-cat area-${c.id}`} onClick={() => { setOpenCat(c.id); selectGoal(null); }}>
+                    <span className="gr-cat-icon" aria-hidden="true">{c.icon}</span>
+                    <span className="gr-cat-name">{c.label}</span>
+                    <span className="gr-cat-count">{list.length} goals</span>
+                  </button>
+                );
+              })}
+            </div>
+            {openCategory ? createPortal(
+              <div className="gr-pop-back" role="presentation" onClick={() => setOpenCat(null)}>
+                <div className={`gr-pop area-${openCategory.id}`} role="dialog" aria-label={openCategory.label} onClick={e => e.stopPropagation()}>
+                  <header>
+                    <strong><span aria-hidden="true">{openCategory.icon}</span> {openCategory.label}</strong>
+                    <button type="button" className="gr-pop-x" aria-label="Close" onClick={() => setOpenCat(null)}>✕</button>
+                  </header>
+                  <div className="gr-boxes">
+                    {popGoals.map(g => {
                       const { mode } = modeOf(g.id, modes);
                       return (
-                        <button
-                          key={g.id}
-                          type="button"
-                          className={`gr-gbox is-${mode || 'none'}${selectedGoal === g.id ? ' is-open' : ''}`}
-                          aria-expanded={selectedGoal === g.id}
-                          aria-label={`${g.title}: ${mode === 'active' ? 'active' : mode === 'passive' ? 'passive' : 'no routine yet'}`}
-                          onClick={() => selectGoal(selectedGoal === g.id ? null : g.id)}
-                        >
+                        <button key={g.id} type="button" className={`gr-gbox is-${mode || 'none'}${selectedGoal === g.id ? ' is-open' : ''}`} onClick={() => selectGoal(selectedGoal === g.id ? null : g.id)}>
                           <span className="gr-gbox-title">{g.title}</span>
                           <span className="gr-gbox-mode">{mode === 'active' ? 'Active' : mode === 'passive' ? 'Passive' : 'No routine yet'}</span>
                         </button>
                       );
                     })}
-                  </span>
-                  {selected && selected.categoryId === c.id ? <GoalDetail goal={selected} modes={modes} close={() => selectGoal(null)} openFlow={openFlow} /> : null}
+                  </div>
+                  {selected && selected.categoryId === openCategory.id ? <GoalDetail goal={selected} modes={modes} close={() => selectGoal(null)} openFlow={openFlow} /> : null}
                 </div>
-              );
-            })}
-          </div>
+              </div>,
+              document.querySelector('.frontier-shell') || document.body,
+            ) : null}
+          </>
         )}
       </div>
 
