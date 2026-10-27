@@ -3,34 +3,22 @@
 import { useEffect, useState } from 'react';
 import type { Goal, GoalsData } from '../../lib/goals';
 import type { SourceSnapshot, SpaceId } from '../../lib/types';
+import { ALIGNMENT, type AlignmentItem } from '../../lib/alignment';
+import { localDayKey, useDayKey } from '../../lib/dayKey';
 import { LOCAL_WRITE_EVENT, readSaved, writeSaved } from '../../lib/storage';
 import { modeOf, routinesFor, setGoalMode, useGoalModes, type GoalModes } from '../../lib/goalModes';
 
-type Guide = {
-  id: string;
-  title: string;
-  icon: string;
-  when: 'Daily' | 'Weekdays';
-  from: string;
-  key?: string;
-  intro?: string;
-  outro?: string;
-  sections: Array<{ heading: string; lines: string[] }>;
-  link?: { label: string; url?: string; space?: SpaceId };
-};
-
 const AFFIRMATIONS_KEY = 'lifehub-grounding-affirmations';
-const dayKey = (d = new Date()) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+const dayKey = localDayKey;
 type Affirmations = { day: string; entries: Record<string, string> };
 const emptyAffirmations: Affirmations = { day: '', entries: {} };
 
 /** Affirmations are daily reflections, separate from the task completion ledger. */
 function useAffirmations() {
-  const [day, setDay] = useState(dayKey);
+  const day = useDayKey();
   const [saved, setSaved] = useState(() => readSaved<Affirmations>(AFFIRMATIONS_KEY, emptyAffirmations));
   useEffect(() => {
     const refresh = () => {
-      setDay(dayKey());
       setSaved(readSaved<Affirmations>(AFFIRMATIONS_KEY, emptyAffirmations));
     };
     const interval = window.setInterval(refresh, 30_000);
@@ -46,7 +34,7 @@ function useAffirmations() {
     const affirmation = text.trim();
     if (!affirmation) return false;
     const currentDay = dayKey();
-    if (day !== currentDay) { setDay(currentDay); return false; }
+    if (day !== currentDay) return false;
     const current = readSaved<Affirmations>(AFFIRMATIONS_KEY, emptyAffirmations);
     const next = { day, entries: { ...(current?.day === day ? current.entries : {}), [id]: affirmation } };
     try {
@@ -60,7 +48,7 @@ function useAffirmations() {
 }
 
 /** The affirmation for one reminder: put it in your own words, press Enter. Required daily to count as reviewed. */
-function AffirmationForm({ guide, reviewed, submit }: { guide: Guide; reviewed?: string; submit: (id: string, text: string) => boolean }) {
+function AffirmationForm({ guide, reviewed, submit }: { guide: AlignmentItem; reviewed?: string; submit: (id: string, text: string) => boolean }) {
   const [draft, setDraft] = useState(reviewed || '');
   const [error, setError] = useState('');
   return (
@@ -79,7 +67,7 @@ function AffirmationForm({ guide, reviewed, submit }: { guide: Guide; reviewed?:
         } else setError('Your affirmation couldn’t be saved. Please try again.');
       }}
     >
-      <label htmlFor={`affirmation-${guide.id}`}>{reviewed ? '✓ Your affirmation today' : 'Put it in your own words'}</label>
+      <label htmlFor={`affirmation-${guide.id}`}>{reviewed ? '✓ Affirmed today' : 'Affirmation'}</label>
       <div className="gr-affirm-row">
         <input
           id={`affirmation-${guide.id}`}
@@ -110,14 +98,11 @@ function AffirmationForm({ guide, reviewed, submit }: { guide: Guide; reviewed?:
   );
 }
 
-const OPEN_KEY = 'lifehub-grounding-open';
-const AREAS_OPEN_KEY = 'lifehub-grounding-areas-open';
 
 /** Collapsed-bar summary: how many reminders are affirmed today. */
 export function GroundingSummary() {
   const { entries } = useAffirmations();
-  // Alignment, Nutrition Flow, Creative menu — all daily
-  const total = 3;
+  const total = ALIGNMENT.length;
   const done = Object.values(entries).filter(v => v?.trim()).length;
   return (
     <span className={`sum-chip${done >= total ? ' is-done' : ''}`}>
@@ -127,41 +112,14 @@ export function GroundingSummary() {
 }
 
 /**
- * Daily grounding, top to bottom: reminders as four cards → the one you open, with its affirmation
- * right under it → current goals by area (active / passive) → what unlocks the move.
+ * Daily grounding, top to bottom: Alignment (one box per item, each with its own affirmation, left to right)
+ * → current goals as boxes by area → what unlocks the move.
  */
 export function DailyGrounding({ move, goals, enter }: { move?: SourceSnapshot; goals: GoalsData | null; enter: (space: SpaceId) => void }) {
-  const [guides, setGuides] = useState<Guide[] | null>(null);
   const { day, entries, submit } = useAffirmations();
   const modes = useGoalModes();
   const [selectedGoal, selectGoal] = useState<string | null>(null);
-  // Goal areas start collapsed; the ones you open stay open
-  const [openAreas, setOpenAreas] = useState<string[]>(() => readSaved<string[]>(AREAS_OPEN_KEY, []));
-  const toggleArea = (id: string) => {
-    const next = openAreas.includes(id) ? openAreas.filter(a => a !== id) : [...openAreas, id];
-    setOpenAreas(next);
-    writeSaved(AREAS_OPEN_KEY, next);
-  };
-  const [open, setOpenState] = useState<string | null>(() => readSaved<string | null>(OPEN_KEY, null));
-  const setOpen = (id: string | null) => {
-    setOpenState(id);
-    writeSaved(OPEN_KEY, id);
-  };
-  useEffect(() => {
-    const controller = new AbortController();
-    fetch(`${import.meta.env.BASE_URL}data/grounding.json?t=${Date.now()}`, { cache: 'no-store', signal: controller.signal })
-      .then(r => (r.ok ? (r.json() as Promise<{ guides?: Guide[] }>) : null))
-      .then(d => setGuides(Array.isArray(d?.guides) ? d.guides : []))
-      .catch(() => {
-        if (!controller.signal.aborted) setGuides([]);
-      });
-    return () => controller.abort();
-  }, []);
-
-  const weekday = ![0, 6].includes(new Date().getDay());
-  const today = (guides || []).filter(g => g.when === 'Daily' || weekday);
-  const affirmed = today.filter(g => entries[g.id]?.trim()).length;
-  const current = today.find(g => g.id === open) || null;
+  const affirmed = ALIGNMENT.filter(g => entries[g.id]?.trim()).length;
   const moveGoals = (move?.featured || []).filter(f => f.completable === false);
   const currentGoals = (goals?.goals || []).filter(g => g.status === 'active');
   const counts = { active: 0, passive: 0, none: 0 };
@@ -178,85 +136,52 @@ export function DailyGrounding({ move, goals, enter }: { move?: SourceSnapshot; 
         <p className="section-label">Grounding</p>
         <h2>Today</h2>
         <p className="gr-sub">{new Date().toLocaleDateString([], { weekday: 'long', month: 'long', day: 'numeric' })}</p>
-        <span className="gr-progress" aria-live="polite" aria-label={`${affirmed} of ${today.length} reminders affirmed today`}>
-          {today.map(g => (
+        <span className="gr-progress" aria-live="polite" aria-label={`${affirmed} of ${ALIGNMENT.length} affirmed today`}>
+          {ALIGNMENT.map(g => (
             <i key={g.id} className={entries[g.id]?.trim() ? 'is-done' : ''} />
           ))}
           <b>
-            {affirmed}/{today.length}
+            {affirmed}/{ALIGNMENT.length}
           </b>{' '}
           affirmed
         </span>
       </header>
 
-      {/* 1 · Reminders */}
+      {/* 1 · Alignment */}
       <div className="gr-part">
         <h3 className="gr-part-title">
-          Reminders <span>· read one, then put it in your own words</span>
+          Alignment <span>· read each one, then put it in your own words</span>
         </h3>
-        {guides === null ? <p className="gr-empty">Loading reminders…</p> : null}
-        {guides?.length === 0 ? <p className="gr-empty">Reminders couldn’t load. Refresh to try again.</p> : null}
-        <div className="gr-cards" role="tablist" aria-label="Today's reminders">
-          {today.map(g => {
-            const isOpen = current?.id === g.id;
-            const mine = entries[g.id]?.trim();
-            return (
-              <button
-                key={g.id}
-                type="button"
-                role="tab"
-                aria-selected={isOpen}
-                className={`gr-card${isOpen ? ' is-open' : ''}${mine ? ' is-done' : ''}`}
-                onClick={() => setOpen(isOpen ? null : g.id)}
-              >
-                <span className="gr-card-top">
-                  <span className="gr-card-icon" aria-hidden="true">
-                    {g.icon}
-                  </span>
-                  <span className="gr-card-state">{mine ? '✓ Affirmed' : g.when}</span>
+        <div className="gr-align">
+          {ALIGNMENT.map(item => (
+            <article key={item.id} className={`gr-item tone-${item.tone}${entries[item.id]?.trim() ? ' is-done' : ''}`} aria-label={item.title}>
+              <header>
+                <span className="gr-card-icon" aria-hidden="true">
+                  {item.icon}
                 </span>
-                <span className="gr-card-title">{g.title}</span>
-                {mine ? <span className="gr-card-mine">“{mine}”</span> : g.key ? <span className="gr-card-key">{g.key}</span> : null}
-                <span className="gr-card-cta">{isOpen ? 'Close' : mine ? 'Read again' : 'Read & affirm'}</span>
-              </button>
-            );
-          })}
-        </div>
-
-        {current ? (
-          <article className="gr-reader" role="tabpanel" aria-label={current.title}>
-            <header className="gr-reader-head">
-              <span className="gr-card-icon" aria-hidden="true">
-                {current.icon}
-              </span>
-              <h4>{current.title}</h4>
-              {current.link?.url ? (
-                <a className="gr-link" href={current.link.url} target="_blank" rel="noopener noreferrer">
-                  {current.link.label} ↗
-                </a>
-              ) : current.link?.space ? (
-                <button type="button" className="gr-link" onClick={() => enter(current.link!.space!)}>
-                  {current.link.label} →
-                </button>
+                <h4>{item.title}</h4>
+              </header>
+              <ul>
+                {item.lines.map(l => (
+                  <li key={l}>{l}</li>
+                ))}
+              </ul>
+              {item.via ? (
+                <span className="gr-via">
+                  {item.via.map(v => (
+                    <i key={v}>{v}</i>
+                  ))}
+                </span>
               ) : null}
-            </header>
-            {current.intro ? <p className="gr-note">{current.intro}</p> : null}
-            <div className="gr-blocks">
-              {current.sections.map(s => (
-                <div key={s.heading} className="gr-block">
-                  <h5>{s.heading}</h5>
-                  <ul>
-                    {s.lines.map(l => (
-                      <li key={l}>{l}</li>
-                    ))}
-                  </ul>
-                </div>
-              ))}
-            </div>
-            {current.outro ? <p className="gr-note is-quote">{current.outro}</p> : null}
-            <AffirmationForm key={`${day}:${current.id}`} guide={current} reviewed={entries[current.id]} submit={submit} />
-          </article>
-        ) : null}
+              {item.link?.url ? (
+                <a className="gr-link gr-item-link" href={item.link.url} target="_blank" rel="noopener noreferrer">
+                  {item.link.label} ↗
+                </a>
+              ) : null}
+              <AffirmationForm key={`${day}:${item.id}`} guide={item} reviewed={entries[item.id]} submit={submit} />
+            </article>
+          ))}
+        </div>
       </div>
 
       {/* 2 · Current goals */}
@@ -280,42 +205,29 @@ export function DailyGrounding({ move, goals, enter }: { move?: SourceSnapshot; 
               const list = currentGoals.filter(g => g.categoryId === c.id);
               if (!list.length) return null;
               return (
-                <div key={c.id} className={`gr-area area-${c.id}${openAreas.includes(c.id) ? ' is-open' : ' is-collapsed'}`}>
-                  <button
-                    type="button"
-                    className="gr-area-name"
-                    aria-expanded={openAreas.includes(c.id)}
-                    onClick={() => toggleArea(c.id)}
-                  >
+                <div key={c.id} className={`gr-area area-${c.id}`}>
+                  <span className="gr-area-name">
                     <span aria-hidden="true">{c.icon}</span> {c.label}
-                    <span className="gr-area-count">{list.length}</span>
-                    <span className="gr-area-dots" aria-hidden="true">
-                      {list.map(g => (
-                        <i key={g.id} className={`is-${modeOf(g.id, modes).mode || 'none'}`} />
-                      ))}
-                    </span>
-                    <span className="gr-area-caret" aria-hidden="true">{openAreas.includes(c.id) ? '▾' : '▸'}</span>
-                  </button>
-                  {openAreas.includes(c.id) ? (
-                    <span className="gr-chips">
-                      {list.map(g => {
-                        const { mode } = modeOf(g.id, modes);
-                        return (
-                          <button
-                            key={g.id}
-                            type="button"
-                            className={`gr-chip is-${mode || 'none'}${selectedGoal === g.id ? ' is-open' : ''}`}
-                            aria-expanded={selectedGoal === g.id}
-                            aria-label={`${g.title}: ${mode === 'active' ? 'active' : mode === 'passive' ? 'passive' : 'no routine yet'}`}
-                            onClick={() => selectGoal(selectedGoal === g.id ? null : g.id)}
-                          >
-                            {g.title}
-                          </button>
-                        );
-                      })}
-                    </span>
-                  ) : null}
-                  {openAreas.includes(c.id) && selected && selected.categoryId === c.id ? <GoalDetail goal={selected} modes={modes} close={() => selectGoal(null)} openFlow={openFlow} /> : null}
+                  </span>
+                  <span className="gr-boxes">
+                    {list.map(g => {
+                      const { mode } = modeOf(g.id, modes);
+                      return (
+                        <button
+                          key={g.id}
+                          type="button"
+                          className={`gr-gbox is-${mode || 'none'}${selectedGoal === g.id ? ' is-open' : ''}`}
+                          aria-expanded={selectedGoal === g.id}
+                          aria-label={`${g.title}: ${mode === 'active' ? 'active' : mode === 'passive' ? 'passive' : 'no routine yet'}`}
+                          onClick={() => selectGoal(selectedGoal === g.id ? null : g.id)}
+                        >
+                          <span className="gr-gbox-title">{g.title}</span>
+                          <span className="gr-gbox-mode">{mode === 'active' ? 'Active' : mode === 'passive' ? 'Passive' : 'No routine yet'}</span>
+                        </button>
+                      );
+                    })}
+                  </span>
+                  {selected && selected.categoryId === c.id ? <GoalDetail goal={selected} modes={modes} close={() => selectGoal(null)} openFlow={openFlow} /> : null}
                 </div>
               );
             })}
