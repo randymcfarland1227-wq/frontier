@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import { buildBrief, type BriefSection } from '../../lib/dailyBrief';
+import { REFRESH_EVENT } from '../../lib/syncNow';
 import { openTaskPanel } from '../../lib/priorityPins';
 import { readSaved, writeSaved } from '../../lib/storage';
 import type { BillDue } from '../../lib/schedule';
@@ -12,7 +13,7 @@ const SHOWN = typeof window !== 'undefined' && window.matchMedia('(max-width: 64
 
 /** The chips on the folded bar: only sections that have something. */
 export function BriefSummary({ snapshots, bills }: { snapshots: Record<SourceId, SourceSnapshot>; bills: BillDue[] }) {
-  const sections = useMemo(() => buildBrief(snapshots, bills), [snapshots, bills]);
+  const sections = useMemo(() => buildBrief(snapshots, bills).filter(s => s.id !== 'tasks'), [snapshots, bills]);
   const short: Record<BriefSection['id'], string> = { money: 'money', tasks: 'tasks today', mail: 'mail', roles: 'roles', sales: 'sales' };
   const live = sections.filter(s => s.rows.length);
   if (!live.length) return <span className="sum-chip">All clear</span>;
@@ -28,7 +29,7 @@ export function BriefSummary({ snapshots, bills }: { snapshots: Record<SourceId,
 }
 
 export function DailyBrief({ snapshots, bills, enter }: { snapshots: Record<SourceId, SourceSnapshot>; bills: BillDue[]; enter: (id: SpaceId) => void }) {
-  const sections = useMemo(() => buildBrief(snapshots, bills), [snapshots, bills]);
+  const sections = useMemo(() => buildBrief(snapshots, bills).filter(s => s.id !== 'tasks'), [snapshots, bills]);
   const [seen, setSeen] = useState<string[]>(() => readSaved<string[]>(SEEN_KEY, []));
   const [more, setMore] = useState<string | null>(null);
   const all = sections.flatMap(s => s.rows.map(r => r.id));
@@ -47,8 +48,11 @@ export function DailyBrief({ snapshots, bills, enter }: { snapshots: Record<Sour
             {fresh} new · mark all seen
           </button>
         ) : null}
+        <button type="button" className="mny-btn" onClick={() => window.dispatchEvent(new Event(REFRESH_EVENT))} title="Pull mail, roles and sales again">
+          ⟳ Check for replies
+        </button>
       </p>
-      {sections.every(s => !s.rows.length) ? <p className="mny-empty">Nothing overdue, due today, or waiting on you. 🎉</p> : null}
+      {sections.every(s => !s.rows.length) ? <p className="mny-empty">No replies, messages or sales waiting on you.</p> : null}
       <div className="brief-grid">
         {sections
           .filter(s => s.rows.length)
