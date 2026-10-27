@@ -1,29 +1,45 @@
 {
   "source": "gmail",
   "metrics": {
-    "starred": 1,
-    "unread": 1,
-    "action": 1
+    "starred": 2,
+    "unread": 2,
+    "action": 2
   },
   "featured": [
     {
+      "id": "1a17c9bbd701260a",
+      "title": "You made the sale for Crocs Bistro Graphic Utensils Work Clogs Men's Size...",
+      "detail": "Next, pack it up and ship it out.",
+      "meta": "From eBay <ebay@ebay.com>",
+      "originUrl": "https://mail.google.com/mail/u/0/#inbox/1a17c9bbd701260a",
+      "completable": false
+    },
+    {
       "id": "1a122c2b24909a50",
       "title": "You made the sale for Louis Vuitton Fashion Coffee Table Book Hardcover E...",
-      "detail": "Next, pack it up and ship it out. ͏‌ ͏‌ ͏‌ ͏‌ ͏‌ ͏‌ ͏‌ ͏‌ ͏‌ ͏‌ ͏‌ ͏‌ ͏‌ ͏‌ ͏‌ ͏‌ ͏‌ ͏‌ ͏‌ ͏‌ ͏‌ ͏‌ ͏‌ ͏‌ ͏‌ ͏‌ ͏‌ ͏‌ ͏‌ ͏‌ ͏‌ ͏‌ ͏‌ ͏‌ ͏‌ ͏‌ ͏‌ ͏‌ ͏‌ ͏‌ ͏‌ ͏‌ ͏‌ ͏‌ ͏‌ ͏‌ ͏‌ ͏‌ ͏‌",
-      "meta": "Gmail starred",
+      "detail": "Next, pack it up and ship it out.",
+      "meta": "From eBay <ebay@ebay.com>",
       "originUrl": "https://mail.google.com/mail/u/0/#inbox/1a122c2b24909a50",
       "completable": false
     }
   ],
   "tasks": [
     {
+      "id": "1a17c9bbd701260a",
+      "title": "You made the sale for Crocs Bistro Graphic Utensils Work Clogs Men's Size...",
+      "detail": "Next, pack it up and ship it out.",
+      "status": "open",
+      "starred": true,
+      "originUrl": "https://mail.google.com/mail/u/0/#inbox/1a17c9bbd701260a"
+    },
+    {
       "id": "1a122c2b24909a50",
       "title": "You made the sale for Louis Vuitton Fashion Coffee Table Book Hardcover E...",
-      "detail": "Next, pack it up and ship it out. ͏‌ ͏‌ ͏‌ ͏‌ ͏‌ ͏‌ ͏‌ ͏‌ ͏‌ ͏‌ ͏‌ ͏‌ ͏‌ ͏‌ ͏‌ ͏‌ ͏‌ ͏‌ ͏‌ ͏‌ ͏‌ ͏‌ ͏‌ ͏‌ ͏‌ ͏‌ ͏‌ ͏‌ ͏‌ ͏‌ ͏‌ ͏‌ ͏‌ ͏‌ ͏‌ ͏‌ ͏‌ ͏‌ ͏‌ ͏‌ ͏‌ ͏‌ ͏‌ ͏‌ ͏‌ ͏‌ ͏‌ ͏‌ ͏‌",
+      "detail": "Next, pack it up and ship it out.",
       "status": "open",
       "starred": true,
       "originUrl": "https://mail.google.com/mail/u/0/#inbox/1a122c2b24909a50"
     }
   ],
-  "refreshedAt": "2026-10-26T12:44:17.496Z"
+  "refreshedAt": "2026-10-27T12:41:08.992Z"
 }
