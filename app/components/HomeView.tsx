@@ -356,7 +356,11 @@ export function HomeView({
         </Collapsible>
       </section>
 
-      <FocusSection snapshots={snapshots} enter={enter} />
+      <section className="source-row" aria-label="Focus">
+        <Collapsible id="focus" label="Focus" title="Focus now" labelHeader tone="self" icon="✧">
+          <FocusSection snapshots={snapshots} enter={enter} />
+        </Collapsible>
+      </section>
 
       <section className="source-row" aria-label="Priority">
         <Collapsible id="priority" label="Priority" title="Doing now" tone="priority" icon="◎" summary={<PrioritySummary />}>
