@@ -73,132 +73,133 @@ function EditableList({ storageKey, seed, label, onTap }: { storageKey: string; 
   );
 }
 
-function Checks({ storageKey, items }: { storageKey: string; items: { id: string; label: string; hint?: string; hot?: boolean }[] }) {
-  const [done, setDone] = useDayState<string[]>(storageKey, []);
-  const toggle = (id: string) => setDone(done.includes(id) ? done.filter(d => d !== id) : [...done, id]);
+const mondayKey = () => {
+  const d = new Date();
+  d.setDate(d.getDate() - ((d.getDay() + 6) % 7));
+  return `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`;
+};
+
+/** Recipes from the Body (Daylight Matrix) library, so a week's meals can be picked in one tap. */
+const BODY_RECIPES = [
+  'Sweet-spicy chicken personal pizza',
+  'Crispy chicken nugget wraps',
+  'Curry chicken + baby potato skillet',
+  'Crisp pierogies + green beans',
+  'Toasted ravioli + seasoned green beans',
+  'Strawberry-banana yogurt smoothie',
+  'Strawberry-banana pancakes',
+];
+
+/** Marvel's options for today, straight from the Calm Plan in his Den: pick one in each group. */
+const MARVEL_MENU: { id: string; label: string; options: { id: string; t: string; d: string }[] }[] = [
+  { id: 'sniff', label: 'Sniff', options: [
+    { id: 'walk', t: 'Sniff walk · 15–25 min', d: 'Quiet route. Let him sniff.' },
+    { id: 'scatter', t: 'Scatter a meal', d: 'Scatter in the grass, or bowl up after 15 min.' },
+  ] },
+  { id: 'move', label: 'Move', options: [
+    { id: 'tug', t: 'Tug with rules · 5 min', d: 'Sit → “Get it” → tug 10–15 sec → “Drop” → kibble.' },
+    { id: 'outlet', t: 'Walk · 15–25 min', d: 'Slack leash; pay him at your side.' },
+  ] },
+  { id: 'think', label: 'Think', options: [
+    { id: 'findit', t: 'Find it', d: 'Him on Place, hide 10 kibble in one room, “Find it!”' },
+    { id: 'paycalm', t: 'Pay calm', d: 'He lies down quietly → toss kibble, no words. About 10 times.' },
+  ] },
+];
+
+function Chips({ storageKey, seed, label, tone }: { storageKey: string; seed: string[]; label: string; tone?: string }) {
+  const [list, save] = useList(storageKey, seed);
   return (
-    <ul className="fc-checks">
-      {items.map(i => (
-        <li key={i.id}>
-          <button type="button" className={`fc-check${done.includes(i.id) ? ' is-done' : ''}${i.hot ? ' is-hot' : ''}`} aria-pressed={done.includes(i.id)} onClick={() => toggle(i.id)}>
-            <b aria-hidden="true">{done.includes(i.id) ? '✓' : ''}</b>
-            <span>
-              {i.label}
-              {i.hint ? <small>{i.hint}</small> : null}
-            </span>
-          </button>
-        </li>
+    <div className={`fc-chips ${tone || ''}`}>
+      {list.map(t => (
+        <span key={t} className="fc-chip">
+          {t}
+          <button type="button" aria-label={`Remove ${t}`} onClick={() => save(list.filter(x => x !== t))}>✕</button>
+        </span>
       ))}
-    </ul>
+      <AddLine label={label} onAdd={t => !list.includes(t) && save([...list, t])} />
+    </div>
   );
 }
 
-const FITNESS_RE = /gym|cardio|abdominal|active pt|movement break|recovery:|walk, stretch/i;
-const WALK_DAYS = [1, 5, 6]; // Mon, Fri, Sat — "Walk Marvel — Priority"
+function Meals() {
+  const week = mondayKey();
+  const [state, setState] = useState(() => readSaved<{ week: string; meals: string[] }>('lifehub-focus-week-meals', { week, meals: [] }));
+  const meals = state.week === week ? state.meals : [];
+  const save = (next: string[]) => {
+    const v = { week, meals: next };
+    setState(v);
+    writeSaved('lifehub-focus-week-meals', v);
+  };
+  const toggle = (m: string) => save(meals.includes(m) ? meals.filter(x => x !== m) : [...meals, m]);
+  return (
+    <>
+      <p className="fc-sub">This week’s meals · from your Body recipes</p>
+      <div className="fc-chips">
+        {BODY_RECIPES.map(r => (
+          <button key={r} type="button" className={`fc-pick${meals.includes(r) ? ' is-on' : ''}`} aria-pressed={meals.includes(r)} onClick={() => toggle(r)}>
+            {r}
+          </button>
+        ))}
+        {meals.filter(m => !BODY_RECIPES.includes(m)).map(m => (
+          <button key={m} type="button" className="fc-pick is-on" onClick={() => toggle(m)}>{m}</button>
+        ))}
+        <AddLine label="Another meal" onAdd={t => !meals.includes(t) && save([...meals, t])} />
+      </div>
+    </>
+  );
+}
 
-export function FocusSection({ snapshots, enter }: { snapshots: Snaps; enter: (id: SpaceId) => void }) {
+function MarvelMenu() {
+  const [picked, setPicked] = useDayState<Record<string, string>>('lifehub-focus-marvel-pick', {});
+  return (
+    <div className="fc-menu">
+      {MARVEL_MENU.map(g => (
+        <div key={g.id} className="fc-menu-group">
+          <b>{g.label}</b>
+          <div className="fc-menu-opts">
+            {g.options.map(o => (
+              <button key={o.id} type="button" className={`fc-pick${picked[g.id] === o.id ? ' is-on' : ''}`} aria-pressed={picked[g.id] === o.id} onClick={() => setPicked({ ...picked, [g.id]: picked[g.id] === o.id ? '' : o.id })}>
+                <span>{o.t}</span>
+                <small>{o.d}</small>
+              </button>
+            ))}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+export function FocusSection({ enter }: { snapshots?: Snaps; enter: (id: SpaceId) => void }) {
   const day = useDayKey();
-  const dow = new Date().getDay();
-  const tt = snapshots.ticktick?.tasks || [];
-  const dueToday = tt.filter(t => t.kind !== 'habit' && t.status !== 'done');
-  const fitnessHabits = tt.filter(t => t.kind === 'habit' && FITNESS_RE.test(t.title)).map(t => ({ id: t.id, label: t.title.replace(/\s*[—-]\s*(Complete Flow|Follow PDF)$/i, '') }));
-  const role = snapshots.role?.metrics || {};
-  const moveOpen = (snapshots.move?.featured || []).length;
-  const [water, setWater] = useDayState<number>('lifehub-focus-water', 0);
-  const [note, setNote] = useDayState<string>('lifehub-focus-fit-note', '');
-  const [nutFocus, setNutFocus] = useState(() => readSaved<string>('lifehub-focus-nutrition', 'Drink more water'));
-  const [fitFocus, setFitFocus] = useState(() => readSaved<string>('lifehub-focus-fitness', 'Full movement and positioning'));
-  const BOTTLES = 5;
-  const dowName = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][dow];
-
   return (
     <section className="focus-row" aria-label="Focus" data-day={day}>
-      {/* Left: short-term focus */}
       <div className="fc-col fc-short">
-        <p className="fc-kicker">Short-term focus · needs doing</p>
-        <ul className="fc-list is-live">
-          {dueToday.slice(0, 4).map(t => (
-            <li key={t.id}>
-              <button type="button" className="fc-row-link" onClick={() => enter('ticktick')}>
-                {t.title}
-              </button>
-              <small>TickTick today</small>
-            </li>
-          ))}
-        </ul>
-        <EditableList storageKey="lifehub-focus-now" seed={['Ticket matters', 'Role follow-ups']} label="Add something that needs doing" onTap={t => enter(/ticket/i.test(t) ? 'money' : /role|job|interview/i.test(t) ? 'role' : 'ticktick')} />
+        <p className="fc-kicker">Short-term focus · right now</p>
+        <EditableList storageKey="lifehub-focus-now" seed={[]} label="Type something that needs doing" />
         <hr className="fc-bar" />
         <p className="fc-kicker is-soft">Next few weeks</p>
-        <ul className="fc-goals">
-          <li>
-            <button type="button" onClick={() => enter('role')}>
-              <b>Find a job</b>
-              <small>
-                {Number(role.ready) || 0} ready · {Number(role.pipeline) || 0} in pipeline · {Number(role.applied) || 0} applied
-              </small>
-            </button>
-          </li>
-          <li>
-            <button type="button" onClick={() => enter('move')}>
-              <b>Find a means to move</b>
-              <small>{moveOpen ? `${moveOpen} starred in Move OS` : 'Move OS gates'}</small>
-            </button>
-          </li>
-          <li>
-            <button type="button" onClick={() => enter('money')}>
-              <b>Fix credit</b>
-              <small>Money → Credit & Outstanding</small>
-            </button>
-          </li>
-        </ul>
+        <EditableList storageKey="lifehub-focus-weeks" seed={[]} label="Type a short-term goal" />
       </div>
 
-      {/* Middle: nutrition over fitness */}
       <div className="fc-col fc-mid">
         <div className="fc-block fc-nut">
           <p className="fc-kicker">Nutrition flow</p>
-          <input className="fc-focus" value={nutFocus} aria-label="Nutrition focus" onChange={e => { setNutFocus(e.target.value); writeSaved('lifehub-focus-nutrition', e.target.value); }} />
-          <div className="fc-bottles" role="group" aria-label="Bottles of water today">
-            {Array.from({ length: BOTTLES }, (_, i) => (
-              <button key={i} type="button" className={i < water ? 'is-on' : ''} aria-label={`Bottle ${i + 1}`} aria-pressed={i < water} onClick={() => setWater(i + 1 === water ? i : i + 1)} />
-            ))}
-            <span>
-              {water}/{BOTTLES} bottles
-            </span>
-          </div>
-          <p className="fc-sub">Meals I can make this week</p>
-          <EditableList storageKey="lifehub-focus-meals" seed={[]} label="Add a meal" />
+          <Chips storageKey="lifehub-focus-nutrition-list" seed={[]} label="Focus: protein, water, veg…" />
+          <Meals />
           <button type="button" className="fc-link" onClick={() => enter('logs')}>
-            Log in macro tracker · 170 g protein →
+            Log in the tracker →
           </button>
         </div>
         <div className="fc-block fc-fit">
-          <p className="fc-kicker">Fitness</p>
-          <input className="fc-focus" value={fitFocus} aria-label="Fitness focus" onChange={e => { setFitFocus(e.target.value); writeSaved('lifehub-focus-fitness', e.target.value); }} />
-          <Checks
-            storageKey="lifehub-focus-fit-done"
-            items={(fitnessHabits.length ? fitnessHabits : [{ id: 'gym', label: 'Full Gym Session' }, { id: 'cardio', label: 'Cardio' }, { id: 'move', label: 'Movement break' }]).slice(0, 6)}
-          />
-          <input className="fc-note" value={note} placeholder={`${dowName}'s log: what I did, how it felt`} aria-label="Fitness log for today" onChange={e => setNote(e.target.value)} />
+          <p className="fc-kicker">Fitness · where I’m pushing</p>
+          <Chips storageKey="lifehub-focus-fitness-list" seed={[]} label="Focus: abs, cardio, movement…" />
         </div>
       </div>
 
-      {/* Right: Marvel */}
       <div className="fc-col fc-marvel">
-        <p className="fc-kicker">Marvel · today’s care menu</p>
-        <p className="fc-sub">Pick at least one meaningful option{WALK_DAYS.includes(dow) ? ' · walk day' : ''}</p>
-        <Checks
-          storageKey="lifehub-focus-marvel"
-          items={[
-            { id: 'sniff', label: 'Sniff', hint: 'Sniff walk 15–25 min, quiet route', hot: WALK_DAYS.includes(dow) },
-            { id: 'move', label: 'Move', hint: 'Tug with rules, 5–10 min' },
-            { id: 'think', label: 'Think', hint: 'Find it: hide 10 kibble' },
-            { id: 'cuddle', label: 'Cuddle', hint: '20–30 min, just for him' },
-            { id: 'brush', label: 'Brush', hint: 'Coat, daily AM' },
-            { id: 'teeth', label: 'Teeth', hint: 'Weekly' },
-            { id: 'supplies', label: 'Supplies', hint: 'Weekly count: food, treats, chews, toys' },
-          ]}
-        />
+        <p className="fc-kicker">Marvel · today</p>
+        <MarvelMenu />
       </div>
     </section>
   );
