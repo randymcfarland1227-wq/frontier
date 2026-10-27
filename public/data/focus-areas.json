@@ -347,14 +347,17 @@
     }
   },
   "ignore": {
-    "note": "Not tasks — never listed, never counted. Empty for TickTick since 2026-10-08: Randy wants the TickTick card to match TickTick's own count, so orientation items (reminders, standards, menus) live in noCredit instead (listed, no credit).",
+    "note": "Not tasks — never listed or counted as actionable work. Open Grounding (Reminders) and Nutrition Flow — Use Macro Tracker remain passive guides in Daily Grounding; hide only their exact task duplicates. Other orientation items retain their existing noCredit behavior.",
     "ticktick": {
       "titleIncludes": [],
-      "titles": []
+      "titles": [
+        "Open Grounding (Reminders)",
+        "Nutrition Flow — Use Macro Tracker"
+      ]
     }
   },
   "noCredit": {
-    "note": "Orientation / container items (Flow): shown and counted on the TickTick card like any task, but checking them off earns no completion credit and they are not Balance workload.",
+    "note": "Orientation / container items (Flow) earn no completion credit and are not Balance workload. They remain listed and counted unless explicitly excluded by ignore (the grounding and nutrition guide duplicates).",
     "ticktick": {
       "titles": [
         "Nutrition Flow — Use Macro Tracker",
