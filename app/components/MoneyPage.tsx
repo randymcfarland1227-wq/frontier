@@ -727,8 +727,11 @@ function MonthView({
   onPaid,
   kinds,
   hidePaid = false,
+  carry = [],
 }: {
   dues: BillDue[];
+  /** Unpaid payments from earlier months: kept in the Still to pay list so nothing drops off at month end */
+  carry?: BillDue[];
   paidAt: Record<string, string>;
   model: MoneyModel;
   onPaid: (d: BillDue) => void;
@@ -737,6 +740,11 @@ function MonthView({
   hidePaid?: boolean;
 }) {
   const today = startOfDay(new Date());
+  const [flat, setFlat] = useState(() => readSaved<boolean>('lifehub-money-still-to-pay', false));
+  const pickView = (v: boolean) => {
+    setFlat(v);
+    writeSaved('lifehub-money-still-to-pay', v);
+  };
   const dues = kinds ? allDues.filter(d => kinds.includes(d.bill.kind || 'bill')) : allDues;
   const all = ledgerMonthRows(dues, model.items.filter(i => !kinds || kinds.includes(i.kind)), today);
   const counted = all.filter(d => !d.skipped);
@@ -755,6 +763,12 @@ function MonthView({
     const w = Math.floor((fromDayKey(d.due).getDate() - 1) / 7);
     weeks.set(w, [...(weeks.get(w) || []), d]);
   }
+  // Not paid, not crossed off, not skipped: overdue first, then by date — no weeks.
+  const monthKeys = new Set(all.map(d => d.key));
+  const carried = carry.filter(d => !monthKeys.has(d.key) && !d.skipped && (!kinds || kinds.includes(d.bill.kind || 'bill')));
+  const stillToPay = [...counted, ...carried]
+    .filter(d => !['paid', 'crossed', 'charged'].includes(monthState(d, paidAt)))
+    .sort((a, b) => Number(monthState(b, paidAt) === 'late') - Number(monthState(a, paidAt) === 'late') || a.due.localeCompare(b.due));
   const monthName = today.toLocaleDateString([], { month: 'long' });
   const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
   const thisWeek = Math.floor((today.getDate() - 1) / 7);
@@ -800,7 +814,22 @@ function MonthView({
           ) : null}
         </div>
       </div>
-      {[...weeks.entries()].map(([w, list]) => {
+      <div className="mm-views" role="group" aria-label="How to list payments">
+        <button type="button" className={`mny-btn${flat ? '' : ' is-on'}`} aria-pressed={!flat} onClick={() => pickView(false)}>By week</button>
+        <button type="button" className={`mny-btn${flat ? ' is-on' : ''}`} aria-pressed={flat} onClick={() => pickView(true)}>Still to pay</button>
+      </div>
+      {flat ? (
+        <ul className="mm-flat">
+          {stillToPay.length ? (
+            <li className="mm-flat-sum">
+              <b>{stillToPay.length}</b> to pay · <b>{money(stillToPay.reduce((t, d) => t + (d.bill.amount || 0), 0))}</b>
+              {stillToPay.some(d => monthState(d, paidAt) === 'late') ? ` · ${stillToPay.filter(d => monthState(d, paidAt) === 'late').length} overdue first` : ''}
+            </li>
+          ) : null}
+          {stillToPay.length ? stillToPay.map(d => <MonthRow key={d.key} d={d} paidAt={paidAt} onPaid={onPaid} fullDate />) : <li className="mny-empty">Everything is paid. 🎉</li>}
+        </ul>
+      ) : null}
+      {flat ? null : [...weeks.entries()].map(([w, list]) => {
         const from = w * 7 + 1;
         const to = Math.min(from + 6, lastDay);
         // Live: what's still unpaid this week (Paid on Life Hub or crossed off in the sheet drops out)
@@ -2920,6 +2949,12 @@ export function MoneyPage({
   // Pay-by dates read from Gmail notices (e.g. Verizon's suspension date) fill in where the sheet / Life Hub has none.
   const dues = useMemo(() => withPayBy(duesIn, debtFile.file?.payby), [duesIn, debtFile.file?.payby]);
   const monthDues = useMemo(() => withPayBy(monthDuesIn, debtFile.file?.payby), [monthDuesIn, debtFile.file?.payby]);
+  // Unpaid from before this month (the month lists only show this month's rows)
+  const carryDues = useMemo(() => {
+    const now = new Date();
+    const first = dayKey(new Date(now.getFullYear(), now.getMonth(), 1));
+    return dues.filter(d => d.due < first && d.days < 0 && !d.skipped);
+  }, [dues]);
   const [note, setNote] = useState<{ text: string; tone: 'ok' | 'bad' } | null>(null);
   const [provider, setProvider] = useState('All');
   const [legacyTab] = useState(() => readSaved<string>(TAB_KEY, 'flow'));
@@ -3380,7 +3415,7 @@ export function MoneyPage({
         {tab === 'spend' && spendView === 'out' ? (
           <div className="mny-stack">
             <Section tone="due" title={`Outgoing · ${monthName}`} hint="Bills, card minimums, Pay Later, cash advances and subscriptions together." figure={money(weekLeft(OUT_KINDS))} figureLabel="left this week" href={link('Randy')}>
-              <MonthView dues={monthDues} paidAt={paidAt} model={model} onPaid={onPaid} kinds={OUT_KINDS} />
+              <MonthView dues={monthDues} carry={carryDues} paidAt={paidAt} model={model} onPaid={onPaid} kinds={OUT_KINDS} />
             </Section>
           </div>
         ) : null}
@@ -3388,7 +3423,7 @@ export function MoneyPage({
         {tab === 'spend' && spendView === 'bills' ? (
           <div className="mny-stack">
             <Section tone="due" title={`Bills · ${monthName}`} hint="Bills and card minimums." figure={money(weekLeft(['bill', 'card']))} figureLabel="left this week" href={link('Randy')}>
-              <MonthView dues={monthDues} paidAt={paidAt} model={model} onPaid={onPaid} kinds={['bill', 'card']} />
+              <MonthView dues={monthDues} carry={carryDues} paidAt={paidAt} model={model} onPaid={onPaid} kinds={['bill', 'card']} />
             </Section>
             {model.bills ? (
               <Section tone="due" title="In the sheet" hint="Click any amount or date to change it in the sheet." href={link('Randy')}>
