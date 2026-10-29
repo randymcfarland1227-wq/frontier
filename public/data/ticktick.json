@@ -1,8 +1,8 @@
 {
   "source": "ticktick",
   "metrics": {
-    "dueToday": 3,
-    "overdue": 4,
+    "dueToday": 2,
+    "overdue": 3,
     "habits": 36
   },
   "featured": [
@@ -31,35 +31,19 @@
       "completable": false
     },
     {
-      "id": "6a124c4c639b9152c7faa9b4",
-      "title": "Music Session- Main",
-      "detail": "May 19- Short production was done --- May 26-Small production session done using train horn- good stuff tbh --- June 2- No session Done --- June 9- Bonaroo ( No Session Done) --- J",
-      "meta": "Overdue · Creativity",
-      "originUrl": "https://ticktick.com/webapp/#p/69def09b442591a95e9af9db/tasks/6a124c4c639b9152c7faa9b4",
-      "completable": false
-    },
-    {
-      "id": "69cefe89a8a19102bc8976dc",
-      "title": "Weekly Finances Review",
-      "detail": "- [x] **Personal Finance Allocation** ::-Review upcoming bills and needed expenses and allocate:: - [x] **Needed/Reoccurring Purchase Review** ::-Review inventory and sheet to see ",
-      "meta": "Due today · Life Planning",
-      "originUrl": "https://ticktick.com/webapp/#p/69dd701e1ca911a95e9a97c7/tasks/69cefe89a8a19102bc8976dc",
-      "completable": false
-    },
-    {
-      "id": "69f65956b6485118d36dca31",
-      "title": "Music  Session-Maintenance",
-      "detail": "Wed- May 20- No music Session Done --- Wed May 27- Production/ No session done --- June 3- No Session Done --- June 10- No Music Session Done ( Bonaroo) --- June 17- When it rains,",
+      "id": "69f65979d19c9118d36dcab1",
+      "title": "Music Session-Support",
+      "detail": "--- May 21- No Thursday session was done --- May 28- No session Done --- June 4- No Session Done --- Jul 11- No Session Done (Bonaroo) --- Jun 18- No Session Done --- June 25- no s",
       "meta": "Due today · Creativity",
-      "originUrl": "https://ticktick.com/webapp/#p/69def09b442591a95e9af9db/tasks/69f65956b6485118d36dca31",
+      "originUrl": "https://ticktick.com/webapp/#p/69def09b442591a95e9af9db/tasks/69f65979d19c9118d36dcab1",
       "completable": false
     },
     {
-      "id": "6a7e9d3c4a4491ef72a47fad",
-      "title": "Nail and Cuticle Care",
+      "id": "6a92084c8f087e0df3ef1720",
+      "title": "Wipe Down Phone, Laptop, and Glasses & Sunglasses",
       "detail": "Maintenance Organization",
       "meta": "Due today · Maintenance Organization",
-      "originUrl": "https://ticktick.com/webapp/#p/69eef620b4b19119328b4dff/tasks/6a7e9d3c4a4491ef72a47fad",
+      "originUrl": "https://ticktick.com/webapp/#p/69eef620b4b19119328b4dff/tasks/6a92084c8f087e0df3ef1720",
       "completable": false
     },
     {
@@ -101,6 +85,22 @@
       "meta": "Habit",
       "originUrl": "https://ticktick.com/webapp/#q/all/habit",
       "completable": false
+    },
+    {
+      "id": "habit-69cef0cab8fe5102bc89607c",
+      "title": "Vacuum Room",
+      "detail": "Check-ins: 32",
+      "meta": "Habit",
+      "originUrl": "https://ticktick.com/webapp/#q/all/habit",
+      "completable": false
+    },
+    {
+      "id": "habit-69cef7a256f71102bc896e72",
+      "title": "Walk Marvel — Priority",
+      "detail": "Check-ins: 6",
+      "meta": "Habit",
+      "originUrl": "https://ticktick.com/webapp/#q/all/habit",
+      "completable": false
     }
   ],
   "tasks": [
@@ -138,46 +138,24 @@
       "projectId": "69def09b442591a95e9af9db"
     },
     {
-      "id": "6a124c4c639b9152c7faa9b4",
-      "title": "Music Session- Main",
-      "detail": "May 19- Short production was done --- May 26-Small production session done using train horn- good stuff tbh --- June 2- No session Done --- June 9- Bonaroo ( No Session Done) --- J",
+      "id": "69f65979d19c9118d36dcab1",
+      "title": "Music Session-Support",
+      "detail": "--- May 21- No Thursday session was done --- May 28- No session Done --- June 4- No Session Done --- Jul 11- No Session Done (Bonaroo) --- Jun 18- No Session Done --- June 25- no s",
       "status": "open",
-      "due": "2026-10-27",
+      "due": "2026-10-29",
       "starred": false,
-      "originUrl": "https://ticktick.com/webapp/#p/69def09b442591a95e9af9db/tasks/6a124c4c639b9152c7faa9b4",
+      "originUrl": "https://ticktick.com/webapp/#p/69def09b442591a95e9af9db/tasks/69f65979d19c9118d36dcab1",
       "kind": "task",
       "projectId": "69def09b442591a95e9af9db"
     },
     {
-      "id": "69cefe89a8a19102bc8976dc",
-      "title": "Weekly Finances Review",
-      "detail": "- [x] **Personal Finance Allocation** ::-Review upcoming bills and needed expenses and allocate:: - [x] **Needed/Reoccurring Purchase Review** ::-Review inventory and sheet to see ",
-      "status": "open",
-      "due": "2026-10-28",
-      "starred": false,
-      "originUrl": "https://ticktick.com/webapp/#p/69dd701e1ca911a95e9a97c7/tasks/69cefe89a8a19102bc8976dc",
-      "kind": "task",
-      "projectId": "69dd701e1ca911a95e9a97c7"
-    },
-    {
-      "id": "69f65956b6485118d36dca31",
-      "title": "Music  Session-Maintenance",
-      "detail": "Wed- May 20- No music Session Done --- Wed May 27- Production/ No session done --- June 3- No Session Done --- June 10- No Music Session Done ( Bonaroo) --- June 17- When it rains,",
-      "status": "open",
-      "due": "2026-10-28",
-      "starred": false,
-      "originUrl": "https://ticktick.com/webapp/#p/69def09b442591a95e9af9db/tasks/69f65956b6485118d36dca31",
-      "kind": "task",
-      "projectId": "69def09b442591a95e9af9db"
-    },
-    {
-      "id": "6a7e9d3c4a4491ef72a47fad",
-      "title": "Nail and Cuticle Care",
+      "id": "6a92084c8f087e0df3ef1720",
+      "title": "Wipe Down Phone, Laptop, and Glasses & Sunglasses",
       "detail": "Maintenance Organization",
       "status": "open",
-      "due": "2026-10-28",
+      "due": "2026-10-29",
       "starred": false,
-      "originUrl": "https://ticktick.com/webapp/#p/69eef620b4b19119328b4dff/tasks/6a7e9d3c4a4491ef72a47fad",
+      "originUrl": "https://ticktick.com/webapp/#p/69eef620b4b19119328b4dff/tasks/6a92084c8f087e0df3ef1720",
       "kind": "task",
       "projectId": "69eef620b4b19119328b4dff"
     },
@@ -506,5 +484,5 @@
       "kind": "habit"
     }
   ],
-  "refreshedAt": "2026-10-28T12:45:08.522Z"
+  "refreshedAt": "2026-10-29T12:45:09.417Z"
 }

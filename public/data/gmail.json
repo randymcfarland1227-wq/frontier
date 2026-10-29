@@ -1,19 +1,11 @@
 {
   "source": "gmail",
   "metrics": {
-    "starred": 2,
-    "unread": 2,
-    "action": 2
+    "starred": 1,
+    "unread": 1,
+    "action": 1
   },
   "featured": [
-    {
-      "id": "1a17c9bbd701260a",
-      "title": "You made the sale for Crocs Bistro Graphic Utensils Work Clogs Men's Size...",
-      "detail": "Next, pack it up and ship it out.",
-      "meta": "From eBay <ebay@ebay.com>",
-      "originUrl": "https://mail.google.com/mail/u/0/#inbox/1a17c9bbd701260a",
-      "completable": false
-    },
     {
       "id": "1a122c2b24909a50",
       "title": "You made the sale for Louis Vuitton Fashion Coffee Table Book Hardcover E...",
@@ -25,14 +17,6 @@
   ],
   "tasks": [
     {
-      "id": "1a17c9bbd701260a",
-      "title": "You made the sale for Crocs Bistro Graphic Utensils Work Clogs Men's Size...",
-      "detail": "Next, pack it up and ship it out.",
-      "status": "open",
-      "starred": true,
-      "originUrl": "https://mail.google.com/mail/u/0/#inbox/1a17c9bbd701260a"
-    },
-    {
       "id": "1a122c2b24909a50",
       "title": "You made the sale for Louis Vuitton Fashion Coffee Table Book Hardcover E...",
       "detail": "Next, pack it up and ship it out.",
@@ -41,5 +25,5 @@
       "originUrl": "https://mail.google.com/mail/u/0/#inbox/1a122c2b24909a50"
     }
   ],
-  "refreshedAt": "2026-10-28T12:45:08.522Z"
+  "refreshedAt": "2026-10-29T12:45:09.417Z"
 }
