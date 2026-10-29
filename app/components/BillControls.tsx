@@ -207,6 +207,18 @@ export function BillChangeForm({ due, onDone }: { due: BillDue; onDone: () => vo
         <button type="button" className="row-action ghost" onClick={onDone}>
           Cancel
         </button>
+        <button
+          type="button"
+          className="row-action ghost bill-change-reset"
+          title="Takes this payment off every Life Hub list (the sheet isn't changed)"
+          onClick={() => {
+            if (!window.confirm(`Remove ${name} (${due.due}) from your lists?`)) return;
+            setBillEdit(due.key, { removed: true });
+            onDone();
+          }}
+        >
+          Remove
+        </button>
         {saved && (saved.skip || saved.moveTo || saved.amount !== undefined || saved.note) ? (
           <button
             type="button"

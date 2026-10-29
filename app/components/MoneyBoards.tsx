@@ -8,7 +8,8 @@
  * fees, loan terms, sales, pay-from) lives in lib/moneyMeta.ts.
  */
 
-import { useEffect, useState, type ReactNode } from 'react';
+import { useEffect, useState, type CSSProperties, type ReactNode } from 'react';
+import { readSaved, writeSaved } from '../../lib/storage';
 import { amountOf, cardSummaries, MONEY_KINDS, parseSheetDate, type Cell, type MoneyModel } from '../../lib/money';
 import { addDays, dayKey, fromDayKey, money, startOfDay, type BillDue } from '../../lib/schedule';
 import { mondayOf, srcKey, updatePick, useBalancePicks } from '../../lib/balancePicks';
@@ -159,6 +160,21 @@ function useBalanceSeen(rows: BankRow[], get: Get) {
     if (!e) return '';
     return e.name === 'first' ? 'no change seen yet' : `changed ${new Date(e.at).toLocaleDateString([], { month: 'short', day: 'numeric' })}`;
   };
+}
+
+/** When Life Hub last saw each card's balance or limit change. */
+function useCardSeen(cards: CardRow[], get: Get) {
+  const sig = cards.map(c => `${c.name}:${c.bal ?? ''}:${c.avail ?? ''}`).join('|');
+  useEffect(() => {
+    for (const c of cards) {
+      const k = `cbal:${metaName(c.name)}`;
+      const cur = c.bal ?? 0;
+      const prev = get(k);
+      if (!prev) setMeta(k, { amount: cur, state: 'avail', name: 'first' });
+      else if (prev.amount !== cur) setMeta(k, { amount: cur, name: undefined });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sig]);
 }
 
 type Sale = MetaEntry & { id: string };
@@ -759,6 +775,26 @@ export function MoneyDash({
   const { get } = useMoneyMeta();
   const rows = bankRows(model);
   const cards = cardRows(model, [], get);
+  const seen = useBalanceSeen(rows, get);
+  void seen;
+  useCardSeen(cards, get);
+  const [foldedCols, setFoldedCols] = useState<Record<string, boolean>>(() => readSaved<Record<string, boolean>>(DASH_FOLD_KEY, {}));
+  const isFolded = (id: string) => Boolean(foldedCols[id]);
+  const fold = (id: string) => {
+    setFoldedCols(prev => {
+      const next = { ...prev, [id]: !prev[id] };
+      writeSaved(DASH_FOLD_KEY, next);
+      return next;
+    });
+  };
+  // When the figures last changed on Life Hub's side of the sync (the sheet keeps no per-cell date).
+  const stampFmt = (iso?: string) => (iso ? new Date(iso).toLocaleString([], { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }) : '');
+  const latest = (keys: string[]) => {
+    const ats = keys.map(k => get(k)).filter((e): e is MetaEntry => Boolean(e && e.name !== 'first')).map(e => e.at);
+    return ats.length ? ats.reduce((a, b) => (b > a ? b : a)) : undefined;
+  };
+  const cashStamp = `updated ${stampFmt(latest(rows.map(r => `bal:${metaName(r.name)}`))) || `· sheet ${stampFmt(model.refreshedAt)}`}`;
+  const cardStamp = `updated ${stampFmt(latest(cards.map(c => `cbal:${metaName(c.name)}`))) || `· sheet ${stampFmt(model.refreshedAt)}`}`;
   const savT = model.savings;
   const goals = (savT?.rows || []).filter(r => r[0]?.text.trim()).map(r => r[0].text.replace(/\s*\(.*\)\s*/, '').trim());
   const savAccts = (savT?.header || []).slice(1).map((h, i) => ({ name: h.trim(), col: i + 1 })).filter(a => a.name);
@@ -775,6 +811,8 @@ export function MoneyDash({
     ['paylater', 'Pay later', 'paylater'],
     ['cash', 'Advances', 'cash'],
   ];
+  const colIds = ['cash-accounts', 'card-cards', 'save-savings', 'due-week', 'plan-credit', 'owed-owed'];
+  const dashCols = colIds.map(id => (foldedCols[id] ? 'minmax(0, .5fr)' : 'minmax(0, 1fr)')).join(' ');
   const owedSum = sumOf(owed.map(o => o.sum));
   const cardLim = sumOf(cards.filter(c => c.limit).map(c => c.limit));
   const cardBal = sumOf(cards.filter(c => c.limit).map(c => c.bal));
@@ -786,9 +824,8 @@ export function MoneyDash({
         <p className="mny-eyebrow">Money · at a glance</p>
         {top}
       </div>
-      <div className="mb-dash-cols">
-        <DashCol tone="cash" go="accounts" onGo={onGo}>
-          <h3>Cash · pend</h3>
+      <div className="mb-dash-cols" style={{ '--dash-cols': dashCols } as CSSProperties}>
+        <DashCol id="cash-accounts" title="Cash · pend" stamp={cashStamp} folded={isFolded("cash-accounts")} onFold={() => fold("cash-accounts")} tone="cash" go="accounts" onGo={onGo}>
           <div className="mb-dc-grid is-3">
             <span />
             <small>avail</small>
@@ -815,8 +852,7 @@ export function MoneyDash({
             </span>
           </div>
         </DashCol>
-        <DashCol tone="card" go="cards" onGo={onGo}>
-          <h3>Cards</h3>
+        <DashCol id="card-cards" title="Cards" stamp={cardStamp} folded={isFolded("card-cards")} onFold={() => fold("card-cards")} tone="card" go="cards" onGo={onGo}>
           <div className="mb-dc-grid is-4">
             <span />
             <small>limit</small>
@@ -845,8 +881,7 @@ export function MoneyDash({
             </span>
           </div>
         </DashCol>
-        <DashCol tone="save" go="savings" onGo={onGo}>
-          <h3>Savings</h3>
+        <DashCol id="save-savings" title="Savings" folded={isFolded("save-savings")} onFold={() => fold("save-savings")} tone="save" go="savings" onGo={onGo}>
           <div className="mb-dc-grid" style={{ gridTemplateColumns: `minmax(0, 1fr) repeat(${goalIdx.length + 1}, minmax(0, 1fr))` }}>
             <span />
             {goalIdx.map(gi => (
@@ -879,8 +914,7 @@ export function MoneyDash({
             </span>
           </div>
         </DashCol>
-        <DashCol tone="due" go="week" onGo={onGo}>
-          <h3>Bills · routine</h3>
+        <DashCol id="due-week" title="Bills · routine" folded={isFolded("due-week")} onFold={() => fold("due-week")} tone="due" go="week" onGo={onGo}>
           <div className="mb-dc-big">
             <b>{paidPct !== undefined ? `${paidPct}%` : '—'}</b>
             <small>
@@ -912,8 +946,7 @@ export function MoneyDash({
             </div>
           ) : null}
         </DashCol>
-        <DashCol tone="plan" go="credit" onGo={onGo}>
-          <h3>Credit</h3>
+        <DashCol id="plan-credit" title="Credit" folded={isFolded("plan-credit")} onFold={() => fold("plan-credit")} tone="plan" go="credit" onGo={onGo}>
           <div className="mb-dc-scores">
             {credit.scores.map(s => (
               <span key={s.bureau} className={`bu-${bureauKey(s.bureau)}`}>
@@ -948,8 +981,7 @@ export function MoneyDash({
             </span>
           </div>
         </DashCol>
-        <DashCol tone="owed" go="owed" onGo={onGo}>
-          <h3>Outstanding</h3>
+        <DashCol id="owed-owed" title="Current liabilities" folded={isFolded("owed-owed")} onFold={() => fold("owed-owed")} tone="owed" go="owed" onGo={onGo}>
           <div className="mb-dc-grid is-2">
             {owed.map(o => (
               <Frag key={o.label}>
@@ -996,21 +1028,41 @@ function DashRow({ label, title, onOpen, children }: { label: string; title?: st
   );
 }
 
-function DashCol({ tone, go, onGo, children }: { tone: string; go: string; onGo: (where: string) => void; children: ReactNode }) {
+const DASH_FOLD_KEY = 'lifehub-dash-folded';
+
+function DashCol({ id, title, stamp, folded, onFold, tone, go, onGo, children }: { id: string; title: string; stamp?: string; folded: boolean; onFold: () => void; tone: string; go: string; onGo: (where: string) => void; children: ReactNode }) {
   return (
     <div
-      className={`mb-dc tone-${tone}`}
+      className={`mb-dc tone-${tone}${folded ? ' is-folded' : ''}`}
       role="button"
       tabIndex={0}
       onClick={() => onGo(go)}
       onKeyDown={e => {
+        if (e.target !== e.currentTarget) return;
         if (e.key === 'Enter' || e.key === ' ') {
           e.preventDefault();
           onGo(go);
         }
       }}
     >
-      {children}
+      <div className="mb-dc-head">
+        <h3>{title}</h3>
+        <button
+          type="button"
+          className="mb-dc-fold"
+          aria-expanded={!folded}
+          aria-label={`${folded ? 'Open' : 'Fold'} ${title}`}
+          data-col={id}
+          onClick={e => {
+            e.stopPropagation();
+            onFold();
+          }}
+        >
+          {folded ? '▸' : '▾'}
+        </button>
+      </div>
+      {stamp ? <small className="mb-dc-stamp">{stamp}</small> : null}
+      {folded ? null : children}
     </div>
   );
 }
