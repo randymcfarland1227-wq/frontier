@@ -12,6 +12,8 @@ import { daysBetween, fromDayKey, startOfDay, type BillDue } from './schedule';
 export type BillEdit = {
   /** Not paying this one */
   skip?: boolean;
+  /** Taken off every list on Life Hub (a duplicate or a bill that's gone); the sheet isn't touched */
+  removed?: boolean;
   /** New due date for this one — YYYY-MM-DD */
   moveTo?: string;
   /** Amount for this one */
@@ -78,6 +80,7 @@ export function setBillEdit(key: string, edit: Omit<BillEdit, 'at'> | null) {
   const at = new Date().toISOString();
   const clean = edit
     ? {
+        ...(edit.removed ? { removed: true } : {}),
         ...(edit.skip ? { skip: true } : {}),
         ...(edit.moveTo && !edit.skip ? { moveTo: edit.moveTo } : {}),
         ...(edit.amount !== undefined && Number.isFinite(edit.amount) ? { amount: edit.amount } : {}),
@@ -135,7 +138,7 @@ export function useBillEdits(): BillEdits {
 }
 
 export function hasEdit(e?: BillEdit): boolean {
-  return Boolean(e && (e.skip || e.moveTo || e.amount !== undefined || e.note));
+  return Boolean(e && (e.skip || e.removed || e.moveTo || e.amount !== undefined || e.note));
 }
 
 /**
@@ -145,6 +148,7 @@ export function hasEdit(e?: BillEdit): boolean {
 export function applyBillEdits(dues: BillDue[], edits: BillEdits, today = new Date(), days: BillDays = loadBillDays()): BillDue[] {
   const t = startOfDay(today);
   return dues
+    .filter(d => !edits[d.key]?.removed)
     .map(d => {
       // A new day every month (set on Life Hub) first; a one-off change below still wins.
       const rule = days[billRuleKey(d.bill)];

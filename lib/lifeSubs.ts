@@ -40,10 +40,10 @@ const SEEDED_SUBS: LifeSub[] = [
     day: 27,
     cycle: 'monthly',
     status: 'active',
-    start: '2026-10-27',
+    start: '2026-11-27',
     note: 'Storage · Google Play · intro price ends Oct 27, then $2.99/mo + tax',
     createdAt: '2026-10-22T12:00:00.000Z',
-    updatedAt: '2026-10-22T12:00:00.000Z',
+    updatedAt: '2026-10-29T12:00:00.000Z',
   },
   {
     id: 'sub-seed-google-workspace',
@@ -153,4 +153,22 @@ export function lifeSubDues(subs: LifeSub[], paid: Set<string>, today = new Date
     }
   }
   return out;
+}
+
+const subName = (n: string) => n.toLowerCase().replace(/\(.*?\)/g, '').replace(/[^a-z0-9]+/g, '');
+
+/** Life Hub subscription charges minus the ones the sheet already lists that month (same name, either spelling). */
+export function withoutSheetTwins(subDues: BillDue[], sheetDues: BillDue[]): BillDue[] {
+  const sheet = sheetDues.filter(d => d.bill.kind === 'sub').map(d => ({ n: subName(d.bill.name), m: d.due.slice(0, 7) }));
+  const seen = new Set<string>();
+  return subDues.filter(d => {
+    const n = subName(d.bill.name);
+    const m = d.due.slice(0, 7);
+    if (sheet.some(s => s.m === m && s.n && n && (s.n.startsWith(n) || n.startsWith(s.n)))) return false;
+    // Two Life Hub subscriptions with the same name in one month are one charge.
+    const k = `${n}:${m}`;
+    if (seen.has(k)) return false;
+    seen.add(k);
+    return true;
+  });
 }
