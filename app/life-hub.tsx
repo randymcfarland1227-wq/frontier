@@ -58,6 +58,7 @@ import {
 import { addCapture, loadCaptures, markPromoted, setCaptureStatus, type Capture } from '../lib/captures';
 import { CapturesPanel } from './components/CapturesPanel';
 import { REFRESH_EVENT, syncGoogleNow } from '../lib/syncNow';
+import { applyFinanceSeed } from '../lib/financeSeed';
 import { useDayKey } from '../lib/dayKey';
 import { WhyPanel } from './components/WhyPanel';
 import { AreaPicker } from './components/AreaPicker';
@@ -338,6 +339,7 @@ export function LifeHub() {
     setTheme(savedTheme);
     document.documentElement.dataset.theme = savedTheme;
     setReady(true);
+    applyFinanceSeed();
     startCloudSync();
   }, []);
 
